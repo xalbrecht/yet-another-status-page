@@ -69,6 +69,10 @@ if (isVercelBlobEnabled) {
 }
 
 export default buildConfig({
+  serverURL: getServerUrl(),
+  csrf: [
+    getServerUrl(),
+  ],
   admin: {
     user: Users.slug,
     meta: {
@@ -133,5 +137,4 @@ export default buildConfig({
       },
     ],
   },
-  serverURL: getServerUrl(),
 })

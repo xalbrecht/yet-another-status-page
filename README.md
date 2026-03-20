@@ -10,6 +10,31 @@ A modern, self-hosted status page built with [Payload CMS](https://payloadcms.co
 
 > **Note**: After deploying to Vercel, make sure to add a **Vercel Blob** store in your project's Storage settings for media uploads to work.
 
+## 🎯 Live Demo
+
+Try out the admin interface without installation! The demo environment automatically resets every hour.
+
+**Demo Login**: [https://demo.yasp.io/admin/login](https://demo.yasp.io/admin/login)
+
+```
+Email: demo@yasp.io
+Password: demo2026#
+```
+
+### Screenshots
+
+**Demo Login Page with Auto-filled Credentials**
+
+![Demo Login Page](public/demo-images/demo-banner2.png)
+
+**Admin Interface with Demo Banner**
+
+![Admin Interface](public/demo-images/demo-banner1.png)
+
+**Checkout the demo using Login button**
+
+![Public Status Page](public/demo-images/header-login-button.png)
+
 ## Features
 
 - **Incident Management** — Track and communicate service disruptions with timeline updates

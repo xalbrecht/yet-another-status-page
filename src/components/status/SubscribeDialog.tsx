@@ -14,10 +14,9 @@ interface SubscriptionAvailability {
 
 const emailSchema = z.object({
   email: z
-    .string()
+    .email({ message: "Please enter a valid email address" })
     .trim()
     .min(1, { message: "Email is required" })
-    .email({ message: "Please enter a valid email address" })
     .max(255, { message: "Email must be less than 255 characters" }),
 });
 
@@ -89,7 +88,7 @@ export function SubscribeDialog({ isOpen, onClose }: SubscribeDialogProps) {
       if (method === "email") {
         const result = emailSchema.safeParse({ email });
         if (!result.success) {
-          setErrors({ email: result.error.errors[0].message });
+          setErrors({ email: result.error.issues[0].message });
           setIsSubmitting(false);
           return;
         }
@@ -116,7 +115,7 @@ export function SubscribeDialog({ isOpen, onClose }: SubscribeDialogProps) {
       } else {
         const result = smsSchema.safeParse({ phone });
         if (!result.success) {
-          setErrors({ phone: result.error.errors[0].message });
+          setErrors({ phone: result.error.issues[0].message });
           setIsSubmitting(false);
           return;
         }

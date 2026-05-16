@@ -1,0 +1,29 @@
+{{ .Chart.Name }} {{ .Chart.AppVersion }} has been deployed.
+
+Status page URL:
+{{- if .Values.ingress.enabled }}
+{{- range .Values.ingress.hosts }}
+{{- $scheme := "http" }}
+{{- if $.Values.ingress.tls }}{{- $scheme = "https" }}{{- end }}
+  {{ $scheme }}://{{ .host }}{{ (index .paths 0).path }}
+{{- end }}
+{{- else if contains "NodePort" .Values.service.type }}
+  export NODE_PORT=$(kubectl get -n {{ .Release.Namespace }} -o jsonpath="{.spec.ports[0].nodePort}" services {{ include "yasp.fullname" . }})
+  export NODE_IP=$(kubectl get nodes -o jsonpath="{.items[0].status.addresses[0].address}")
+  echo http://$NODE_IP:$NODE_PORT
+{{- else if contains "LoadBalancer" .Values.service.type }}
+  Wait for an external IP, then visit:
+  kubectl get svc -n {{ .Release.Namespace }} {{ include "yasp.fullname" . }}
+{{- else }}
+  kubectl port-forward -n {{ .Release.Namespace }} svc/{{ include "yasp.fullname" . }} 8080:{{ .Values.service.port }}
+  Then open http://localhost:8080
+{{- end }}
+
+Admin panel:
+  Append /admin to the URL above and create the first admin user.
+
+{{- if .Values.postgresql.enabled }}
+
+Bundled PostgreSQL is enabled. The Deployment reads the password from the
+secret "{{ .Release.Name }}-postgresql" managed by the bitnami/postgresql subchart.
+{{- end }}

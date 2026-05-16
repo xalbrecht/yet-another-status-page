@@ -1,0 +1,24 @@
+apiVersion: v2
+name: yet-another-status-page
+description: A self-hosted status page built with Payload CMS and Next.js
+type: application
+version: 0.4.0
+appVersion: 0.4.0
+kubeVersion: ">=1.25.0-0"
+home: https://github.com/Hostzero-GmbH/yet-another-status-page
+sources:
+  - https://github.com/Hostzero-GmbH/yet-another-status-page
+keywords:
+  - status-page
+  - payload
+  - nextjs
+  - incidents
+  - monitoring
+maintainers:
+  - name: HostZero
+    url: https://hostzero.com
+dependencies:
+  - name: postgresql
+    version: "16.x.x"
+    repository: oci://registry-1.docker.io/bitnamicharts
+    condition: postgresql.enabled

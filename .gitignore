@@ -29,6 +29,10 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
+# Helm chart dependencies (pulled at release time)
+charts/*/charts/
+charts/**/Chart.lock
+
 # TypeScript
 *.tsbuildinfo
 next-env.d.ts

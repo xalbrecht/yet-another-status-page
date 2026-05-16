@@ -4,26 +4,32 @@ A modern, self-hosted status page built with [Payload CMS](https://payloadcms.co
 
 ## Features
 
-- 🚨 **Incident Management** - Track and communicate service disruptions
-- 🔧 **Scheduled Maintenance** - Plan and notify users about upcoming maintenance
-- 📧 **Email & SMS Notifications** - Automatic subscriber notifications via SMTP and Twilio
-- 📊 **Service Groups** - Organize services into logical groups
-- 🎨 **Beautiful UI** - Modern, responsive status page with dark mode support
-- 🔒 **Self-Hosted** - Full control over your data and infrastructure
-- 🐳 **Docker Ready** - Easy deployment with Docker and Docker Compose
+- **Incident management** — track and communicate service disruptions
+- **Scheduled maintenance** — plan and notify users about upcoming work
+- **Email & SMS notifications** — automatic subscriber alerts via SMTP and Twilio
+- **Service groups** — organize services into logical groups
+- **Modern UI** — responsive status page with dark mode
+- **Self-hosted** — full control over your data and infrastructure
+- **Kubernetes-native** — official Helm chart with bundled Postgres, Ingress, NetworkPolicy, and PDB
+- **Container-friendly** — multi-arch (amd64/arm64) image published to GHCR
 
 ## Quick Start
 
-```bash
-# Clone the repository
-git clone https://github.com/Hostzero-GmbH/yet-another-status-page.git
-cd yet-another-status-page
+The recommended way to deploy is the [Helm chart](getting-started/helm.md) on Kubernetes:
 
-# Start with Docker Compose
-docker compose up -d
+```bash
+kubectl create namespace status
+
+helm upgrade --install status \
+  oci://ghcr.io/hostzero-gmbh/charts/yet-another-status-page \
+  --namespace status \
+  --set serverUrl=https://status.example.com \
+  --set secret.payloadSecret=$(openssl rand -hex 32)
 ```
 
-Visit `http://localhost:3000` to see your status page, and `http://localhost:3000/admin` to access the admin panel.
+After the rollout, the status page is reachable at `<serverUrl>` and the admin panel at `<serverUrl>/admin`.
+
+For evaluation on a single host, see [Docker Compose](development/docker-compose.md). For local hacking, see [Local Setup](development/local-setup.md).
 
 ## Architecture
 
@@ -37,13 +43,15 @@ Visit `http://localhost:3000` to see your status page, and `http://localhost:300
 │  - Subscribe Form            │  - Schedule Maintenances     │
 │                              │  - Send Notifications        │
 ├─────────────────────────────────────────────────────────────┤
-│                     PostgreSQL Database                      │
+│                     PostgreSQL Database                     │
 └─────────────────────────────────────────────────────────────┘
 ```
 
 ## Documentation
 
-- [Installation Guide](getting-started/installation.md) - Get started with Yet Another Status Page
-- [Docker Compose Setup](getting-started/docker-compose.md) - Deploy with Docker
-- [Admin Guide](admin/overview.md) - Learn how to manage your status page
-- [Notification Workflow](admin/notifications.md) - Understand the notification system
+- [Installation](getting-started/installation.md) — all deployment options
+- [Helm](getting-started/helm.md) — recommended production deployment
+- [Configuration](getting-started/configuration.md) — environment variables and admin settings
+- [Admin Guide](admin/overview.md) — managing your status page
+- [Notifications](admin/notifications.md) — the notification system
+- [Local Setup](development/local-setup.md) — developing on the codebase

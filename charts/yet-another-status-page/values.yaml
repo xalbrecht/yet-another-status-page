@@ -1,0 +1,195 @@
+# Default values for yet-another-status-page.
+
+# -- Number of app replicas
+replicaCount: 1
+
+image:
+  # -- Container image repository
+  repository: ghcr.io/hostzero-gmbh/yet-another-status-page
+  # -- Image pull policy
+  pullPolicy: IfNotPresent
+  # -- Image tag (defaults to "v<chart appVersion>")
+  tag: ""
+
+# -- Image pull secrets for private registries
+imagePullSecrets: []
+
+# -- Override the chart name
+nameOverride: ""
+
+# -- Override the full name of the chart
+fullnameOverride: ""
+
+# -- Public URL the status page is reachable on (used by the app for absolute links and the Payload admin)
+serverUrl: ""
+
+serviceAccount:
+  # -- Create a ServiceAccount
+  create: true
+  # -- ServiceAccount annotations
+  annotations: {}
+  # -- ServiceAccount name (auto-generated if empty)
+  name: ""
+
+# -- Pod annotations
+podAnnotations: {}
+
+# -- Pod labels
+podLabels: {}
+
+# -- Pod-level security context
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1001
+  runAsGroup: 1001
+  fsGroup: 1001
+  seccompProfile:
+    type: RuntimeDefault
+
+# -- Container-level security context. readOnlyRootFilesystem stays off because Next.js writes to .next/cache.
+securityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+  readOnlyRootFilesystem: false
+
+# -- Resource requests and limits
+resources:
+  limits:
+    cpu: "1"
+    memory: 1Gi
+  requests:
+    cpu: 100m
+    memory: 256Mi
+
+# -- Node selector
+nodeSelector: {}
+
+# -- Tolerations
+tolerations: []
+
+# -- Affinity rules
+affinity: {}
+
+# -- Priority class name
+priorityClassName: ""
+
+# -- Pod termination grace period in seconds
+terminationGracePeriodSeconds: 30
+
+# Deployment update strategy
+strategy:
+  type: RollingUpdate
+  rollingUpdate:
+    maxSurge: 1
+    maxUnavailable: 0
+
+service:
+  # -- Service type
+  type: ClusterIP
+  # -- Service port
+  port: 80
+  # -- NodePort (only when type=NodePort)
+  nodePort: ""
+  # -- Service annotations
+  annotations: {}
+
+ingress:
+  # -- Enable Ingress
+  enabled: false
+  # -- IngressClass name
+  className: ""
+  # -- Ingress annotations
+  annotations: {}
+  # -- Ingress host rules
+  hosts:
+    - host: status.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+  # -- TLS configuration
+  tls: []
+  #  - secretName: status-tls
+  #    hosts:
+  #      - status.example.com
+
+# Persistent storage for /app/public/media uploads
+persistence:
+  # -- Enable a PVC for media uploads
+  enabled: true
+  # -- Use an existing PVC (skips PVC creation)
+  existingClaim: ""
+  # -- Storage class. "" = default, "-" = none.
+  storageClass: ""
+  accessModes:
+    - ReadWriteOnce
+  # -- Volume size
+  size: 5Gi
+  # -- PVC annotations
+  annotations: {}
+
+# Secret holding PAYLOAD_SECRET (and DATABASE_URI when not using bundled postgres or externalDatabase.existingSecret)
+secret:
+  # -- Create the secret. Set to false to manage it externally.
+  create: true
+  # -- Random 32+ char string used by Payload to sign tokens. REQUIRED when secret.create=true.
+  payloadSecret: ""
+  # -- DATABASE_URI used only when postgresql.enabled=false and externalDatabase.existingSecret is unset
+  databaseUri: ""
+
+# -- Use a pre-existing secret instead of creating one. Must contain PAYLOAD_SECRET (and DATABASE_URI when applicable).
+existingSecret: ""
+
+# External database (used only when postgresql.enabled=false)
+externalDatabase:
+  # -- Pre-existing secret with a DATABASE_URI key
+  existingSecret: ""
+  # -- Key inside existingSecret holding DATABASE_URI
+  existingSecretKey: "DATABASE_URI"
+
+# -- Additional environment variables
+extraEnv: []
+  # - name: DEBUG
+  #   value: "twilio:*"
+
+# -- Additional envFrom sources (configMapRef / secretRef)
+envFrom: []
+
+# -- Additional volumes
+extraVolumes: []
+
+# -- Additional volume mounts
+extraVolumeMounts: []
+
+# Network policy
+networkPolicy:
+  # -- Enable NetworkPolicy. Default egress allows DNS, Postgres (5432), SMTP (25/465/587), HTTPS (443).
+  enabled: false
+  # -- Additional ingress rules
+  ingress: []
+  # -- Additional egress rules
+  egress: []
+
+# Pod disruption budget
+podDisruptionBudget:
+  # -- Enable PodDisruptionBudget
+  enabled: false
+  # -- Minimum available pods
+  minAvailable: 1
+  # -- Max unavailable pods (takes precedence over minAvailable)
+  maxUnavailable: ""
+
+# Bundled bitnami/postgresql subchart. Disable to bring your own database.
+postgresql:
+  enabled: true
+  auth:
+    username: hostzero
+    database: hostzero_status
+    # -- Password for the bundled Postgres user. If empty, the subchart generates one and persists it in the release secret.
+    password: ""
+    postgresPassword: ""
+  primary:
+    persistence:
+      enabled: true
+      size: 8Gi

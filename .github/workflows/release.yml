@@ -1,0 +1,183 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+  NODE_VERSION: '22'
+
+permissions:
+  contents: write
+  packages: write
+  id-token: write
+  attestations: write
+
+jobs:
+  validate:
+    name: Validate Release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Check version consistency
+        run: |
+          TAG_VERSION="${GITHUB_REF_NAME#v}"
+          CHART_VERSION=$(yq '.version' charts/yet-another-status-page/Chart.yaml)
+          CHART_APP_VERSION=$(yq '.appVersion' charts/yet-another-status-page/Chart.yaml)
+          PACKAGE_VERSION=$(jq -r '.version' package.json)
+
+          echo "Tag version:        $TAG_VERSION"
+          echo "Chart version:      $CHART_VERSION"
+          echo "Chart appVersion:   $CHART_APP_VERSION"
+          echo "package.json:       $PACKAGE_VERSION"
+
+          if [ "$TAG_VERSION" != "$CHART_VERSION" ]; then
+            echo "::error::Chart version ($CHART_VERSION) does not match tag version ($TAG_VERSION)"
+            exit 1
+          fi
+
+          if [ "$TAG_VERSION" != "$CHART_APP_VERSION" ]; then
+            echo "::error::Chart appVersion ($CHART_APP_VERSION) does not match tag version ($TAG_VERSION)"
+            exit 1
+          fi
+
+          if [ "$TAG_VERSION" != "$PACKAGE_VERSION" ]; then
+            echo "::error::package.json version ($PACKAGE_VERSION) does not match tag version ($TAG_VERSION)"
+            exit 1
+          fi
+
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    needs: validate
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Build
+        env:
+          SKIP_BUILD_STATIC_GENERATION: "true"
+          DATABASE_URI: postgresql://postgres:postgres@localhost:5432/build
+          PAYLOAD_SECRET: build-time-secret
+        run: npm run build
+
+  build-and-push:
+    name: Build and Push Docker Image
+    runs-on: ubuntu-latest
+    needs: test
+    outputs:
+      digest: ${{ steps.build.outputs.digest }}
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Log in to Container Registry
+        uses: docker/login-action@v4
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v6
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=semver,pattern=v{{version}}
+            type=semver,pattern=v{{major}}.{{minor}}
+            type=semver,pattern=v{{major}}
+
+      - name: Build and push Docker image
+        id: build
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Generate artifact attestation
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-name: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          subject-digest: ${{ steps.build.outputs.digest }}
+          push-to-registry: true
+
+  publish-helm-chart:
+    name: Publish Helm Chart (OCI)
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v5
+
+      - name: Log in to Container Registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | helm registry login ${{ env.REGISTRY }} -u ${{ github.actor }} --password-stdin
+
+      - name: Update chart dependencies
+        run: helm dependency update charts/yet-another-status-page
+
+      - name: Package Helm chart
+        run: helm package charts/yet-another-status-page
+
+      - name: Push Helm chart to OCI registry
+        env:
+          REPO_OWNER: ${{ github.repository_owner }}
+        run: |
+          helm push yet-another-status-page-*.tgz oci://${{ env.REGISTRY }}/${REPO_OWNER,,}/charts
+
+  create-release:
+    name: Create GitHub Release
+    runs-on: ubuntu-latest
+    needs:
+      - build-and-push
+      - publish-helm-chart
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v5
+
+      - name: Update chart dependencies
+        run: helm dependency update charts/yet-another-status-page
+
+      - name: Package Helm chart
+        run: helm package charts/yet-another-status-page
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v3
+        with:
+          generate_release_notes: true
+          files: |
+            yet-another-status-page-*.tgz
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

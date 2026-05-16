@@ -5,7 +5,7 @@
 # Getting Started
 
 - [Installation](./getting-started/installation.md)
-- [Docker Compose](./getting-started/docker-compose.md)
+- [Helm (Recommended)](./getting-started/helm.md)
 - [Configuration](./getting-started/configuration.md)
 
 # Admin Guide
@@ -20,6 +20,7 @@
 # Development
 
 - [Local Setup](./development/local-setup.md)
+- [Docker Compose](./development/docker-compose.md)
 - [Architecture](./development/architecture.md)
 
 # API Reference

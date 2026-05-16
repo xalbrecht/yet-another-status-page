@@ -1,6 +1,7 @@
 import { ViewTransition } from 'react'
 import { getSettings } from '@/lib/payload'
 import { getMediaUrl } from '@/lib/utils'
+import { ThemeProvider } from '@/components/theme-provider'
 import type { Media } from '@/payload-types'
 import type { Metadata } from 'next'
 import './globals.css'
@@ -49,7 +50,9 @@ export default function FrontendLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body>
-        <ViewTransition>{children}</ViewTransition>
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+          <ViewTransition>{children}</ViewTransition>
+        </ThemeProvider>
       </body>
     </html>
   )

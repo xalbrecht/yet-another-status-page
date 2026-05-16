@@ -8,7 +8,7 @@ Yet Another Status Page can be deployed in several ways. The **recommended** pat
 | --- | --- |
 | Helm (recommended) | Kubernetes >= 1.25, Helm >= 3.8, `kubectl` |
 | Docker Compose | Docker + Docker Compose |
-| From source | Node.js 20+, PostgreSQL 15+ |
+| From source | Node.js 24+, PostgreSQL 15+ |
 | Vercel | A Vercel account |
 
 ## Option 1: Helm (Recommended)

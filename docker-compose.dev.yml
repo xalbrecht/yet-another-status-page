@@ -1,6 +1,6 @@
 services:
   cms:
-    image: node:22-alpine
+    image: node:24-alpine
     ports:
       - '3333:3000'
     volumes:

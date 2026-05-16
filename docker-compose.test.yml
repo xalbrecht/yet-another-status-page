@@ -3,7 +3,7 @@
 
 services:
   app:
-    image: node:22-alpine
+    image: node:24-alpine
     ports:
       - "3001:3000"
     volumes:

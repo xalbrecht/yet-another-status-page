@@ -15,6 +15,9 @@ updates:
         update-types: ["version-update:semver-major"]
       - dependency-name: "@eslint/js"
         update-types: ["version-update:semver-major"]
+      # @types/node tracks the runtime Node major (LTS). Bump together with the Dockerfile/CI Node image.
+      - dependency-name: "@types/node"
+        update-types: ["version-update:semver-major"]
 
   - package-ecosystem: "docker"
     directory: "/"
@@ -25,6 +28,10 @@ updates:
     labels:
       - "dependencies"
       - "docker"
+    ignore:
+      # Pinned to the active Node LTS major; non-LTS bumps (odd majors / next LTS) require a manual coordinated bump.
+      - dependency-name: "node"
+        update-types: ["version-update:semver-major"]
 
   - package-ecosystem: "github-actions"
     directory: "/"

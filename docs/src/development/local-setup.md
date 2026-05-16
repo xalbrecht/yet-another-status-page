@@ -4,7 +4,7 @@ This guide explains how to set up Yet Another Status Page for local development.
 
 ## Prerequisites
 
-- Node.js 20+
+- Node.js 24+
 - PostgreSQL 15+ (or Docker)
 - npm or pnpm
 

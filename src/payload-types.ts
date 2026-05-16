@@ -253,6 +253,14 @@ export interface Maintenance {
    */
   shortId?: string | null;
   /**
+   * When the maintenance was cancelled
+   */
+  cancelledAt?: string | null;
+  /**
+   * When the maintenance was completed
+   */
+  completedAt?: string | null;
+  /**
    * Detailed description of the maintenance work
    */
   description?: {
@@ -287,7 +295,7 @@ export interface Maintenance {
    */
   duration?: string | null;
   /**
-   * Current status of the maintenance
+   * Derived from the latest entry in Updates, or auto-transitioned by schedule. Post an update to change status.
    */
   status: 'upcoming' | 'in_progress' | 'completed' | 'cancelled';
   /**
@@ -686,6 +694,8 @@ export interface IncidentsSelect<T extends boolean = true> {
 export interface MaintenancesSelect<T extends boolean = true> {
   title?: T;
   shortId?: T;
+  cancelledAt?: T;
+  completedAt?: T;
   description?: T;
   affectedServices?: T;
   scheduledStartAt?: T;
@@ -915,6 +925,10 @@ export interface Setting {
    * Override the default status banner message (leave empty to use automatic)
    */
   customStatusMessage?: string | null;
+  /**
+   * How long completed and cancelled maintenances stay visible on the status page after they enter a terminal state.
+   */
+  maintenanceTerminalRetentionHours?: number | null;
   updatedAt?: string | null;
   createdAt?: string | null;
 }
@@ -1033,6 +1047,7 @@ export interface SettingsSelect<T extends boolean = true> {
   logoDark?: T;
   maintenanceModeEnabled?: T;
   customStatusMessage?: T;
+  maintenanceTerminalRetentionHours?: T;
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;

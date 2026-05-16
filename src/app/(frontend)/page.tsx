@@ -89,12 +89,30 @@ async function getStatusData() {
     limit: 100,
   })
 
+  const retentionHours = settings.maintenanceTerminalRetentionHours ?? 24
+  const cutoff = new Date(Date.now() - retentionHours * 3600 * 1000).toISOString()
+
   const maintenances = await payload.find({
     collection: 'maintenances',
     where: {
-      status: { not_equals: 'completed' },
+      or: [
+        { status: { equals: 'upcoming' } },
+        { status: { equals: 'in_progress' } },
+        {
+          and: [
+            { status: { equals: 'cancelled' } },
+            { cancelledAt: { greater_than: cutoff } },
+          ],
+        },
+        {
+          and: [
+            { status: { equals: 'completed' } },
+            { completedAt: { greater_than: cutoff } },
+          ],
+        },
+      ],
     },
-    sort: 'scheduledStart',
+    sort: 'scheduledStartAt',
     limit: 10,
   })
 
@@ -136,6 +154,13 @@ async function getStatusData() {
       durationText = `~${durationHours} hour${durationHours !== 1 ? 's' : ''}`
     }
 
+    const updates = (m.updates || []).map((update, index) => ({
+      id: `${m.id}-update-${index}`,
+      status: update.status,
+      message: update.message || '',
+      timestamp: formatTime(new Date(update.createdAt)),
+    })).reverse()
+
     return {
       id: String(m.id),
       shortId: m.shortId || '',
@@ -149,7 +174,8 @@ async function getStatusData() {
         }
         return String(s)
       }),
-      status: m.status as 'upcoming' | 'in_progress' | 'completed',
+      status: m.status,
+      updates,
     }
   })
 

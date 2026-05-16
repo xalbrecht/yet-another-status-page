@@ -167,6 +167,34 @@ export const Maintenances: CollectionConfig = {
       },
     },
     {
+      name: 'cancelledAt',
+      type: 'date',
+      label: 'Cancelled At',
+      index: true,
+      admin: {
+        position: 'sidebar',
+        description: 'When the maintenance was cancelled',
+        readOnly: true,
+        date: {
+          pickerAppearance: 'dayAndTime',
+        },
+      },
+    },
+    {
+      name: 'completedAt',
+      type: 'date',
+      label: 'Completed At',
+      index: true,
+      admin: {
+        position: 'sidebar',
+        description: 'When the maintenance was completed',
+        readOnly: true,
+        date: {
+          pickerAppearance: 'dayAndTime',
+        },
+      },
+    },
+    {
       name: 'description',
       type: 'richText',
       label: 'Description',
@@ -222,8 +250,11 @@ export const Maintenances: CollectionConfig = {
       required: true,
       defaultValue: 'upcoming',
       options: [...maintenanceStatusOptions],
+      index: true,
       admin: {
-        description: 'Current status of the maintenance',
+        description:
+          'Derived from the latest entry in Updates, or auto-transitioned by schedule. Post an update to change status.',
+        readOnly: true,
       },
     },
     {
@@ -293,12 +324,35 @@ export const Maintenances: CollectionConfig = {
   ],
   hooks: {
     beforeChange: [
-      ({ data, operation }) => {
-        // Always generate a new shortId on create (including duplicates)
+      ({ data, operation, req }) => {
+        data = data || {}
+
         if (operation === 'create') {
-          data = data || {}
           data.shortId = generateShortId(8)
         }
+
+        // Sync top-level status from the latest update, except when the schedule
+        // auto-transition is writing status directly without a corresponding update.
+        if (!req?.context?.skipAutoStatusUpdate) {
+          const updates = data.updates as Array<{ status?: string }> | undefined
+          if (updates && updates.length > 0) {
+            const latest = updates[updates.length - 1]
+            if (latest?.status) data.status = latest.status
+          }
+        }
+
+        if (data.status === 'cancelled' && !data.cancelledAt) {
+          data.cancelledAt = new Date().toISOString()
+        } else if (data.status !== 'cancelled') {
+          data.cancelledAt = null
+        }
+
+        if (data.status === 'completed' && !data.completedAt) {
+          data.completedAt = new Date().toISOString()
+        } else if (data.status !== 'completed') {
+          data.completedAt = null
+        }
+
         return data
       },
     ],

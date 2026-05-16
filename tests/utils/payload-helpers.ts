@@ -40,13 +40,22 @@ interface Incident {
   }>
 }
 
+interface MaintenanceUpdate {
+  status: 'upcoming' | 'in_progress' | 'completed' | 'cancelled'
+  message: string
+  createdAt: string
+}
+
 interface Maintenance {
   id: number
   title: string
   shortId: string
-  status: string
+  status: 'upcoming' | 'in_progress' | 'completed' | 'cancelled'
   scheduledStartAt: string
   scheduledEndAt?: string
+  cancelledAt?: string | null
+  completedAt?: string | null
+  updates?: MaintenanceUpdate[]
 }
 
 interface Subscriber {
@@ -185,6 +194,67 @@ export async function createMaintenance(data: {
   
   const result = await response.json()
   return result.doc
+}
+
+/**
+ * Fetch a single maintenance by id (returns the latest server state).
+ */
+export async function getMaintenance(id: number): Promise<Maintenance> {
+  const response = await fetch(`${API_BASE}/api/maintenances/${id}`)
+  if (!response.ok) {
+    const errorBody = await response.text()
+    throw new Error(`Failed to fetch maintenance: ${response.status} ${response.statusText} - ${errorBody}`)
+  }
+  return response.json()
+}
+
+/**
+ * Append an update to a maintenance, mirroring how the admin UI does it.
+ * The collection's beforeChange hook will sync the parent status from the
+ * latest update entry and stamp terminal timestamps.
+ */
+export async function appendMaintenanceUpdate(
+  id: number,
+  update: { status: MaintenanceUpdate['status']; message: string },
+): Promise<Maintenance> {
+  const current = await getMaintenance(id)
+  const nextUpdates = [
+    ...(current.updates || []),
+    {
+      status: update.status,
+      message: update.message,
+      createdAt: new Date().toISOString(),
+    },
+  ]
+
+  const response = await fetch(`${API_BASE}/api/maintenances/${id}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ updates: nextUpdates }),
+  })
+
+  if (!response.ok) {
+    const errorBody = await response.text()
+    throw new Error(`Failed to append maintenance update: ${response.status} ${response.statusText} - ${errorBody}`)
+  }
+
+  const result = await response.json()
+  return result.doc
+}
+
+/**
+ * Update the Settings global. Used by tests to flip the retention window.
+ */
+export async function updateSettings(data: Record<string, unknown>): Promise<void> {
+  const response = await fetch(`${API_BASE}/api/globals/settings`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  })
+  if (!response.ok) {
+    const errorBody = await response.text()
+    throw new Error(`Failed to update settings: ${response.status} ${response.statusText} - ${errorBody}`)
+  }
 }
 
 /**

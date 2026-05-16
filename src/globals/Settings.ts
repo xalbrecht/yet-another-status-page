@@ -1,4 +1,5 @@
 import type { GlobalConfig } from 'payload'
+import { authenticatedOrTestWrite } from '@/lib/access'
 
 export const Settings: GlobalConfig = {
   slug: 'settings',
@@ -8,6 +9,7 @@ export const Settings: GlobalConfig = {
   },
   access: {
     read: () => true,
+    update: authenticatedOrTestWrite,
   },
   fields: [
     // General Settings
@@ -148,6 +150,26 @@ export const Settings: GlobalConfig = {
           label: 'Custom Status Message',
           admin: {
             description: 'Override the default status banner message (leave empty to use automatic)',
+          },
+        },
+      ],
+    },
+    {
+      type: 'collapsible',
+      label: 'Maintenance',
+      admin: {
+        initCollapsed: true,
+      },
+      fields: [
+        {
+          name: 'maintenanceTerminalRetentionHours',
+          type: 'number',
+          defaultValue: 24,
+          min: 0,
+          label: 'Maintenance retention (hours)',
+          admin: {
+            description:
+              'How long completed and cancelled maintenances stay visible on the status page after they enter a terminal state.',
           },
         },
       ],

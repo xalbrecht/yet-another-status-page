@@ -1,105 +1,158 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
-/* Status Page Design System */
+@custom-variant dark (&:where(.dark, .dark *));
 
-@layer base {
-  :root {
-    --background: 0 0% 98%;
-    --foreground: 220 15% 15%;
+@source "../../components/**/*.{ts,tsx}";
+@source "../**/*.{ts,tsx}";
 
-    --card: 0 0% 100%;
-    --card-foreground: 220 15% 15%;
+:root {
+  --background: 0 0% 98%;
+  --foreground: 220 15% 15%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 220 15% 15%;
+  --card: 0 0% 100%;
+  --card-foreground: 220 15% 15%;
 
-    --primary: 220 15% 20%;
-    --primary-foreground: 0 0% 98%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 220 15% 15%;
 
-    --secondary: 220 10% 94%;
-    --secondary-foreground: 220 15% 20%;
+  --primary: 220 15% 20%;
+  --primary-foreground: 0 0% 98%;
 
-    --muted: 220 10% 96%;
-    --muted-foreground: 220 10% 45%;
+  --secondary: 220 10% 94%;
+  --secondary-foreground: 220 15% 20%;
 
-    --accent: 220 10% 92%;
-    --accent-foreground: 220 15% 20%;
+  --muted: 220 10% 96%;
+  --muted-foreground: 220 10% 45%;
 
-    --destructive: 0 72% 51%;
-    --destructive-foreground: 0 0% 100%;
+  --accent: 220 10% 92%;
+  --accent-foreground: 220 15% 20%;
 
-    --border: 220 13% 90%;
-    --input: 220 13% 90%;
-    --ring: 220 15% 20%;
+  --destructive: 0 72% 51%;
+  --destructive-foreground: 0 0% 100%;
 
-    --radius: 0.5rem;
+  --border: 220 13% 90%;
+  --input: 220 13% 90%;
+  --ring: 220 15% 20%;
 
-    /* Status colors */
-    --status-operational: 152 69% 40%;
-    --status-degraded: 38 92% 50%;
-    --status-partial: 25 95% 53%;
-    --status-major: 0 72% 51%;
-    --status-maintenance: 217 91% 60%;
+  --radius: 0.5rem;
 
-    /* Status banner backgrounds */
-    --status-banner-operational: 152 69% 40%;
-    --status-banner-degraded: 38 92% 50%;
-    --status-banner-partial: 25 95% 53%;
-    --status-banner-major: 0 72% 51%;
-    --status-banner-maintenance: 217 91% 60%;
-  }
+  --status-operational: 152 69% 40%;
+  --status-degraded: 38 92% 50%;
+  --status-partial: 25 95% 53%;
+  --status-major: 0 72% 51%;
+  --status-maintenance: 217 91% 60%;
 
-  .dark {
-    --background: 220 20% 10%;
-    --foreground: 220 10% 94%;
+  --status-banner-operational: 152 69% 40%;
+  --status-banner-degraded: 38 92% 50%;
+  --status-banner-partial: 25 95% 53%;
+  --status-banner-major: 0 72% 51%;
+  --status-banner-maintenance: 217 91% 60%;
+}
 
-    --card: 220 18% 13%;
-    --card-foreground: 220 10% 94%;
+.dark {
+  --background: 220 20% 10%;
+  --foreground: 220 10% 94%;
 
-    --popover: 220 18% 13%;
-    --popover-foreground: 220 10% 94%;
+  --card: 220 18% 13%;
+  --card-foreground: 220 10% 94%;
 
-    --primary: 220 10% 94%;
-    --primary-foreground: 220 20% 10%;
+  --popover: 220 18% 13%;
+  --popover-foreground: 220 10% 94%;
 
-    --secondary: 220 15% 18%;
-    --secondary-foreground: 220 10% 94%;
+  --primary: 220 10% 94%;
+  --primary-foreground: 220 20% 10%;
 
-    --muted: 220 15% 18%;
-    --muted-foreground: 220 10% 55%;
+  --secondary: 220 15% 18%;
+  --secondary-foreground: 220 10% 94%;
 
-    --accent: 220 15% 22%;
-    --accent-foreground: 220 10% 94%;
+  --muted: 220 15% 18%;
+  --muted-foreground: 220 10% 55%;
 
-    --destructive: 0 62% 45%;
-    --destructive-foreground: 0 0% 100%;
+  --accent: 220 15% 22%;
+  --accent-foreground: 220 10% 94%;
 
-    --border: 220 15% 20%;
-    --input: 220 15% 20%;
-    --ring: 220 10% 80%;
+  --destructive: 0 62% 45%;
+  --destructive-foreground: 0 0% 100%;
 
-    /* Status colors - same in dark mode */
-    --status-operational: 152 69% 45%;
-    --status-degraded: 38 92% 55%;
-    --status-partial: 25 95% 58%;
-    --status-major: 0 72% 55%;
-    --status-maintenance: 217 91% 65%;
+  --border: 220 15% 20%;
+  --input: 220 15% 20%;
+  --ring: 220 10% 80%;
 
-    --status-banner-operational: 152 69% 35%;
-    --status-banner-degraded: 38 80% 40%;
-    --status-banner-partial: 25 85% 42%;
-    --status-banner-major: 0 65% 40%;
-    --status-banner-maintenance: 217 80% 45%;
-  }
+  --status-operational: 152 69% 45%;
+  --status-degraded: 38 92% 55%;
+  --status-partial: 25 95% 58%;
+  --status-major: 0 72% 55%;
+  --status-maintenance: 217 91% 65%;
+
+  --status-banner-operational: 152 69% 35%;
+  --status-banner-degraded: 38 80% 40%;
+  --status-banner-partial: 25 85% 42%;
+  --status-banner-major: 0 65% 40%;
+  --status-banner-maintenance: 217 80% 45%;
+}
+
+@theme inline {
+  --font-sans: 'Inter', system-ui, sans-serif;
+
+  --color-border: hsl(var(--border));
+  --color-input: hsl(var(--input));
+  --color-ring: hsl(var(--ring));
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+
+  --color-secondary: hsl(var(--secondary));
+  --color-secondary-foreground: hsl(var(--secondary-foreground));
+
+  --color-destructive: hsl(var(--destructive));
+  --color-destructive-foreground: hsl(var(--destructive-foreground));
+
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+
+  --color-accent: hsl(var(--accent));
+  --color-accent-foreground: hsl(var(--accent-foreground));
+
+  --color-popover: hsl(var(--popover));
+  --color-popover-foreground: hsl(var(--popover-foreground));
+
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
+
+  --color-status-operational: hsl(var(--status-operational));
+  --color-status-degraded: hsl(var(--status-degraded));
+  --color-status-partial: hsl(var(--status-partial));
+  --color-status-major: hsl(var(--status-major));
+  --color-status-maintenance: hsl(var(--status-maintenance));
+
+  --color-status-banner-operational: hsl(var(--status-banner-operational));
+  --color-status-banner-degraded: hsl(var(--status-banner-degraded));
+  --color-status-banner-partial: hsl(var(--status-banner-partial));
+  --color-status-banner-major: hsl(var(--status-banner-major));
+  --color-status-banner-maintenance: hsl(var(--status-banner-maintenance));
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+
+  --animate-accordion-down: accordion-down 0.2s ease-out;
+  --animate-accordion-up: accordion-up 0.2s ease-out;
+  --animate-fade-in: fade-in 0.3s ease-out;
+
+  --container-2xl: 1400px;
 }
 
 @layer base {
-  * {
-    @apply border-border;
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: hsl(var(--border));
   }
 
   html {
@@ -109,19 +162,35 @@
   body {
     @apply bg-background text-foreground antialiased;
   }
+
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
 }
 
 @layer utilities {
   .status-pulse {
     animation: pulse-status 2s ease-in-out infinite;
   }
+}
 
-  @keyframes pulse-status {
-    0%, 100% {
-      opacity: 1;
-    }
-    50% {
-      opacity: 0.6;
-    }
-  }
+@keyframes accordion-down {
+  from { height: 0; }
+  to { height: var(--radix-accordion-content-height); }
+}
+
+@keyframes accordion-up {
+  from { height: var(--radix-accordion-content-height); }
+  to { height: 0; }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pulse-status {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
 }

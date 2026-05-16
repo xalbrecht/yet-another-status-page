@@ -9,6 +9,12 @@ updates:
     labels:
       - "dependencies"
       - "npm"
+    ignore:
+      # Pinned to 9.x: eslint-plugin-react (transitive via eslint-config-next) caps eslint at ^9.7.
+      - dependency-name: "eslint"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@eslint/js"
+        update-types: ["version-update:semver-major"]
 
   - package-ecosystem: "docker"
     directory: "/"

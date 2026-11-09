@@ -6,6 +6,7 @@ import { ThemeProvider } from '@/components/theme-provider'
 import type { Media } from '@/payload-types'
 import type { Metadata } from 'next'
 import './globals.css'
+import { lang } from '@/lib/i18n'
 
 export const dynamic = 'force-dynamic'
 
@@ -55,7 +56,7 @@ export default function FrontendLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" className={inter.variable} suppressHydrationWarning>
+    <html lang={lang} className={inter.variable} suppressHydrationWarning>
       <body>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <ViewTransition>{children}</ViewTransition>

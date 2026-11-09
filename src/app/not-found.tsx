@@ -14,6 +14,7 @@ export const dynamic = 'force-dynamic'
 export default async function NotFound() {
   let siteName = 'Status'
   let footerText: unknown = null
+  let timezone: string | undefined
   let logoLightUrl: string | undefined
   let logoDarkUrl: string | undefined
 
@@ -22,6 +23,7 @@ export default async function NotFound() {
 
     siteName = settings.siteName || 'Status'
     footerText = settings.footerText
+    timezone = settings.timezone ?? undefined
     logoLightUrl = getMediaUrl(settings.logoLight)
     logoDarkUrl = getMediaUrl(settings.logoDark)
   } catch {
@@ -62,7 +64,7 @@ export default async function NotFound() {
               </div>
             </main>
 
-            <Footer footerText={footerText} />
+            <Footer footerText={footerText} timezone={timezone} />
           </div>
         </ThemeProvider>
       </body>

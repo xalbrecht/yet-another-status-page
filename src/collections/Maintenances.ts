@@ -422,10 +422,10 @@ export const Maintenances: CollectionConfig = {
         }
 
         const statusLabels: Record<string, string> = {
-          upcoming: 'Scheduled',
-          in_progress: 'In Progress',
-          completed: 'Completed',
-          cancelled: 'Cancelled',
+          upcoming: t('maintenance.upcoming'),
+          in_progress: t('maintenance.in_progress'),
+          completed: t('maintenance.completed'),
+          cancelled: t('maintenance.cancelled'),
         }
         const title = doc.title || 'Maintenance'
         const shortId = doc.shortId || ''

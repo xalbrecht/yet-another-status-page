@@ -70,7 +70,7 @@ export function renderIcs(siteName: string, maintenances: Maintenance[]): string
     'PRODID:-//Yet Another Status Page//EN',
     'CALSCALE:GREGORIAN',
     'METHOD:PUBLISH',
-    `X-WR-CALNAME:${escapeText(siteName)} Maintenance`,
+    `X-WR-CALNAME:${escapeText(siteName)} ${t('ical.calendar')}`,
     'X-PUBLISHED-TTL:PT1H',
     ...maintenances.flatMap((m) => event(m, host)),
     'END:VCALENDAR',

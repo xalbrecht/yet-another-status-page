@@ -154,6 +154,7 @@ export const de: Record<TranslationKey, string> = {
   'feed.title': '{siteName} Status',
   'feed.maintenanceTag': 'Wartung',
   'feed.scheduled': 'Geplant:',
+  'ical.calendar': 'Wartungen',
   'ical.affected': 'Betroffene Dienste:',
   'ical.duration': 'Voraussichtliche Dauer:',
 }

@@ -154,6 +154,7 @@ export const en = {
   'feed.title': '{siteName} Status',
   'feed.maintenanceTag': 'Maintenance',
   'feed.scheduled': 'Scheduled:',
+  'ical.calendar': 'Maintenance',
   'ical.affected': 'Affected services:',
   'ical.duration': 'Expected duration:',
 } as const

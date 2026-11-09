@@ -261,10 +261,10 @@ export const Incidents: CollectionConfig = {
         }
 
         const statusLabels: Record<string, string> = {
-          investigating: 'Investigating',
-          identified: 'Identified',
-          monitoring: 'Monitoring',
-          resolved: 'Resolved',
+          investigating: t('incident.investigating'),
+          identified: t('incident.identified'),
+          monitoring: t('incident.monitoring'),
+          resolved: t('incident.resolved'),
         }
         const title = doc.title || 'Incident'
         const shortId = doc.shortId || ''
@@ -274,7 +274,7 @@ export const Incidents: CollectionConfig = {
         // On create, use the first update for the initial notification
         if (operation === 'create' && currentUpdates.length > 0) {
           const firstUpdate = currentUpdates[0]
-          const statusLabel = statusLabels[firstUpdate.status] || firstUpdate.status || 'Investigating'
+          const statusLabel = statusLabels[firstUpdate.status] || firstUpdate.status || t('incident.investigating')
           
           const notificationData: DeferredNotification = {
             docId: doc.id,

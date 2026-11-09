@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { t } from '@/lib/i18n'
 import { Copy, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -23,7 +24,7 @@ export function CopyLinkButton() {
       )}
     >
       {copied ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
-      {copied ? "Copied!" : "Copy link"}
+      {copied ? t("common.copied") : t("common.copyLink")}
     </button>
   );
 }

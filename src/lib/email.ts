@@ -1,4 +1,5 @@
 import nodemailer from 'nodemailer'
+import { lang, t } from '@/lib/i18n'
 import type { EmailSetting } from '@/payload-types'
 
 interface EmailOptions {
@@ -45,7 +46,7 @@ export async function sendEmail(
   try {
     const transporter = await createTransporter(emailSettings)
 
-    const fromName = emailSettings.smtpFromName || 'Status Page'
+    const fromName = emailSettings.smtpFromName || t('mail.fromName')
     const from = `"${fromName}" <${emailSettings.smtpFromAddress}>`
 
     const headers: Record<string, string> = {}
@@ -115,7 +116,7 @@ export function generateEmailHtml(options: {
 
   return `
 <!DOCTYPE html>
-<html lang="en">
+<html lang="${lang}">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -204,8 +205,8 @@ export function generateEmailHtml(options: {
     </div>
     ` : ''}
     <div class="footer">
-      <p>This email was sent from <a href="${siteUrl}">${siteName}</a></p>
-      ${unsubscribeUrl ? `<p><a href="${unsubscribeUrl}">Unsubscribe from status updates</a></p>` : ''}
+      <p>${t('mail.sentFrom')} <a href="${siteUrl}">${siteName}</a></p>
+      ${unsubscribeUrl ? `<p><a href="${unsubscribeUrl}">${t('mail.unsubscribe')}</a></p>` : ''}
     </div>
   </div>
 </body>

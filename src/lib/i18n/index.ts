@@ -15,3 +15,8 @@ export const lang: Lang = LANG
 export function t(key: TranslationKey): string {
   return dictionaries[LANG][key] ?? en[key]
 }
+
+// Text mit Platzhaltern der Form {name}: tf('footer.timezone', { timezone: 'UTC' })
+export function tf(key: TranslationKey, vars: Record<string, string | number>): string {
+  return t(key).replace(/\{(\w+)\}/g, (m, name) => (name in vars ? String(vars[name]) : m))
+}

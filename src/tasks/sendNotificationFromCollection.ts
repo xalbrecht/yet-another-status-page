@@ -1,4 +1,5 @@
 import type { BasePayload } from 'payload'
+import { t, tf } from '@/lib/i18n'
 import { sendBulkEmails, generateEmailHtml } from '@/lib/email'
 import { sendBulkSms, formatSmsMessage } from '@/lib/sms'
 import { getServerUrl } from '@/lib/utils'
@@ -110,9 +111,9 @@ export async function sendNotificationFromCollectionHandler({ input, req }: Task
 
         const html = generateEmailHtml({
           siteName,
-          title: subject || itemTitle || 'Status Update',
+          title: subject || itemTitle || t('mail.defaultTitle'),
           body: emailBody || '',
-          ctaText: 'View Status',
+          ctaText: t('mail.cta'),
           ctaUrl: itemUrl,
           unsubscribeUrl,
           siteUrl,
@@ -121,7 +122,7 @@ export async function sendNotificationFromCollectionHandler({ input, req }: Task
 
         return {
           to: subscriber.email!,
-          subject: subject || `[${siteName}] Status Update`,
+          subject: subject || tf('mail.defaultSubject', { siteName }),
           html,
           unsubscribeUrl,
         }

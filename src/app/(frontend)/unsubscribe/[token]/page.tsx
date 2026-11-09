@@ -1,4 +1,5 @@
 import { getPayload } from 'payload'
+import { tf } from '@/lib/i18n'
 import config from '@payload-config'
 import type { Metadata } from 'next'
 import { UnsubscribeClient } from './UnsubscribeClient'
@@ -19,8 +20,8 @@ export async function generateMetadata(): Promise<Metadata> {
   const siteName = settings.siteName || 'Status Page'
 
   return {
-    title: `Unsubscribe - ${siteName}`,
-    description: `Manage your subscription preferences for ${siteName} status updates.`,
+    title: tf('unsub.metaTitle', { siteName }),
+    description: tf('unsub.metaDescription', { siteName }),
   }
 }
 

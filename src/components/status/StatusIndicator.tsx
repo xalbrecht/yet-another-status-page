@@ -1,6 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
+import { t } from '@/lib/i18n'
 
 export type ServiceStatus = "operational" | "degraded" | "partial" | "major" | "maintenance";
 
@@ -12,27 +13,27 @@ interface StatusIndicatorProps {
 
 const statusConfig = {
   operational: {
-    label: "Operational",
+    label: t("status.operational"),
     dotClass: "bg-status-operational",
     textClass: "text-status-operational",
   },
   degraded: {
-    label: "Degraded",
+    label: t("status.degraded"),
     dotClass: "bg-status-degraded",
     textClass: "text-status-degraded",
   },
   partial: {
-    label: "Partial Outage",
+    label: t("status.partial"),
     dotClass: "bg-status-partial",
     textClass: "text-status-partial",
   },
   major: {
-    label: "Major Outage",
+    label: t("status.major"),
     dotClass: "bg-status-major",
     textClass: "text-status-major",
   },
   maintenance: {
-    label: "Maintenance",
+    label: t("status.maintenance"),
     dotClass: "bg-status-maintenance",
     textClass: "text-status-maintenance",
   },

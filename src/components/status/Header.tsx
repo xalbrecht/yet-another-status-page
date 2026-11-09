@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { t } from '@/lib/i18n'
 import Link from "next/link";
 import { ThemeToggle } from "./ThemeToggle";
 import { cn } from "@/lib/utils";
@@ -17,7 +18,7 @@ export function Header({
   siteName,
   logoLightUrl,
   logoDarkUrl,
-  subtitle = "System Status",
+  subtitle = t("header.subtitle"),
   children,
 }: HeaderProps) {
   const hasLogo = Boolean(logoLightUrl || logoDarkUrl);

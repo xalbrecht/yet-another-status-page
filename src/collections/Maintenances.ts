@@ -1,4 +1,5 @@
 import type { CollectionConfig } from 'payload'
+import { t } from '@/lib/i18n'
 import { generateShortId } from '@/lib/shortId'
 import { standardAccess } from '@/lib/access'
 import { getServerUrl } from '@/lib/utils'
@@ -161,23 +162,23 @@ async function createMaintenanceNotificationDeferred(data: DeferredNotification)
       const template = smsSettings.templateMaintenanceUpdate || '[{{siteName}}] 🔧 {{title}} | {{status}} | {{schedule}} | {{message}} | {{url}}'
       smsBody = interpolateTemplate(template, templateVars)
     } else {
-      const template = smsSettings.templateMaintenanceNew || '[{{siteName}}] 🔧 MAINTENANCE: {{title}} | {{schedule}} | {{url}}'
+      const template = smsSettings.templateMaintenanceNew || t('notif.smsMaintNew')
       smsBody = interpolateTemplate(template, templateVars)
     }
     
     const emailBody = data.isUpdate
-      ? `Maintenance Status: ${data.statusLabel}\n\n${data.message || ''}\n\nView full details: ${url}`
-      : `A maintenance window has been scheduled.\n\nScheduled Start: ${data.startTimeStr || 'TBD'}\n${data.endTimeStr ? `Scheduled End: ${data.endTimeStr}\n` : ''}${data.duration ? `Expected Duration: ${data.duration}\n` : ''}\nWe will notify you when the maintenance begins and completes.\n\nView full details: ${url}`
+      ? `${t('notif.maintStatus')}: ${data.statusLabel}\n\n${data.message || ''}\n\n${t('notif.viewDetails')}: ${url}`
+      : `${t('notif.maintScheduled')}\n\n${t('notif.maintStart')}: ${data.startTimeStr || t('notif.maintTbd')}\n${data.endTimeStr ? `${t('notif.maintEnd')}: ${data.endTimeStr}\n` : ''}${data.duration ? `${t('notif.maintDuration')}: ${data.duration}\n` : ''}\n${t('notif.maintNotify')}\n\n${t('notif.viewDetails')}: ${url}`
     
     const notification = await payload.create({
       collection: 'notifications',
       data: {
-        title: data.isUpdate ? `[Maintenance ${data.statusLabel}] ${data.title}` : `[Scheduled Maintenance] ${data.title}`,
+        title: data.isUpdate ? `[${t('notif.maintTag')} ${data.statusLabel}] ${data.title}` : `[${t('notif.maintScheduledTag')}] ${data.title}`,
         relatedMaintenance: typeof data.docId === 'string' ? parseInt(data.docId, 10) : data.docId,
         updateIndex: data.updateIndex,
         channel: 'both',
         status: 'draft',
-        subject: data.isUpdate ? `[Maintenance ${data.statusLabel}] ${data.title}` : `[Scheduled Maintenance] ${data.title}`,
+        subject: data.isUpdate ? `[${t('notif.maintTag')} ${data.statusLabel}] ${data.title}` : `[${t('notif.maintScheduledTag')}] ${data.title}`,
         emailBody,
         smsBody,
       },

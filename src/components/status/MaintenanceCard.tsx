@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { t } from '@/lib/i18n'
 import { Wrench, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { RichText } from "@/components/RichText";
@@ -39,10 +40,10 @@ const badgeStyles: Record<MaintenanceItemStatus, string> = {
 };
 
 const badgeLabels: Record<MaintenanceItemStatus, string> = {
-  upcoming: "Upcoming",
-  in_progress: "In Progress",
-  completed: "Completed",
-  cancelled: "Cancelled",
+  upcoming: t("maintenance.badgeUpcoming"),
+  in_progress: t("maintenance.in_progress"),
+  completed: t("maintenance.completed"),
+  cancelled: t("maintenance.cancelled"),
 };
 
 export function MaintenanceCard({ maintenance }: MaintenanceCardProps) {
@@ -95,7 +96,7 @@ export function MaintenanceCard({ maintenance }: MaintenanceCardProps) {
                 <Clock className="h-3 w-3" />
                 {maintenance.scheduledAt}
               </span>
-              {maintenance.duration && <span>Duration: {maintenance.duration}</span>}
+              {maintenance.duration && <span>{t("maintenance.duration")}: {maintenance.duration}</span>}
             </div>
             {maintenance.affectedServices.length > 0 && (
               <div className="flex flex-wrap gap-1.5 pt-1">

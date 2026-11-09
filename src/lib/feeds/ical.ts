@@ -1,4 +1,5 @@
 import type { Maintenance } from '@/payload-types'
+import { t } from '@/lib/i18n'
 import { lexicalToText } from '@/lib/lexical'
 import { getServerUrl } from '@/lib/utils'
 
@@ -37,8 +38,8 @@ function event(doc: Maintenance, host: string): string[] {
     .map((s) => s.name)
   const description = [
     lexicalToText(doc.description),
-    services.length ? `Affected services: ${services.join(', ')}` : null,
-    doc.duration ? `Expected duration: ${doc.duration}` : null,
+    services.length ? `${t('ical.affected')} ${services.join(', ')}` : null,
+    doc.duration ? `${t('ical.duration')} ${doc.duration}` : null,
     url,
   ]
     .filter(Boolean)

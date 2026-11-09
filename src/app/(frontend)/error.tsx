@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect } from 'react'
+import { t } from '@/lib/i18n'
 import Link from 'next/link'
 
 export default function Error({
@@ -35,28 +36,28 @@ export default function Error({
           </div>
         </div>
         <h1 className="mb-2 text-2xl font-bold text-gray-900 dark:text-white">
-          Something went wrong
+          {t('error.title')}
         </h1>
         <p className="mb-6 text-gray-600 dark:text-gray-400">
-          We encountered an unexpected error. Our team has been notified.
+          {t('error.text')}
         </p>
         <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
           <button
             onClick={reset}
             className="rounded-lg bg-blue-600 px-6 py-3 font-medium text-white transition-colors hover:bg-blue-700"
           >
-            Try again
+            {t('error.retry')}
           </button>
           <Link
             href="/"
             className="rounded-lg border border-gray-300 bg-white px-6 py-3 font-medium text-gray-700 transition-colors hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
           >
-            Go to Status Page
+            {t('error.goStatus')}
           </Link>
         </div>
         {error.digest && (
           <p className="mt-6 text-xs text-gray-400 dark:text-gray-500">
-            Error ID: {error.digest}
+            {t('error.id')} {error.digest}
           </p>
         )}
       </div>

@@ -7,6 +7,7 @@ import { Footer } from '@/components/status/Footer'
 import { ThemeProvider } from '@/components/theme-provider'
 import { inter } from '@/lib/fonts'
 import { getMediaUrl } from '@/lib/utils'
+import { lang } from '@/lib/i18n'
 
 export const dynamic = 'force-dynamic'
 
@@ -28,7 +29,7 @@ export default async function NotFound() {
   }
 
   return (
-    <html lang="en" className={inter.variable} suppressHydrationWarning>
+    <html lang={lang} className={inter.variable} suppressHydrationWarning>
       <body className="bg-background text-foreground antialiased">
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <div className="flex min-h-screen flex-col">

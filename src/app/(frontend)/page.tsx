@@ -6,6 +6,7 @@ import { computeOverallStatus, visibleMaintenanceWhere, type ServiceStatus } fro
 import { getMediaUrl } from '@/lib/utils'
 import { Header } from '@/components/status/Header'
 import { Footer } from '@/components/status/Footer'
+import { t } from '@/lib/i18n'
 import { Subscribe } from '@/components/status/SubscribeDialog'
 import { LoginButton } from '@/components/status/LoginButton'
 import { StatusBanner } from '@/components/status/StatusBanner'
@@ -233,7 +234,7 @@ export default async function StatusPage() {
         {/* Scheduled Maintenance */}
         {maintenances.length > 0 && (
           <section className="mb-10 animate-fade-in">
-            <h2 className="mb-4 text-xl font-bold text-foreground">Scheduled Maintenance</h2>
+            <h2 className="mb-4 text-xl font-bold text-foreground">{t('home.scheduledMaintenance')}</h2>
             <div className="space-y-4">
               {maintenances.map((maintenance) => (
                 <MaintenanceCard key={maintenance.id} maintenance={maintenance} />
@@ -244,7 +245,7 @@ export default async function StatusPage() {
 
         {/* Past Incidents */}
         <section className="animate-fade-in">
-          <h2 className="mb-6 text-xl font-bold text-foreground">Past Incidents</h2>
+          <h2 className="mb-6 text-xl font-bold text-foreground">{t('home.pastIncidents')}</h2>
           <IncidentTimelineWithLinks days={pastIncidents} />
           <div className="mt-6 text-center">
             <Link

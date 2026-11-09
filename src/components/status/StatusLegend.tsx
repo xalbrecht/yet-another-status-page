@@ -1,13 +1,14 @@
 "use client";
 
 import { CheckCircle2, AlertTriangle, AlertCircle, XCircle, Wrench } from "lucide-react";
+import { t } from '@/lib/i18n'
 
 const legendItems = [
-  { icon: CheckCircle2, label: "Operational", colorClass: "text-status-operational" },
-  { icon: AlertTriangle, label: "Degraded Performance", colorClass: "text-status-degraded" },
-  { icon: AlertCircle, label: "Partial Outage", colorClass: "text-status-partial" },
-  { icon: XCircle, label: "Major Outage", colorClass: "text-status-major" },
-  { icon: Wrench, label: "Maintenance", colorClass: "text-status-maintenance" },
+  { icon: CheckCircle2, label: t("status.operational"), colorClass: "text-status-operational" },
+  { icon: AlertTriangle, label: t("status.legendDegraded"), colorClass: "text-status-degraded" },
+  { icon: AlertCircle, label: t("status.partial"), colorClass: "text-status-partial" },
+  { icon: XCircle, label: t("status.major"), colorClass: "text-status-major" },
+  { icon: Wrench, label: t("status.maintenance"), colorClass: "text-status-maintenance" },
 ];
 
 export function StatusLegend() {

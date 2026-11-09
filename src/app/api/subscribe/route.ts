@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { t } from '@/lib/i18n'
 import { getPayload } from 'payload'
 import config from '@payload-config'
 import type { EmailSetting, SmsSetting } from '@/payload-types'
@@ -87,7 +88,7 @@ export async function POST(request: NextRequest) {
 
     if (!rateLimit.allowed) {
       return NextResponse.json(
-        { error: 'Too many subscription attempts. Please try again later.' },
+        { error: t('api.tooMany') },
         {
           status: 429,
           headers: {
@@ -106,7 +107,7 @@ export async function POST(request: NextRequest) {
     // Validate input
     if (!type || !['email', 'sms'].includes(type)) {
       return NextResponse.json(
-        { error: 'Invalid subscription type' },
+        { error: t('api.invalidType') },
         { status: 400 }
       )
     }
@@ -123,14 +124,14 @@ export async function POST(request: NextRequest) {
       // Check if SMTP is configured
       if (!isEmailConfigured(emailSettings)) {
         return NextResponse.json(
-          { error: 'Email notifications are not available. Please contact the administrator.' },
+          { error: t('api.emailUnavailable') },
           { status: 503 }
         )
       }
 
       if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
         return NextResponse.json(
-          { error: 'Invalid email address' },
+          { error: t('api.invalidEmail') },
           { status: 400 }
         )
       }
@@ -150,7 +151,7 @@ export async function POST(request: NextRequest) {
 
       if (existing.docs.length > 0) {
         return NextResponse.json(
-          { error: 'This email is already subscribed' },
+          { error: t('api.emailExists') },
           { status: 409 }
         )
       }
@@ -170,14 +171,14 @@ export async function POST(request: NextRequest) {
       // Check if SMS is configured
       if (!isSmsConfigured(smsSettings)) {
         return NextResponse.json(
-          { error: 'SMS notifications are not available. Please contact the administrator.' },
+          { error: t('api.smsUnavailable') },
           { status: 503 }
         )
       }
 
       if (!phone || !/^\+?[1-9]\d{6,14}$/.test(phone)) {
         return NextResponse.json(
-          { error: 'Invalid phone number' },
+          { error: t('api.invalidPhone') },
           { status: 400 }
         )
       }
@@ -197,7 +198,7 @@ export async function POST(request: NextRequest) {
 
       if (existing.docs.length > 0) {
         return NextResponse.json(
-          { error: 'This phone number is already subscribed' },
+          { error: t('api.phoneExists') },
           { status: 409 }
         )
       }
@@ -222,7 +223,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Error creating subscription:', error)
     return NextResponse.json(
-      { error: 'Failed to create subscription' },
+      { error: t('api.createFailed') },
       { status: 500 }
     )
   }
@@ -246,7 +247,7 @@ export async function GET() {
   } catch (error) {
     console.error('Error checking subscription availability:', error)
     return NextResponse.json(
-      { error: 'Failed to check subscription availability' },
+      { error: t('api.availabilityFailed') },
       { status: 500 }
     )
   }

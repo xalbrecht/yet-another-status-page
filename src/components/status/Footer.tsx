@@ -1,6 +1,7 @@
 'use client'
 
 import { RichText } from '@/components/RichText'
+import { t } from '@/lib/i18n'
 import { DEFAULT_TIMEZONE, formatTimezoneNotice } from '@/lib/datetime'
 
 interface FooterProps {
@@ -30,10 +31,10 @@ export function Footer({ footerText, timezone }: FooterProps) {
             <p className="text-xs text-muted-foreground/80">
               {formatTimezoneNotice(timezone || DEFAULT_TIMEZONE)}
             </p>
-            <nav aria-label="Machine-readable formats" className="flex gap-3 text-xs text-muted-foreground/80">
+            <nav aria-label={t('footer.machineReadable')} className="flex gap-3 text-xs text-muted-foreground/80">
               <a href="https://docs.yasp.io/api/public-api.html" target="_blank" rel="noopener noreferrer" className="hover:text-foreground">API</a>
-              <a href="/feed.atom" type="application/atom+xml" className="hover:text-foreground">Atom feed</a>
-              <a href="/maintenances.ics" type="text/calendar" className="hover:text-foreground">Maintenance calendar</a>
+              <a href="/feed.atom" type="application/atom+xml" className="hover:text-foreground">{t('footer.atom')}</a>
+              <a href="/maintenances.ics" type="text/calendar" className="hover:text-foreground">{t('footer.calendar')}</a>
             </nav>
           </div>
           <a
@@ -41,7 +42,7 @@ export function Footer({ footerText, timezone }: FooterProps) {
             target="_blank"
             rel="noopener noreferrer"
             className="flex shrink-0 items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
-            aria-label="View source on GitHub"
+            aria-label={t('footer.github')}
           >
             <svg
               className="h-5 w-5"

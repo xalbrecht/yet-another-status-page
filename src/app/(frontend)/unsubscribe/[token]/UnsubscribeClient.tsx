@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { t, tf } from '@/lib/i18n'
 import Link from 'next/link'
 import { CheckCircle, XCircle, AlertTriangle } from 'lucide-react'
 
@@ -52,11 +53,10 @@ export function UnsubscribeClient({
               <XCircle className="w-8 h-8 text-destructive" />
             </div>
             <h1 className="text-2xl font-bold text-foreground mb-2">
-              Invalid Unsubscribe Link
+              {t('unsub.invalidTitle')}
             </h1>
             <p className="text-muted-foreground mb-6">
-              This unsubscribe link is invalid or has expired. If you need to unsubscribe,
-              please use the link from a recent notification email.
+              {t('unsub.invalidText')}
             </p>
           </>
         )}
@@ -67,10 +67,10 @@ export function UnsubscribeClient({
               <CheckCircle className="w-8 h-8 text-muted-foreground" />
             </div>
             <h1 className="text-2xl font-bold text-foreground mb-2">
-              Already Unsubscribed
+              {t('unsub.alreadyTitle')}
             </h1>
             <p className="text-muted-foreground mb-6">
-              You have already been unsubscribed from {siteName} status updates.
+              {tf('unsub.alreadyText', { siteName })}
             </p>
           </>
         )}
@@ -81,15 +81,15 @@ export function UnsubscribeClient({
               <AlertTriangle className="w-8 h-8 text-status-maintenance" />
             </div>
             <h1 className="text-2xl font-bold text-foreground mb-2">
-              Unsubscribe from Updates
+              {t('unsub.confirmTitle')}
             </h1>
             <p className="text-muted-foreground mb-2">
-              Are you sure you want to stop receiving {subscriberType} notifications from{' '}
-              <strong>{siteName}</strong>?
+              {t('unsub.confirmBefore')} {subscriberType === 'email' ? t('unsub.typeEmail') : t('unsub.typeSms')}{t('unsub.confirmMid')}{' '}
+              <strong>{siteName}</strong> {t('unsub.confirmAfter')}
             </p>
             {subscriberContact && (
               <p className="text-sm text-muted-foreground mb-6">
-                {subscriberType === 'email' ? 'Email' : 'Phone'}: {subscriberContact}
+                {subscriberType === 'email' ? t('unsub.labelEmail') : t('unsub.labelPhone')}: {subscriberContact}
               </p>
             )}
             <div className="flex flex-col gap-3">
@@ -98,13 +98,13 @@ export function UnsubscribeClient({
                 disabled={isUnsubscribing}
                 className="w-full py-3 px-4 rounded-lg bg-destructive text-destructive-foreground font-medium hover:bg-destructive/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
-                {isUnsubscribing ? 'Unsubscribing...' : 'Yes, Unsubscribe Me'}
+                {isUnsubscribing ? t('unsub.submitting') : t('unsub.submit')}
               </button>
               <Link
                 href="/"
                 className="w-full py-3 px-4 rounded-lg border border-border text-foreground font-medium hover:bg-accent transition-colors"
               >
-                Cancel
+                {t('unsub.cancel')}
               </Link>
             </div>
           </>
@@ -116,11 +116,10 @@ export function UnsubscribeClient({
               <CheckCircle className="w-8 h-8 text-status-operational" />
             </div>
             <h1 className="text-2xl font-bold text-foreground mb-2">
-              Successfully Unsubscribed
+              {t('unsub.successTitle')}
             </h1>
             <p className="text-muted-foreground mb-6">
-              You will no longer receive status updates from {siteName}.
-              You can resubscribe at any time from our status page.
+              {tf('unsub.successText', { siteName })}
             </p>
           </>
         )}
@@ -131,10 +130,10 @@ export function UnsubscribeClient({
               <XCircle className="w-8 h-8 text-destructive" />
             </div>
             <h1 className="text-2xl font-bold text-foreground mb-2">
-              Something Went Wrong
+              {t('unsub.errorTitle')}
             </h1>
             <p className="text-muted-foreground mb-6">
-              We couldn&apos;t process your unsubscribe request. Please try again later.
+              {t('unsub.errorText')}
             </p>
           </>
         )}
@@ -143,7 +142,7 @@ export function UnsubscribeClient({
           href="/"
           className="text-sm text-primary hover:text-primary/80 transition-colors"
         >
-          ← Return to Status Page
+          {t('unsub.back')}
         </Link>
       </div>
     </div>

@@ -6,7 +6,7 @@ import { computeOverallStatus, visibleMaintenanceWhere, type ServiceStatus } fro
 import { getMediaUrl } from '@/lib/utils'
 import { Header } from '@/components/status/Header'
 import { Footer } from '@/components/status/Footer'
-import { t } from '@/lib/i18n'
+import { t, tf } from '@/lib/i18n'
 import { Subscribe } from '@/components/status/SubscribeDialog'
 import { LoginButton } from '@/components/status/LoginButton'
 import { StatusBanner } from '@/components/status/StatusBanner'
@@ -29,7 +29,7 @@ export const revalidate = 0
 export async function generateMetadata(): Promise<Metadata> {
   const settings = await getSettings()
   
-  const title = settings.metaTitle || `${settings.siteName} Status`
+  const title = settings.metaTitle || tf('meta.homeTitle', { siteName: settings.siteName })
   const description = settings.metaDescription || `Real-time status and incident updates for ${settings.siteName} services`
 
   return {
@@ -252,7 +252,7 @@ export default async function StatusPage() {
               href="/history"
               className="text-sm font-medium text-primary hover:text-primary/80 transition-colors"
             >
-              ← View incident history
+              {t('home.viewHistory')}
             </Link>
           </div>
         </section>

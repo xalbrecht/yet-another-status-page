@@ -67,6 +67,12 @@ test.describe('Lagebild', () => {
     await expect(panel).toBeVisible()
     await expect(panel.getByText(`Aufklappen Dienst ${id}`)).toBeVisible()
     await expect(panel.locator('[role="img"]').first()).toBeVisible()
+    // Balken aus 144 Strichen zu 5 Minuten, der Tooltip nennt die Uhrzeit und den Zustand
+    const strokes = panel.locator('[role="img"]').first().locator('[data-i]')
+    await expect(strokes).toHaveCount(144)
+    await strokes.nth(100).hover()
+    await expect(page.getByRole('tooltip')).toContainText(/\d{2}:\d{2}/)
+    await expect(page.getByRole('tooltip')).toContainText(/Schwerer Ausfall|Major Outage|Keine Daten|No data/)
     // Dienst war erst seit dem Anlegen bekannt und seitdem ausgefallen: Verfügbarkeit unter 100 %
     await expect(panel.getByText(/\d+[.,]\d{2} %/)).toBeVisible()
 

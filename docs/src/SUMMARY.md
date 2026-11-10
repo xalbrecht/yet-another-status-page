@@ -13,6 +13,7 @@
 
 - [Overview](./admin/overview.md)
 - [Managing Services](./admin/services.md)
+- [Situation Overview](./admin/situation-overview.md)
 - [Incidents](./admin/incidents.md)
 - [Maintenances](./admin/maintenances.md)
 - [Notifications](./admin/notifications.md)

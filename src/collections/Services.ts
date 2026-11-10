@@ -22,6 +22,30 @@ export const Services: CollectionConfig = {
   },
   orderable: true,
   access: standardAccess,
+  hooks: {
+    afterChange: [
+      async ({ doc, previousDoc, operation, req }) => {
+        // Zustandsänderung ins Statusprotokoll schreiben (Grundlage des Lagebilds)
+        if (operation === 'create' || previousDoc?.status !== doc.status) {
+          await req.payload.create({
+            collection: 'service-status-events',
+            data: { service: doc.id, status: doc.status, changedAt: new Date().toISOString() },
+            req,
+          })
+        }
+        return doc
+      },
+    ],
+    afterDelete: [
+      async ({ id, req }) => {
+        await req.payload.delete({
+          collection: 'service-status-events',
+          where: { service: { equals: id } },
+          req,
+        })
+      },
+    ],
+  },
   fields: [
     {
       name: 'name',

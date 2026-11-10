@@ -3,6 +3,7 @@ import * as migration_20260112_163613_split_email_sms_settings from './20260112_
 import * as migration_20260516_125650_add_maintenance_retention from './20260516_125650_add_maintenance_retention';
 import * as migration_20260731_171745_add_api_key_strategy from './20260731_171745_add_api_key_strategy';
 import * as migration_20260821_192600_add_localization_settings from './20260821_192600_add_localization_settings';
+import * as migration_20261110_150700_add_lagebild from './20261110_150700_add_lagebild';
 
 export const migrations = [
   {
@@ -29,5 +30,10 @@ export const migrations = [
     up: migration_20260821_192600_add_localization_settings.up,
     down: migration_20260821_192600_add_localization_settings.down,
     name: '20260821_192600_add_localization_settings',
+  },
+  {
+    up: migration_20261110_150700_add_lagebild.up,
+    down: migration_20261110_150700_add_lagebild.down,
+    name: '20261110_150700_add_lagebild',
   },
 ];

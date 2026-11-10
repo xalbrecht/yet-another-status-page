@@ -5,6 +5,7 @@ import { standardAccess } from '@/lib/access'
 import { getServerUrl } from '@/lib/utils'
 import { localizedDateAdmin } from '@/lib/localizedDateAdmin'
 import { ta } from '@/lib/i18n/admin'
+import { syncServiceStatusesFromIncidents, uniqueServiceIds } from '@/lib/service-status-sync'
 
 export const incidentStatusOptions = [
   { label: ta('Investigating'), value: 'investigating' },
@@ -190,6 +191,21 @@ export const Incidents: CollectionConfig = {
       },
     },
     {
+      name: 'impact',
+      type: 'select',
+      required: true,
+      defaultValue: 'degraded',
+      label: ta('Impact on affected services'),
+      options: [
+        { label: ta('Degraded Performance'), value: 'degraded' },
+        { label: ta('Partial Outage'), value: 'partial' },
+        { label: ta('Major Outage'), value: 'major' },
+      ],
+      admin: {
+        description: ta('Status set on the affected services while the incident is open. Once resolved, the services return to Operational.'),
+      },
+    },
+    {
       name: 'updates',
       type: 'array',
       required: true,
@@ -233,6 +249,12 @@ export const Incidents: CollectionConfig = {
     },
   ],
   hooks: {
+    afterDelete: [
+      async ({ doc, req }) => {
+        // Gelöschte Störung gibt die Dienste wieder frei
+        await syncServiceStatusesFromIncidents(req.payload, uniqueServiceIds(doc.affectedServices), req)
+      },
+    ],
     beforeChange: [
       ({ data, operation }) => {
         data = data || {}
@@ -260,6 +282,16 @@ export const Incidents: CollectionConfig = {
       },
     ],
     afterChange: [
+      async ({ doc, previousDoc, req }) => {
+        // Zustand der betroffenen Dienste aus den offenen Störungen neu berechnen.
+        // Auch Dienste, die aus der Störung entfernt wurden, werden neu bewertet.
+        await syncServiceStatusesFromIncidents(
+          req.payload,
+          uniqueServiceIds(doc.affectedServices, previousDoc?.affectedServices),
+          req,
+        )
+        return doc
+      },
       async ({ doc, operation, previousDoc, req }) => {
         // Skip if triggered by our own update to prevent loops
         if (req.context?.skipNotificationCreation) {

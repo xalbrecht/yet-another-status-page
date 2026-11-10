@@ -128,6 +128,32 @@ test.describe('Lagebild', () => {
     await updateIncident(incident.id, { title: `Titel neu ${id}` })
     await page.reload()
     await expect(page.getByTestId('lagebild-a').getByText(`Titel neu ${id}`).first()).toBeVisible()
+
+  test('Variante B: Klick auf eine Kachel klappt die Dienste auf', async ({ page }) => {
+    const id = Date.now()
+    const group = await createServiceGroup({ name: `Variante B Gruppe ${id}`, icon: 'Server' })
+    const service = await createService({ name: `Variante B Dienst ${id}`, group: group.id })
+    await updateService(service.id, { status: 'partial' })
+    await updateSettings({ lagebildVariant: 'b' })
+
+    await page.goto('/')
+    const view = page.getByTestId('lagebild-b')
+    const tile = view.locator('button[aria-expanded]', { hasText: `Variante B Gruppe ${id}` })
+    const panel = page.getByTestId(`lagebild-panel-${group.id}`)
+
+    await expect(panel).toHaveCount(0)
+    await expect(tile).toHaveAttribute('aria-expanded', 'false')
+
+    await tile.click()
+    await expect(tile).toHaveAttribute('aria-expanded', 'true')
+    await expect(panel).toBeVisible()
+    await expect(panel.getByText(`Variante B Dienst ${id}`)).toBeVisible()
+    await expect(panel.locator('[role="img"]').first().locator('[data-i]')).toHaveCount(144)
+    await expect(panel.getByText(/\d+[.,]\d{2} %/)).toBeVisible()
+
+    // zweiter Klick schließt den Bereich
+    await tile.click()
+    await expect(panel).toHaveCount(0)
   })
 
   test('Rückschau: Vorgabe des Admins, Auswahl des Besuchers, ungültiger Wert', async ({ page }) => {

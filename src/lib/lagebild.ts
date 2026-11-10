@@ -172,6 +172,16 @@ export function computeAvailability(timeline: Timeline, windowStart: number, now
   return known === 0 ? null : ((known - down) / known) * 100
 }
 
+/**
+ * Zeitpunkt, ab dem im Fenster ein Zustand bekannt ist. `windowStart`, wenn schon vor dem Fenster einer bekannt war,
+ * sonst der erste Eintrag im Fenster. `null`: im Fenster ist kein Zustand bekannt.
+ */
+export function knownSince(timeline: Timeline, windowStart: number, now: number): number | null {
+  if (statusAt(timeline, windowStart) !== null) return windowStart
+  const first = timeline.find((entry) => entry.at > windowStart && entry.at <= now)
+  return first ? first.at : null
+}
+
 /** Verfügbarkeit mit zwei Nachkommastellen, abgerundet: 99,996 % erscheint nicht als 100,00 %. */
 export function formatAvailability(value: number | null, locale: string): string {
   if (value === null) return ''
@@ -215,6 +225,8 @@ export type LagebildService = {
   availability: number | null
   /** Verfügbarkeit als Text, z. B. „99,87 %“. Leer, wenn unbekannt. */
   availabilityLabel: string
+  /** Beginn der bekannten Zeit als Text („seit …“), wenn das Statusprotokoll kürzer zurückreicht als die Rückschau. Sonst leer. */
+  availabilitySince: string
 }
 
 export type LagebildGroup = {
@@ -383,6 +395,9 @@ export async function loadLagebild(
       services: groupServices.map((service) => {
         const timeline = timelines.get(String(service.id)) ?? []
         const availability = computeAvailability(timeline, windowStart, now)
+        const since = knownSince(timeline, windowStart, now)
+        const availabilitySince =
+          since !== null && since > windowStart ? tf('lagebild.since', { time: formatDateTime(new Date(since), dt) }) : ''
         return {
           id: String(service.id),
           name: service.name,
@@ -390,6 +405,7 @@ export async function loadLagebild(
           bars: computeBarRuns([timeline], barWindow),
           availability,
           availabilityLabel: formatAvailability(availability, dt.locale),
+          availabilitySince,
         }
       }),
     })

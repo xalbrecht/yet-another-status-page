@@ -316,7 +316,9 @@ function ServicePanel({
               </span>
               <span className="text-right text-sm font-semibold tabular-nums text-foreground">
                 {service.availabilityLabel || '–'}
-                <span className="block text-[11px] font-normal text-muted-foreground">{periodName}</span>
+                <span className="block text-[11px] font-normal text-muted-foreground">
+                  {service.availabilitySince || periodName}
+                </span>
               </span>
             </li>
           ))}

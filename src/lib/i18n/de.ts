@@ -190,5 +190,6 @@ export const de: Record<TranslationKey, string> = {
   'lagebild.barHours.12': '12 Stunden',
   'lagebild.barHours.24': '24 Stunden',
   'lagebild.yesterday': 'gestern',
+  'lagebild.since': 'seit {time}',
   'lagebild.servicesOf': 'Dienste der Gruppe {group}',
 }

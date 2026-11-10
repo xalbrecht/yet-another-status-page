@@ -190,6 +190,7 @@ export const en = {
   'lagebild.barHours.12': '12 hours',
   'lagebild.barHours.24': '24 hours',
   'lagebild.yesterday': 'yesterday',
+  'lagebild.since': 'since {time}',
   'lagebild.servicesOf': 'Services of group {group}',
 } as const
 

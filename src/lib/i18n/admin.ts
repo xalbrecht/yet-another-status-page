@@ -226,6 +226,18 @@ const adminDe: Record<string, string> = {
   'Notification not found': 'Benachrichtigung nicht gefunden',
   'Notification has already been sent': 'Benachrichtigung wurde bereits gesendet',
   'Notification is currently being processed': 'Benachrichtigung wird gerade verarbeitet',
+  'Situation overview': 'Lagebild',
+  'Display': 'Anzeige',
+  'Off': 'Aus',
+  'Variant A (tiles, bars below)': 'Variante A (Kacheln, Balken darunter)',
+  'Variant B (tiles with own bar)': 'Variante B (Kacheln mit eigenem Balken)',
+  'Both (for testing)': 'Beide (zum Testen)',
+  'Situation overview per service group on the start page. Variant A shows tiles with the bars of the last 12 hours below. Variant B shows a small bar in every tile. "Both" displays both variants one after the other to compare them.': 'Lagebild je Dienstgruppe auf der Startseite. Variante A zeigt Kacheln und darunter die Balken der letzten 12 Stunden. Variante B zeigt in jeder Kachel einen kleinen Balken. „Beide“ zeigt beide Varianten nacheinander, um sie zu vergleichen.',
+  'Automatic log of service status changes. Used for the situation overview.': 'Automatisches Protokoll der Zustandsänderungen von Diensten. Grundlage des Lagebilds.',
+  'Icon': 'Icon',
+  'Icon for this group in the situation overview on the status page': 'Icon dieser Gruppe im Lagebild auf der Statusseite',
+  'Impact on affected services': 'Auswirkung auf betroffene Dienste',
+  'Status set on the affected services while the incident is open. Once resolved, the services return to Operational.': 'Zustand, den die betroffenen Dienste erhalten, solange die Störung offen ist. Nach der Behebung kehren die Dienste auf „Betriebsbereit“ zurück.',
 }
 
 // Liefert den deutschen Text, bei NEXT_PUBLIC_UI_LANG=en den englischen Originaltext.

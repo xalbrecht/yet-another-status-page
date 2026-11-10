@@ -1004,6 +1004,10 @@ export interface Setting {
    */
   lagebildVariant?: ('off' | 'a' | 'b' | 'both') | null;
   /**
+   * Vorgabe für die Rückschau im Lagebild: Liste der Einschränkungen und Verfügbarkeit je Dienst. Besucher können sie auf der Statusseite ändern.
+   */
+  lagebildPeriodDays?: ('14' | '30' | '90' | '180' | '365') | null;
+  /**
    * How long completed and cancelled maintenances stay visible on the status page after they enter a terminal state.
    */
   maintenanceTerminalRetentionHours?: number | null;
@@ -1189,6 +1193,7 @@ export interface SettingsSelect<T extends boolean = true> {
   maintenanceModeEnabled?: T;
   customStatusMessage?: T;
   lagebildVariant?: T;
+  lagebildPeriodDays?: T;
   maintenanceTerminalRetentionHours?: T;
   timezone?: T;
   locale?: T;

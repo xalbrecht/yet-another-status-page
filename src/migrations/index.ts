@@ -5,6 +5,7 @@ import * as migration_20260731_171745_add_api_key_strategy from './20260731_1717
 import * as migration_20260821_192600_add_localization_settings from './20260821_192600_add_localization_settings';
 import * as migration_20261110_150700_add_lagebild from './20261110_150700_add_lagebild';
 import * as migration_20261110_170500_add_users_reset_password_requested_at from './20261110_170500_add_users_reset_password_requested_at';
+import * as migration_20261110_180000_add_lagebild_period_days from './20261110_180000_add_lagebild_period_days';
 
 export const migrations = [
   {
@@ -41,5 +42,10 @@ export const migrations = [
     up: migration_20261110_170500_add_users_reset_password_requested_at.up,
     down: migration_20261110_170500_add_users_reset_password_requested_at.down,
     name: '20261110_170500_add_users_reset_password_requested_at',
+  },
+  {
+    up: migration_20261110_180000_add_lagebild_period_days.up,
+    down: migration_20261110_180000_add_lagebild_period_days.down,
+    name: '20261110_180000_add_lagebild_period_days',
   },
 ];

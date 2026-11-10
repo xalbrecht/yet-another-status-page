@@ -26,7 +26,8 @@ The file runs in `serial` mode, because the tests change the **global settings**
 ### Not covered
 
 - Mobile layout and tooltips by touch.
-- German locale (the test environment uses `en-US`, so times show as `08:37 PM` and the "yesterday" prefix is not checked).
+- The German interface (the test environment runs in English). Only the specs of this fork that accept both languages would notice a missing German text.
+- German time formats (the test environment uses `en-US`, so times show as `08:37 PM` and the "yesterday" prefix is not checked).
 - Production build, memory and response time under load (see [Measuring](#measuring-performance-and-memory)).
 - Availability values against real data (only against test data).
 
@@ -99,7 +100,7 @@ Including the CA permanently in the test compose file is tracked in issue #22.
 - **A change by `router.replace` is only visible after the server has rendered the page.** On the dev server this can take several seconds. Give `toHaveURL` and the following assertions a longer timeout (`{ timeout: 30_000 }`).
 - **Reset global settings** in `afterAll`, also when the test fails.
 - **Unique names**: `Date.now()` in names of groups and services, and select by name, not by position.
-- **Language**: assertions that read texts accept German and English (`/(Letzte|Last) 24 (Stunden|hours)/`), because the language follows the environment.
+- **Language**: The test compose file builds the application with `NEXT_PUBLIC_UI_LANG=en`, because the upstream specs read English texts ("Page Not Found", "Past Incidents"). Without it the page is German (the default of this fork) and 11 of them fail. Specs written in this fork accept both languages (`/(Letzte|Last) 24 (Stunden|hours)/`), so they pass in either setting.
 
 ## Measuring performance and memory
 
@@ -141,3 +142,4 @@ Increase the load in small steps and stop at about 80 % of the limit. A containe
 | First test times out, later ones pass | Cold dev server | Warm up with `curl`, raise `--timeout` |
 | `toHaveURL` never matches after `selectOption` | Not hydrated yet, or two quick address changes | Wait for hydration, separate the steps |
 | Test passes alone, fails in the full run | Test depends on global settings of another test | Set the settings it needs at its start |
+| Many tests fail with "element not found" for English texts | Application was built in German (`NEXT_PUBLIC_UI_LANG` not `en`) | Use `docker-compose.test.yml`, or set `NEXT_PUBLIC_UI_LANG=en` when you start the dev server by hand |

@@ -10,7 +10,7 @@ import { statusBg } from './status-styles'
 type Props = {
   runs: BarRun[]
   /** Zeitfenster des Balkens, daraus ergibt sich die Uhrzeit eines Strichs */
-  window: BarWindow & { locale: string; timeZone: string }
+  window: BarWindow & { locale: string; timeZone: string; yesterday: string }
   heightClass?: string
   label: string
 }
@@ -27,6 +27,9 @@ export function StatusBar({ runs, window: bar, heightClass = 'h-6', label }: Pro
     () => new Intl.DateTimeFormat(bar.locale, { hour: '2-digit', minute: '2-digit', timeZone: bar.timeZone }),
     [bar.locale, bar.timeZone],
   )
+
+  // Kalendertag in der Zeitzone der Statusseite, für „gestern“ vor der Uhrzeit
+  const day = useMemo(() => new Intl.DateTimeFormat('en-CA', { timeZone: bar.timeZone }), [bar.timeZone])
 
   useEffect(() => {
     if (!tip) return
@@ -73,6 +76,7 @@ export function StatusBar({ runs, window: bar, heightClass = 'h-6', label }: Pro
           style={{ left: tip.x, top: tip.y - 6 }}
           className="pointer-events-none fixed z-50 -translate-x-1/2 -translate-y-full whitespace-nowrap rounded-md bg-foreground px-2 py-1 text-xs font-semibold tabular-nums text-background shadow-md"
         >
+          {day.format(endOfSlot) === day.format(bar.nowMs) ? '' : `${bar.yesterday} `}
           {clock.format(endOfSlot)}
           <span className="block text-[11px] font-medium opacity-85">
             {tipStatus ? statusLabel(tipStatus) : t('lagebild.noData')}

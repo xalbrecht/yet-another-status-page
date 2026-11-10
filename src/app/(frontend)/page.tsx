@@ -15,7 +15,7 @@ import { MaintenanceCard } from '@/components/status/MaintenanceCard'
 import { IncidentTimelineWithLinks } from '@/components/status/IncidentTimeline'
 import { StatusLegend } from '@/components/status/StatusLegend'
 import { Lagebild } from '@/components/status/lagebild/Lagebild'
-import { loadLagebild } from '@/lib/lagebild'
+import { loadLagebild, parsePeriodDays, type PeriodDays } from '@/lib/lagebild'
 import {
   addZonedDays,
   formatDate,
@@ -50,7 +50,7 @@ export async function generateMetadata(): Promise<Metadata> {
   }
 }
 
-async function getStatusData() {
+async function getStatusData(requestedPeriod: unknown) {
   const payload = await getCachedPayload()
   const settings = await getSettings()
   const dt = resolveDateTimeConfig(settings)
@@ -181,11 +181,15 @@ async function getStatusData() {
 
   // Lagebild nur laden, wenn es in den Website-Einstellungen aktiviert ist
   const lagebildVariant = settings.lagebildVariant ?? 'off'
-  const lagebild = lagebildVariant === 'off' ? null : await loadLagebild(payload, dt)
+  // Vorgabe aus den Einstellungen; der Besucher überschreibt sie mit ?rueckschau=<Tage>
+  const defaultPeriodDays = parsePeriodDays(settings.lagebildPeriodDays)
+  const periodDays: PeriodDays = parsePeriodDays(requestedPeriod, defaultPeriodDays)
+  const lagebild = lagebildVariant === 'off' ? null : await loadLagebild(payload, dt, periodDays)
 
   return {
     lagebildVariant,
     lagebild,
+    defaultPeriodDays,
     settings,
     overallStatus,
     serviceGroups: groupedServices,
@@ -197,11 +201,19 @@ async function getStatusData() {
 export default async function StatusPage({
   searchParams,
 }: {
-  searchParams: Promise<{ gruppe?: string | string[] }>
+  searchParams: Promise<{ gruppe?: string | string[]; rueckschau?: string | string[] }>
 }) {
-  const { settings, overallStatus, serviceGroups, maintenances, pastIncidents, lagebild, lagebildVariant } =
-    await getStatusData()
-  const { gruppe } = await searchParams
+  const { gruppe, rueckschau } = await searchParams
+  const {
+    settings,
+    overallStatus,
+    serviceGroups,
+    maintenances,
+    pastIncidents,
+    lagebild,
+    lagebildVariant,
+    defaultPeriodDays,
+  } = await getStatusData(rueckschau)
   const initialGroup = typeof gruppe === 'string' ? gruppe : null
 
   return (
@@ -224,7 +236,12 @@ export default async function StatusPage({
         {/* Lagebild je Dienstgruppe (Website-Einstellungen → Lagebild) */}
         {lagebild && lagebildVariant !== 'off' && (
           <div className="mb-10">
-            <Lagebild variant={lagebildVariant} data={lagebild} initialGroup={initialGroup} />
+            <Lagebild
+              variant={lagebildVariant}
+              data={lagebild}
+              initialGroup={initialGroup}
+              defaultPeriodDays={defaultPeriodDays}
+            />
           </div>
         )}
 

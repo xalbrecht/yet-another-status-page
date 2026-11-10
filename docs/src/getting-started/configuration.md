@@ -41,6 +41,7 @@ When deploying to Vercel, you need to configure Vercel Blob storage for media up
 |----------|-------------|---------|
 | `PORT` | Server port | `3000` |
 | `NODE_ENV` | Environment mode | `production` |
+| `LAGEBILD_CACHE_SECONDS` | How long the [situation overview](../admin/situation-overview.md) is cached for all visitors (0 to 3600, `0` switches the cache off) | `60` |
 
 ### SSO/OIDC Authentication (Optional)
 

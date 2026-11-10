@@ -2,6 +2,8 @@
 
 This directory contains the test suite for Yet Another Status Page.
 
+Running the tests behind a TLS-intercepting proxy, the situation overview tests, known pitfalls and how to measure performance and memory are described in [docs/src/development/testing.md](../docs/src/development/testing.md).
+
 ## E2E Tests (Playwright)
 
 End-to-end tests using Playwright to test the full application.

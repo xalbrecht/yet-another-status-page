@@ -14,6 +14,16 @@ export type LagebildStatus = Service['status']
 /** Anzahl der Striche eines Balkens: 12 Stunden zu 5 Minuten (24 Stunden zu 10 Minuten). */
 export const BAR_SLOTS = 144
 export const BAR_HOURS = 12
+
+/** Wählbarer Zeitraum des Balkens in Stunden. Der erste Wert ist die Vorgabe. */
+export const BAR_HOURS_OPTIONS = [12, 24] as const
+export type BarHours = (typeof BAR_HOURS_OPTIONS)[number]
+
+/** Wandelt einen Wert aus Adresse oder Einstellung in einen zulässigen Zeitraum des Balkens um, sonst `fallback`. */
+export function parseBarHours(value: unknown, fallback: BarHours = BAR_HOURS): BarHours {
+  const hours = Number(Array.isArray(value) ? value[0] : value)
+  return (BAR_HOURS_OPTIONS as readonly number[]).includes(hours) ? (hours as BarHours) : fallback
+}
 export const PERIOD_DAYS = 14
 
 /** Wählbare Rückschau in Tagen. Der erste Wert ist die Vorgabe. */
@@ -84,11 +94,17 @@ export type BarWindow = {
 }
 
 /** Fenster des Balkens. Die Abschnitte enden auf volle Vielfache ihrer Länge (12:05, 12:10 …), der letzte enthält `now`. */
-export function computeBarWindow(now: number, hours: number = BAR_HOURS): BarWindow {
+export function computeBarWindow(now: number, hours: BarHours = BAR_HOURS): BarWindow {
   const slotMinutes = (hours * 60) / BAR_SLOTS
   const slotMs = slotMinutes * MINUTE
   const endMs = Math.ceil(now / slotMs) * slotMs
   return { startMs: endMs - BAR_SLOTS * slotMs, slotMinutes, slots: BAR_SLOTS, nowMs: now }
+}
+
+/** Uhrzeit für Anfang und Ende des Balkens. Liegt sie nicht am heutigen Tag, steht „gestern“ davor. */
+function formatBarClock(date: Date, now: Date, dt: DateTimeConfig): string {
+  const clock = formatClockTime(date, dt)
+  return formatDateSlug(date, dt.timezone) === formatDateSlug(now, dt.timezone) ? clock : `${t('lagebild.yesterday')} ${clock}`
 }
 
 /** Schlechtester Zustand der Zeitleisten im Abschnitt [from, to). `null`: im Abschnitt ist kein Zustand bekannt. */
@@ -236,8 +252,10 @@ export type LagebildData = {
   /** Beginn und Ende des Balkens als Uhrzeit, z. B. „09:10“ und „21:10“ */
   barsFrom: string
   barsTo: string
-  /** Angaben, aus denen die Oberfläche die Uhrzeit eines Strichs berechnet */
-  bar: BarWindow & { locale: string; timeZone: string }
+  /** Gewählter Zeitraum des Balkens in Stunden */
+  barHours: BarHours
+  /** Angaben, aus denen die Oberfläche die Uhrzeit eines Strichs berechnet („gestern“ vor Zeiten des Vortags) */
+  bar: BarWindow & { locale: string; timeZone: string; yesterday: string }
 }
 
 export function statusLabel(status: LagebildStatus): string {
@@ -262,11 +280,12 @@ export async function loadLagebild(
   payload: Payload,
   dt: DateTimeConfig,
   periodDays: PeriodDays = PERIOD_DAYS,
+  barHours: BarHours = BAR_HOURS,
   nowDate = new Date(),
 ): Promise<LagebildData> {
   const now = nowDate.getTime()
   const windowStart = now - periodDays * DAY
-  const barWindow = computeBarWindow(now)
+  const barWindow = computeBarWindow(now, barHours)
 
   const [groupsResult, servicesResult] = await Promise.all([
     payload.find({ collection: 'service-groups', sort: '_order', depth: 0, pagination: false }),
@@ -420,8 +439,9 @@ export async function loadLagebild(
     periods,
     periodDays,
     days,
-    barsFrom: formatClockTime(new Date(barWindow.startMs), dt),
-    barsTo: formatClockTime(new Date(barWindow.nowMs), dt),
-    bar: { ...barWindow, locale: dt.locale, timeZone: dt.timezone },
+    barsFrom: formatBarClock(new Date(barWindow.startMs), nowDate, dt),
+    barsTo: formatBarClock(nowDate, nowDate, dt),
+    barHours,
+    bar: { ...barWindow, locale: dt.locale, timeZone: dt.timezone, yesterday: t('lagebild.yesterday') },
   }
 }

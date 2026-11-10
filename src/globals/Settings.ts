@@ -197,6 +197,22 @@ export const Settings: GlobalConfig = {
             ),
           },
         },
+        {
+          name: 'lagebildBarHours',
+          type: 'select',
+          label: ta('Bar period', 'Zeitraum der Balken'),
+          defaultValue: '12',
+          options: [
+            { label: ta('12 hours (5 minutes per stroke)', '12 Stunden (5 Minuten je Strich)'), value: '12' },
+            { label: ta('24 hours (10 minutes per stroke)', '24 Stunden (10 Minuten je Strich)'), value: '24' },
+          ],
+          admin: {
+            description: ta(
+              'Default period of the bars in the situation overview. Visitors can change it on the status page.',
+              'Vorgabe für den Zeitraum der Balken im Lagebild. Besucher können ihn auf der Statusseite ändern.',
+            ),
+          },
+        },
       ],
     },
     {

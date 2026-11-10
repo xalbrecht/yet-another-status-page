@@ -35,6 +35,7 @@ The start page calculates one bar per service and group. To keep the load low, t
 - A change of a service status, of a service or of a group discards the cache at once. The new state appears on the next load of the page.
 - Other changes (for example the title of an incident that is linked in the list of disruptions) appear after at most 60 seconds.
 - The bars and the times above them can be up to 60 seconds old.
+- The cache lives in each application instance (default cache handler of Next.js). With several instances (for example several Helm replicas) a change discards the cache only in the instance that received it. The others catch up after at most 60 seconds.
 
 ## Status log
 

@@ -231,6 +231,7 @@ export async function seedDemoData(payload: Payload) {
       draft: false,
       data: {
         title: 'API Gateway Latency Issues',
+        impact: 'partial',
         status: 'resolved',
         affectedServices: affectedServicesApi,
         updates: [
@@ -264,6 +265,7 @@ export async function seedDemoData(payload: Payload) {
       draft: false,
       data: {
         title: 'Authentication Service Degraded Performance',
+        impact: 'degraded',
         status: 'identified',
         affectedServices: affectedServicesAuth,
         updates: [
@@ -287,6 +289,7 @@ export async function seedDemoData(payload: Payload) {
       draft: false,
       data: {
         title: 'CDN Cache Invalidation Delay',
+        impact: 'degraded',
         status: 'resolved',
         affectedServices: affectedServicesCdn,
         updates: [

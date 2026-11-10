@@ -1035,6 +1035,10 @@ export interface Setting {
    */
   lagebildPeriodDays?: ('14' | '30' | '90' | '180' | '365') | null;
   /**
+   * Vorgabe für den Zeitraum der Balken im Lagebild. Besucher können ihn auf der Statusseite ändern.
+   */
+  lagebildBarHours?: ('12' | '24') | null;
+  /**
    * How long completed and cancelled maintenances stay visible on the status page after they enter a terminal state.
    */
   maintenanceTerminalRetentionHours?: number | null;
@@ -1221,6 +1225,7 @@ export interface SettingsSelect<T extends boolean = true> {
   customStatusMessage?: T;
   lagebildVariant?: T;
   lagebildPeriodDays?: T;
+  lagebildBarHours?: T;
   maintenanceTerminalRetentionHours?: T;
   timezone?: T;
   locale?: T;

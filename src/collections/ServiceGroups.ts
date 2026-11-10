@@ -1,6 +1,7 @@
 import type { CollectionConfig } from 'payload'
 import { standardAccess } from '@/lib/access'
 import { ta } from '@/lib/i18n/admin'
+import { DEFAULT_GROUP_ICON, groupIconOptions } from '@/lib/group-icons'
 
 export const ServiceGroups: CollectionConfig = {
   slug: 'service-groups',
@@ -47,6 +48,16 @@ export const ServiceGroups: CollectionConfig = {
       label: ta('Description'),
       admin: {
         description: ta('Optional description for this service group'),
+      },
+    },
+    {
+      name: 'icon',
+      type: 'select',
+      label: ta('Icon'),
+      defaultValue: DEFAULT_GROUP_ICON,
+      options: [...groupIconOptions],
+      admin: {
+        description: ta('Icon for this group in the situation overview on the status page'),
       },
     },
   ],

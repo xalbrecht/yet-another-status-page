@@ -186,6 +186,7 @@ export const en = {
   'lagebild.colBar': 'Last 12 hours',
   'lagebild.colAvailability': 'Availability',
   'lagebild.close': 'Close',
+  'lagebild.since': 'since {time}',
   'lagebild.servicesOf': 'Services of group {group}',
 } as const
 

@@ -79,26 +79,26 @@ export function computeBarRuns(timelines: Timeline[], now: number, dt: DateTimeC
   const slotMs = BAR_SLOT_MINUTES * MINUTE
   const count = (BAR_HOURS * HOUR) / slotMs
   const start = now - BAR_HOURS * HOUR
-  const runs: BarRun[] = []
-  let runStart = start
+  // Abschnitte zuerst nur mit Zeitpunkten bilden. Die Uhrzeit wird danach einmal je Abschnittsrand
+  // formatiert, nicht je Fenster: `formatTime` kostet etwa 0,6 ms, und die Seite rechnet je Dienst einen Balken.
+  const runs: Array<{ status: LagebildStatus | null; slots: number; startAt: number; endAt: number }> = []
   for (let i = 0; i < count; i++) {
     const slotEnd = start + (i + 1) * slotMs
     const status = groupStatusAt(timelines, slotEnd - 1)
     const last = runs[runs.length - 1]
     if (last && last.status === status) {
       last.slots += 1
-      last.to = formatTime(new Date(slotEnd), dt)
+      last.endAt = slotEnd
     } else {
-      runStart = start + i * slotMs
-      runs.push({
-        status,
-        slots: 1,
-        from: formatTime(new Date(runStart), dt),
-        to: formatTime(new Date(slotEnd), dt),
-      })
+      runs.push({ status, slots: 1, startAt: start + i * slotMs, endAt: slotEnd })
     }
   }
-  return runs
+  return runs.map((run) => ({
+    status: run.status,
+    slots: run.slots,
+    from: formatTime(new Date(run.startAt), dt),
+    to: formatTime(new Date(run.endAt), dt),
+  }))
 }
 
 export type RawPeriod = {

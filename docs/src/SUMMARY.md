@@ -24,6 +24,7 @@
 - [Local Setup](./development/local-setup.md)
 - [Docker Compose](./development/docker-compose.md)
 - [Architecture](./development/architecture.md)
+- [Testing](./development/testing.md)
 
 # API Reference
 

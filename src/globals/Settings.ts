@@ -178,6 +178,25 @@ export const Settings: GlobalConfig = {
             description: ta('Situation overview per service group on the start page. Variant A shows tiles with the bars of the last 12 hours below. Variant B shows a small bar in every tile. "Both" displays both variants one after the other to compare them.'),
           },
         },
+        {
+          name: 'lagebildPeriodDays',
+          type: 'select',
+          label: ta('Look-back period', 'Rückschau'),
+          defaultValue: '14',
+          options: [
+            { label: ta('14 days', '14 Tage'), value: '14' },
+            { label: ta('Month (30 days)', 'Monat (30 Tage)'), value: '30' },
+            { label: ta('Quarter (90 days)', 'Quartal (90 Tage)'), value: '90' },
+            { label: ta('Half year (180 days)', 'Halbjahr (180 Tage)'), value: '180' },
+            { label: ta('Year (365 days)', 'Jahr (365 Tage)'), value: '365' },
+          ],
+          admin: {
+            description: ta(
+              'Default look-back of the situation overview: restrictions list and availability per service. Visitors can change it on the status page.',
+              'Vorgabe für die Rückschau im Lagebild: Liste der Einschränkungen und Verfügbarkeit je Dienst. Besucher können sie auf der Statusseite ändern.',
+            ),
+          },
+        },
       ],
     },
     {

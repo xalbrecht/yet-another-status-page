@@ -4,7 +4,7 @@ Incidents represent unplanned service disruptions or issues affecting your infra
 
 ## Creating an Incident
 
-1. Go to **Status → Incidents**
+1. Go to **Status → Incidents** (Status → Störungen)
 2. Click **Create New**
 3. Fill in the incident details:
    - **Title** - Brief description (e.g., "API Gateway Latency Issues")
@@ -19,10 +19,10 @@ A notification draft is automatically created when you save.
 
 | Status | Description |
 |--------|-------------|
-| **Investigating** | Issue detected, investigating cause |
-| **Identified** | Root cause identified, working on fix |
-| **Monitoring** | Fix applied, monitoring for stability |
-| **Resolved** | Issue fully resolved |
+| **Investigating** (Wird untersucht) | Issue detected, investigating cause |
+| **Identified** (Ursache gefunden) | Root cause identified, working on fix |
+| **Monitoring** (Wird beobachtet) | Fix applied, monitoring for stability |
+| **Resolved** (Behoben) | Issue fully resolved |
 
 ### Status Flow
 
@@ -32,14 +32,22 @@ Investigating → Identified → Monitoring → Resolved
 
 You can skip statuses if appropriate (e.g., go directly to Resolved for quick fixes).
 
-## Impact Levels
+## Impact on Affected Services
 
-| Impact | Description | Display |
-|--------|-------------|---------|
-| Operational | No user impact (informational) | 🟢 Green |
-| Degraded Performance | Slower than normal | 🟡 Yellow |
-| Partial Outage | Some functionality unavailable | 🟠 Orange |
-| Major Outage | Service completely unavailable | 🔴 Red |
+The field **Impact on affected services** (Auswirkung auf betroffene Dienste) is set when you create the incident, like the component status in Cachet. It is the status the affected services receive while the incident is open. Default: Degraded Performance.
+
+| Impact | German | Display |
+|--------|--------|---------|
+| Degraded Performance | Eingeschränkt | 🟡 Yellow |
+| Partial Outage | Teilausfall | 🟠 Orange |
+| Major Outage | Schwerer Ausfall | 🔴 Red |
+
+- Saving the incident sets this status on all affected services.
+- With several open incidents on one service, the worst impact applies.
+- When the incident is resolved, the services return to **Operational**, unless another open incident still affects them. A service in maintenance stays in maintenance.
+- Every change appears in the **status log** and in the [Situation Overview](./situation-overview.md).
+
+Change the impact later by editing the field and saving. The services follow.
 
 ## Adding Updates
 

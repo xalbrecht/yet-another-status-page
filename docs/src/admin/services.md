@@ -8,7 +8,7 @@ Service groups organize related services together.
 
 ### Creating a Service Group
 
-1. Go to **Status → Service Groups**
+1. Go to **Status → Service Groups** (Status → Dienstgruppen)
 2. Click **Create New**
 3. Enter a name (e.g., "Core Infrastructure", "API Services")
 4. Optionally add a description
@@ -25,7 +25,7 @@ Services are individual components within a group.
 
 ### Creating a Service
 
-1. Go to **Status → Services**
+1. Go to **Status → Services** (Status → Dienste)
 2. Click **Create New**
 3. Fill in:
    - **Name** - Display name (e.g., "API Gateway")
@@ -36,23 +36,28 @@ Services are individual components within a group.
 
 ### Service Statuses
 
-| Status | Color | Description |
-|--------|-------|-------------|
-| Operational | 🟢 Green | Service is working normally |
-| Degraded Performance | 🟡 Yellow | Service is slow or partially impaired |
-| Partial Outage | 🟠 Orange | Some functionality unavailable |
-| Major Outage | 🔴 Red | Service is completely unavailable |
-| Under Maintenance | 🔵 Blue | Service is undergoing planned maintenance |
+| Status | German | Color | Description |
+|--------|--------|-------|-------------|
+| Operational | Betriebsbereit | 🟢 Green | Service is working normally |
+| Degraded Performance | Eingeschränkt | 🟡 Yellow | Service is slow or partially impaired |
+| Partial Outage | Teilausfall | 🟠 Orange | Some functionality unavailable |
+| Major Outage | Schwerer Ausfall | 🔴 Red | Service is completely unavailable |
+| Under Maintenance | Wartung | 🔵 Blue | Service is undergoing planned maintenance |
+
+Every status change is written to the **status log** with its time. The [Situation Overview](./situation-overview.md) is calculated from it.
 
 ### Automatic Status Updates
 
-Service status is automatically updated when:
+Incidents set the status of their affected services:
 
-- An incident is created affecting the service
-- An incident is resolved
-- A maintenance window starts or ends
+- Saving an incident sets the **Impact on affected services** (Auswirkung auf betroffene Dienste) on every affected service.
+- If several open incidents affect a service, the worst impact applies.
+- When the last open incident of a service is resolved, the service returns to **Operational**. A service in **Under Maintenance** stays in maintenance.
+- Removing a service from an incident, or deleting the incident, re-evaluates that service.
 
-You can also manually update the status at any time.
+Maintenance windows do **not** change the service status. Set **Under Maintenance** by hand when work starts and reset it afterwards.
+
+You can also change the status by hand at any time. A manual status stays until an incident for that service is saved or resolved.
 
 ## Best Practices
 

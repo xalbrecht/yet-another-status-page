@@ -79,7 +79,11 @@ cp .env.example .env
 DATABASE_URI=postgresql://postgres:postgres@localhost:5432/hostzero_status
 PAYLOAD_SECRET=your-development-secret-key
 SERVER_URL=http://localhost:3000
+# Optional: interface language, default de. Set en for English (read at build and dev start)
+# NEXT_PUBLIC_UI_LANG=en
 ```
+
+The end-to-end tests of the upstream project check English texts. Run them with `NEXT_PUBLIC_UI_LANG=en`.
 
 ### 4. Run Migrations
 

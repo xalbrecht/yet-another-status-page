@@ -1,13 +1,22 @@
 'use client'
 
 import Link from 'next/link'
-import { useState } from 'react'
-import { statusLabel, type LagebildData, type LagebildGroup, type LagebildPeriod } from '@/lib/lagebild'
+import { useRouter } from 'next/navigation'
+import { ChevronDown } from 'lucide-react'
+import { Fragment, useLayoutEffect, useRef, useState, useTransition } from 'react'
+import {
+  PERIOD_OPTIONS,
+  statusLabel,
+  type LagebildData,
+  type LagebildGroup,
+  type LagebildPeriod,
+  type PeriodDays,
+} from '@/lib/lagebild'
 import { t, tf } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import { GroupIcon } from './GroupIcon'
 import { StatusBar } from './StatusBar'
-import { statusBadgeIcon, statusBorder, statusSoftBg, statusText } from './status-styles'
+import { statusBadgeIcon, statusBg, statusBorder, statusSoftBg, statusText } from './status-styles'
 
 type Variant = 'a' | 'b'
 
@@ -16,10 +25,12 @@ type Props = {
   data: LagebildData
   /** Gruppe aus der Adresse (`?gruppe=…`), falls vorhanden */
   initialGroup: string | null
+  /** Vorgabe des Admins für die Rückschau */
+  defaultPeriodDays: PeriodDays
 }
 
-/** Lagebild je Dienstgruppe: Kacheln, Balken der letzten 12 Stunden, Einschränkungen der letzten 14 Tage. */
-export function Lagebild({ variant, data, initialGroup }: Props) {
+/** Lagebild je Dienstgruppe: Kacheln mit aufklappbaren Diensten, Einschränkungen der gewählten Rückschau. */
+export function Lagebild({ variant, data, initialGroup, defaultPeriodDays }: Props) {
   if (data.groups.length === 0) return null
 
   if (variant === 'both') {
@@ -28,31 +39,47 @@ export function Lagebild({ variant, data, initialGroup }: Props) {
         <p className="rounded-md border border-dashed border-border bg-secondary/50 px-4 py-2 text-sm text-muted-foreground">
           {t('lagebild.testNotice')}
         </p>
-        <LagebildView variant="a" data={data} initialGroup={initialGroup} syncUrl={false} caption={t('lagebild.variantA')} />
-        <LagebildView variant="b" data={data} initialGroup={initialGroup} syncUrl={false} caption={t('lagebild.variantB')} />
+        <LagebildView variant="a" data={data} initialGroup={initialGroup} defaultPeriodDays={defaultPeriodDays} syncUrl={false} caption={t('lagebild.variantA')} />
+        <LagebildView variant="b" data={data} initialGroup={initialGroup} defaultPeriodDays={defaultPeriodDays} syncUrl={false} caption={t('lagebild.variantB')} />
       </div>
     )
   }
 
-  return <LagebildView variant={variant} data={data} initialGroup={initialGroup} syncUrl />
+  return (
+    <LagebildView variant={variant} data={data} initialGroup={initialGroup} defaultPeriodDays={defaultPeriodDays} syncUrl />
+  )
 }
 
 function LagebildView({
   variant,
   data,
   initialGroup,
+  defaultPeriodDays,
   syncUrl,
   caption,
 }: {
   variant: Variant
   data: LagebildData
   initialGroup: string | null
+  defaultPeriodDays: PeriodDays
   syncUrl: boolean
   caption?: string
 }) {
   const [selected, setSelected] = useState<string | null>(
     initialGroup && data.groups.some((group) => group.id === initialGroup) ? initialGroup : null,
   )
+
+  const gridRef = useRef<HTMLDivElement>(null)
+  const [columns, setColumns] = useState(4)
+  useLayoutEffect(() => {
+    const grid = gridRef.current
+    if (!grid) return
+    const measure = () => setColumns(Math.max(1, getComputedStyle(grid).gridTemplateColumns.split(' ').length))
+    measure()
+    const observer = new ResizeObserver(measure)
+    observer.observe(grid)
+    return () => observer.disconnect()
+  }, [])
 
   function select(groupId: string | null) {
     const next = groupId === selected ? null : groupId
@@ -73,75 +100,172 @@ function LagebildView({
       </h2>
 
       <div
+        ref={gridRef}
         className={cn(
           'grid gap-3',
           variant === 'a' ? 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4' : 'grid-cols-1 sm:grid-cols-2',
         )}
       >
-        {data.groups.map((group) =>
-          variant === 'a' ? (
-            <TileA key={group.id} group={group} active={selected === group.id} onSelect={() => select(group.id)} />
-          ) : (
-            <TileB
-              key={group.id}
-              group={group}
-              active={selected === group.id}
-              onSelect={() => select(group.id)}
-              from={data.barsFrom}
-              to={data.barsTo}
-            />
-          ),
-        )}
+        {data.groups.map((group, index) => {
+          const open = selected === group.id
+          // Aufklappbereich steht hinter der letzten Kachel der Zeile
+          const endsRow = index === data.groups.length - 1 || (index + 1) % columns === 0
+          const panelGroup = variant === 'a' && endsRow ? data.groups.find((g) => g.id === selected) : undefined
+          const panelIndex = panelGroup ? data.groups.indexOf(panelGroup) : -1
+          const panelInRow = panelGroup && Math.floor(panelIndex / columns) === Math.floor(index / columns)
+          return (
+            <Fragment key={group.id}>
+              {variant === 'a' ? (
+                <TileA group={group} active={open} onSelect={() => select(group.id)} />
+              ) : (
+                <TileB group={group} active={open} onSelect={() => select(group.id)} from={data.barsFrom} to={data.barsTo} />
+              )}
+              {panelGroup && panelInRow && (
+                <ServicePanel
+                  group={panelGroup}
+                  periodDays={data.periodDays}
+                  caretPercent={(((panelIndex % columns) + 0.5) / columns) * 100}
+                  from={data.barsFrom}
+                  onClose={() => select(panelGroup.id)}
+                />
+              )}
+            </Fragment>
+          )
+        })}
       </div>
 
-      {variant === 'a' && (
-        <div className="mt-8">
-          <h3 className="mb-3 text-lg font-semibold text-foreground">{t('lagebild.barsTitle')}</h3>
-          <div className="space-y-2 rounded-lg border border-border bg-card p-4">
-            {data.groups.map((group) => (
-              <div key={group.id} className="flex items-center gap-3">
-                <div className="flex w-36 shrink-0 items-center gap-2 text-sm font-medium text-foreground sm:w-44">
-                  <GroupIcon name={group.icon} className="h-4 w-4 shrink-0 text-muted-foreground" />
-                  <span className="truncate">{group.name}</span>
-                </div>
-                <StatusBar runs={group.bars} label={`${group.name}: ${statusLabel(group.status)}`} />
-              </div>
-            ))}
-            <div className="flex justify-between pl-[9.75rem] text-xs text-muted-foreground sm:pl-[12.5rem]">
-              <span>{data.barsFrom}</span>
-              <span>{t('lagebild.now')}</span>
-            </div>
-          </div>
-        </div>
-      )}
-
-      <PeriodList data={data} selected={selected} onSelect={select} />
+      <PeriodList data={data} selected={selected} onSelect={select} defaultPeriodDays={defaultPeriodDays} />
     </section>
   )
 }
 
 function TileA({ group, active, onSelect }: { group: LagebildGroup; active: boolean; onSelect: () => void }) {
   const Badge = statusBadgeIcon[group.status]
+  const affected = group.services.filter((service) => service.status === 'degraded' || service.status === 'partial' || service.status === 'major').length
+  const count = group.services.length
+  const meta = [
+    count === 1 ? t('lagebild.servicesOne') : tf('lagebild.servicesMany', { count }),
+    affected > 0 ? tf('lagebild.affected', { count: affected }) : null,
+  ]
+    .filter(Boolean)
+    .join(' · ')
   return (
     <button
       type="button"
       onClick={onSelect}
-      aria-pressed={active}
-      title={`${group.name}: ${statusLabel(group.status)}`}
+      aria-expanded={active}
       className={cn(
-        'flex flex-col items-center gap-3 rounded-lg border bg-card px-3 py-4 text-center transition-colors hover:bg-secondary/60',
-        active ? 'border-primary ring-2 ring-primary/30' : 'border-border',
+        'relative flex flex-col items-center gap-1 rounded-xl border bg-card px-3 pb-3.5 pt-5 text-center transition-colors hover:bg-secondary/60',
+        active ? cn('ring-2 ring-primary/20', statusBorder[group.status]) : 'border-border',
       )}
     >
-      <span className={cn('relative flex h-14 w-14 items-center justify-center rounded-xl', statusSoftBg[group.status])}>
+      <ChevronDown
+        aria-hidden="true"
+        className={cn('absolute right-2.5 top-2.5 h-4 w-4 text-muted-foreground transition-transform', active && 'rotate-180')}
+      />
+      <span className={cn('relative mb-2 flex h-14 w-14 items-center justify-center rounded-2xl', statusSoftBg[group.status])}>
         <GroupIcon name={group.icon} className={cn('h-7 w-7', statusText[group.status])} />
         <span className="absolute -bottom-2 -right-2 rounded-full bg-card">
           <Badge className={cn('h-5 w-5', statusText[group.status])} aria-hidden="true" />
         </span>
       </span>
       <span className="text-sm font-semibold text-foreground">{group.name}</span>
-      <span className="sr-only">{statusLabel(group.status)}</span>
+      <span className={cn('text-xs font-semibold', statusText[group.status])}>{statusLabel(group.status)}</span>
+      <span className="text-xs text-muted-foreground">{meta}</span>
     </button>
+  )
+}
+
+/** Dienste einer Gruppe: Balken der letzten 12 Stunden und Verfügbarkeit im gewählten Zeitraum. */
+function ServicePanel({
+  group,
+  periodDays,
+  caretPercent,
+  from,
+  onClose,
+}: {
+  group: LagebildGroup
+  periodDays: PeriodDays
+  caretPercent: number
+  from: string
+  onClose: () => void
+}) {
+  const periodName = t(`lagebild.period.${periodDays}` as const)
+  return (
+    <div
+      role="region"
+      aria-label={tf('lagebild.servicesOf', { group: group.name })}
+      data-testid={`lagebild-panel-${group.id}`}
+      className={cn(
+        'relative col-span-full animate-fade-in space-y-3 rounded-xl border bg-card p-4',
+        statusBorder[group.status],
+      )}
+    >
+      <span
+        aria-hidden="true"
+        style={{ left: `${caretPercent}%` }}
+        className={cn(
+          'absolute -top-[7px] h-3 w-3 -translate-x-1/2 rotate-45 border-l border-t bg-card',
+          statusBorder[group.status],
+        )}
+      />
+      <div className="flex items-center gap-3">
+        <span className={cn('flex h-8 w-8 items-center justify-center rounded-lg', statusSoftBg[group.status])}>
+          <GroupIcon name={group.icon} className={cn('h-[18px] w-[18px]', statusText[group.status])} />
+        </span>
+        <h3 className="flex-1 text-base font-bold text-foreground">{group.name}</h3>
+        <button
+          type="button"
+          onClick={onClose}
+          className="rounded-md border border-border bg-card px-2.5 py-1 text-xs font-medium text-foreground hover:bg-secondary/60"
+        >
+          {t('lagebild.close')}
+        </button>
+      </div>
+
+      <div>
+        <div className="hidden grid-cols-[minmax(8rem,12rem)_minmax(0,1fr)_5.5rem] gap-4 pb-1.5 text-[11px] text-muted-foreground sm:grid">
+          <span>{t('lagebild.colService')}</span>
+          <span>{t('lagebild.colBar')}</span>
+          <span className="text-right">{t('lagebild.colAvailability')}</span>
+        </div>
+        <ul>
+          {group.services.map((service) => (
+            <li
+              key={service.id}
+              className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-1.5 border-t border-border py-2.5 sm:grid-cols-[minmax(8rem,12rem)_minmax(0,1fr)_5.5rem]"
+            >
+              <span className="min-w-0">
+                <span className="block break-words text-sm font-semibold text-foreground">{service.name}</span>
+                <span className={cn('block text-xs font-semibold', statusText[service.status])}>
+                  {statusLabel(service.status)}
+                </span>
+              </span>
+              <span className="order-last col-span-2 sm:order-none sm:col-span-1">
+                <StatusBar runs={service.bars} heightClass="h-5" label={`${service.name}: ${statusLabel(service.status)}`} />
+              </span>
+              <span className="text-right text-sm font-semibold tabular-nums text-foreground">
+                {service.availabilityLabel || '–'}
+                <span className="block text-[11px] font-normal text-muted-foreground">{periodName}</span>
+              </span>
+            </li>
+          ))}
+        </ul>
+        <div className="mt-1 flex justify-between text-[11px] text-muted-foreground sm:ml-[calc(min(12rem,30%)+1rem)] sm:mr-[6.5rem]">
+          <span>{from}</span>
+          <span>{t('lagebild.now')}</span>
+        </div>
+      </div>
+
+      <div className="flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-muted-foreground">
+        {(['operational', 'degraded', 'partial', 'major', 'maintenance'] as const).map((status) => (
+          <span key={status} className="inline-flex items-center gap-1.5">
+            <span className={cn('h-2.5 w-2.5 rounded-sm', statusBg[status])} aria-hidden="true" />
+            {statusLabel(status)}
+          </span>
+        ))}
+      </div>
+    </div>
   )
 }
 
@@ -193,11 +317,24 @@ function PeriodList({
   data,
   selected,
   onSelect,
+  defaultPeriodDays,
 }: {
   data: LagebildData
   selected: string | null
   onSelect: (groupId: string | null) => void
+  defaultPeriodDays: PeriodDays
 }) {
+  const router = useRouter()
+  const [pending, startTransition] = useTransition()
+
+  /** Rückschau über die Adresse wechseln, damit der Server neu rechnet. Die Vorgabe des Admins erscheint nicht in der Adresse. */
+  function changePeriod(days: PeriodDays) {
+    const url = new URL(window.location.href)
+    if (days === defaultPeriodDays) url.searchParams.delete('rueckschau')
+    else url.searchParams.set('rueckschau', String(days))
+    startTransition(() => router.replace(`${url.pathname}${url.search}`, { scroll: false }))
+  }
+
   const visible = data.periods.filter((period) => !selected || period.groupId === selected)
 
   // Tage mit Einträgen einzeln, aufeinanderfolgende leere Tage zu einer Zeile zusammenfassen
@@ -230,7 +367,27 @@ function PeriodList({
 
   return (
     <div className="mt-8">
-      <h3 className="mb-3 text-lg font-semibold text-foreground">{t('lagebild.periodsTitle')}</h3>
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+        <h3 className="text-lg font-semibold text-foreground">
+          {tf('lagebild.periodsTitle', { days: data.periodDays })}
+        </h3>
+        <label className="flex items-center gap-2 text-sm text-muted-foreground">
+          {t('lagebild.periodLabel')}
+          <select
+            value={data.periodDays}
+            disabled={pending}
+            onChange={(event) => changePeriod(Number(event.target.value) as PeriodDays)}
+            data-testid="lagebild-period"
+            className="rounded-md border border-border bg-card px-2 py-1 text-sm font-medium text-foreground"
+          >
+            {PERIOD_OPTIONS.map((days) => (
+              <option key={days} value={days}>
+                {t(`lagebild.period.${days}` as const)}
+              </option>
+            ))}
+          </select>
+        </label>
+      </div>
 
       <div className="mb-4 flex flex-wrap gap-2" role="group" aria-label={t('lagebild.filterLabel')}>
         <Chip active={selected === null} onClick={() => selected !== null && onSelect(selected)}>

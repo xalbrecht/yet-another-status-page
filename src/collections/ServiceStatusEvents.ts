@@ -1,6 +1,7 @@
 import type { CollectionConfig } from 'payload'
 import { authenticatedOrTestWrite } from '@/lib/access'
 import { ta } from '@/lib/i18n/admin'
+import { invalidateLagebild } from '@/lib/lagebild-invalidate'
 import { serviceStatusOptions } from './Services'
 
 /**
@@ -21,6 +22,20 @@ export const ServiceStatusEvents: CollectionConfig = {
     description: ta('Automatic log of service status changes. Used for the situation overview.'),
   },
   defaultSort: '-changedAt',
+  hooks: {
+    afterChange: [
+      ({ doc }) => {
+        invalidateLagebild()
+        return doc
+      },
+    ],
+    afterDelete: [
+      ({ doc }) => {
+        invalidateLagebild()
+        return doc
+      },
+    ],
+  },
   access: {
     read: authenticatedOrTestWrite,
     // Einträge werden nur vom System angelegt (Local API umgeht diese Regeln)

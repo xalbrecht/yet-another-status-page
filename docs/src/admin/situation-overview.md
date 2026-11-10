@@ -16,7 +16,7 @@ Go to **Configuration → Site Settings → Situation overview** (Konfiguration 
 ## What is shown
 
 - **Tile per group** - icon, the worst status of the group's services and the number of services (with the number of affected ones). A click on a tile opens the services of the group below the tile row, a second click closes them. The tiles below move down. The click also filters the list of disruptions to that group.
-- **Services of a group** - for every service the bar of the last 12 hours (one segment per 5 minutes, grey means no data) and its availability in the selected look-back period.
+- **Services of a group** - for every service the bar of the last 12 hours and its availability in the selected look-back period. The bar has one stroke per 5 minutes (144 strokes). Each stroke shows the worst status within its 5 minutes, so a short outage stays visible. Grey means no data. Hovering over a stroke or tapping it shows the end of its 5 minutes (for example 12:05) and the status. The start and end of the bar are shown as times above the bars.
 - **Availability** - share of the known time in which the service was neither Partial Outage nor Major Outage. Degraded and Maintenance count as available. Time before the first log entry is not counted. The value is rounded down to two decimals.
 - **Disruptions** - every period of the selected look-back in which a group was not Operational, with start and end. A related incident or maintenance is linked. Chips filter by group. The filter is part of the address (`/?gruppe=<id>`).
 

@@ -5,7 +5,7 @@ import { formatDate, formatDateSlug, formatDateTime, formatTime, type DateTimeCo
 import { t, tf } from '@/lib/i18n'
 
 /**
- * Lagebild: Balken der letzten 12 Stunden und Einschränkungen der letzten 14 Tage.
+ * Lagebild: Balken der letzten 12 Stunden, Verfügbarkeit je Dienst und Einschränkungen der gewählten Rückschau.
  * Grundlage ist das Statusprotokoll (Collection „service-status-events“).
  */
 
@@ -14,6 +14,16 @@ export type LagebildStatus = Service['status']
 export const BAR_SLOT_MINUTES = 5
 export const BAR_HOURS = 12
 export const PERIOD_DAYS = 14
+
+/** Wählbare Rückschau in Tagen. Der erste Wert ist die Vorgabe. */
+export const PERIOD_OPTIONS = [14, 30, 90, 180, 365] as const
+export type PeriodDays = (typeof PERIOD_OPTIONS)[number]
+
+/** Wandelt einen Wert aus Adresse oder Einstellung in eine zulässige Rückschau um, sonst `fallback`. */
+export function parsePeriodDays(value: unknown, fallback: PeriodDays = PERIOD_DAYS): PeriodDays {
+  const days = Number(Array.isArray(value) ? value[0] : value)
+  return (PERIOD_OPTIONS as readonly number[]).includes(days) ? (days as PeriodDays) : fallback
+}
 
 const MINUTE = 60_000
 const HOUR = 60 * MINUTE
@@ -98,9 +108,43 @@ export type RawPeriod = {
   end: number | null
 }
 
-/** Zeiträume der letzten 14 Tage, in denen eine Gruppe nicht „Betriebsbereit“ war. */
-export function computePeriods(timelines: Timeline[], now: number): RawPeriod[] {
-  const windowStart = now - PERIOD_DAYS * DAY
+/**
+ * Verfügbarkeit eines Dienstes in Prozent: Anteil der bekannten Zeit seit `windowStart`, in der der Dienst
+ * weder „Teilausfall“ noch „Schwerer Ausfall“ hatte. „Eingeschränkt“ und „Wartung“ zählen als verfügbar.
+ * `null`: im Zeitraum ist kein Zustand bekannt.
+ */
+export function computeAvailability(timeline: Timeline, windowStart: number, now: number): number | null {
+  let known = 0
+  let down = 0
+  let status = statusAt(timeline, windowStart)
+  let cursor = windowStart
+  const close = (until: number) => {
+    if (status === null || until <= cursor) return
+    known += until - cursor
+    if (status === 'partial' || status === 'major') down += until - cursor
+  }
+  for (const entry of timeline) {
+    if (entry.at <= windowStart) continue
+    if (entry.at > now) break
+    if (status === null) cursor = entry.at
+    else close(entry.at)
+    status = entry.status
+    cursor = entry.at
+  }
+  close(now)
+  return known === 0 ? null : ((known - down) / known) * 100
+}
+
+/** Verfügbarkeit mit zwei Nachkommastellen, abgerundet: 99,996 % erscheint nicht als 100,00 %. */
+export function formatAvailability(value: number | null, locale: string): string {
+  if (value === null) return ''
+  const floored = Math.floor(value * 100) / 100
+  return `${new Intl.NumberFormat(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(floored)} %`
+}
+
+/** Zeiträume der letzten `periodDays` Tage, in denen eine Gruppe nicht „Betriebsbereit“ war. */
+export function computePeriods(timelines: Timeline[], now: number, periodDays: number = PERIOD_DAYS): RawPeriod[] {
+  const windowStart = now - periodDays * DAY
   const points = new Set<number>([windowStart])
   for (const timeline of timelines) {
     for (const entry of timeline) {
@@ -125,6 +169,17 @@ export function computePeriods(timelines: Timeline[], now: number): RawPeriod[] 
   return periods
 }
 
+export type LagebildService = {
+  id: string
+  name: string
+  status: LagebildStatus
+  bars: BarRun[]
+  /** Verfügbarkeit in Prozent im gewählten Zeitraum, `null`: unbekannt */
+  availability: number | null
+  /** Verfügbarkeit als Text, z. B. „99,87 %“. Leer, wenn unbekannt. */
+  availabilityLabel: string
+}
+
 export type LagebildGroup = {
   id: string
   name: string
@@ -132,6 +187,7 @@ export type LagebildGroup = {
   /** aktueller Zustand = schlechtester Zustand der Dienste */
   status: LagebildStatus
   bars: BarRun[]
+  services: LagebildService[]
 }
 
 export type LagebildPeriod = {
@@ -152,7 +208,9 @@ export type LagebildPeriod = {
 export type LagebildData = {
   groups: LagebildGroup[]
   periods: LagebildPeriod[]
-  /** Tage der letzten 14 Tage, neuester zuerst */
+  /** Gewählte Rückschau in Tagen */
+  periodDays: PeriodDays
+  /** Tage der Rückschau, neuester zuerst */
   days: Array<{ dayKey: string; dayLabel: string }>
   barsFrom: string
   barsTo: string
@@ -176,9 +234,14 @@ export function statusLabel(status: LagebildStatus): string {
 type Related = { title: string; href: string; serviceIds: string[]; from: number; to: number }
 
 /** Lädt Gruppen, Dienste und Protokoll und berechnet das Lagebild. */
-export async function loadLagebild(payload: Payload, dt: DateTimeConfig, nowDate = new Date()): Promise<LagebildData> {
+export async function loadLagebild(
+  payload: Payload,
+  dt: DateTimeConfig,
+  periodDays: PeriodDays = PERIOD_DAYS,
+  nowDate = new Date(),
+): Promise<LagebildData> {
   const now = nowDate.getTime()
-  const windowStart = now - PERIOD_DAYS * DAY
+  const windowStart = now - periodDays * DAY
 
   const [groupsResult, servicesResult] = await Promise.all([
     payload.find({ collection: 'service-groups', sort: '_order', depth: 0, pagination: false }),
@@ -194,7 +257,7 @@ export async function loadLagebild(payload: Payload, dt: DateTimeConfig, nowDate
       depth: 0,
       pagination: false,
     }),
-    // Letzter Eintrag vor dem Zeitfenster: Zustand zu Beginn der 14 Tage
+    // Letzter Eintrag vor dem Zeitfenster: Zustand zu Beginn der Rückschau
     Promise.all(
       serviceIds.map(async (id) => {
         const result = await payload.find({
@@ -273,9 +336,21 @@ export async function loadLagebild(payload: Payload, dt: DateTimeConfig, nowDate
       icon,
       status: worstStatus(groupServices.map((service) => service.status)) ?? 'operational',
       bars: computeBarRuns(groupTimelines, now, dt),
+      services: groupServices.map((service) => {
+        const timeline = timelines.get(String(service.id)) ?? []
+        const availability = computeAvailability(timeline, windowStart, now)
+        return {
+          id: String(service.id),
+          name: service.name,
+          status: service.status,
+          bars: computeBarRuns([timeline], now, dt),
+          availability,
+          availabilityLabel: formatAvailability(availability, dt.locale),
+        }
+      }),
     })
 
-    for (const period of computePeriods(groupTimelines, now)) {
+    for (const period of computePeriods(groupTimelines, now, periodDays)) {
       const end = period.end ?? now
       const hit = related.find(
         (entry) =>
@@ -310,7 +385,7 @@ export async function loadLagebild(payload: Payload, dt: DateTimeConfig, nowDate
   periods.sort((a, b) => b.start - a.start)
 
   const days: LagebildData['days'] = []
-  for (let i = 0; i < PERIOD_DAYS; i++) {
+  for (let i = 0; i < periodDays; i++) {
     const date = new Date(now - i * DAY)
     days.push({ dayKey: formatDateSlug(date, dt.timezone), dayLabel: formatDate(date, dt) })
   }
@@ -318,6 +393,7 @@ export async function loadLagebild(payload: Payload, dt: DateTimeConfig, nowDate
   return {
     groups,
     periods,
+    periodDays,
     days,
     barsFrom: formatTime(new Date(now - BAR_HOURS * HOUR), dt),
     barsTo: formatTime(nowDate, dt),

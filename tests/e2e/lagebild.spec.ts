@@ -10,14 +10,14 @@ import {
 } from '../utils/payload-helpers'
 
 /**
- * Lagebild: Kacheln, Balken, 14-Tage-Übersicht und Zustand bei der Meldung.
+ * Lagebild: Kacheln, Dienste je Gruppe, Rückschau und Zustand bei der Meldung.
  * Die Tests setzen die Anzeige nach jedem Lauf auf „off“ zurück.
  */
 test.describe('Lagebild', () => {
   test.describe.configure({ mode: 'serial' })
 
   test.afterAll(async () => {
-    await updateSettings({ lagebildVariant: 'off' })
+    await updateSettings({ lagebildVariant: 'off', lagebildPeriodDays: '14' })
   })
 
   test('ist standardmäßig ausgeblendet', async ({ page }) => {
@@ -45,8 +45,70 @@ test.describe('Lagebild', () => {
       await expect(variant.getByRole('button', { name: new RegExp(`Lagebild Mail ${id}`) }).first()).toBeVisible()
       await expect(variant.getByText(new RegExp(`(Partial Outage|Teilausfall): Lagebild Mail ${id}`))).toBeVisible()
     }
-    // Variante A zeigt zusätzlich die separate Balkenliste
-    await expect(variantA.locator('[role="img"]').first()).toBeVisible()
+  })
+
+  test('Klick auf eine Kachel klappt die Dienste mit Balken und Verfügbarkeit auf', async ({ page }) => {
+    const id = Date.now()
+    const group = await createServiceGroup({ name: `Aufklappen Gruppe ${id}`, icon: 'Server' })
+    const service = await createService({ name: `Aufklappen Dienst ${id}`, group: group.id })
+    await updateService(service.id, { status: 'major' })
+    await updateSettings({ lagebildVariant: 'a' })
+
+    await page.goto('/')
+    const view = page.getByTestId('lagebild-a')
+    const tile = view.locator('button[aria-expanded]', { hasText: `Aufklappen Gruppe ${id}` })
+    const panel = page.getByTestId(`lagebild-panel-${group.id}`)
+
+    await expect(panel).toHaveCount(0)
+    await expect(tile).toHaveAttribute('aria-expanded', 'false')
+
+    await tile.click()
+    await expect(tile).toHaveAttribute('aria-expanded', 'true')
+    await expect(panel).toBeVisible()
+    await expect(panel.getByText(`Aufklappen Dienst ${id}`)).toBeVisible()
+    await expect(panel.locator('[role="img"]').first()).toBeVisible()
+    // Dienst war erst seit dem Anlegen bekannt und seitdem ausgefallen: Verfügbarkeit unter 100 %
+    await expect(panel.getByText(/\d+[.,]\d{2} %/)).toBeVisible()
+
+    // zweiter Klick schließt den Bereich
+    await tile.click()
+    await expect(panel).toHaveCount(0)
+  })
+
+  test('Rückschau: Vorgabe des Admins, Auswahl des Besuchers, ungültiger Wert', async ({ page }) => {
+    const id = Date.now()
+    const group = await createServiceGroup({ name: `Rückschau Gruppe ${id}` })
+    const service = await createService({ name: `Rückschau Dienst ${id}`, group: group.id })
+    await updateService(service.id, { status: 'degraded' })
+    await updateSettings({ lagebildVariant: 'a', lagebildPeriodDays: '14' })
+
+    await page.goto('/')
+    const select = page.getByTestId('lagebild-period')
+    await expect(select).toHaveValue('14')
+
+    // Besucher wählt „Quartal“: Adresse und Überschrift folgen
+    await select.selectOption('90')
+    await expect(page).toHaveURL(/rueckschau=90/)
+    await expect(page.getByRole('heading', { name: /90/ })).toBeVisible()
+    await expect(select).toHaveValue('90')
+
+    // ungültiger Wert fällt auf die Vorgabe zurück
+    await page.goto('/?rueckschau=7')
+    await expect(page.getByTestId('lagebild-period')).toHaveValue('14')
+
+    // Vorgabe des Admins „Halbjahr“; die Vorgabe selbst erscheint nicht in der Adresse
+    await updateSettings({ lagebildPeriodDays: '180' })
+    await page.goto('/')
+    // React hängt die Handler erst nach dem Laden an: vorher löst selectOption nichts aus
+    await page.waitForFunction(() => {
+      const el = document.querySelector('[data-testid="lagebild-period"]')
+      return !!el && Object.keys(el).some((key) => key.startsWith('__reactProps'))
+    })
+    await expect(page.getByTestId('lagebild-period')).toHaveValue('180')
+    await page.getByTestId('lagebild-period').selectOption('14')
+    await expect(page).toHaveURL(/rueckschau=14/)
+    await page.getByTestId('lagebild-period').selectOption('180')
+    await expect(page).not.toHaveURL(/rueckschau/)
   })
 
   test('Filter je Gruppe schränkt die Übersicht ein und steht in der Adresse', async ({ page }) => {

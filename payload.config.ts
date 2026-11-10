@@ -24,6 +24,7 @@ import {
   Notifications,
   ServiceGroups,
   Services,
+  ServiceStatusEvents,
   Subscribers,
   Users,
 } from '@/collections'
@@ -103,6 +104,7 @@ export default buildConfig({
     // Status collections
     ServiceGroups,
     Services,
+    ServiceStatusEvents,
     Incidents,
     Maintenances,
     // Notification collections

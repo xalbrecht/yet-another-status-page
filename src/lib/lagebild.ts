@@ -15,6 +15,19 @@ export type LagebildStatus = Service['status']
 export const BAR_SLOTS = 144
 export const BAR_HOURS = 12
 
+/** Marke des zwischengespeicherten Lagebilds, damit eine Änderung es verwerfen kann. */
+export const LAGEBILD_CACHE_TAG = 'lagebild'
+
+/** Wie lange das berechnete Lagebild für alle Besucher gilt (Sekunden), wenn nichts anderes eingestellt ist. */
+export const LAGEBILD_CACHE_SECONDS = 60
+
+/** Liest `LAGEBILD_CACHE_SECONDS`: ganze Zahl von 0 bis 3600, `0` schaltet das Zwischenspeichern aus. Sonst die Vorgabe. */
+export function parseCacheSeconds(value: unknown, fallback: number = LAGEBILD_CACHE_SECONDS): number {
+  if (value === undefined || value === null || String(value).trim() === '') return fallback
+  const seconds = Number(value)
+  return Number.isInteger(seconds) && seconds >= 0 && seconds <= 3600 ? seconds : fallback
+}
+
 /** Wählbarer Zeitraum des Balkens in Stunden. Der erste Wert ist die Vorgabe. */
 export const BAR_HOURS_OPTIONS = [12, 24] as const
 export type BarHours = (typeof BAR_HOURS_OPTIONS)[number]

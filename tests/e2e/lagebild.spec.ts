@@ -81,6 +81,55 @@ test.describe('Lagebild', () => {
     await expect(panel).toHaveCount(0)
   })
 
+  test('Statusänderung ist trotz Zwischenspeicher sofort sichtbar', async ({ page }) => {
+    // Das Lagebild wird für alle Besucher 60 Sekunden zwischengespeichert. Eine Änderung am Zustand
+    // eines Dienstes verwirft den Zwischenspeicher, sonst müsste man bis zu einer Minute warten.
+    const id = Date.now()
+    const group = await createServiceGroup({ name: `Zwischenspeicher Gruppe ${id}` })
+    const service = await createService({ name: `Zwischenspeicher Dienst ${id}`, group: group.id })
+    await updateService(service.id, { status: 'degraded' })
+    await updateSettings({ lagebildVariant: 'a' })
+
+    const tile = () =>
+      page.getByTestId('lagebild-a').locator('button[aria-expanded]', { hasText: `Zwischenspeicher Gruppe ${id}` })
+
+    // erster Aufruf füllt den Zwischenspeicher
+    await page.goto('/')
+    await expect(tile()).toContainText(/Eingeschränkt|Degraded/)
+
+    // Zustand ändern und sofort neu laden: der neue Zustand erscheint ohne Wartezeit
+    await updateService(service.id, { status: 'major' })
+    await page.reload()
+    await expect(tile()).toContainText(/Schwerer Ausfall|Major Outage/)
+
+    // auch ein neuer Dienst in der Gruppe erscheint sofort
+    await createService({ name: `Zwischenspeicher Zweiter ${id}`, group: group.id })
+    await page.reload()
+    await expect(tile()).toContainText(/2 (Dienste|services)/)
+  })
+
+  test('Titel einer Störung ist trotz Zwischenspeicher sofort sichtbar', async ({ page }) => {
+    // Der Titel der zugehörigen Störung steht in der Liste der Einschränkungen und damit im Zwischenspeicher.
+    // Ändert sich nur der Titel (kein Zustand eines Dienstes), muss die Störung selbst den Zwischenspeicher verwerfen.
+    const id = Date.now()
+    const group = await createServiceGroup({ name: `Störung Gruppe ${id}` })
+    const service = await createService({ name: `Störung Dienst ${id}`, group: group.id })
+    const incident = await createIncident({
+      title: `Titel alt ${id}`,
+      impact: 'major',
+      affectedServices: [service.id],
+      updates: [{ status: 'investigating', message: 'Wir prüfen.', createdAt: new Date(Date.now() - 60_000).toISOString() }],
+    })
+    await updateSettings({ lagebildVariant: 'a' })
+
+    await page.goto('/')
+    await expect(page.getByText(`Titel alt ${id}`).first()).toBeVisible()
+
+    await updateIncident(incident.id, { title: `Titel neu ${id}` })
+    await page.reload()
+    await expect(page.getByTestId('lagebild-a').getByText(`Titel neu ${id}`).first()).toBeVisible()
+  })
+
   test('Variante B: Klick auf eine Kachel klappt die Dienste auf', async ({ page }) => {
     const id = Date.now()
     const group = await createServiceGroup({ name: `Variante B Gruppe ${id}`, icon: 'Server' })

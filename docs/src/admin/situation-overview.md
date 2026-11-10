@@ -9,19 +9,24 @@ Go to **Configuration → Site Settings → Situation overview** (Konfiguration 
 | Option | German | Result |
 |--------|--------|--------|
 | Off | Aus | No situation overview (default) |
-| Variant A | Variante A | Tiles per group, the bars of the last 12 hours below |
+| Variant A | Variante A | Tiles per group, a click opens the services of the group below the tile row |
 | Variant B | Variante B | Tiles per group, each with its own small bar |
 | Both (for testing) | Beide (zum Testen) | Both variants one after the other, to compare them |
 
 ## What is shown
 
-- **Tile per group** - icon and the worst status of the group's services. A click on a tile filters the list below.
-- **Bars of the last 12 hours** - one segment per 5 minutes, coloured by the worst status of the group's services at that time. Grey means no data.
-- **Disruptions of the last 14 days** - every period in which a group was not Operational, with start and end. A related incident or maintenance is linked. Chips filter by group. The filter is part of the address (`/?gruppe=<id>`).
+- **Tile per group** - icon, the worst status of the group's services and the number of services (with the number of affected ones). A click on a tile opens the services of the group below the tile row, a second click closes them. The tiles below move down. The click also filters the list of disruptions to that group.
+- **Services of a group** - for every service the bar of the last 12 hours (one segment per 5 minutes, grey means no data) and its availability in the selected look-back period.
+- **Availability** - share of the known time in which the service was neither Partial Outage nor Major Outage. Degraded and Maintenance count as available. Time before the first log entry is not counted. The value is rounded down to two decimals.
+- **Disruptions** - every period of the selected look-back in which a group was not Operational, with start and end. A related incident or maintenance is linked. Chips filter by group. The filter is part of the address (`/?gruppe=<id>`).
+
+## Look-back period
+
+The field **Look-back period** (Rückschau) in the same section sets the default: 14 days (default), month (30), quarter (90), half year (180) or year (365). Visitors can change it with the list **Look-back** above the disruptions. The choice is part of the address (`/?rueckschau=<days>`) and applies to the list of disruptions and the availability. Invalid values fall back to the admin default. The bars always show the last 12 hours.
 
 ## Status log
 
-Every status change of a service is recorded in **Status → Status log** (Status → Statusprotokoll) (automatically, entries cannot be created by hand). The bars and the 14-day list are calculated from it.
+Every status change of a service is recorded in **Status → Status log** (Status → Statusprotokoll) (automatically, entries cannot be created by hand). The bars, the availability and the list of disruptions are calculated from it.
 
 - There is no history from before the feature was introduced. Existing services get a first entry at the time of the update, earlier time ranges show as "No data".
 - Changing a service status by hand is logged like any other change.

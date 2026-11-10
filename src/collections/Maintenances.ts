@@ -6,6 +6,7 @@ import { getServerUrl } from '@/lib/utils'
 import { formatNotificationDateTime, resolveDateTimeConfig } from '@/lib/datetime'
 import { localizedDateAdmin } from '@/lib/localizedDateAdmin'
 import { ta } from '@/lib/i18n/admin'
+import { invalidateLagebild } from '@/lib/lagebild-invalidate'
 
 export const maintenanceStatusOptions = [
   { label: ta('Upcoming'), value: 'upcoming' },
@@ -421,7 +422,19 @@ export const Maintenances: CollectionConfig = {
         return { ...doc, status: newStatus }
       },
     ],
+    afterDelete: [
+      // Titel und Verknüpfung stehen im zwischengespeicherten Lagebild
+      ({ doc }) => {
+        invalidateLagebild()
+        return doc
+      },
+    ],
     afterChange: [
+      // Titel und Verknüpfung stehen im zwischengespeicherten Lagebild
+      ({ doc }) => {
+        invalidateLagebild()
+        return doc
+      },
       async ({ doc, operation, previousDoc, req }) => {
         // Skip if triggered by auto-status update or our own update
         if (req.context?.skipAutoStatusUpdate || req.context?.skipNotificationCreation) {

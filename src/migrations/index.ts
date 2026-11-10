@@ -6,6 +6,8 @@ import * as migration_20260821_192600_add_localization_settings from './20260821
 import * as migration_20261110_150700_add_lagebild from './20261110_150700_add_lagebild';
 import * as migration_20261110_170500_add_users_reset_password_requested_at from './20261110_170500_add_users_reset_password_requested_at';
 import * as migration_20261110_180000_add_lagebild_period_days from './20261110_180000_add_lagebild_period_days';
+import * as migration_20261110_190000_add_group_icons from './20261110_190000_add_group_icons';
+import * as migration_20261110_190100_set_group_icons from './20261110_190100_set_group_icons';
 
 export const migrations = [
   {
@@ -47,5 +49,15 @@ export const migrations = [
     up: migration_20261110_180000_add_lagebild_period_days.up,
     down: migration_20261110_180000_add_lagebild_period_days.down,
     name: '20261110_180000_add_lagebild_period_days',
+  },
+  {
+    up: migration_20261110_190000_add_group_icons.up,
+    down: migration_20261110_190000_add_group_icons.down,
+    name: '20261110_190000_add_group_icons',
+  },
+  {
+    up: migration_20261110_190100_set_group_icons.up,
+    down: migration_20261110_190100_set_group_icons.down,
+    name: '20261110_190100_set_group_icons',
   },
 ];

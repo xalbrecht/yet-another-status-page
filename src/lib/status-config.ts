@@ -1,3 +1,4 @@
+import { t } from "@/lib/i18n"
 import { CheckCircle2, AlertTriangle, Search, AlertCircle, Wrench, Clock } from "lucide-react"
 
 /**
@@ -10,25 +11,25 @@ export const incidentStatusConfig = {
     icon: Search,
     color: "text-status-major",
     bgColor: "bg-status-major",
-    label: "Investigating",
+    label: t("incident.investigating"),
   },
   identified: {
     icon: AlertTriangle,
     color: "text-status-degraded",
     bgColor: "bg-status-degraded",
-    label: "Identified",
+    label: t("incident.identified"),
   },
   monitoring: {
     icon: AlertCircle,
     color: "text-status-maintenance",
     bgColor: "bg-status-maintenance",
-    label: "Monitoring",
+    label: t("incident.monitoring"),
   },
   resolved: {
     icon: CheckCircle2,
     color: "text-status-operational",
     bgColor: "bg-status-operational",
-    label: "Resolved",
+    label: t("incident.resolved"),
   },
 } as const
 
@@ -39,25 +40,25 @@ export const maintenanceStatusConfig = {
     icon: Clock,
     color: "text-status-maintenance",
     bgColor: "bg-status-maintenance",
-    label: "Scheduled",
+    label: t("maintenance.upcoming"),
   },
   in_progress: {
     icon: Wrench,
     color: "text-status-degraded",
     bgColor: "bg-status-maintenance",
-    label: "In Progress",
+    label: t("maintenance.in_progress"),
   },
   completed: {
     icon: CheckCircle2,
     color: "text-status-operational",
     bgColor: "bg-status-operational",
-    label: "Completed",
+    label: t("maintenance.completed"),
   },
   cancelled: {
     icon: AlertTriangle,
     color: "text-muted-foreground",
     bgColor: "bg-muted",
-    label: "Cancelled",
+    label: t("maintenance.cancelled"),
   },
 } as const
 

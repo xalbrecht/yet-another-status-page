@@ -1,6 +1,7 @@
 "use client";
 
 import { Moon, Sun } from "lucide-react";
+import { t } from '@/lib/i18n'
 import { useTheme } from "next-themes";
 import { useSyncExternalStore } from "react";
 import { cn } from "@/lib/utils";
@@ -29,7 +30,7 @@ export function ThemeToggle() {
         "bg-card text-muted-foreground transition-all duration-200",
         "hover:bg-accent hover:text-foreground"
       )}
-      aria-label={isDark ? "Switch to light theme" : "Switch to dark theme"}
+      aria-label={isDark ? t("common.themeLight") : t("common.themeDark")}
     >
       {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
     </button>

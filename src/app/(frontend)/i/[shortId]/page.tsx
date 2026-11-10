@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { t, tf } from '@/lib/i18n'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { ChevronLeft } from 'lucide-react'
@@ -74,11 +75,11 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const data = await getIncidentData(shortId)
 
   if (!data) {
-    return { title: 'Incident Not Found' }
+    return { title: t('incident.notFound') }
   }
 
   const title = `${data.incident.title} - ${data.settings.siteName}`
-  const description = `Incident details and updates for ${data.incident.title}`
+  const description = tf('incident.metaDescription', { title: data.incident.title })
 
   return {
     title,
@@ -105,7 +106,7 @@ export default async function IncidentPage({ params }: PageProps) {
         siteName={settings.siteName}
         logoLightUrl={getMediaUrl(settings.logoLight)}
         logoDarkUrl={getMediaUrl(settings.logoDark)}
-        subtitle="Incident Details"
+        subtitle={t('incident.details')}
       />
 
       <main className="mx-auto w-full max-w-4xl flex-1 px-4 py-8 sm:px-6">
@@ -116,7 +117,7 @@ export default async function IncidentPage({ params }: PageProps) {
             className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:text-primary/80 transition-colors"
           >
             <ChevronLeft className="h-4 w-4" />
-            Back to status
+            {t('nav.backToStatus')}
           </Link>
           <CopyLinkButton />
         </div>
@@ -127,8 +128,8 @@ export default async function IncidentPage({ params }: PageProps) {
             <div>
               <h1 className="text-2xl font-bold text-foreground">{incident.title}</h1>
               <p className="mt-1 text-sm text-muted-foreground">
-                Reported on {incident.createdAt}
-                {incident.resolvedAt && ` · Resolved on ${incident.resolvedAt}`}
+                {t('incident.reportedOn')} {incident.createdAt}
+                {incident.resolvedAt && ` · ${t('incident.resolvedOn')} ${incident.resolvedAt}`}
               </p>
             </div>
             <span
@@ -139,13 +140,13 @@ export default async function IncidentPage({ params }: PageProps) {
                   : "bg-status-degraded/10 text-status-degraded"
               )}
             >
-              {isResolved ? "Resolved" : "Ongoing"}
+              {isResolved ? t("incident.resolved") : t("incident.ongoing")}
             </span>
           </div>
 
           {incident.affectedServices.length > 0 && (
             <div className="mt-4 flex flex-wrap gap-1.5">
-              <span className="text-sm text-muted-foreground">Affected:</span>
+              <span className="text-sm text-muted-foreground">{t('incident.affected')}</span>
               {incident.affectedServices.map((service) => (
                 <span
                   key={service}
@@ -160,7 +161,7 @@ export default async function IncidentPage({ params }: PageProps) {
 
         {/* Updates Timeline */}
         <section className="animate-fade-in">
-          <h2 className="mb-6 text-xl font-bold text-foreground">Updates</h2>
+          <h2 className="mb-6 text-xl font-bold text-foreground">{t('common.updates')}</h2>
           <IncidentUpdatesTimeline updates={incident.updates} />
         </section>
       </main>

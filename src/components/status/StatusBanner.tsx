@@ -2,6 +2,7 @@
 
 import { CheckCircle2, AlertTriangle, AlertCircle, XCircle, Wrench } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { t } from "@/lib/i18n";
 
 export type OverallStatus = "operational" | "degraded" | "partial" | "major" | "maintenance";
 
@@ -13,27 +14,27 @@ interface StatusBannerProps {
 const statusConfig = {
   operational: {
     icon: CheckCircle2,
-    text: "All systems are operational",
+    text: t("banner.operational"),
     className: "bg-status-banner-operational",
   },
   degraded: {
     icon: AlertTriangle,
-    text: "Some systems are experiencing degraded performance",
+    text: t("banner.degraded"),
     className: "bg-status-banner-degraded",
   },
   partial: {
     icon: AlertCircle,
-    text: "Some systems are experiencing partial outages",
+    text: t("banner.partial"),
     className: "bg-status-banner-partial",
   },
   major: {
     icon: XCircle,
-    text: "Major system outage in progress",
+    text: t("banner.major"),
     className: "bg-status-banner-major",
   },
   maintenance: {
     icon: Wrench,
-    text: "Scheduled maintenance in progress",
+    text: t("banner.maintenance"),
     className: "bg-status-banner-maintenance",
   },
 };

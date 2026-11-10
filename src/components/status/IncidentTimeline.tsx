@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { t } from '@/lib/i18n'
 import { cn } from "@/lib/utils";
 import { incidentStatusConfig, type IncidentUpdateStatus } from "@/lib/status-config";
 import type { ServiceStatus } from "./StatusIndicator";
@@ -45,7 +46,7 @@ export function IncidentTimeline({ days }: IncidentTimelineProps) {
           <h3 className="mb-3 text-lg font-semibold text-foreground">{day.date}</h3>
           {day.incidents.length === 0 ? (
             <div className="rounded-lg border border-border bg-muted/30 px-5 py-4">
-              <p className="text-sm text-muted-foreground">No incidents reported.</p>
+              <p className="text-sm text-muted-foreground">{t("incident.none")}</p>
             </div>
           ) : (
             <div className="space-y-4">
@@ -70,7 +71,7 @@ export function IncidentTimelineWithLinks({ days }: IncidentTimelineWithLinksPro
           </h3>
           {day.incidents.length === 0 ? (
             <div className="rounded-lg border border-border bg-muted/30 px-5 py-4">
-              <p className="text-sm text-muted-foreground">No incidents reported.</p>
+              <p className="text-sm text-muted-foreground">{t("incident.none")}</p>
             </div>
           ) : (
             <div className="space-y-4">
@@ -113,7 +114,7 @@ function IncidentCard({ incident, linkToDetail = false }: { incident: Incident; 
               : "bg-status-degraded/10 text-status-degraded"
           )}
         >
-          {isResolved ? "Resolved" : "Ongoing"}
+          {isResolved ? t("incident.resolved") : t("incident.ongoing")}
         </span>
       </div>
       <div className="p-5">

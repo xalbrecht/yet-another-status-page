@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { t, tf } from '@/lib/i18n'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { ChevronLeft, Wrench, Clock, CheckCircle2, AlertTriangle } from 'lucide-react'
@@ -20,10 +21,10 @@ interface PageProps {
 }
 
 const statusConfig: Record<string, { label: string; className: string; icon: typeof Wrench }> = {
-  upcoming: { label: "Upcoming", className: "bg-status-maintenance/10 text-status-maintenance", icon: Clock },
-  in_progress: { label: "In Progress", className: "bg-status-degraded/10 text-status-degraded", icon: Wrench },
-  completed: { label: "Completed", className: "bg-status-operational/10 text-status-operational", icon: CheckCircle2 },
-  cancelled: { label: "Cancelled", className: "bg-muted text-muted-foreground", icon: AlertTriangle },
+  upcoming: { label: t("maintenance.badgeUpcoming"), className: "bg-status-maintenance/10 text-status-maintenance", icon: Clock },
+  in_progress: { label: t("maintenance.in_progress"), className: "bg-status-degraded/10 text-status-degraded", icon: Wrench },
+  completed: { label: t("maintenance.completed"), className: "bg-status-operational/10 text-status-operational", icon: CheckCircle2 },
+  cancelled: { label: t("maintenance.cancelled"), className: "bg-muted text-muted-foreground", icon: AlertTriangle },
 }
 
 async function getMaintenanceData(shortId: string) {
@@ -89,11 +90,11 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const data = await getMaintenanceData(shortId)
 
   if (!data) {
-    return { title: 'Maintenance Not Found' }
+    return { title: t('maintenance.notFound') }
   }
 
   const title = `${data.maintenance.title} - ${data.settings.siteName}`
-  const description = `Scheduled maintenance: ${data.maintenance.title}`
+  const description = tf('maintenance.metaDescription', { title: data.maintenance.title })
 
   return {
     title,
@@ -121,7 +122,7 @@ export default async function MaintenancePage({ params }: PageProps) {
         siteName={settings.siteName}
         logoLightUrl={getMediaUrl(settings.logoLight)}
         logoDarkUrl={getMediaUrl(settings.logoDark)}
-        subtitle="Maintenance Details"
+        subtitle={t('maintenance.details')}
       />
 
       <main className="mx-auto w-full max-w-4xl flex-1 px-4 py-8 sm:px-6">
@@ -132,7 +133,7 @@ export default async function MaintenancePage({ params }: PageProps) {
             className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:text-primary/80 transition-colors"
           >
             <ChevronLeft className="h-4 w-4" />
-            Back to status
+            {t('nav.backToStatus')}
           </Link>
           <CopyLinkButton />
         </div>
@@ -152,7 +153,7 @@ export default async function MaintenancePage({ params }: PageProps) {
                       <Clock className="h-4 w-4" />
                       {maintenance.scheduledAt}
                     </span>
-                    {maintenance.duration && <span>Duration: {maintenance.duration}</span>}
+                    {maintenance.duration && <span>{t("maintenance.duration")}: {maintenance.duration}</span>}
                   </div>
                 </div>
                 <span className={cn("rounded-full px-3 py-1 text-xs font-medium flex items-center gap-1.5", status.className)}>
@@ -169,7 +170,7 @@ export default async function MaintenancePage({ params }: PageProps) {
 
               {maintenance.affectedServices.length > 0 && (
                 <div className="mt-4 flex flex-wrap gap-1.5">
-                  <span className="text-sm text-muted-foreground">Affected services:</span>
+                  <span className="text-sm text-muted-foreground">{t('maintenance.affectedServices')}</span>
                   {maintenance.affectedServices.map((service) => (
                     <span
                       key={service}

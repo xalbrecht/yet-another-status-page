@@ -6,6 +6,7 @@ import { computeOverallStatus, visibleMaintenanceWhere, type ServiceStatus } fro
 import { getMediaUrl } from '@/lib/utils'
 import { Header } from '@/components/status/Header'
 import { Footer } from '@/components/status/Footer'
+import { t, tf } from '@/lib/i18n'
 import { Subscribe } from '@/components/status/SubscribeDialog'
 import { LoginButton } from '@/components/status/LoginButton'
 import { StatusBanner } from '@/components/status/StatusBanner'
@@ -28,7 +29,7 @@ export const revalidate = 0
 export async function generateMetadata(): Promise<Metadata> {
   const settings = await getSettings()
   
-  const title = settings.metaTitle || `${settings.siteName} Status`
+  const title = settings.metaTitle || tf('meta.homeTitle', { siteName: settings.siteName })
   const description = settings.metaDescription || `Real-time status and incident updates for ${settings.siteName} services`
 
   return {
@@ -233,7 +234,7 @@ export default async function StatusPage() {
         {/* Scheduled Maintenance */}
         {maintenances.length > 0 && (
           <section className="mb-10 animate-fade-in">
-            <h2 className="mb-4 text-xl font-bold text-foreground">Scheduled Maintenance</h2>
+            <h2 className="mb-4 text-xl font-bold text-foreground">{t('home.scheduledMaintenance')}</h2>
             <div className="space-y-4">
               {maintenances.map((maintenance) => (
                 <MaintenanceCard key={maintenance.id} maintenance={maintenance} />
@@ -244,14 +245,14 @@ export default async function StatusPage() {
 
         {/* Past Incidents */}
         <section className="animate-fade-in">
-          <h2 className="mb-6 text-xl font-bold text-foreground">Past Incidents</h2>
+          <h2 className="mb-6 text-xl font-bold text-foreground">{t('home.pastIncidents')}</h2>
           <IncidentTimelineWithLinks days={pastIncidents} />
           <div className="mt-6 text-center">
             <Link
               href="/history"
               className="text-sm font-medium text-primary hover:text-primary/80 transition-colors"
             >
-              ← View incident history
+              {t('home.viewHistory')}
             </Link>
           </div>
         </section>

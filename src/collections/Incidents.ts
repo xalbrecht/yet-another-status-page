@@ -1,4 +1,5 @@
 import type { CollectionConfig } from 'payload'
+import { t } from '@/lib/i18n'
 import { generateShortId } from '@/lib/shortId'
 import { standardAccess } from '@/lib/access'
 import { getServerUrl } from '@/lib/utils'
@@ -71,20 +72,20 @@ async function createIncidentNotificationDeferred(data: DeferredNotification) {
     
     if (data.isInitial) {
       // Initial incident notification (from first update)
-      const template = smsSettings.templateIncidentNew || '[{{siteName}}] 🚨 INCIDENT: {{title}} | {{status}} | {{message}} | {{url}}'
+      const template = smsSettings.templateIncidentNew || t('notif.smsIncidentNew')
       smsBody = interpolateTemplate(template, templateVars)
-      emailBody = `A new incident has been reported.\n\nStatus: ${data.statusLabel}\n\n${data.message}\n\nView full details: ${url}`
+      emailBody = `${t('notif.incidentNew')}\n\n${t('notif.status')}: ${data.statusLabel}\n\n${data.message}\n\n${t('notif.viewDetails')}: ${url}`
     } else {
       // Subsequent update notification
       const template = smsSettings.templateIncidentUpdate || '[{{siteName}}] 📢 {{title}} | {{status}} | {{message}} | {{url}}'
       smsBody = interpolateTemplate(template, templateVars)
-      emailBody = `Status: ${data.statusLabel}\n\n${data.message}\n\nView full details: ${url}`
+      emailBody = `${t('notif.status')}: ${data.statusLabel}\n\n${data.message}\n\n${t('notif.viewDetails')}: ${url}`
     }
     
     const notification = await payload.create({
       collection: 'notifications',
       data: {
-        title: data.isInitial ? `[New Incident] ${data.title}` : `[${data.statusLabel}] ${data.title}`,
+        title: data.isInitial ? `[${t('notif.newIncident')}] ${data.title}` : `[${data.statusLabel}] ${data.title}`,
         relatedIncident: typeof data.docId === 'string' ? parseInt(data.docId, 10) : data.docId,
         updateIndex: data.updateIndex,
         channel: 'both',
@@ -260,10 +261,10 @@ export const Incidents: CollectionConfig = {
         }
 
         const statusLabels: Record<string, string> = {
-          investigating: 'Investigating',
-          identified: 'Identified',
-          monitoring: 'Monitoring',
-          resolved: 'Resolved',
+          investigating: t('incident.investigating'),
+          identified: t('incident.identified'),
+          monitoring: t('incident.monitoring'),
+          resolved: t('incident.resolved'),
         }
         const title = doc.title || 'Incident'
         const shortId = doc.shortId || ''
@@ -273,7 +274,7 @@ export const Incidents: CollectionConfig = {
         // On create, use the first update for the initial notification
         if (operation === 'create' && currentUpdates.length > 0) {
           const firstUpdate = currentUpdates[0]
-          const statusLabel = statusLabels[firstUpdate.status] || firstUpdate.status || 'Investigating'
+          const statusLabel = statusLabels[firstUpdate.status] || firstUpdate.status || t('incident.investigating')
           
           const notificationData: DeferredNotification = {
             docId: doc.id,

@@ -1,4 +1,5 @@
 import type { Incident, Maintenance } from '@/payload-types'
+import { t, tf } from '@/lib/i18n'
 import { incidentStatusConfig, maintenanceStatusConfig } from '@/lib/status-config'
 import { lexicalToHtml } from '@/lib/lexical'
 import { getServerUrl } from '@/lib/utils'
@@ -50,10 +51,10 @@ export function incidentEntry(doc: Incident): Entry {
 export function maintenanceEntry(doc: Maintenance): Entry {
   const url = `${getServerUrl()}/m/${doc.shortId}`
   const label = maintenanceStatusConfig[doc.status]?.label ?? doc.status
-  const schedule = `<p>Scheduled: ${esc(doc.scheduledStartAt)}${doc.scheduledEndAt ? ` – ${esc(doc.scheduledEndAt)}` : ''}${doc.duration ? ` (${esc(doc.duration)})` : ''}</p>`
+  const schedule = `<p>${t('feed.scheduled')} ${esc(doc.scheduledStartAt)}${doc.scheduledEndAt ? ` – ${esc(doc.scheduledEndAt)}` : ''}${doc.duration ? ` (${esc(doc.duration)})` : ''}</p>`
   return {
     id: url,
-    title: `[Maintenance ${label}] ${doc.title}`,
+    title: `[${t('feed.maintenanceTag')} ${label}] ${doc.title}`,
     url,
     published: doc.createdAt,
     updated: latestUpdateAt(doc),
@@ -82,7 +83,7 @@ export function renderAtom(siteName: string, selfPath: string, entries: Entry[])
   return `<?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
   <id>${esc(base)}/</id>
-  <title>${esc(siteName)} Status</title>
+  <title>${esc(tf('feed.title', { siteName }))}</title>
   <link rel="alternate" type="text/html" href="${esc(base)}/"/>
   <link rel="self" type="application/atom+xml" href="${esc(base)}${selfPath}"/>
   <updated>${esc(updated)}</updated>

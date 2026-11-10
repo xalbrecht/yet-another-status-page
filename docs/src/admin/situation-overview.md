@@ -32,8 +32,7 @@ The field **Bar period** (Zeitraum der Balken) in the same section sets the defa
 
 The start page calculates one bar per service and group. To keep the load low, the result is cached for all visitors for 60 seconds (environment variable `LAGEBILD_CACHE_SECONDS`, `0` switches the cache off, see [Configuration](../getting-started/configuration.md)). The cache is separate for each look-back, bar period, language and time zone.
 
-- A change of a service status, of a service or of a group discards the cache at once. The new state appears on the next load of the page.
-- Other changes (for example the title of an incident that is linked in the list of disruptions) appear after at most 60 seconds.
+- A change of a service status, of a service, of a group, of an incident or of a maintenance discards the cache at once. The new state appears on the next load of the page. In a window of a few milliseconds while the change is saved, a request can still cache the old state for up to 60 seconds.
 - The bars and the times above them can be up to 60 seconds old.
 - The cache lives in each application instance (default cache handler of Next.js). With several instances (for example several Helm replicas) a change discards the cache only in the instance that received it. The others catch up after at most 60 seconds.
 

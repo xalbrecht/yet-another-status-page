@@ -108,6 +108,28 @@ test.describe('Lagebild', () => {
     await expect(tile()).toContainText(/2 (Dienste|services)/)
   })
 
+  test('Titel einer Störung ist trotz Zwischenspeicher sofort sichtbar', async ({ page }) => {
+    // Der Titel der zugehörigen Störung steht in der Liste der Einschränkungen und damit im Zwischenspeicher.
+    // Ändert sich nur der Titel (kein Zustand eines Dienstes), muss die Störung selbst den Zwischenspeicher verwerfen.
+    const id = Date.now()
+    const group = await createServiceGroup({ name: `Störung Gruppe ${id}` })
+    const service = await createService({ name: `Störung Dienst ${id}`, group: group.id })
+    const incident = await createIncident({
+      title: `Titel alt ${id}`,
+      impact: 'major',
+      affectedServices: [service.id],
+      updates: [{ status: 'investigating', message: 'Wir prüfen.', createdAt: new Date(Date.now() - 60_000).toISOString() }],
+    })
+    await updateSettings({ lagebildVariant: 'a' })
+
+    await page.goto('/')
+    await expect(page.getByText(`Titel alt ${id}`).first()).toBeVisible()
+
+    await updateIncident(incident.id, { title: `Titel neu ${id}` })
+    await page.reload()
+    await expect(page.getByTestId('lagebild-a').getByText(`Titel neu ${id}`).first()).toBeVisible()
+  })
+
   test('Rückschau: Vorgabe des Admins, Auswahl des Besuchers, ungültiger Wert', async ({ page }) => {
     const id = Date.now()
     const group = await createServiceGroup({ name: `Rückschau Gruppe ${id}` })

@@ -186,5 +186,6 @@ export const de: Record<TranslationKey, string> = {
   'lagebild.colBar': 'Letzte 12 Stunden',
   'lagebild.colAvailability': 'Verfügbarkeit',
   'lagebild.close': 'Schließen',
+  'lagebild.since': 'seit {time}',
   'lagebild.servicesOf': 'Dienste der Gruppe {group}',
 }

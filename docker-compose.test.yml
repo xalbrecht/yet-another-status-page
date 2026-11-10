@@ -17,6 +17,10 @@ services:
       - NODE_ENV=development
       # Allow unauthenticated writes for E2E tests
       - PAYLOAD_PUBLIC_ALLOW_WRITES=true
+      # The upstream specs read English texts ("Page Not Found", "Past Incidents"). The default is German.
+      - NEXT_PUBLIC_UI_LANG=en
+      # Do not rewrite src/payload-types.ts and the import map in the working directory
+      - PAYLOAD_AUTO_GENERATE=false
     command: sh -c "npm install && npm run dev -- --port 3000"
     depends_on:
       db:

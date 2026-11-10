@@ -1,10 +1,11 @@
 import type { GlobalConfig } from 'payload'
+import { ta } from '@/lib/i18n/admin'
 
 export const EmailSettings: GlobalConfig = {
   slug: 'email-settings',
-  label: 'Email Settings',
+  label: ta('Email Settings'),
   admin: {
-    group: 'Configuration',
+    group: ta('Configuration'),
   },
   access: {
     read: () => true,
@@ -14,14 +15,14 @@ export const EmailSettings: GlobalConfig = {
       name: 'enabled',
       type: 'checkbox',
       defaultValue: false,
-      label: 'Enable Email Subscriptions',
+      label: ta('Enable Email Subscriptions'),
       admin: {
-        description: 'Allow users to subscribe via email (requires SMTP to be configured)',
+        description: ta('Allow users to subscribe via email (requires SMTP to be configured)'),
       },
     },
     {
       type: 'collapsible',
-      label: 'SMTP Configuration',
+      label: ta('SMTP Configuration'),
       admin: {
         initCollapsed: false,
       },
@@ -29,48 +30,48 @@ export const EmailSettings: GlobalConfig = {
         {
           name: 'smtpHost',
           type: 'text',
-          label: 'SMTP Host',
+          label: ta('SMTP Host'),
           admin: {
-            description: 'SMTP server hostname (e.g., smtp.gmail.com, smtp.sendgrid.net)',
+            description: ta('SMTP server hostname (e.g., smtp.gmail.com, smtp.sendgrid.net)'),
           },
         },
         {
           name: 'smtpPort',
           type: 'number',
-          label: 'SMTP Port',
+          label: ta('SMTP Port'),
           defaultValue: 587,
           admin: {
-            description: 'SMTP port (typically 587 for TLS, 465 for SSL, 25 for unencrypted)',
+            description: ta('SMTP port (typically 587 for TLS, 465 for SSL, 25 for unencrypted)'),
           },
         },
         {
           name: 'smtpSecure',
           type: 'select',
-          label: 'Encryption',
+          label: ta('Encryption'),
           defaultValue: 'tls',
           options: [
-            { label: 'TLS (STARTTLS) - Port 587', value: 'tls' },
-            { label: 'SSL - Port 465', value: 'ssl' },
-            { label: 'None - Port 25', value: 'none' },
+            { label: ta('TLS (STARTTLS) - Port 587'), value: 'tls' },
+            { label: ta('SSL - Port 465'), value: 'ssl' },
+            { label: ta('None - Port 25'), value: 'none' },
           ],
           admin: {
-            description: 'Connection security method',
+            description: ta('Connection security method'),
           },
         },
         {
           name: 'smtpUsername',
           type: 'text',
-          label: 'SMTP Username',
+          label: ta('SMTP Username'),
           admin: {
-            description: 'Username for SMTP authentication (often your email address)',
+            description: ta('Username for SMTP authentication (often your email address)'),
           },
         },
         {
           name: 'smtpPassword',
           type: 'text',
-          label: 'SMTP Password',
+          label: ta('SMTP Password'),
           admin: {
-            description: 'Password or API key for SMTP authentication. Leave empty to keep existing value.',
+            description: ta('Password or API key for SMTP authentication. Leave empty to keep existing value.'),
             autoComplete: 'new-password',
           },
           hooks: {
@@ -98,25 +99,25 @@ export const EmailSettings: GlobalConfig = {
         {
           name: 'smtpFromAddress',
           type: 'email',
-          label: 'From Email Address',
+          label: ta('From Email Address'),
           admin: {
-            description: 'Email address that notifications will be sent from',
+            description: ta('Email address that notifications will be sent from'),
           },
         },
         {
           name: 'smtpFromName',
           type: 'text',
-          label: 'From Name',
+          label: ta('From Name'),
           admin: {
-            description: 'Display name for the sender (e.g., "Acme Status")',
+            description: ta('Display name for the sender (e.g., "Acme Status")'),
           },
         },
         {
           name: 'smtpReplyTo',
           type: 'email',
-          label: 'Reply-To Address',
+          label: ta('Reply-To Address'),
           admin: {
-            description: 'Optional reply-to email address (leave empty to use From address)',
+            description: ta('Optional reply-to email address (leave empty to use From address)'),
           },
         },
       ],

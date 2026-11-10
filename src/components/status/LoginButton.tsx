@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { t } from '@/lib/i18n'
 import Link from 'next/link'
 
 export function LoginButton() {
@@ -24,7 +25,7 @@ export function LoginButton() {
       href="/admin/"
       className="inline-flex items-center justify-center rounded-md bg-brand px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-brand-hover focus:outline-none focus:ring-2 focus:ring-brand focus:ring-offset-2"
     >
-      Login
+      {t("common.login")}
     </Link>
   )
 }

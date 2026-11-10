@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { t, tf } from '@/lib/i18n'
 import { notFound, redirect } from 'next/navigation'
 import Link from 'next/link'
 import { ChevronLeft, ChevronRight, Calendar } from 'lucide-react'
@@ -38,15 +39,15 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const parsedDate = dateFromSlug(dateSlug, dt.timezone)
   
   if (!parsedDate) {
-    return { title: 'Week Not Found' }
+    return { title: t('history.weekNotFound') }
   }
   
   const weekStart = getWeekStart(parsedDate, dt.weekStartsOn, dt.timezone)
   const weekEnd = addZonedDays(weekStart, 6, dt.timezone)
   const weekRange = `${formatShortDate(weekStart, dt)} - ${formatShortDate(weekEnd, dt)}`
   
-  const titleTemplate = settings.historyMetaTitle || 'Incidents: {{date}} - {{siteName}}'
-  const descriptionTemplate = settings.historyMetaDescription || 'Status updates and incidents for {{siteName}} during {{date}}'
+  const titleTemplate = settings.historyMetaTitle || t('history.weekMetaTitle')
+  const descriptionTemplate = settings.historyMetaDescription || t('history.weekMetaDescription')
   
   const title = titleTemplate
     .replace(/\{\{date\}\}/g, weekRange)
@@ -174,7 +175,7 @@ export default async function WeekPage({ params }: PageProps) {
         siteName={settings.siteName}
         logoLightUrl={getMediaUrl(settings.logoLight)}
         logoDarkUrl={getMediaUrl(settings.logoDark)}
-        subtitle="Incident History"
+        subtitle={t('history.title')}
       />
 
       <main className="mx-auto w-full max-w-4xl flex-1 px-4 py-8 sm:px-6">
@@ -185,18 +186,20 @@ export default async function WeekPage({ params }: PageProps) {
             className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:text-primary/80 transition-colors"
           >
             <ChevronLeft className="h-4 w-4" />
-            Back to current status
+            {t('history.backToCurrent')}
           </Link>
         </div>
 
         {/* Title and Week Range */}
         <div className="mb-8 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-foreground">Incident History</h1>
+            <h1 className="text-2xl font-bold text-foreground">{t('history.title')}</h1>
             <p className="mt-1 text-sm text-muted-foreground">
               {totalIncidents === 0
-                ? "No incidents reported"
-                : `${totalIncidents} incident${totalIncidents !== 1 ? "s" : ""} reported`}
+                ? t("history.none")
+                : totalIncidents === 1
+                  ? t("history.one")
+                  : tf("history.many", { count: totalIncidents })}
             </p>
           </div>
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -221,7 +224,7 @@ export default async function WeekPage({ params }: PageProps) {
             )}
           >
             <ChevronLeft className="h-4 w-4" />
-            Previous week
+            {t('history.prevWeek')}
           </Link>
 
           {nextWeekSlug ? (
@@ -233,7 +236,7 @@ export default async function WeekPage({ params }: PageProps) {
                 "hover:bg-accent hover:text-accent-foreground"
               )}
             >
-              Next week
+              {t('history.nextWeek')}
               <ChevronRight className="h-4 w-4" />
             </Link>
           ) : (
@@ -243,7 +246,7 @@ export default async function WeekPage({ params }: PageProps) {
                 "text-sm font-medium text-muted-foreground opacity-50 cursor-not-allowed"
               )}
             >
-              Next week
+              {t('history.nextWeek')}
               <ChevronRight className="h-4 w-4" />
             </span>
           )}

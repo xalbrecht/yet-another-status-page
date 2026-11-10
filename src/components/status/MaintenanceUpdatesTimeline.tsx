@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils";
+import { t } from '@/lib/i18n'
 import { maintenanceStatusConfig, type MaintenanceUpdateStatus } from "@/lib/status-config";
 
 interface MaintenanceUpdate {
@@ -17,7 +18,7 @@ export function MaintenanceUpdatesTimeline({ updates }: MaintenanceUpdatesTimeli
 
   return (
     <section className="animate-fade-in">
-      <h2 className="mb-6 text-xl font-bold text-foreground">Updates</h2>
+      <h2 className="mb-6 text-xl font-bold text-foreground">{t("common.updates")}</h2>
       <div className="rounded-lg border border-border bg-card p-6">
         <div className="relative space-y-6">
           {updates.map((update, index) => {

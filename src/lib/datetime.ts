@@ -1,3 +1,5 @@
+import { tf } from '@/lib/i18n'
+
 export type WeekStartsOn = 'sunday' | 'monday'
 
 export type DateTimeConfig = {
@@ -324,7 +326,7 @@ export function formatNotificationDateTime(date: Date, config: DateTimeConfig): 
 }
 
 export function formatTimezoneNotice(timeZone: string): string {
-  return `All times in ${safeTimeZone(timeZone)}`
+  return tf('footer.timezone', { timezone: safeTimeZone(timeZone) })
 }
 
 export function utcToPickerDate(value: string | Date, timeZone: string): Date {

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { t, tf } from '@/lib/i18n'
 import { Mail, MessageSquare, X, Bell, AlertCircle } from "lucide-react";
 import { z } from "zod";
 import { cn } from "@/lib/utils";
@@ -14,19 +15,19 @@ interface SubscriptionAvailability {
 
 const emailSchema = z.object({
   email: z
-    .email({ message: "Please enter a valid email address" })
+    .email({ message: t("sub.emailInvalid") })
     .trim()
-    .min(1, { message: "Email is required" })
-    .max(255, { message: "Email must be less than 255 characters" }),
+    .min(1, { message: t("sub.emailRequired") })
+    .max(255, { message: t("sub.emailTooLong") }),
 });
 
 const smsSchema = z.object({
   phone: z
     .string()
     .trim()
-    .min(1, { message: "Phone number is required" })
+    .min(1, { message: t("sub.phoneRequired") })
     .regex(/^\+?[1-9]\d{6,14}$/, {
-      message: "Please enter a valid phone number (e.g., +1234567890)",
+      message: t("sub.phoneInvalid"),
     }),
 });
 
@@ -100,17 +101,17 @@ export function SubscribeDialog({ isOpen, onClose }: SubscribeDialogProps) {
         });
         
         if (!response.ok) {
-          let errorMessage = "Failed to subscribe";
+          let errorMessage = t("sub.failed");
           try {
             const data = await response.json();
             errorMessage = data.error || errorMessage;
           } catch {
-            errorMessage = response.statusText || `Error ${response.status}`;
+            errorMessage = response.statusText || `${t("common.error")} ${response.status}`;
           }
           throw new Error(errorMessage);
         }
         
-        setSuccessMessage(`You'll receive status updates at ${email}`);
+        setSuccessMessage(tf("sub.successEmail", { email }));
         setEmail("");
       } else {
         const result = smsSchema.safeParse({ phone });
@@ -127,17 +128,17 @@ export function SubscribeDialog({ isOpen, onClose }: SubscribeDialogProps) {
         });
         
         if (!response.ok) {
-          let errorMessage = "Failed to subscribe";
+          let errorMessage = t("sub.failed");
           try {
             const data = await response.json();
             errorMessage = data.error || errorMessage;
           } catch {
-            errorMessage = response.statusText || `Error ${response.status}`;
+            errorMessage = response.statusText || `${t("common.error")} ${response.status}`;
           }
           throw new Error(errorMessage);
         }
         
-        setSuccessMessage(`You'll receive SMS updates at ${phone}`);
+        setSuccessMessage(tf("sub.successSms", { phone }));
         setPhone("");
       }
       
@@ -146,7 +147,7 @@ export function SubscribeDialog({ isOpen, onClose }: SubscribeDialogProps) {
         setSuccessMessage(null);
       }, 2000);
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "Failed to subscribe. Please try again.";
+      const errorMessage = error instanceof Error ? error.message : t("sub.failedRetry");
       setErrors({ 
         [method === "email" ? "email" : "phone"]: errorMessage 
       });
@@ -174,11 +175,11 @@ export function SubscribeDialog({ isOpen, onClose }: SubscribeDialogProps) {
       <div className="relative z-10 mx-4 w-full max-w-lg animate-fade-in rounded-xl border border-border bg-card shadow-2xl sm:mx-0">
         {/* Header */}
         <div className="flex items-center justify-between border-b border-border px-5 py-4 sm:px-6">
-          <h2 className="text-lg font-semibold text-foreground">Get status updates</h2>
+          <h2 className="text-lg font-semibold text-foreground">{t("sub.title")}</h2>
           <button
             onClick={onClose}
             className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-            aria-label="Close dialog"
+            aria-label={t("sub.closeDialog")}
           >
             <X className="h-5 w-5" />
           </button>
@@ -195,10 +196,10 @@ export function SubscribeDialog({ isOpen, onClose }: SubscribeDialogProps) {
               <AlertCircle className="h-5 w-5 flex-shrink-0 text-muted-foreground" />
               <div>
                 <p className="text-sm font-medium text-foreground">
-                  Subscriptions not available
+                  {t("sub.unavailableTitle")}
                 </p>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  Status update notifications are not currently configured. Please check back later or contact the administrator.
+                  {t("sub.unavailableText")}
                 </p>
               </div>
             </div>
@@ -224,7 +225,7 @@ export function SubscribeDialog({ isOpen, onClose }: SubscribeDialogProps) {
                     )}
                   >
                     <Mail className="h-4 w-4" />
-                    Email
+                    {t("sub.tabEmail")}
                   </button>
                   <button
                     onClick={() => {
@@ -259,7 +260,7 @@ export function SubscribeDialog({ isOpen, onClose }: SubscribeDialogProps) {
                     )}
                   >
                     <Mail className="h-4 w-4" />
-                    Email
+                    {t("sub.tabEmail")}
                   </button>
                   <button
                     onClick={() => {
@@ -293,7 +294,7 @@ export function SubscribeDialog({ isOpen, onClose }: SubscribeDialogProps) {
                   {onlyEmailAvailable && (
                     <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
                       <Mail className="h-4 w-4" />
-                      <span>Subscribe via email</span>
+                      <span>{t("sub.viaEmail")}</span>
                     </div>
                   )}
                   <div>
@@ -301,14 +302,14 @@ export function SubscribeDialog({ isOpen, onClose }: SubscribeDialogProps) {
                       htmlFor="email"
                       className="mb-1.5 block text-sm font-medium text-foreground"
                     >
-                      Email Address
+                      {t("sub.emailLabel")}
                     </label>
                     <input
                       id="email"
                       type="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      placeholder="you@example.com"
+                      placeholder={t("sub.emailPlaceholder")}
                       className={cn(
                         "w-full rounded-lg border bg-background px-4 py-2.5 text-sm text-foreground",
                         "placeholder:text-muted-foreground",
@@ -322,7 +323,7 @@ export function SubscribeDialog({ isOpen, onClose }: SubscribeDialogProps) {
                     )}
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    We&apos;ll only email you when there are incidents or scheduled maintenance.
+                    {t("sub.emailHint")}
                   </p>
                 </div>
               ) : (availability?.sms && method === "sms") || onlySmsAvailable ? (
@@ -330,7 +331,7 @@ export function SubscribeDialog({ isOpen, onClose }: SubscribeDialogProps) {
                   {onlySmsAvailable && (
                     <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
                       <MessageSquare className="h-4 w-4" />
-                      <span>Subscribe via SMS</span>
+                      <span>{t("sub.viaSms")}</span>
                     </div>
                   )}
                   <div>
@@ -338,14 +339,14 @@ export function SubscribeDialog({ isOpen, onClose }: SubscribeDialogProps) {
                       htmlFor="phone"
                       className="mb-1.5 block text-sm font-medium text-foreground"
                     >
-                      Phone Number
+                      {t("sub.phoneLabel")}
                     </label>
                     <input
                       id="phone"
                       type="tel"
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
-                      placeholder="+1234567890"
+                      placeholder={t("sub.phonePlaceholder")}
                       className={cn(
                         "w-full rounded-lg border bg-background px-4 py-2.5 text-sm text-foreground",
                         "placeholder:text-muted-foreground",
@@ -359,7 +360,7 @@ export function SubscribeDialog({ isOpen, onClose }: SubscribeDialogProps) {
                     )}
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    Include your country code. Standard SMS rates may apply.
+                    {t("sub.phoneHint")}
                   </p>
                 </div>
               ) : null}
@@ -380,10 +381,10 @@ export function SubscribeDialog({ isOpen, onClose }: SubscribeDialogProps) {
                     {isSubmitting ? (
                       <>
                         <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-                        Subscribing...
+                        {t("sub.submitting")}
                       </>
                     ) : (
-                      "Subscribe"
+                      t("sub.submit")
                     )}
                   </button>
                 </div>
@@ -410,10 +411,10 @@ export function SubscribeButton({ onClick }: SubscribeButtonProps) {
         "text-sm font-medium text-foreground transition-all",
         "hover:bg-accent hover:text-accent-foreground"
       )}
-      aria-label="Subscribe to updates"
+      aria-label={t("sub.buttonAria")}
     >
       <Bell className="h-4 w-4" />
-      <span className="hidden sm:inline">Subscribe</span>
+      <span className="hidden sm:inline">{t("sub.submit")}</span>
     </button>
   );
 }

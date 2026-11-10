@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { t } from '@/lib/i18n'
 import { getPayload } from 'payload'
 import { headers } from 'next/headers'
 import config from '@payload-config'
@@ -66,7 +67,7 @@ export async function POST(request: NextRequest) {
     // Get the related item for the permalink
     const siteUrl = getServerUrl()
     let itemUrl = siteUrl
-    let itemTitle = 'Status Update'
+    let itemTitle = t('mail.defaultTitle')
 
     if (notification.relatedIncident) {
       const incident = typeof notification.relatedIncident === 'object' 

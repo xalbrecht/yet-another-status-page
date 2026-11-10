@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils";
+import { t } from '@/lib/i18n'
 import { incidentStatusConfig, type IncidentUpdateStatus } from "@/lib/status-config";
 
 interface IncidentUpdate {
@@ -41,7 +42,7 @@ export function IncidentUpdatesTimeline({ updates }: IncidentUpdatesTimelineProp
                     {config.label}
                   </span>
                   <span className="text-xs text-muted-foreground">
-                    {update.date} at {update.timestamp}
+                    {update.date} {t("common.at")} {update.timestamp}
                   </span>
                 </div>
                 <p className="mt-1 text-sm text-muted-foreground">{update.message}</p>

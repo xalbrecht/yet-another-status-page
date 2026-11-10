@@ -5,12 +5,13 @@ import { standardAccess } from '@/lib/access'
 import { getServerUrl } from '@/lib/utils'
 import { formatNotificationDateTime, resolveDateTimeConfig } from '@/lib/datetime'
 import { localizedDateAdmin } from '@/lib/localizedDateAdmin'
+import { ta } from '@/lib/i18n/admin'
 
 export const maintenanceStatusOptions = [
-  { label: 'Upcoming', value: 'upcoming' },
-  { label: 'In Progress', value: 'in_progress' },
-  { label: 'Completed', value: 'completed' },
-  { label: 'Cancelled', value: 'cancelled' },
+  { label: ta('Upcoming'), value: 'upcoming' },
+  { label: ta('In Progress'), value: 'in_progress' },
+  { label: ta('Completed'), value: 'completed' },
+  { label: ta('Cancelled'), value: 'cancelled' },
 ] as const
 
 export type MaintenanceStatus = (typeof maintenanceStatusOptions)[number]['value']
@@ -191,10 +192,11 @@ async function createMaintenanceNotificationDeferred(data: DeferredNotification)
 
 export const Maintenances: CollectionConfig = {
   slug: 'maintenances',
+  labels: { singular: ta('Maintenance', 'Wartung'), plural: ta('Maintenances', 'Wartungen') },
   admin: {
     useAsTitle: 'title',
     defaultColumns: ['title', 'shortId', 'status', 'scheduledStartAt', 'updatedAt'],
-    group: 'Status',
+    group: ta('Status'),
   },
   access: standardAccess,
   fields: [
@@ -202,9 +204,9 @@ export const Maintenances: CollectionConfig = {
       name: 'title',
       type: 'text',
       required: true,
-      label: 'Maintenance Title',
+      label: ta('Maintenance Title'),
       admin: {
-        description: 'A brief description of the maintenance (e.g., "Database Migration")',
+        description: ta('A brief description of the maintenance (e.g., "Database Migration")'),
       },
     },
     {
@@ -212,41 +214,41 @@ export const Maintenances: CollectionConfig = {
       type: 'text',
       unique: true,
       index: true,
-      label: 'Short ID',
+      label: ta('Short ID'),
       admin: {
         position: 'sidebar',
-        description: 'Auto-generated short ID for permalinks',
+        description: ta('Auto-generated short ID for permalinks'),
         readOnly: true,
       },
     },
     {
       name: 'cancelledAt',
       type: 'date',
-      label: 'Cancelled At',
+      label: ta('Cancelled At'),
       index: true,
       admin: localizedDateAdmin({
         position: 'sidebar',
-        description: 'When the maintenance was cancelled',
+        description: ta('When the maintenance was cancelled'),
         readOnly: true,
       }),
     },
     {
       name: 'completedAt',
       type: 'date',
-      label: 'Completed At',
+      label: ta('Completed At'),
       index: true,
       admin: localizedDateAdmin({
         position: 'sidebar',
-        description: 'When the maintenance was completed',
+        description: ta('When the maintenance was completed'),
         readOnly: true,
       }),
     },
     {
       name: 'description',
       type: 'richText',
-      label: 'Description',
+      label: ta('Description'),
       admin: {
-        description: 'Detailed description of the maintenance work',
+        description: ta('Detailed description of the maintenance work'),
       },
       // Uses global editor config with FixedToolbarFeature
     },
@@ -255,38 +257,39 @@ export const Maintenances: CollectionConfig = {
       type: 'relationship',
       relationTo: 'services',
       hasMany: true,
-      label: 'Affected Services',
+      label: ta('Affected Services'),
       admin: {
-        description: 'Services that will be affected by this maintenance',
+        description: ta('Services that will be affected by this maintenance'),
       },
     },
     {
       name: 'scheduledStartAt',
       type: 'date',
       required: true,
-      label: 'Scheduled Start',
+      label: ta('Scheduled Start'),
       admin: localizedDateAdmin({
-        description: 'When the maintenance is scheduled to start',
+        description: ta('When the maintenance is scheduled to start'),
       }),
     },
     {
       name: 'scheduledEndAt',
       type: 'date',
-      label: 'Scheduled End',
+      label: ta('Scheduled End'),
       admin: localizedDateAdmin({
-        description: 'When the maintenance is expected to end',
+        description: ta('When the maintenance is expected to end'),
       }),
     },
     {
       name: 'duration',
       type: 'text',
-      label: 'Duration',
+      label: ta('Duration'),
       admin: {
-        description: 'Human-readable duration (e.g., "~2 hours")',
+        description: ta('Human-readable duration (e.g., "~2 hours")'),
       },
     },
     {
       name: 'status',
+      label: ta('Status', 'Status'),
       type: 'select',
       required: true,
       defaultValue: 'upcoming',
@@ -305,9 +308,9 @@ export const Maintenances: CollectionConfig = {
           name: 'autoStartOnSchedule',
           type: 'checkbox',
           defaultValue: true,
-          label: 'Auto-start on schedule',
+          label: ta('Auto-start on schedule'),
           admin: {
-            description: 'Automatically set to "In Progress" when start time is reached',
+            description: ta('Automatically set to "In Progress" when start time is reached'),
             width: '50%',
           },
         },
@@ -315,9 +318,9 @@ export const Maintenances: CollectionConfig = {
           name: 'autoCompleteOnSchedule',
           type: 'checkbox',
           defaultValue: true,
-          label: 'Auto-complete on schedule',
+          label: ta('Auto-complete on schedule'),
           admin: {
-            description: 'Automatically set to "Completed" when end time is reached',
+            description: ta('Automatically set to "Completed" when end time is reached'),
             width: '50%',
           },
         },
@@ -326,35 +329,39 @@ export const Maintenances: CollectionConfig = {
     {
       name: 'updates',
       type: 'array',
-      label: 'Updates',
+      label: ta('Updates'),
+      labels: { singular: ta('Update', 'Aktualisierung'), plural: ta('Updates') },
       admin: {
-        description: 'Optional timeline of updates for this maintenance',
+        description: ta('Optional timeline of updates for this maintenance'),
       },
       fields: [
         {
           name: 'status',
+          label: ta('Status', 'Status'),
           type: 'select',
           required: true,
           options: [...maintenanceStatusOptions],
           admin: {
-            description: 'Status at the time of this update',
+            description: ta('Status at the time of this update'),
           },
         },
         {
           name: 'message',
+          label: ta('Message', 'Nachricht'),
           type: 'textarea',
           required: true,
           admin: {
-            description: 'Update message',
+            description: ta('Update message'),
           },
         },
         {
           name: 'createdAt',
+          label: ta('Created At', 'Erstellt am'),
           type: 'date',
           required: true,
           defaultValue: () => new Date().toISOString(),
           admin: localizedDateAdmin({
-            description: 'When this update was posted',
+            description: ta('When this update was posted'),
           }),
         },
       ],

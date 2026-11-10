@@ -13,6 +13,8 @@ import { vercelBlobStorage } from '@payloadcms/storage-vercel-blob'
 import path from 'path'
 import { buildConfig, Plugin } from 'payload'
 import { fileURLToPath } from 'url'
+import { de } from '@payloadcms/translations/languages/de'
+import { en } from '@payloadcms/translations/languages/en'
 
 // Collections
 import {
@@ -43,6 +45,7 @@ import { isDemoMode } from '@/lib/demo'
 
 // Utils
 import { getServerUrl } from '@/lib/utils'
+import { lang } from '@/lib/i18n'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -82,6 +85,11 @@ export default buildConfig({
   csrf: [
     getServerUrl(),
   ],
+  // Sprache der Admin-Oberfläche folgt NEXT_PUBLIC_UI_LANG (Standard: Deutsch)
+  i18n: {
+    supportedLanguages: lang === 'de' ? { de } : { en },
+    fallbackLanguage: lang,
+  },
   admin: {
     user: Users.slug,
     meta: {

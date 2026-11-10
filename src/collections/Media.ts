@@ -1,9 +1,11 @@
 import type { CollectionConfig } from 'payload'
+import { ta } from '@/lib/i18n/admin'
 
 export const Media: CollectionConfig = {
   slug: 'media',
+  labels: { singular: ta('Media', 'Medium'), plural: ta('Media', 'Medien') },
   admin: {
-    group: 'Admin',
+    group: ta('Admin'),
   },
   access: {
     read: () => true,
@@ -20,9 +22,9 @@ export const Media: CollectionConfig = {
       name: 'alt',
       type: 'text',
       required: true,
-      label: 'Alt Text',
+      label: ta('Alt Text'),
       admin: {
-        description: 'Alternative text for accessibility',
+        description: ta('Alternative text for accessibility'),
       },
     },
   ],

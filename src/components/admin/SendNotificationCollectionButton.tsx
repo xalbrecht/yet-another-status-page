@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react'
 import { useDocumentInfo, useField } from '@payloadcms/ui'
+import { ta } from '@/lib/i18n/admin'
 import './SendNotificationButton.scss'
 
 export const SendNotificationCollectionButton: React.FC = () => {
@@ -51,7 +52,7 @@ export const SendNotificationCollectionButton: React.FC = () => {
       if (response.ok && data.success) {
         setResult({
           success: true,
-          message: `Sent to ${data.totalRecipients} subscriber(s)`,
+          message: ta('Sent to {count} subscriber(s)').replace('{count}', String(data.totalRecipients)),
         })
         // Reload the page to reflect the updated status
         setTimeout(() => {
@@ -60,13 +61,13 @@ export const SendNotificationCollectionButton: React.FC = () => {
       } else {
         setResult({
           success: false,
-          message: data.error || 'Failed to send notification',
+          message: data.error || ta('Failed to send notification'),
         })
       }
     } catch (_error) {
       setResult({
         success: false,
-        message: 'Network error - please try again',
+        message: ta('Network error - please try again'),
       })
     } finally {
       setSending(false)
@@ -77,7 +78,7 @@ export const SendNotificationCollectionButton: React.FC = () => {
     return (
       <div className="send-notification-button">
         <div className="send-notification-button__info">
-          Save the notification first before sending.
+          {ta('Save the notification first before sending.')}
         </div>
       </div>
     )
@@ -87,7 +88,7 @@ export const SendNotificationCollectionButton: React.FC = () => {
     return (
       <div className="send-notification-button">
         <div className="send-notification-button__sent">
-          ✓ Notification sent successfully
+          ✓ {ta('Notification sent successfully')}
         </div>
       </div>
     )
@@ -98,13 +99,13 @@ export const SendNotificationCollectionButton: React.FC = () => {
       {/* Show saved error from previous failed attempt */}
       {isFailed && savedError && (
         <div className="send-notification-button__result send-notification-button__result--error">
-          <strong>Send failed:</strong> {savedError}
+          <strong>{ta('Send failed:')}</strong> {savedError}
         </div>
       )}
 
       {!hasContent && (isDraft || isFailed) && (
         <div className="send-notification-button__warning">
-          Add {channel === 'email' ? 'subject and email body' : channel === 'sms' ? 'SMS message' : 'message content'} before sending.
+          {ta('Add {content} before sending.').replace('{content}', channel === 'email' ? ta('subject and email body') : channel === 'sms' ? ta('SMS message') : ta('message content'))}
         </div>
       )}
 
@@ -123,7 +124,7 @@ export const SendNotificationCollectionButton: React.FC = () => {
         {sending ? (
           <>
             <span className="send-notification-button__spinner" />
-            Sending...
+            {ta('Sending...')}
           </>
         ) : (
           <>
@@ -131,7 +132,7 @@ export const SendNotificationCollectionButton: React.FC = () => {
               <path d="M22 2L11 13" />
               <path d="M22 2L15 22L11 13L2 9L22 2Z" />
             </svg>
-            {isFailed ? 'Retry Send' : 'Send Notification Now'}
+            {isFailed ? ta('Retry Send') : ta('Send Notification Now')}
           </>
         )}
       </button>

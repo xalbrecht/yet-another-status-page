@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { ta } from '@/lib/i18n/admin'
 import './DemoLoginNotice.scss'
 
 export function DemoLoginNotice() {
@@ -100,7 +101,8 @@ export function DemoLoginNotice() {
           <line x1="12" y1="8" x2="12.01" y2="8" />
         </svg>
         <div className="demo-login-notice__text">
-          <strong>Demo Mode:</strong> Use {demoEmail} / {demoPassword} or just click "Login" to try it out!
+          <strong>{ta('Demo Mode:')}</strong>{' '}
+          {ta('Use {credentials} or just click "Login" to try it out!').replace('{credentials}', `${demoEmail} / ${demoPassword}`)}
         </div>
       </div>
     </div>

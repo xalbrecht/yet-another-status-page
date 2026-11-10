@@ -1,22 +1,24 @@
 import type { CollectionConfig } from 'payload'
 import { standardAccess } from '@/lib/access'
+import { ta } from '@/lib/i18n/admin'
 
 export const serviceStatusOptions = [
-  { label: 'Operational', value: 'operational' },
-  { label: 'Degraded Performance', value: 'degraded' },
-  { label: 'Partial Outage', value: 'partial' },
-  { label: 'Major Outage', value: 'major' },
-  { label: 'Under Maintenance', value: 'maintenance' },
+  { label: ta('Operational'), value: 'operational' },
+  { label: ta('Degraded Performance'), value: 'degraded' },
+  { label: ta('Partial Outage'), value: 'partial' },
+  { label: ta('Major Outage'), value: 'major' },
+  { label: ta('Under Maintenance'), value: 'maintenance' },
 ] as const
 
 export type ServiceStatus = (typeof serviceStatusOptions)[number]['value']
 
 export const Services: CollectionConfig = {
   slug: 'services',
+  labels: { singular: ta('Service', 'Dienst'), plural: ta('Services', 'Dienste') },
   admin: {
     useAsTitle: 'name',
     defaultColumns: ['name', 'group', 'status', 'updatedAt'],
-    group: 'Status',
+    group: ta('Status'),
   },
   orderable: true,
   access: standardAccess,
@@ -25,7 +27,7 @@ export const Services: CollectionConfig = {
       name: 'name',
       type: 'text',
       required: true,
-      label: 'Service Name',
+      label: ta('Service Name'),
     },
     {
       name: 'slug',
@@ -33,7 +35,7 @@ export const Services: CollectionConfig = {
       required: true,
       unique: true,
       admin: {
-        description: 'URL-friendly identifier (e.g., "api-gateway")',
+        description: ta('URL-friendly identifier (e.g., "api-gateway")'),
       },
       hooks: {
         beforeValidate: [
@@ -52,9 +54,9 @@ export const Services: CollectionConfig = {
     {
       name: 'description',
       type: 'textarea',
-      label: 'Description',
+      label: ta('Description'),
       admin: {
-        description: 'Optional description for this service',
+        description: ta('Optional description for this service'),
       },
     },
     {
@@ -62,19 +64,20 @@ export const Services: CollectionConfig = {
       type: 'relationship',
       relationTo: 'service-groups',
       required: true,
-      label: 'Service Group',
+      label: ta('Service Group'),
       admin: {
-        description: 'Which group this service belongs to',
+        description: ta('Which group this service belongs to'),
       },
     },
     {
       name: 'status',
+      label: ta('Status', 'Status'),
       type: 'select',
       required: true,
       defaultValue: 'operational',
       options: [...serviceStatusOptions],
       admin: {
-        description: 'Current status of the service',
+        description: ta('Current status of the service'),
       },
     },
   ],

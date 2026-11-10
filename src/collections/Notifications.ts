@@ -1,17 +1,18 @@
 import type { CollectionConfig } from 'payload'
 import { localizedDateAdmin } from '@/lib/localizedDateAdmin'
+import { ta } from '@/lib/i18n/admin'
 
 export const notificationChannelOptions = [
-  { label: 'Email', value: 'email' },
-  { label: 'SMS', value: 'sms' },
-  { label: 'Both', value: 'both' },
+  { label: ta('Email'), value: 'email' },
+  { label: ta('SMS'), value: 'sms' },
+  { label: ta('Both'), value: 'both' },
 ] as const
 
 export const notificationStatusOptions = [
-  { label: 'Draft', value: 'draft' },
-  { label: 'Scheduled', value: 'scheduled' },
-  { label: 'Sent', value: 'sent' },
-  { label: 'Failed', value: 'failed' },
+  { label: ta('Draft'), value: 'draft' },
+  { label: ta('Scheduled'), value: 'scheduled' },
+  { label: ta('Sent'), value: 'sent' },
+  { label: ta('Failed'), value: 'failed' },
 ] as const
 
 export type NotificationChannel = (typeof notificationChannelOptions)[number]['value']
@@ -19,11 +20,12 @@ export type NotificationStatus = (typeof notificationStatusOptions)[number]['val
 
 export const Notifications: CollectionConfig = {
   slug: 'notifications',
+  labels: { singular: ta('Notification', 'Benachrichtigung'), plural: ta('Notifications', 'Benachrichtigungen') },
   admin: {
     useAsTitle: 'title',
     defaultColumns: ['title', 'channel', 'status', 'recipientCount', 'createdAt'],
-    group: 'Notifications',
-    description: 'Manage and send notifications to subscribers',
+    group: ta('Notifications'),
+    description: ta('Manage and send notifications to subscribers'),
   },
   access: {
     read: () => true,
@@ -81,9 +83,9 @@ export const Notifications: CollectionConfig = {
       name: 'title',
       type: 'text',
       required: true,
-      label: 'Notification Title',
+      label: ta('Notification Title'),
       admin: {
-        description: 'Internal title for this notification (auto-generated)',
+        description: ta('Internal title for this notification (auto-generated)'),
       },
     },
     {
@@ -93,7 +95,7 @@ export const Notifications: CollectionConfig = {
           name: 'relatedIncident',
           type: 'relationship',
           relationTo: 'incidents',
-          label: 'Related Incident',
+          label: ta('Related Incident'),
           admin: {
             width: '50%',
             condition: (data) => !data?.relatedMaintenance,
@@ -103,7 +105,7 @@ export const Notifications: CollectionConfig = {
           name: 'relatedMaintenance',
           type: 'relationship',
           relationTo: 'maintenances',
-          label: 'Related Maintenance',
+          label: ta('Related Maintenance'),
           admin: {
             width: '50%',
             condition: (data) => !data?.relatedIncident,
@@ -114,7 +116,7 @@ export const Notifications: CollectionConfig = {
     {
       name: 'updateIndex',
       type: 'number',
-      label: 'Update Index',
+      label: ta('Update Index'),
       admin: {
         hidden: true,
       },
@@ -124,6 +126,7 @@ export const Notifications: CollectionConfig = {
       fields: [
         {
           name: 'channel',
+          label: ta('Channel', 'Kanal'),
           type: 'select',
           required: true,
           defaultValue: 'both',
@@ -134,6 +137,7 @@ export const Notifications: CollectionConfig = {
         },
         {
           name: 'status',
+          label: ta('Status', 'Status'),
           type: 'select',
           required: true,
           defaultValue: 'draft',
@@ -147,27 +151,27 @@ export const Notifications: CollectionConfig = {
     {
       name: 'subject',
       type: 'text',
-      label: 'Email Subject',
+      label: ta('Email Subject'),
       admin: {
-        description: 'Subject line for email notifications',
+        description: ta('Subject line for email notifications'),
         condition: (data) => data?.channel !== 'sms',
       },
     },
     {
       name: 'emailBody',
       type: 'textarea',
-      label: 'Email Body',
+      label: ta('Email Body'),
       admin: {
-        description: 'Full email message content. Use {{siteUrl}} for the site URL.',
+        description: ta('Full email message content. Use {{siteUrl}} for the site URL.'),
         condition: (data) => data?.channel !== 'sms',
       },
     },
     {
       name: 'smsBody',
       type: 'textarea',
-      label: 'SMS Message',
+      label: ta('SMS Message'),
       admin: {
-        description: 'Short SMS message (160 characters recommended)',
+        description: ta('Short SMS message (160 characters recommended)'),
         condition: (data) => data?.channel !== 'email',
       },
     },
@@ -192,13 +196,14 @@ export const Notifications: CollectionConfig = {
     {
       name: 'recipientCount',
       type: 'number',
-      label: 'Recipients',
+      label: ta('Recipients'),
       admin: {
         hidden: true,
       },
     },
     {
       name: 'errorMessage',
+      label: ta('Error Message', 'Fehlermeldung'),
       type: 'textarea',
       admin: {
         hidden: true,
@@ -207,7 +212,7 @@ export const Notifications: CollectionConfig = {
     {
       name: 'sentAt',
       type: 'date',
-      label: 'Sent At',
+      label: ta('Sent At'),
       admin: {
         ...localizedDateAdmin({
           readOnly: true,

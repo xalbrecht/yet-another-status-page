@@ -4,12 +4,13 @@ import { generateShortId } from '@/lib/shortId'
 import { standardAccess } from '@/lib/access'
 import { getServerUrl } from '@/lib/utils'
 import { localizedDateAdmin } from '@/lib/localizedDateAdmin'
+import { ta } from '@/lib/i18n/admin'
 
 export const incidentStatusOptions = [
-  { label: 'Investigating', value: 'investigating' },
-  { label: 'Identified', value: 'identified' },
-  { label: 'Monitoring', value: 'monitoring' },
-  { label: 'Resolved', value: 'resolved' },
+  { label: ta('Investigating'), value: 'investigating' },
+  { label: ta('Identified'), value: 'identified' },
+  { label: ta('Monitoring'), value: 'monitoring' },
+  { label: ta('Resolved'), value: 'resolved' },
 ] as const
 
 export type IncidentStatus = (typeof incidentStatusOptions)[number]['value']
@@ -124,10 +125,11 @@ export function getIncidentResolvedAt(updates: Array<{ status?: string; createdA
 
 export const Incidents: CollectionConfig = {
   slug: 'incidents',
+  labels: { singular: ta('Incident', 'Störung'), plural: ta('Incidents', 'Störungen') },
   admin: {
     useAsTitle: 'title',
     defaultColumns: ['title', 'status', 'shortId', 'createdAt'],
-    group: 'Status',
+    group: ta('Status'),
   },
   access: standardAccess,
   fields: [
@@ -135,9 +137,9 @@ export const Incidents: CollectionConfig = {
       name: 'title',
       type: 'text',
       required: true,
-      label: 'Incident Title',
+      label: ta('Incident Title'),
       admin: {
-        description: 'A brief description of the incident (e.g., "API Gateway Latency Issues")',
+        description: ta('A brief description of the incident (e.g., "API Gateway Latency Issues")'),
       },
     },
     {
@@ -145,10 +147,10 @@ export const Incidents: CollectionConfig = {
       type: 'text',
       unique: true,
       index: true,
-      label: 'Short ID',
+      label: ta('Short ID'),
       admin: {
         position: 'sidebar',
-        description: 'Auto-generated short ID for permalinks',
+        description: ta('Auto-generated short ID for permalinks'),
         readOnly: true,
       },
     },
@@ -159,21 +161,21 @@ export const Incidents: CollectionConfig = {
       defaultValue: 'investigating',
       options: [...incidentStatusOptions],
       index: true,
-      label: 'Current Status',
+      label: ta('Current Status'),
       admin: {
         position: 'sidebar',
-        description: 'Automatically synced from the latest update',
+        description: ta('Automatically synced from the latest update'),
         readOnly: true,
       },
     },
     {
       name: 'resolvedAt',
       type: 'date',
-      label: 'Resolved At',
+      label: ta('Resolved At'),
       index: true,
       admin: localizedDateAdmin({
         position: 'sidebar',
-        description: 'When the incident was resolved',
+        description: ta('When the incident was resolved'),
         readOnly: true,
       }),
     },
@@ -182,9 +184,9 @@ export const Incidents: CollectionConfig = {
       type: 'relationship',
       relationTo: 'services',
       hasMany: true,
-      label: 'Affected Services',
+      label: ta('Affected Services'),
       admin: {
-        description: 'Services affected by this incident',
+        description: ta('Services affected by this incident'),
       },
     },
     {
@@ -192,35 +194,39 @@ export const Incidents: CollectionConfig = {
       type: 'array',
       required: true,
       minRows: 1,
-      label: 'Updates',
+      label: ta('Updates'),
+      labels: { singular: ta('Update', 'Aktualisierung'), plural: ta('Updates') },
       admin: {
-        description: 'Timeline of updates for this incident. At least one update is required.',
+        description: ta('Timeline of updates for this incident. At least one update is required.'),
       },
       fields: [
         {
           name: 'status',
+          label: ta('Status', 'Status'),
           type: 'select',
           required: true,
           options: [...incidentStatusOptions],
           admin: {
-            description: 'Status at the time of this update',
+            description: ta('Status at the time of this update'),
           },
         },
         {
           name: 'message',
+          label: ta('Message', 'Nachricht'),
           type: 'textarea',
           required: true,
           admin: {
-            description: 'Update message',
+            description: ta('Update message'),
           },
         },
         {
           name: 'createdAt',
+          label: ta('Created At', 'Erstellt am'),
           type: 'date',
           required: true,
           defaultValue: () => new Date().toISOString(),
           admin: localizedDateAdmin({
-            description: 'When this update was posted',
+            description: ta('When this update was posted'),
           }),
         },
       ],

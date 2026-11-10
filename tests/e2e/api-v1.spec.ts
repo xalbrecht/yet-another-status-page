@@ -165,7 +165,8 @@ test.describe('GET /api/v1/services', () => {
     expect(response.status()).toBe(200)
     const { data } = await response.json()
     const found = data.find((s: { slug: string }) => s.slug === service.slug)
-    expect(found).toMatchObject({ name: service.name, status: 'operational', group: { slug: group.slug, name: group.name } })
+    // seed() legt eine offene Störung an. Sie setzt den Dienst auf ihre Auswirkung (Standard: „degraded“).
+    expect(found).toMatchObject({ name: service.name, status: 'degraded', group: { slug: group.slug, name: group.name } })
   })
 })
 

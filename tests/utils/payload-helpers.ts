@@ -73,6 +73,7 @@ interface Subscriber {
 export async function createServiceGroup(data: {
   name: string
   slug?: string
+  icon?: string
 }): Promise<ServiceGroup> {
   const response = await fetch(`${API_BASE}/api/service-groups`, {
     method: 'POST',
@@ -80,6 +81,7 @@ export async function createServiceGroup(data: {
     body: JSON.stringify({
       name: data.name,
       slug: data.slug || data.name.toLowerCase().replace(/\s+/g, '-'),
+      ...(data.icon ? { icon: data.icon } : {}),
     }),
   })
   
@@ -132,10 +134,12 @@ export async function createIncident(data: {
     createdAt?: string
   }>
   affectedServices?: number[]
+  impact?: 'degraded' | 'partial' | 'major'
   createdAt?: string
 }): Promise<Incident> {
   const payload: Record<string, unknown> = {
     title: data.title,
+    ...(data.impact ? { impact: data.impact } : {}),
     updates: data.updates.map(u => ({
       ...u,
       createdAt: u.createdAt || new Date().toISOString(),
@@ -161,6 +165,47 @@ export async function createIncident(data: {
   
   const result = await response.json()
   return result.doc
+}
+
+/**
+ * Update a service (e.g. its status)
+ */
+export async function updateService(id: number, data: Record<string, unknown>): Promise<Service> {
+  const response = await fetch(`${API_BASE}/api/services/${id}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  })
+  if (!response.ok) {
+    const errorBody = await response.text()
+    throw new Error(`Failed to update service: ${response.status} ${response.statusText} - ${errorBody}`)
+  }
+  return (await response.json()).doc
+}
+
+/**
+ * Read a service
+ */
+export async function getService(id: number): Promise<Service> {
+  const response = await fetch(`${API_BASE}/api/services/${id}`)
+  if (!response.ok) throw new Error(`Failed to read service: ${response.status}`)
+  return response.json()
+}
+
+/**
+ * Update an incident (e.g. append an update)
+ */
+export async function updateIncident(id: number, data: Record<string, unknown>): Promise<Incident> {
+  const response = await fetch(`${API_BASE}/api/incidents/${id}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  })
+  if (!response.ok) {
+    const errorBody = await response.text()
+    throw new Error(`Failed to update incident: ${response.status} ${response.statusText} - ${errorBody}`)
+  }
+  return (await response.json()).doc
 }
 
 /**

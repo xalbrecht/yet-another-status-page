@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { ta } from '@/lib/i18n/admin'
 import './DemoBanner.scss'
 
 export function DemoBanner() {
@@ -28,7 +29,7 @@ export function DemoBanner() {
           setTimeUntilReset(data.timeUntilReset)
         })
         .catch(() => {
-          setTimeUntilReset('Unknown')
+          setTimeUntilReset(ta('Unknown'))
         })
     }
 
@@ -60,11 +61,11 @@ export function DemoBanner() {
           </svg>
         </div>
         <div className="demo-banner__text">
-          <strong>Live Demo Mode</strong>
+          <strong>{ta('Live Demo Mode')}</strong>
           <span className="demo-banner__separator">•</span>
-          Try all features! Data resets in: <strong>{timeUntilReset}</strong>
+          {ta('Try all features! Data resets in:')} <strong>{timeUntilReset}</strong>
           <span className="demo-banner__separator">•</span>
-          Password changes are disabled
+          {ta('Password changes are disabled')}
         </div>
       </div>
     </div>

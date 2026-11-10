@@ -24,6 +24,10 @@ Go to **Configuration → Site Settings → Situation overview** (Konfiguration 
 
 The field **Look-back period** (Rückschau) in the same section sets the default: 14 days (default), month (30), quarter (90), half year (180) or year (365). Visitors can change it with the list **Look-back** above the disruptions. The choice is part of the address (`/?rueckschau=<days>`) and applies to the list of disruptions and the availability. Invalid values fall back to the admin default. The bars always show the last 12 hours.
 
+## Bar period
+
+The field **Bar period** (Zeitraum der Balken) in the same section sets the default: 12 hours (default, 5 minutes per stroke) or 24 hours (10 minutes per stroke). The bar always has 144 strokes. Visitors can change it with the list **Bars** next to the heading "Situation overview". The choice is part of the address (`/?balken=<hours>`), invalid values fall back to the admin default. For 24 hours the times of the previous day are marked with "yesterday" (gestern), for example "yesterday 21:20". The status log must reach back far enough: A stroke before the first log entry shows "No data".
+
 ## Status log
 
 Every status change of a service is recorded in **Status → Status log** (Status → Statusprotokoll) (automatically, entries cannot be created by hand). The bars, the availability and the list of disruptions are calculated from it.

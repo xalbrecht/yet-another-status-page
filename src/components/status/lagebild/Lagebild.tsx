@@ -5,10 +5,12 @@ import { useRouter } from 'next/navigation'
 import { ChevronDown } from 'lucide-react'
 import { Fragment, useLayoutEffect, useRef, useState, useTransition } from 'react'
 import {
+  BAR_HOURS_OPTIONS,
   PERIOD_OPTIONS,
   statusLabel,
   type LagebildData,
   type LagebildGroup,
+  type BarHours,
   type LagebildPeriod,
   type PeriodDays,
 } from '@/lib/lagebild'
@@ -27,10 +29,12 @@ type Props = {
   initialGroup: string | null
   /** Vorgabe des Admins für die Rückschau */
   defaultPeriodDays: PeriodDays
+  /** Vorgabe des Admins für den Zeitraum des Balkens */
+  defaultBarHours: BarHours
 }
 
 /** Lagebild je Dienstgruppe: Kacheln mit aufklappbaren Diensten, Einschränkungen der gewählten Rückschau. */
-export function Lagebild({ variant, data, initialGroup, defaultPeriodDays }: Props) {
+export function Lagebild({ variant, data, initialGroup, defaultPeriodDays, defaultBarHours }: Props) {
   if (data.groups.length === 0) return null
 
   if (variant === 'both') {
@@ -39,14 +43,21 @@ export function Lagebild({ variant, data, initialGroup, defaultPeriodDays }: Pro
         <p className="rounded-md border border-dashed border-border bg-secondary/50 px-4 py-2 text-sm text-muted-foreground">
           {t('lagebild.testNotice')}
         </p>
-        <LagebildView variant="a" data={data} initialGroup={initialGroup} defaultPeriodDays={defaultPeriodDays} syncUrl={false} caption={t('lagebild.variantA')} />
-        <LagebildView variant="b" data={data} initialGroup={initialGroup} defaultPeriodDays={defaultPeriodDays} syncUrl={false} caption={t('lagebild.variantB')} />
+        <LagebildView variant="a" data={data} initialGroup={initialGroup} defaultPeriodDays={defaultPeriodDays} defaultBarHours={defaultBarHours} syncUrl={false} caption={t('lagebild.variantA')} />
+        <LagebildView variant="b" data={data} initialGroup={initialGroup} defaultPeriodDays={defaultPeriodDays} defaultBarHours={defaultBarHours} syncUrl={false} caption={t('lagebild.variantB')} />
       </div>
     )
   }
 
   return (
-    <LagebildView variant={variant} data={data} initialGroup={initialGroup} defaultPeriodDays={defaultPeriodDays} syncUrl />
+    <LagebildView
+      variant={variant}
+      data={data}
+      initialGroup={initialGroup}
+      defaultPeriodDays={defaultPeriodDays}
+      defaultBarHours={defaultBarHours}
+      syncUrl
+    />
   )
 }
 
@@ -55,6 +66,7 @@ function LagebildView({
   data,
   initialGroup,
   defaultPeriodDays,
+  defaultBarHours,
   syncUrl,
   caption,
 }: {
@@ -62,9 +74,21 @@ function LagebildView({
   data: LagebildData
   initialGroup: string | null
   defaultPeriodDays: PeriodDays
+  defaultBarHours: BarHours
   syncUrl: boolean
   caption?: string
 }) {
+  const router = useRouter()
+  const [barPending, startBarTransition] = useTransition()
+
+  /** Zeitraum des Balkens über die Adresse wechseln, damit der Server neu rechnet. Die Vorgabe des Admins erscheint nicht in der Adresse. */
+  function changeBarHours(hours: BarHours) {
+    const url = new URL(window.location.href)
+    if (hours === defaultBarHours) url.searchParams.delete('balken')
+    else url.searchParams.set('balken', String(hours))
+    startBarTransition(() => router.replace(`${url.pathname}${url.search}`, { scroll: false }))
+  }
+
   const [selected, setSelected] = useState<string | null>(
     initialGroup && data.groups.some((group) => group.id === initialGroup) ? initialGroup : null,
   )
@@ -94,10 +118,28 @@ function LagebildView({
 
   return (
     <section className="animate-fade-in" data-testid={`lagebild-${variant}`}>
-      <h2 className="mb-4 text-xl font-bold text-foreground">
-        {t('lagebild.title')}
-        {caption && <span className="ml-2 text-sm font-medium text-muted-foreground">({caption})</span>}
-      </h2>
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+        <h2 className="text-xl font-bold text-foreground">
+          {t('lagebild.title')}
+          {caption && <span className="ml-2 text-sm font-medium text-muted-foreground">({caption})</span>}
+        </h2>
+        <label className="flex items-center gap-2 text-sm text-muted-foreground">
+          {t('lagebild.barLabel')}
+          <select
+            value={data.barHours}
+            disabled={barPending}
+            onChange={(event) => changeBarHours(Number(event.target.value) as BarHours)}
+            data-testid={`lagebild-bar-hours-${variant}`}
+            className="rounded-md border border-border bg-card px-2 py-1 text-sm font-medium text-foreground"
+          >
+            {BAR_HOURS_OPTIONS.map((hours) => (
+              <option key={hours} value={hours}>
+                {t(`lagebild.barHours.${hours}` as const)}
+              </option>
+            ))}
+          </select>
+        </label>
+      </div>
 
       <div
         ref={gridRef}
@@ -240,7 +282,7 @@ function ServicePanel({
         <div className="hidden grid-cols-[minmax(8rem,12rem)_minmax(0,1fr)_5.5rem] items-end gap-4 pb-1.5 text-[11px] text-muted-foreground sm:grid">
           <span>{t('lagebild.colService')}</span>
           <span className="flex flex-col gap-0.5">
-            <span>{t('lagebild.colBar')}</span>
+            <span>{tf('lagebild.colBar', { hours: (bar.slots * bar.slotMinutes) / 60, minutes: bar.slotMinutes })}</span>
             <span className="flex justify-between text-xs font-semibold tabular-nums text-foreground">
               <span>{from}</span>
               <span>{to}</span>

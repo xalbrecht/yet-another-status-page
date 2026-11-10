@@ -15,7 +15,7 @@ import { MaintenanceCard } from '@/components/status/MaintenanceCard'
 import { IncidentTimelineWithLinks } from '@/components/status/IncidentTimeline'
 import { StatusLegend } from '@/components/status/StatusLegend'
 import { Lagebild } from '@/components/status/lagebild/Lagebild'
-import { loadLagebild, parsePeriodDays, type PeriodDays } from '@/lib/lagebild'
+import { loadLagebild, parseBarHours, parsePeriodDays, type BarHours, type PeriodDays } from '@/lib/lagebild'
 import {
   addZonedDays,
   formatDate,
@@ -50,7 +50,7 @@ export async function generateMetadata(): Promise<Metadata> {
   }
 }
 
-async function getStatusData(requestedPeriod: unknown) {
+async function getStatusData(requestedPeriod: unknown, requestedBar: unknown) {
   const payload = await getCachedPayload()
   const settings = await getSettings()
   const dt = resolveDateTimeConfig(settings)
@@ -184,12 +184,16 @@ async function getStatusData(requestedPeriod: unknown) {
   // Vorgabe aus den Einstellungen; der Besucher überschreibt sie mit ?rueckschau=<Tage>
   const defaultPeriodDays = parsePeriodDays(settings.lagebildPeriodDays)
   const periodDays: PeriodDays = parsePeriodDays(requestedPeriod, defaultPeriodDays)
-  const lagebild = lagebildVariant === 'off' ? null : await loadLagebild(payload, dt, periodDays)
+  // Zeitraum des Balkens: Vorgabe aus den Einstellungen, der Besucher überschreibt sie mit ?balken=<Stunden>
+  const defaultBarHours = parseBarHours(settings.lagebildBarHours)
+  const barHours: BarHours = parseBarHours(requestedBar, defaultBarHours)
+  const lagebild = lagebildVariant === 'off' ? null : await loadLagebild(payload, dt, periodDays, barHours)
 
   return {
     lagebildVariant,
     lagebild,
     defaultPeriodDays,
+    defaultBarHours,
     settings,
     overallStatus,
     serviceGroups: groupedServices,
@@ -201,9 +205,9 @@ async function getStatusData(requestedPeriod: unknown) {
 export default async function StatusPage({
   searchParams,
 }: {
-  searchParams: Promise<{ gruppe?: string | string[]; rueckschau?: string | string[] }>
+  searchParams: Promise<{ gruppe?: string | string[]; rueckschau?: string | string[]; balken?: string | string[] }>
 }) {
-  const { gruppe, rueckschau } = await searchParams
+  const { gruppe, rueckschau, balken } = await searchParams
   const {
     settings,
     overallStatus,
@@ -213,7 +217,8 @@ export default async function StatusPage({
     lagebild,
     lagebildVariant,
     defaultPeriodDays,
-  } = await getStatusData(rueckschau)
+    defaultBarHours,
+  } = await getStatusData(rueckschau, balken)
   const initialGroup = typeof gruppe === 'string' ? gruppe : null
 
   return (
@@ -241,6 +246,7 @@ export default async function StatusPage({
               data={lagebild}
               initialGroup={initialGroup}
               defaultPeriodDays={defaultPeriodDays}
+              defaultBarHours={defaultBarHours}
             />
           </div>
         )}

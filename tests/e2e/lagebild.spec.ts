@@ -17,7 +17,7 @@ test.describe('Lagebild', () => {
   test.describe.configure({ mode: 'serial' })
 
   test.afterAll(async () => {
-    await updateSettings({ lagebildVariant: 'off', lagebildPeriodDays: '14' })
+    await updateSettings({ lagebildVariant: 'off', lagebildPeriodDays: '14', lagebildBarHours: '12' })
   })
 
   test('ist standardmäßig ausgeblendet', async ({ page }) => {
@@ -115,6 +115,54 @@ test.describe('Lagebild', () => {
     await expect(page).toHaveURL(/rueckschau=14/)
     await page.getByTestId('lagebild-period').selectOption('180')
     await expect(page).not.toHaveURL(/rueckschau/)
+  })
+
+  test('Zeitraum des Balkens: Vorgabe des Admins, Auswahl des Besuchers, ungültiger Wert', async ({ page }) => {
+    const id = Date.now()
+    const group = await createServiceGroup({ name: `Balken Gruppe ${id}` })
+    const service = await createService({ name: `Balken Dienst ${id}`, group: group.id })
+    await updateService(service.id, { status: 'degraded' })
+    await updateSettings({ lagebildVariant: 'a', lagebildBarHours: '12' })
+
+    // React hängt die Handler erst nach dem Laden an: vorher löst selectOption nichts aus
+    const bereit = (testId: string) =>
+      page.waitForFunction((id) => {
+        const el = document.querySelector(`[data-testid="${id}"]`)
+        return !!el && Object.keys(el).some((key) => key.startsWith('__reactProps'))
+      }, testId)
+
+    await page.goto('/')
+    await bereit('lagebild-bar-hours-a')
+    const select = page.getByTestId('lagebild-bar-hours-a')
+    await expect(select).toHaveValue('12')
+
+    // Besucher wählt 24 Stunden. Die Adresse ändert sich erst, wenn der Server die Seite neu geliefert hat
+    // (Dev-Server: bis zu einigen Sekunden). Die Gruppe wird erst danach geöffnet: Beide Aktionen ändern die Adresse,
+    // und direkt hintereinander überholen sie sich (history.replaceState gegen router.replace).
+    await select.selectOption('24')
+    await expect(page).toHaveURL(/balken=24/, { timeout: 30_000 })
+    await expect(select).toHaveValue('24')
+
+    // Gruppe öffnen: Die Adresse behält den Zeitraum, 144 Striche, Überschrift nennt 24 Stunden und 10 Minuten
+    await page.getByTestId('lagebild-a').locator('button[aria-expanded]', { hasText: `Balken Gruppe ${id}` }).click()
+    const panel = page.getByTestId(`lagebild-panel-${group.id}`)
+    await expect(page).toHaveURL(new RegExp(`gruppe=${group.id}&balken=24|balken=24&gruppe=${group.id}`))
+    await expect(panel.locator('[data-i]')).toHaveCount(144)
+    await expect(panel).toContainText(/(Letzte|Last) 24 (Stunden|hours) · 10 (Minuten|minutes)/)
+
+    // ungültiger Wert fällt auf die Vorgabe zurück
+    await page.goto('/?balken=7')
+    await expect(page.getByTestId('lagebild-bar-hours-a')).toHaveValue('12')
+
+    // Vorgabe des Admins „24 Stunden“; die Vorgabe selbst erscheint nicht in der Adresse
+    await updateSettings({ lagebildBarHours: '24' })
+    await page.goto('/')
+    await bereit('lagebild-bar-hours-a')
+    await expect(page.getByTestId('lagebild-bar-hours-a')).toHaveValue('24')
+    await page.getByTestId('lagebild-bar-hours-a').selectOption('12')
+    await expect(page).toHaveURL(/balken=12/, { timeout: 30_000 })
+    await page.getByTestId('lagebild-bar-hours-a').selectOption('24')
+    await expect(page).not.toHaveURL(/balken/, { timeout: 30_000 })
   })
 
   test('Filter je Gruppe schränkt die Übersicht ein und steht in der Adresse', async ({ page }) => {

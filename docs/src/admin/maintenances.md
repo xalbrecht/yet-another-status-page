@@ -4,7 +4,7 @@ Maintenances represent planned service interruptions or maintenance windows.
 
 ## Creating a Maintenance
 
-1. Go to **Status → Maintenances**
+1. Go to **Status → Maintenances** (Status → Wartungen)
 2. Click **Create New**
 3. Fill in the maintenance details:
    - **Title** - Brief description (e.g., "Database Migration")
@@ -21,10 +21,10 @@ A notification draft is automatically created when you save.
 
 | Status | Description |
 |--------|-------------|
-| **Upcoming** | Scheduled but not yet started |
-| **In Progress** | Currently underway |
-| **Completed** | Successfully finished |
-| **Cancelled** | Maintenance was cancelled |
+| **Upcoming** (Geplant) | Scheduled but not yet started |
+| **In Progress** (In Arbeit) | Currently underway |
+| **Completed** (Abgeschlossen) | Successfully finished |
+| **Cancelled** (Abgesagt) | Maintenance was cancelled |
 
 ## Auto-Status Updates
 

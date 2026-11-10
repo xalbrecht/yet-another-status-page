@@ -4,14 +4,14 @@ The situation overview shows the state of every service group on the start page,
 
 ## Enabling
 
-Go to **Configuration → Site Settings → Situation overview** and choose **Display**:
+Go to **Configuration → Site Settings → Situation overview** (Konfiguration → Website-Einstellungen → Lagebild) and choose **Display**:
 
-| Option | Result |
-|--------|--------|
-| Off | No situation overview (default) |
-| Variant A | Tiles per group, the bars of the last 12 hours below |
-| Variant B | Tiles per group, each with its own small bar |
-| Both (for testing) | Both variants one after the other, to compare them |
+| Option | German | Result |
+|--------|--------|--------|
+| Off | Aus | No situation overview (default) |
+| Variant A | Variante A | Tiles per group, the bars of the last 12 hours below |
+| Variant B | Variante B | Tiles per group, each with its own small bar |
+| Both (for testing) | Beide (zum Testen) | Both variants one after the other, to compare them |
 
 ## What is shown
 
@@ -21,7 +21,7 @@ Go to **Configuration → Site Settings → Situation overview** and choose **Di
 
 ## Status log
 
-Every status change of a service is recorded in **Status → Status log** (automatically, entries cannot be created by hand). The bars and the 14-day list are calculated from it.
+Every status change of a service is recorded in **Status → Status log** (Status → Statusprotokoll) (automatically, entries cannot be created by hand). The bars and the 14-day list are calculated from it.
 
 - There is no history from before the feature was introduced. Existing services get a first entry at the time of the update, earlier time ranges show as "No data".
 - Changing a service status by hand is logged like any other change.

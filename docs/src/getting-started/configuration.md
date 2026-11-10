@@ -134,13 +134,46 @@ OIDC_DISABLE_LOCAL_LOGIN=true
 
 > **Warning**: Ensure SSO is working correctly before enabling this option, or you may lock yourself out!
 
+## Interface Language
+
+The language of the status page, notification emails, feeds and the admin panel is set when the application is **built**, with the environment variable `NEXT_PUBLIC_UI_LANG`:
+
+| Value | Result |
+|-------|--------|
+| `de` (default) | German |
+| `en` | English |
+
+The value is compiled into the application. Changing it requires a new build (`NEXT_PUBLIC_UI_LANG=en npm run build`). It cannot be changed at runtime.
+
+Where to set it:
+
+| Situation | Where |
+|-----------|-------|
+| German (default) | Nothing to set |
+| Local development | `.env` or the shell before `npm run dev` / `npm run build`, for example `NEXT_PUBLIC_UI_LANG=en npm run dev` |
+| Docker image | Build argument, see below. A value in `docker-compose.yml`, `.env` of the container or the Helm values has **no effect** at runtime |
+| E2E tests | `NEXT_PUBLIC_UI_LANG=en` in the environment of the server under test |
+
+The Dockerfile has no build argument for the language yet, so the published image and images built from it are always German. For an English image add to the `builder` stage, next to the other `ARG` lines and before `RUN npm run build`:
+
+```dockerfile
+ARG NEXT_PUBLIC_UI_LANG=de
+ENV NEXT_PUBLIC_UI_LANG=${NEXT_PUBLIC_UI_LANG}
+```
+
+and build with `docker build --build-arg NEXT_PUBLIC_UI_LANG=en …`. Switching the language in the admin panel without a rebuild is planned.
+
+Menu names in this manual are given in English followed by the German name, for example **Status → Incidents** (German: **Status → Störungen**). A full list is in the [Admin Overview](../admin/overview.md#language-of-the-admin-panel).
+
+The setting **Locale** (below) is independent of this. It only controls the date and time format.
+
 ## Admin Panel Settings
 
 The admin panel has three configuration sections under **Configuration**:
 
 ### Site Settings
 
-Access **Configuration → Site Settings** to configure:
+Access **Configuration → Site Settings** (Konfiguration → Website-Einstellungen) to configure:
 
 - **Site Name**: Displayed in the header and emails
 - **Site Description**: Meta description for SEO
@@ -148,6 +181,7 @@ Access **Configuration → Site Settings** to configure:
 - **Logos**: Light and dark theme logos
 - **SEO**: Meta titles and descriptions
 - **Status Override**: Maintenance mode and custom messages
+- **Situation overview**: Off, Variant A, Variant B or Both (see [Situation Overview](../admin/situation-overview.md))
 - **Localization**: Timezone, locale, and week start (see below)
 
 #### Localization
@@ -157,7 +191,7 @@ These settings control the **admin calendar** and the **site clock** visitors se
 | Setting | Description | Default |
 |---------|-------------|---------|
 | Timezone | IANA timezone for timestamps, history week boundaries, and admin date pickers | `UTC` |
-| Locale | BCP 47 locale for date/time formatting (e.g. `en-US`, `de-DE`, `fr-FR`) | `en-US` |
+| Locale | BCP 47 locale for date/time formatting (e.g. `en-US`, `de-DE`, `fr-FR`). For German dates and a 24-hour clock use `de-DE` | `en-US` |
 | Week starts on | First day of the week for incident history and admin date pickers | Monday |
 
 Public pages always show the **site timezone**, not the visitor’s local time, so “maintenance at 15:00” means the same instant for everyone. A footer notice explains this (for example: “All times in Europe/Berlin. This is the status page timezone.”). Individual timestamps also include a short zone abbreviation.
@@ -166,7 +200,7 @@ Admin date pickers use the same timezone, locale, and week start, so times you e
 
 ### Email Settings
 
-Access **Configuration → Email Settings** to configure email notifications:
+Access **Configuration → Email Settings** (Konfiguration → E-Mail-Einstellungen) to configure email notifications:
 
 | Setting | Description |
 |---------|-------------|
@@ -182,7 +216,7 @@ Access **Configuration → Email Settings** to configure email notifications:
 
 ### SMS Settings
 
-Access **Configuration → SMS Settings** to configure SMS notifications:
+Access **Configuration → SMS Settings** (Konfiguration → SMS-Einstellungen) to configure SMS notifications:
 
 | Setting | Description |
 |---------|-------------|
@@ -217,8 +251,8 @@ You can also configure **Title Max Length** and **Message Max Length** to contro
 
 After configuring SMTP or Twilio:
 
-1. Create a test subscriber in **Notifications → Subscribers**
-2. Create a test incident in **Status → Incidents**
+1. Create a test subscriber in **Notifications → Subscribers** (Benachrichtigungen → Abonnenten)
+2. Create a test incident in **Status → Incidents** (Status → Störungen)
 3. Check the **Notifications** collection for the auto-generated draft
 4. Click **Send Notification Now** to test
 

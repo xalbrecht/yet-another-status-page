@@ -6,12 +6,12 @@ The Yet Another Status Page admin panel is powered by Payload CMS and provides a
 
 The dashboard shows at-a-glance metrics:
 
-- **Active Incidents** - Current unresolved incidents
-- **Upcoming Maintenances** - Scheduled or in-progress maintenance windows
-- **Draft Notifications** - Notifications waiting to be sent
-- **Scheduled Notifications** - Notifications being processed
-- **Email Subscribers** - Active email subscribers
-- **SMS Subscribers** - Active SMS subscribers
+- **Active Incidents** (Aktive Störungen) - Current unresolved incidents
+- **Upcoming Maintenances** (Geplante Wartungen) - Scheduled or in-progress maintenance windows
+- **Draft Notifications** (Entwürfe) - Notifications waiting to be sent
+- **Scheduled** (Geplant) - Notifications being processed
+- **Email Subscribers** (E-Mail-Abonnenten) - Active email subscribers
+- **SMS Subscribers** (SMS-Abonnenten) - Active SMS subscribers
 
 ## Navigation
 
@@ -23,6 +23,7 @@ The admin panel is organized into sections:
 - **Services** - Individual services to monitor
 - **Incidents** - Service disruptions and issues
 - **Maintenances** - Scheduled maintenance windows
+- **Status log** - Automatic record of every service status change (read-only). See [Situation Overview](./situation-overview.md#status-log)
 
 ### Notifications
 
@@ -36,9 +37,33 @@ The admin panel is organized into sections:
 
 ### Configuration
 
-- **Site Settings** - Site name, branding, SEO, status overrides, localization
+- **Site Settings** - Site name, branding, SEO, status overrides, situation overview, localization
 - **Email Settings** - SMTP configuration and email subscriptions
 - **SMS Settings** - Twilio configuration, SMS subscriptions, and message templates
+
+## Language of the admin panel
+
+The admin panel uses the interface language of the build (`NEXT_PUBLIC_UI_LANG`, default German, see [Configuration](../getting-started/configuration.md#interface-language)). The menu names are:
+
+| English | German |
+|---------|--------|
+| Status | Status |
+| Service Groups | Dienstgruppen |
+| Services | Dienste |
+| Incidents | Störungen |
+| Maintenances | Wartungen |
+| Status log | Statusprotokoll |
+| Notifications (section and collection) | Benachrichtigungen |
+| Subscribers | Abonnenten |
+| Admin | Administration |
+| Users | Benutzer |
+| Media | Medien |
+| Configuration | Konfiguration |
+| Site Settings | Website-Einstellungen |
+| Email Settings | E-Mail-Einstellungen |
+| SMS Settings | SMS-Einstellungen |
+
+Field names, descriptions, buttons and messages of the admin panel are translated as well. Texts that editors enter themselves (titles, update messages) stay as entered.
 
 ## Workflow Overview
 

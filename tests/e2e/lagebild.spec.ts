@@ -81,6 +81,33 @@ test.describe('Lagebild', () => {
     await expect(panel).toHaveCount(0)
   })
 
+  test('Statusänderung ist trotz Zwischenspeicher sofort sichtbar', async ({ page }) => {
+    // Das Lagebild wird für alle Besucher 60 Sekunden zwischengespeichert. Eine Änderung am Zustand
+    // eines Dienstes verwirft den Zwischenspeicher, sonst müsste man bis zu einer Minute warten.
+    const id = Date.now()
+    const group = await createServiceGroup({ name: `Zwischenspeicher Gruppe ${id}` })
+    const service = await createService({ name: `Zwischenspeicher Dienst ${id}`, group: group.id })
+    await updateService(service.id, { status: 'degraded' })
+    await updateSettings({ lagebildVariant: 'a' })
+
+    const tile = () =>
+      page.getByTestId('lagebild-a').locator('button[aria-expanded]', { hasText: `Zwischenspeicher Gruppe ${id}` })
+
+    // erster Aufruf füllt den Zwischenspeicher
+    await page.goto('/')
+    await expect(tile()).toContainText(/Eingeschränkt|Degraded/)
+
+    // Zustand ändern und sofort neu laden: der neue Zustand erscheint ohne Wartezeit
+    await updateService(service.id, { status: 'major' })
+    await page.reload()
+    await expect(tile()).toContainText(/Schwerer Ausfall|Major Outage/)
+
+    // auch ein neuer Dienst in der Gruppe erscheint sofort
+    await createService({ name: `Zwischenspeicher Zweiter ${id}`, group: group.id })
+    await page.reload()
+    await expect(tile()).toContainText(/2 (Dienste|services)/)
+  })
+
   test('Rückschau: Vorgabe des Admins, Auswahl des Besuchers, ungültiger Wert', async ({ page }) => {
     const id = Date.now()
     const group = await createServiceGroup({ name: `Rückschau Gruppe ${id}` })

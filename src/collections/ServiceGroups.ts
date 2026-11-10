@@ -1,12 +1,14 @@
 import type { CollectionConfig } from 'payload'
 import { standardAccess } from '@/lib/access'
+import { ta } from '@/lib/i18n/admin'
 
 export const ServiceGroups: CollectionConfig = {
   slug: 'service-groups',
+  labels: { singular: ta('Service Group', 'Dienstgruppe'), plural: ta('Service Groups', 'Dienstgruppen') },
   admin: {
     useAsTitle: 'name',
     defaultColumns: ['name', 'updatedAt'],
-    group: 'Status',
+    group: ta('Status'),
   },
   orderable: true,
   access: standardAccess,
@@ -15,7 +17,7 @@ export const ServiceGroups: CollectionConfig = {
       name: 'name',
       type: 'text',
       required: true,
-      label: 'Group Name',
+      label: ta('Group Name'),
     },
     {
       name: 'slug',
@@ -23,7 +25,7 @@ export const ServiceGroups: CollectionConfig = {
       required: true,
       unique: true,
       admin: {
-        description: 'URL-friendly identifier (e.g., "core-infrastructure")',
+        description: ta('URL-friendly identifier (e.g., "core-infrastructure")'),
       },
       hooks: {
         beforeValidate: [
@@ -42,9 +44,9 @@ export const ServiceGroups: CollectionConfig = {
     {
       name: 'description',
       type: 'textarea',
-      label: 'Description',
+      label: ta('Description'),
       admin: {
-        description: 'Optional description for this service group',
+        description: ta('Optional description for this service group'),
       },
     },
   ],

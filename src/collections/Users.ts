@@ -2,6 +2,7 @@ import type { CollectionConfig } from 'payload'
 import { isLocalLoginDisabled } from '@/lib/oidc'
 import { isDemoMode, getDemoUserEmail } from '@/lib/demo'
 import { getServerUrl } from '@/lib/utils'
+import { ta } from '@/lib/i18n/admin'
 
 const isProduction = process.env.NODE_ENV === 'production'
 
@@ -26,9 +27,10 @@ const getCookieDomain = (): string | undefined => {
 
 export const Users: CollectionConfig = {
   slug: 'users',
+  labels: { singular: ta('User', 'Benutzer'), plural: ta('Users', 'Benutzer') },
   admin: {
     useAsTitle: 'email',
-    group: 'Admin',
+    group: ta('Admin'),
   },
   auth: {
     useAPIKey: true,
@@ -74,7 +76,7 @@ export const Users: CollectionConfig = {
     {
       name: 'name',
       type: 'text',
-      label: 'Full Name',
+      label: ta('Full Name'),
     },
     {
       name: 'role',
@@ -82,11 +84,11 @@ export const Users: CollectionConfig = {
       required: true,
       defaultValue: 'editor',
       options: [
-        { label: 'Admin', value: 'admin' },
-        { label: 'Editor', value: 'editor' },
+        { label: ta('Admin', 'Administrator'), value: 'admin' },
+        { label: ta('Editor'), value: 'editor' },
       ],
       admin: {
-        description: 'User role for access control',
+        description: ta('User role for access control'),
       },
     },
   ],

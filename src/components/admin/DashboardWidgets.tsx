@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react'
 import Link from 'next/link'
+import { ta } from '@/lib/i18n/admin'
 import './DashboardWidgets.scss'
 
 interface WidgetData {
@@ -28,7 +29,7 @@ export const DashboardWidgets: React.FC = () => {
         const stats = await response.json()
         setData(stats)
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Unknown error')
+        setError(err instanceof Error ? err.message : ta('Unknown error'))
       } finally {
         setLoading(false)
       }
@@ -43,7 +44,7 @@ export const DashboardWidgets: React.FC = () => {
   if (loading) {
     return (
       <div className="dashboard-widgets">
-        <div className="dashboard-widgets__loading">Loading dashboard stats...</div>
+        <div className="dashboard-widgets__loading">{ta('Loading dashboard stats...')}</div>
       </div>
     )
   }
@@ -51,7 +52,7 @@ export const DashboardWidgets: React.FC = () => {
   if (error) {
     return (
       <div className="dashboard-widgets">
-        <div className="dashboard-widgets__error">Failed to load stats: {error}</div>
+        <div className="dashboard-widgets__error">{ta('Failed to load stats:')} {error}</div>
       </div>
     )
   }
@@ -60,7 +61,7 @@ export const DashboardWidgets: React.FC = () => {
 
   return (
     <div className="dashboard-widgets">
-      <h2 className="dashboard-widgets__title">Status Overview</h2>
+      <h2 className="dashboard-widgets__title">{ta('Status Overview')}</h2>
       
       <div className="dashboard-widgets__grid">
         {/* Active Incidents */}
@@ -74,7 +75,7 @@ export const DashboardWidgets: React.FC = () => {
           </div>
           <div className="dashboard-widget__content">
             <div className="dashboard-widget__value">{data.activeIncidents}</div>
-            <div className="dashboard-widget__label">Active Incidents</div>
+            <div className="dashboard-widget__label">{ta('Active Incidents')}</div>
           </div>
         </Link>
 
@@ -88,7 +89,7 @@ export const DashboardWidgets: React.FC = () => {
           </div>
           <div className="dashboard-widget__content">
             <div className="dashboard-widget__value">{data.upcomingMaintenances}</div>
-            <div className="dashboard-widget__label">Upcoming Maintenances</div>
+            <div className="dashboard-widget__label">{ta('Upcoming Maintenances')}</div>
           </div>
         </Link>
 
@@ -102,7 +103,7 @@ export const DashboardWidgets: React.FC = () => {
           </div>
           <div className="dashboard-widget__content">
             <div className="dashboard-widget__value">{data.pendingNotifications}</div>
-            <div className="dashboard-widget__label">Draft Notifications</div>
+            <div className="dashboard-widget__label">{ta('Draft Notifications')}</div>
           </div>
         </Link>
 
@@ -118,7 +119,7 @@ export const DashboardWidgets: React.FC = () => {
           </div>
           <div className="dashboard-widget__content">
             <div className="dashboard-widget__value">{data.scheduledNotifications}</div>
-            <div className="dashboard-widget__label">Scheduled</div>
+            <div className="dashboard-widget__label">{ta('Scheduled')}</div>
           </div>
         </Link>
 
@@ -132,7 +133,7 @@ export const DashboardWidgets: React.FC = () => {
           </div>
           <div className="dashboard-widget__content">
             <div className="dashboard-widget__value">{data.emailSubscribers}</div>
-            <div className="dashboard-widget__label">Email Subscribers</div>
+            <div className="dashboard-widget__label">{ta('Email Subscribers')}</div>
           </div>
         </Link>
 
@@ -146,7 +147,7 @@ export const DashboardWidgets: React.FC = () => {
           </div>
           <div className="dashboard-widget__content">
             <div className="dashboard-widget__value">{data.smsSubscribers}</div>
-            <div className="dashboard-widget__label">SMS Subscribers</div>
+            <div className="dashboard-widget__label">{ta('SMS Subscribers')}</div>
           </div>
         </Link>
       </div>

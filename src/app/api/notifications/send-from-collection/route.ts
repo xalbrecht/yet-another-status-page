@@ -5,6 +5,7 @@ import { headers } from 'next/headers'
 import config from '@payload-config'
 import { getServerUrl } from '@/lib/utils'
 import type { Notification, Incident, Maintenance } from '@/payload-types'
+import { ta } from '@/lib/i18n/admin'
 
 interface SendRequest {
   notificationId: string | number
@@ -20,7 +21,7 @@ export async function POST(request: NextRequest) {
     
     if (!user) {
       return NextResponse.json(
-        { error: 'Authentication required' },
+        { error: ta('Authentication required') },
         { status: 401 }
       )
     }
@@ -31,7 +32,7 @@ export async function POST(request: NextRequest) {
 
     if (!notificationId) {
       return NextResponse.json(
-        { error: 'Missing notificationId' },
+        { error: ta('Missing notificationId') },
         { status: 400 }
       )
     }
@@ -44,14 +45,14 @@ export async function POST(request: NextRequest) {
 
     if (!notification) {
       return NextResponse.json(
-        { error: 'Notification not found' },
+        { error: ta('Notification not found') },
         { status: 404 }
       )
     }
 
     if (notification.status === 'sent') {
       return NextResponse.json(
-        { error: 'Notification has already been sent' },
+        { error: ta('Notification has already been sent') },
         { status: 400 }
       )
     }
@@ -59,7 +60,7 @@ export async function POST(request: NextRequest) {
     // Allow retry from failed status
     if (notification.status !== 'draft' && notification.status !== 'failed') {
       return NextResponse.json(
-        { error: 'Notification is currently being processed' },
+        { error: ta('Notification is currently being processed') },
         { status: 400 }
       )
     }
@@ -132,7 +133,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Error sending notification:', error)
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Failed to send notification' },
+      { error: error instanceof Error ? error.message : ta('Failed to send notification') },
       { status: 500 }
     )
   }

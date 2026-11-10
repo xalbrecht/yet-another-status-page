@@ -1,6 +1,7 @@
 import type { CollectionConfig } from 'payload'
 import { standardAccess } from '@/lib/access'
 import { ta } from '@/lib/i18n/admin'
+import { invalidateLagebild } from '@/lib/lagebild-invalidate'
 
 export const serviceStatusOptions = [
   { label: ta('Operational'), value: 'operational' },
@@ -33,6 +34,7 @@ export const Services: CollectionConfig = {
             req,
           })
         }
+        invalidateLagebild()
         return doc
       },
     ],
@@ -43,6 +45,7 @@ export const Services: CollectionConfig = {
           where: { service: { equals: id } },
           req,
         })
+        invalidateLagebild()
       },
     ],
   },

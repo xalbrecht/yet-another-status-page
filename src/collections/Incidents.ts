@@ -4,6 +4,7 @@ import { generateShortId } from '@/lib/shortId'
 import { standardAccess } from '@/lib/access'
 import { getServerUrl } from '@/lib/utils'
 import { localizedDateAdmin } from '@/lib/localizedDateAdmin'
+import { invalidateLagebild } from '@/lib/lagebild-invalidate'
 import { ta } from '@/lib/i18n/admin'
 import { syncServiceStatusesFromIncidents, uniqueServiceIds } from '@/lib/service-status-sync'
 
@@ -250,6 +251,11 @@ export const Incidents: CollectionConfig = {
   ],
   hooks: {
     afterDelete: [
+      // Titel und Verknüpfung stehen im zwischengespeicherten Lagebild
+      ({ doc }) => {
+        invalidateLagebild()
+        return doc
+      },
       async ({ doc, req }) => {
         // Gelöschte Störung gibt die Dienste wieder frei
         await syncServiceStatusesFromIncidents(req.payload, uniqueServiceIds(doc.affectedServices), req)
@@ -282,6 +288,11 @@ export const Incidents: CollectionConfig = {
       },
     ],
     afterChange: [
+      // Titel und Verknüpfung stehen im zwischengespeicherten Lagebild
+      ({ doc }) => {
+        invalidateLagebild()
+        return doc
+      },
       async ({ doc, previousDoc, req }) => {
         // Zustand der betroffenen Dienste aus den offenen Störungen neu berechnen.
         // Auch Dienste, die aus der Störung entfernt wurden, werden neu bewertet.

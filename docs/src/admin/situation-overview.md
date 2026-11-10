@@ -28,6 +28,14 @@ The field **Look-back period** (Rückschau) in the same section sets the default
 
 The field **Bar period** (Zeitraum der Balken) in the same section sets the default: 12 hours (default, 5 minutes per stroke) or 24 hours (10 minutes per stroke). The bar always has 144 strokes. Visitors can change it with the list **Bars** next to the heading "Situation overview". The choice is part of the address (`/?balken=<hours>`), invalid values fall back to the admin default. For 24 hours the times of the previous day are marked with "yesterday" (gestern), for example "yesterday 21:20". The status log must reach back far enough: A stroke before the first log entry shows "No data".
 
+## Caching
+
+The start page calculates one bar per service and group. To keep the load low, the result is cached for all visitors for 60 seconds (environment variable `LAGEBILD_CACHE_SECONDS`, `0` switches the cache off, see [Configuration](../getting-started/configuration.md)). The cache is separate for each look-back, bar period, language and time zone.
+
+- A change of a service status, of a service, of a group, of an incident or of a maintenance discards the cache at once. The new state appears on the next load of the page. In a window of a few milliseconds while the change is saved, a request can still cache the old state for up to 60 seconds.
+- The bars and the times above them can be up to 60 seconds old.
+- The cache lives in each application instance (default cache handler of Next.js). With several instances (for example several Helm replicas) a change discards the cache only in the instance that received it. The others catch up after at most 60 seconds.
+
 ## Status log
 
 Every status change of a service is recorded in **Status → Status log** (Status → Statusprotokoll) (automatically, entries cannot be created by hand). The bars, the availability and the list of disruptions are calculated from it.

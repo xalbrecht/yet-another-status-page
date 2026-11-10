@@ -128,6 +128,7 @@ test.describe('Lagebild', () => {
     await updateIncident(incident.id, { title: `Titel neu ${id}` })
     await page.reload()
     await expect(page.getByTestId('lagebild-a').getByText(`Titel neu ${id}`).first()).toBeVisible()
+  })
 
   test('Variante B: Klick auf eine Kachel klappt die Dienste auf', async ({ page }) => {
     const id = Date.now()

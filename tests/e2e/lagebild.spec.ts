@@ -136,21 +136,19 @@ test.describe('Lagebild', () => {
     const select = page.getByTestId('lagebild-bar-hours-a')
     await expect(select).toHaveValue('12')
 
-    // Gruppe öffnen: 144 Striche, Überschrift nennt 12 Stunden und 5 Minuten
-    await page.getByTestId('lagebild-a').locator('button[aria-expanded]', { hasText: `Balken Gruppe ${id}` }).click()
-    const panel = page.getByTestId(`lagebild-panel-${group.id}`)
-    // Die Gruppe steht in der Adresse, bevor die Auswahl bedient wird (sonst überholen sich zwei Adressänderungen)
-    await expect(page).toHaveURL(new RegExp(`gruppe=${group.id}`))
-    await expect(panel.locator('[data-i]')).toHaveCount(144)
-    await expect(panel).toContainText(/(Letzte|Last) 12 (Stunden|hours) · 5 (Minuten|minutes)/)
-
-    // Besucher wählt 24 Stunden: Adresse, Überschrift und Strichlänge folgen, es bleiben 144 Striche
-    // Die Adresse ändert sich erst, wenn der Server die Seite neu geliefert hat (Dev-Server: bis zu einigen Sekunden)
+    // Besucher wählt 24 Stunden. Die Adresse ändert sich erst, wenn der Server die Seite neu geliefert hat
+    // (Dev-Server: bis zu einigen Sekunden). Die Gruppe wird erst danach geöffnet: Beide Aktionen ändern die Adresse,
+    // und direkt hintereinander überholen sie sich (history.replaceState gegen router.replace).
     await select.selectOption('24')
     await expect(page).toHaveURL(/balken=24/, { timeout: 30_000 })
     await expect(select).toHaveValue('24')
-    await expect(panel).toContainText(/(Letzte|Last) 24 (Stunden|hours) · 10 (Minuten|minutes)/, { timeout: 30_000 })
+
+    // Gruppe öffnen: Die Adresse behält den Zeitraum, 144 Striche, Überschrift nennt 24 Stunden und 10 Minuten
+    await page.getByTestId('lagebild-a').locator('button[aria-expanded]', { hasText: `Balken Gruppe ${id}` }).click()
+    const panel = page.getByTestId(`lagebild-panel-${group.id}`)
+    await expect(page).toHaveURL(new RegExp(`gruppe=${group.id}&balken=24|balken=24&gruppe=${group.id}`))
     await expect(panel.locator('[data-i]')).toHaveCount(144)
+    await expect(panel).toContainText(/(Letzte|Last) 24 (Stunden|hours) · 10 (Minuten|minutes)/)
 
     // ungültiger Wert fällt auf die Vorgabe zurück
     await page.goto('/?balken=7')

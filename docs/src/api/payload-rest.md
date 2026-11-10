@@ -21,7 +21,7 @@ Reads of the status collections (`services`, `service-groups`, `incidents`, `mai
 
 API keys are per user and use Payload's built-in API key strategy. Requests authenticated with a key run as that user and inherit their access control.
 
-1. Open **Admin → Users** and edit (or create) a user
+1. Open **Admin → Users** (Administration → Benutzer) and edit (or create) a user
 2. Enable **Enable API Key**
 3. Save, then copy the generated API key and treat it like a password
 

@@ -87,8 +87,8 @@ npm start
 1. **Access the admin panel** at `<serverUrl>/admin`.
 2. **Create the first admin user** when prompted.
 3. **Configure the site** under:
-   - Configuration → Site Settings (name, description, favicon, logos)
-   - Configuration → Email Settings (SMTP)
-   - Configuration → SMS Settings (Twilio)
-4. **Add services** by creating service groups and services that represent your infrastructure.
+   - Configuration → Site Settings (name, description, favicon, logos, situation overview). German: Konfiguration → Website-Einstellungen
+   - Configuration → Email Settings (SMTP). German: Konfiguration → E-Mail-Einstellungen
+   - Configuration → SMS Settings (Twilio). German: Konfiguration → SMS-Einstellungen
+4. **Add services** by creating service groups (with an icon) and services that represent your infrastructure.
 5. **Go live** at `<serverUrl>`.

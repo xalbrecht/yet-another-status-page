@@ -15,7 +15,7 @@ Each subscriber has one type. Users who want both should create two subscription
 
 ### Manual Addition
 
-1. Go to **Notifications → Subscribers**
+1. Go to **Notifications → Subscribers** (Benachrichtigungen → Abonnenten)
 2. Click **Create New**
 3. Fill in:
    - **Type** - Email or SMS

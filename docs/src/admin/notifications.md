@@ -25,7 +25,7 @@ Notification drafts are **automatically created** when:
 
 Notifications are **never sent automatically**. You must:
 
-1. Go to **Notifications → Notifications**
+1. Go to **Notifications → Notifications** (Benachrichtigungen → Benachrichtigungen)
 2. Review the draft content
 3. Edit if needed
 4. Click **Send Notification Now**
@@ -69,7 +69,7 @@ Emails automatically include:
 
 ### Configuration
 
-Configure SMTP in **Configuration → Email Settings**:
+Configure SMTP in **Configuration → Email Settings** (Konfiguration → E-Mail-Einstellungen):
 
 - Enable Email Subscriptions toggle
 - SMTP Host, Port, Security
@@ -90,7 +90,7 @@ SMS messages are generated from customizable templates and include:
 
 ### Configuration
 
-Configure Twilio in **Configuration → SMS Settings**:
+Configure Twilio in **Configuration → SMS Settings** (Konfiguration → SMS-Einstellungen):
 
 - Enable SMS Subscriptions toggle
 - Account SID
@@ -99,7 +99,9 @@ Configure Twilio in **Configuration → SMS Settings**:
 
 ### SMS Templates
 
-You can customize SMS message templates in **Configuration → SMS Settings** under the "SMS Templates" section. Available placeholders:
+The default texts of notification emails and the default SMS templates are in the interface language of the build (German by default, see [Configuration](../getting-started/configuration.md#interface-language)). Existing templates saved in **Configuration → SMS Settings** keep their text.
+
+You can customize SMS message templates in **Configuration → SMS Settings** (Konfiguration → SMS-Einstellungen) under the "SMS Templates" section. Available placeholders:
 
 - `{{siteName}}` - Your site name
 - `{{title}}` - Incident/maintenance title
@@ -160,7 +162,7 @@ Common failure reasons:
 
 ### Managing Subscribers
 
-Go to **Notifications → Subscribers** to:
+Go to **Notifications → Subscribers** (Benachrichtigungen → Abonnenten) to:
 
 - View all subscribers
 - Add subscribers manually

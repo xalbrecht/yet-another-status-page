@@ -9,8 +9,8 @@ Incidents represent unplanned service disruptions or issues affecting your infra
 3. Fill in the incident details:
    - **Title** - Brief description (e.g., "API Gateway Latency Issues")
    - **Affected Services** - Select impacted services
+   - **Impact on affected services** - Status the affected services receive while the incident is open (Degraded Performance, Partial Outage or Major Outage). Once the incident is resolved, the services return to Operational, unless another open incident still affects them. Every status change is recorded in the status log.
    - **Status** - Current investigation status
-   - **Impact** - Severity level
 4. Click **Save**
 
 A notification draft is automatically created when you save.

@@ -12,7 +12,8 @@ Service groups organize related services together.
 2. Click **Create New**
 3. Enter a name (e.g., "Core Infrastructure", "API Services")
 4. Optionally add a description
-5. Click **Save**
+5. Optionally choose an **Icon** (used in the [Situation Overview](./situation-overview.md))
+6. Click **Save**
 
 ### Ordering Groups
 

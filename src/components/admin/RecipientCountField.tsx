@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react'
 import { useField, useDocumentInfo } from '@payloadcms/ui'
+import { ta } from '@/lib/i18n/admin'
 import './RecipientCountField.scss'
 
 export const RecipientCountField: React.FC = () => {
@@ -60,8 +61,8 @@ export const RecipientCountField: React.FC = () => {
       </div>
       <p className="recipient-count-field__description">
         {isSent 
-          ? 'Number of subscribers who received this notification'
-          : 'Active subscribers who will receive this notification'
+          ? ta('Number of subscribers who received this notification')
+          : ta('Active subscribers who will receive this notification')
         }
       </p>
     </div>

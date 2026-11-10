@@ -1,10 +1,11 @@
 import type { GlobalConfig } from 'payload'
+import { ta } from '@/lib/i18n/admin'
 
 export const SmsSettings: GlobalConfig = {
   slug: 'sms-settings',
-  label: 'SMS Settings',
+  label: ta('SMS Settings'),
   admin: {
-    group: 'Configuration',
+    group: ta('Configuration'),
   },
   access: {
     read: () => true,
@@ -14,14 +15,14 @@ export const SmsSettings: GlobalConfig = {
       name: 'enabled',
       type: 'checkbox',
       defaultValue: false,
-      label: 'Enable SMS Subscriptions',
+      label: ta('Enable SMS Subscriptions'),
       admin: {
-        description: 'Allow users to subscribe via SMS (requires Twilio to be configured)',
+        description: ta('Allow users to subscribe via SMS (requires Twilio to be configured)'),
       },
     },
     {
       type: 'collapsible',
-      label: 'Twilio Configuration',
+      label: ta('Twilio Configuration'),
       admin: {
         initCollapsed: false,
       },
@@ -29,17 +30,17 @@ export const SmsSettings: GlobalConfig = {
         {
           name: 'twilioAccountSid',
           type: 'text',
-          label: 'Account SID',
+          label: ta('Account SID'),
           admin: {
-            description: 'Your Twilio Account SID (starts with AC...)',
+            description: ta('Your Twilio Account SID (starts with AC...)'),
           },
         },
         {
           name: 'twilioAuthToken',
           type: 'text',
-          label: 'Auth Token',
+          label: ta('Auth Token'),
           admin: {
-            description: 'Your Twilio Auth Token. Leave empty to keep existing value.',
+            description: ta('Your Twilio Auth Token. Leave empty to keep existing value.'),
             autoComplete: 'new-password',
           },
           hooks: {
@@ -67,83 +68,83 @@ export const SmsSettings: GlobalConfig = {
         {
           name: 'twilioFromNumber',
           type: 'text',
-          label: 'From Phone Number',
+          label: ta('From Phone Number'),
           admin: {
-            description: 'Your Twilio phone number (e.g., +1234567890). Required if not using a Messaging Service.',
+            description: ta('Your Twilio phone number (e.g., +1234567890). Required if not using a Messaging Service.'),
           },
         },
         {
           name: 'twilioMessagingServiceSid',
           type: 'text',
-          label: 'Messaging Service SID',
+          label: ta('Messaging Service SID'),
           admin: {
-            description: 'Use a Messaging Service instead of a phone number for better deliverability. Required if not using a From Phone Number.',
+            description: ta('Use a Messaging Service instead of a phone number for better deliverability. Required if not using a From Phone Number.'),
           },
         },
       ],
     },
     {
       type: 'collapsible',
-      label: 'SMS Templates',
+      label: ta('SMS Templates'),
       admin: {
         initCollapsed: true,
-        description: 'Configure SMS message templates. Available placeholders: {{siteName}}, {{title}}, {{status}}, {{message}}, {{url}}',
+        description: ta('Configure SMS message templates. Available placeholders: {{siteName}}, {{title}}, {{status}}, {{message}}, {{url}}'),
       },
       fields: [
         {
           name: 'templateTitleMaxLength',
           type: 'number',
-          label: 'Title Max Length',
+          label: ta('Title Max Length'),
           defaultValue: 50,
           admin: {
-            description: 'Maximum characters for {{title}} placeholder. Longer titles will be truncated.',
+            description: ta('Maximum characters for {{title}} placeholder. Longer titles will be truncated.'),
             width: '50%',
           },
         },
         {
           name: 'templateMessageMaxLength',
           type: 'number',
-          label: 'Message Max Length',
+          label: ta('Message Max Length'),
           defaultValue: 100,
           admin: {
-            description: 'Maximum characters for {{message}} placeholder. Longer messages will be truncated.',
+            description: ta('Maximum characters for {{message}} placeholder. Longer messages will be truncated.'),
             width: '50%',
           },
         },
         {
           name: 'templateIncidentNew',
           type: 'textarea',
-          label: 'New Incident Template',
+          label: ta('New Incident Template'),
           defaultValue: '[{{siteName}}] 🚨 INCIDENT: {{title}} | {{status}} | {{message}} | {{url}}',
           admin: {
-            description: 'Template for new incident notifications',
+            description: ta('Template for new incident notifications'),
           },
         },
         {
           name: 'templateIncidentUpdate',
           type: 'textarea',
-          label: 'Incident Update Template',
+          label: ta('Incident Update Template'),
           defaultValue: '[{{siteName}}] 📢 {{title}} | {{status}} | {{message}} | {{url}}',
           admin: {
-            description: 'Template for incident update notifications',
+            description: ta('Template for incident update notifications'),
           },
         },
         {
           name: 'templateMaintenanceNew',
           type: 'textarea',
-          label: 'New Maintenance Template',
+          label: ta('New Maintenance Template'),
           defaultValue: '[{{siteName}}] 🔧 MAINTENANCE: {{title}} | {{schedule}} | {{url}}',
           admin: {
-            description: 'Template for new scheduled maintenance notifications. {{schedule}} includes start/end times.',
+            description: ta('Template for new scheduled maintenance notifications. {{schedule}} includes start/end times.'),
           },
         },
         {
           name: 'templateMaintenanceUpdate',
           type: 'textarea',
-          label: 'Maintenance Update Template',
+          label: ta('Maintenance Update Template'),
           defaultValue: '[{{siteName}}] 🔧 {{title}} | {{status}} | {{schedule}} | {{message}} | {{url}}',
           admin: {
-            description: 'Template for maintenance update notifications',
+            description: ta('Template for maintenance update notifications'),
           },
         },
       ],

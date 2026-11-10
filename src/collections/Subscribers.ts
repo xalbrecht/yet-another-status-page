@@ -1,10 +1,11 @@
 import type { CollectionConfig } from 'payload'
 import { authenticatedOrTestWrite } from '@/lib/access'
 import { generateShortId } from '@/lib/shortId'
+import { ta } from '@/lib/i18n/admin'
 
 export const subscriptionTypeOptions = [
-  { label: 'Email', value: 'email' },
-  { label: 'SMS', value: 'sms' },
+  { label: ta('Email'), value: 'email' },
+  { label: ta('SMS'), value: 'sms' },
 ] as const
 
 export type SubscriptionType = (typeof subscriptionTypeOptions)[number]['value']
@@ -19,10 +20,11 @@ interface SubscriberData {
 
 export const Subscribers: CollectionConfig = {
   slug: 'subscribers',
+  labels: { singular: ta('Subscriber', 'Abonnent'), plural: ta('Subscribers', 'Abonnenten') },
   admin: {
     useAsTitle: 'email',
     defaultColumns: ['type', 'email', 'phone', 'verified', 'active', 'createdAt'],
-    group: 'Notifications',
+    group: ta('Notifications'),
   },
   access: {
     read: authenticatedOrTestWrite,
@@ -33,20 +35,21 @@ export const Subscribers: CollectionConfig = {
   fields: [
     {
       name: 'type',
+      label: ta('Type', 'Art'),
       type: 'select',
       required: true,
       defaultValue: 'email',
       options: [...subscriptionTypeOptions],
       admin: {
-        description: 'Type of subscription',
+        description: ta('Type of subscription'),
       },
     },
     {
       name: 'email',
       type: 'email',
-      label: 'Email Address',
+      label: ta('Email Address'),
       admin: {
-        description: 'Required if subscription type is email',
+        description: ta('Required if subscription type is email'),
         condition: (data) => (data as SubscriberData)?.type === 'email',
       },
       validate: async (
@@ -86,9 +89,9 @@ export const Subscribers: CollectionConfig = {
     {
       name: 'phone',
       type: 'text',
-      label: 'Phone Number',
+      label: ta('Phone Number'),
       admin: {
-        description: 'Required if subscription type is SMS (include country code)',
+        description: ta('Required if subscription type is SMS (include country code)'),
         condition: (data) => (data as SubscriberData)?.type === 'sms',
       },
       validate: async (
@@ -132,17 +135,17 @@ export const Subscribers: CollectionConfig = {
       name: 'verified',
       type: 'checkbox',
       defaultValue: false,
-      label: 'Verified',
+      label: ta('Verified'),
       admin: {
-        description: 'Whether the subscription has been verified',
+        description: ta('Whether the subscription has been verified'),
       },
     },
     {
       name: 'verificationToken',
       type: 'text',
-      label: 'Verification Token',
+      label: ta('Verification Token'),
       admin: {
-        description: 'Token used for email/phone verification',
+        description: ta('Token used for email/phone verification'),
         readOnly: true,
       },
       hooks: {
@@ -160,10 +163,10 @@ export const Subscribers: CollectionConfig = {
     {
       name: 'unsubscribeToken',
       type: 'text',
-      label: 'Unsubscribe Token',
+      label: ta('Unsubscribe Token'),
       unique: true,
       admin: {
-        description: 'Token used for one-click unsubscribe',
+        description: ta('Token used for one-click unsubscribe'),
         readOnly: true,
       },
       hooks: {
@@ -182,18 +185,18 @@ export const Subscribers: CollectionConfig = {
       name: 'active',
       type: 'checkbox',
       defaultValue: true,
-      label: 'Active',
+      label: ta('Active'),
       admin: {
-        description: 'Whether the subscription is active',
+        description: ta('Whether the subscription is active'),
       },
     },
     {
       name: 'ipAddress',
       type: 'text',
-      label: 'IP Address',
+      label: ta('IP Address'),
       index: true,
       admin: {
-        description: 'IP address used when subscribing (for rate limiting)',
+        description: ta('IP address used when subscribing (for rate limiting)'),
         readOnly: true,
         position: 'sidebar',
       },

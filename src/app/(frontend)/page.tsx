@@ -15,7 +15,8 @@ import { MaintenanceCard } from '@/components/status/MaintenanceCard'
 import { IncidentTimelineWithLinks } from '@/components/status/IncidentTimeline'
 import { StatusLegend } from '@/components/status/StatusLegend'
 import { Lagebild } from '@/components/status/lagebild/Lagebild'
-import { loadLagebild, parseBarHours, parsePeriodDays, type BarHours, type PeriodDays } from '@/lib/lagebild'
+import { loadLagebildCached } from '@/lib/lagebild-cache'
+import { parseBarHours, parsePeriodDays, type BarHours, type PeriodDays } from '@/lib/lagebild'
 import {
   addZonedDays,
   formatDate,
@@ -187,7 +188,7 @@ async function getStatusData(requestedPeriod: unknown, requestedBar: unknown) {
   // Zeitraum des Balkens: Vorgabe aus den Einstellungen, der Besucher überschreibt sie mit ?balken=<Stunden>
   const defaultBarHours = parseBarHours(settings.lagebildBarHours)
   const barHours: BarHours = parseBarHours(requestedBar, defaultBarHours)
-  const lagebild = lagebildVariant === 'off' ? null : await loadLagebild(payload, dt, periodDays, barHours)
+  const lagebild = lagebildVariant === 'off' ? null : await loadLagebildCached(dt, periodDays, barHours)
 
   return {
     lagebildVariant,

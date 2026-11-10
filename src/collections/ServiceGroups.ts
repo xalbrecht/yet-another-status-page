@@ -2,6 +2,7 @@ import type { CollectionConfig } from 'payload'
 import { standardAccess } from '@/lib/access'
 import { ta } from '@/lib/i18n/admin'
 import { DEFAULT_GROUP_ICON, groupIconOptions } from '@/lib/group-icons'
+import { invalidateLagebild } from '@/lib/lagebild-invalidate'
 
 export const ServiceGroups: CollectionConfig = {
   slug: 'service-groups',
@@ -13,6 +14,21 @@ export const ServiceGroups: CollectionConfig = {
   },
   orderable: true,
   access: standardAccess,
+  hooks: {
+    // Name, Symbol und Reihenfolge der Gruppen stehen im zwischengespeicherten Lagebild
+    afterChange: [
+      ({ doc }) => {
+        invalidateLagebild()
+        return doc
+      },
+    ],
+    afterDelete: [
+      ({ doc }) => {
+        invalidateLagebild()
+        return doc
+      },
+    ],
+  },
   fields: [
     {
       name: 'name',

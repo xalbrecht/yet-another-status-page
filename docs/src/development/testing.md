@@ -100,6 +100,7 @@ Including the CA permanently in the test compose file is tracked in issue #22.
 - **A change by `router.replace` is only visible after the server has rendered the page.** On the dev server this can take several seconds. Give `toHaveURL` and the following assertions a longer timeout (`{ timeout: 30_000 }`).
 - **Reset global settings** in `afterAll`, also when the test fails.
 - **Unique names**: `Date.now()` in names of groups and services, and select by name, not by position.
+- **The dev server in the container writes to your working directory.** By default Payload rewrites `src/payload-types.ts` and `src/app/(payload)/admin/importMap.js` while it runs, in the language of the interface. The test compose file sets `PAYLOAD_AUTO_GENERATE=false`, so a test run does not change tracked files. If you start the dev server by hand, run `git status` afterwards and restore these two files instead of committing them.
 - **Language**: The test compose file builds the application with `NEXT_PUBLIC_UI_LANG=en`, because the upstream specs read English texts ("Page Not Found", "Past Incidents"). Without it the page is German (the default of this fork) and 11 of them fail. Specs written in this fork accept both languages (`/(Letzte|Last) 24 (Stunden|hours)/`), so they pass in either setting.
 
 ## Measuring performance and memory

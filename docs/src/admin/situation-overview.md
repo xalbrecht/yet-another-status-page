@@ -10,7 +10,7 @@ Go to **Configuration → Site Settings → Situation overview** (Konfiguration 
 |--------|--------|--------|
 | Off | Aus | No situation overview (default) |
 | Variant A | Variante A | Tiles per group, a click opens the services of the group below the tile row |
-| Variant B | Variante B | Tiles per group, each with its own small bar |
+| Variant B | Variante B | Tiles per group, each with its own small bar. A click opens the services of the group below the tile row, like in variant A |
 | Both (for testing) | Beide (zum Testen) | Both variants one after the other, to compare them |
 
 ## What is shown

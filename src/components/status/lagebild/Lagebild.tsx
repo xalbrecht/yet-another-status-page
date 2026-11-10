@@ -152,7 +152,7 @@ function LagebildView({
           const open = selected === group.id
           // Aufklappbereich steht hinter der letzten Kachel der Zeile
           const endsRow = index === data.groups.length - 1 || (index + 1) % columns === 0
-          const panelGroup = variant === 'a' && endsRow ? data.groups.find((g) => g.id === selected) : undefined
+          const panelGroup = endsRow ? data.groups.find((g) => g.id === selected) : undefined
           const panelIndex = panelGroup ? data.groups.indexOf(panelGroup) : -1
           const panelInRow = panelGroup && Math.floor(panelIndex / columns) === Math.floor(index / columns)
           return (
@@ -190,16 +190,23 @@ function LagebildView({
   )
 }
 
-function TileA({ group, active, onSelect }: { group: LagebildGroup; active: boolean; onSelect: () => void }) {
-  const Badge = statusBadgeIcon[group.status]
-  const affected = group.services.filter((service) => service.status === 'degraded' || service.status === 'partial' || service.status === 'major').length
+/** „3 Dienste · 1 betroffen“ */
+function serviceMeta(group: LagebildGroup): string {
+  const affected = group.services.filter(
+    (service) => service.status === 'degraded' || service.status === 'partial' || service.status === 'major',
+  ).length
   const count = group.services.length
-  const meta = [
+  return [
     count === 1 ? t('lagebild.servicesOne') : tf('lagebild.servicesMany', { count }),
     affected > 0 ? tf('lagebild.affected', { count: affected }) : null,
   ]
     .filter(Boolean)
     .join(' · ')
+}
+
+function TileA({ group, active, onSelect }: { group: LagebildGroup; active: boolean; onSelect: () => void }) {
+  const Badge = statusBadgeIcon[group.status]
+  const meta = serviceMeta(group)
   return (
     <button
       type="button"
@@ -361,7 +368,7 @@ function TileB({
     <button
       type="button"
       onClick={onSelect}
-      aria-pressed={active}
+      aria-expanded={active}
       className={cn(
         'flex flex-col gap-3 rounded-lg border border-l-4 bg-card px-4 py-3 text-left transition-colors hover:bg-secondary/60',
         statusBorder[group.status],
@@ -372,9 +379,17 @@ function TileB({
         <GroupIcon name={group.icon} className="h-6 w-6 shrink-0 text-muted-foreground" />
         <span className="flex-1">
           <span className="block text-sm font-semibold text-foreground">{group.name}</span>
-          <span className={cn('block text-xs font-semibold', statusText[group.status])}>{statusLabel(group.status)}</span>
+          <span className="block text-xs text-muted-foreground">
+            <span className={cn('font-semibold', statusText[group.status])}>{statusLabel(group.status)}</span>
+            {' · '}
+            {serviceMeta(group)}
+          </span>
         </span>
         <Badge className={cn('h-5 w-5 shrink-0', statusText[group.status])} aria-hidden="true" />
+        <ChevronDown
+          aria-hidden="true"
+          className={cn('h-4 w-4 shrink-0 text-muted-foreground transition-transform', active && 'rotate-180')}
+        />
       </span>
       <span className="block">
         <StatusBar runs={group.bars} window={bar} heightClass="h-3" label={`${group.name}: ${statusLabel(group.status)}`} />

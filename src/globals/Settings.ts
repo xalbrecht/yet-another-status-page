@@ -158,6 +158,30 @@ export const Settings: GlobalConfig = {
     },
     {
       type: 'collapsible',
+      label: ta('Situation overview'),
+      admin: {
+        initCollapsed: true,
+      },
+      fields: [
+        {
+          name: 'lagebildVariant',
+          type: 'select',
+          label: ta('Display'),
+          defaultValue: 'off',
+          options: [
+            { label: ta('Off'), value: 'off' },
+            { label: ta('Variant A (tiles, bars below)'), value: 'a' },
+            { label: ta('Variant B (tiles with own bar)'), value: 'b' },
+            { label: ta('Both (for testing)'), value: 'both' },
+          ],
+          admin: {
+            description: ta('Situation overview per service group on the start page. Variant A shows tiles with the bars of the last 12 hours below. Variant B shows a small bar in every tile. "Both" displays both variants one after the other to compare them.'),
+          },
+        },
+      ],
+    },
+    {
+      type: 'collapsible',
       label: ta('Maintenance'),
       admin: {
         initCollapsed: true,

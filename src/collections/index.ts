@@ -1,5 +1,6 @@
 export { ServiceGroups } from './ServiceGroups'
 export { Services } from './Services'
+export { ServiceStatusEvents } from './ServiceStatusEvents'
 export { Incidents } from './Incidents'
 export { Maintenances } from './Maintenances'
 export { Notifications } from './Notifications'

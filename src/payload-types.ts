@@ -69,6 +69,7 @@ export interface Config {
   collections: {
     'service-groups': ServiceGroup;
     services: Service;
+    'service-status-events': ServiceStatusEvent;
     incidents: Incident;
     maintenances: Maintenance;
     notifications: Notification;
@@ -85,6 +86,7 @@ export interface Config {
   collectionsSelect: {
     'service-groups': ServiceGroupsSelect<false> | ServiceGroupsSelect<true>;
     services: ServicesSelect<false> | ServicesSelect<true>;
+    'service-status-events': ServiceStatusEventsSelect<false> | ServiceStatusEventsSelect<true>;
     incidents: IncidentsSelect<false> | IncidentsSelect<true>;
     maintenances: MaintenancesSelect<false> | MaintenancesSelect<true>;
     notifications: NotificationsSelect<false> | NotificationsSelect<true>;
@@ -154,13 +156,40 @@ export interface ServiceGroup {
   _order?: string | null;
   name: string;
   /**
-   * URL-friendly identifier (e.g., "core-infrastructure")
+   * Kennung für die Adresse (z. B. „core-infrastructure“)
    */
   slug: string;
   /**
-   * Optional description for this service group
+   * Optionale Beschreibung dieser Dienstgruppe
    */
   description?: string | null;
+  /**
+   * Icon dieser Gruppe im Lagebild auf der Statusseite
+   */
+  icon?:
+    | (
+        | 'LayoutGrid'
+        | 'Server'
+        | 'Database'
+        | 'HardDrive'
+        | 'Cpu'
+        | 'Cloud'
+        | 'Network'
+        | 'Wifi'
+        | 'Globe'
+        | 'Mail'
+        | 'Phone'
+        | 'Smartphone'
+        | 'Monitor'
+        | 'Printer'
+        | 'ShieldCheck'
+        | 'Lock'
+        | 'Users'
+        | 'FileText'
+        | 'Landmark'
+        | 'Building2'
+      )
+    | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -173,21 +202,35 @@ export interface Service {
   _order?: string | null;
   name: string;
   /**
-   * URL-friendly identifier (e.g., "api-gateway")
+   * Kennung für die Adresse (z. B. „api-gateway“)
    */
   slug: string;
   /**
-   * Optional description for this service
+   * Optionale Beschreibung dieses Dienstes
    */
   description?: string | null;
   /**
-   * Which group this service belongs to
+   * Dienstgruppe, zu der dieser Dienst gehört
    */
   group: number | ServiceGroup;
   /**
-   * Current status of the service
+   * Aktueller Status des Dienstes
    */
   status: 'operational' | 'degraded' | 'partial' | 'major' | 'maintenance';
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Automatisches Protokoll der Zustandsänderungen von Diensten. Grundlage des Lagebilds.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "service-status-events".
+ */
+export interface ServiceStatusEvent {
+  id: number;
+  service: number | Service;
+  status: 'operational' | 'degraded' | 'partial' | 'major' | 'maintenance';
+  changedAt: string;
   updatedAt: string;
   createdAt: string;
 }
@@ -198,39 +241,43 @@ export interface Service {
 export interface Incident {
   id: number;
   /**
-   * A brief description of the incident (e.g., "API Gateway Latency Issues")
+   * Kurze Beschreibung der Störung (z. B. „Verzögerungen am API-Gateway“)
    */
   title: string;
   /**
-   * Auto-generated short ID for permalinks
+   * Automatisch erzeugte Kurz-ID für dauerhafte Links
    */
   shortId?: string | null;
   /**
-   * Automatically synced from the latest update
+   * Wird automatisch aus der letzten Aktualisierung übernommen
    */
   status: 'investigating' | 'identified' | 'monitoring' | 'resolved';
   /**
-   * When the incident was resolved
+   * Zeitpunkt, zu dem die Störung behoben wurde
    */
   resolvedAt?: string | null;
   /**
-   * Services affected by this incident
+   * Von dieser Störung betroffene Dienste
    */
   affectedServices?: (number | Service)[] | null;
   /**
-   * Timeline of updates for this incident. At least one update is required.
+   * Zustand, den die betroffenen Dienste erhalten, solange die Störung offen ist. Nach der Behebung kehren die Dienste auf „Betriebsbereit“ zurück.
+   */
+  impact: 'degraded' | 'partial' | 'major';
+  /**
+   * Verlauf der Aktualisierungen zu dieser Störung. Mindestens eine Aktualisierung ist erforderlich.
    */
   updates: {
     /**
-     * Status at the time of this update
+     * Status zum Zeitpunkt dieser Aktualisierung
      */
     status: 'investigating' | 'identified' | 'monitoring' | 'resolved';
     /**
-     * Update message
+     * Text der Aktualisierung
      */
     message: string;
     /**
-     * When this update was posted
+     * Zeitpunkt dieser Aktualisierung
      */
     createdAt: string;
     id?: string | null;
@@ -245,23 +292,23 @@ export interface Incident {
 export interface Maintenance {
   id: number;
   /**
-   * A brief description of the maintenance (e.g., "Database Migration")
+   * Kurze Beschreibung der Wartung (z. B. „Datenbankmigration“)
    */
   title: string;
   /**
-   * Auto-generated short ID for permalinks
+   * Automatisch erzeugte Kurz-ID für dauerhafte Links
    */
   shortId?: string | null;
   /**
-   * When the maintenance was cancelled
+   * Zeitpunkt, zu dem die Wartung abgesagt wurde
    */
   cancelledAt?: string | null;
   /**
-   * When the maintenance was completed
+   * Zeitpunkt, zu dem die Wartung abgeschlossen wurde
    */
   completedAt?: string | null;
   /**
-   * Detailed description of the maintenance work
+   * Ausführliche Beschreibung der Wartungsarbeiten
    */
   description?: {
     root: {
@@ -279,19 +326,19 @@ export interface Maintenance {
     [k: string]: unknown;
   } | null;
   /**
-   * Services that will be affected by this maintenance
+   * Von dieser Wartung betroffene Dienste
    */
   affectedServices?: (number | Service)[] | null;
   /**
-   * When the maintenance is scheduled to start
+   * Geplanter Beginn der Wartung
    */
   scheduledStartAt: string;
   /**
-   * When the maintenance is expected to end
+   * Voraussichtliches Ende der Wartung
    */
   scheduledEndAt?: string | null;
   /**
-   * Human-readable duration (e.g., "~2 hours")
+   * Dauer in Worten (z. B. „ca. 2 Stunden“)
    */
   duration?: string | null;
   /**
@@ -299,28 +346,28 @@ export interface Maintenance {
    */
   status: 'upcoming' | 'in_progress' | 'completed' | 'cancelled';
   /**
-   * Automatically set to "In Progress" when start time is reached
+   * Wird beim Erreichen des geplanten Beginns automatisch auf „In Arbeit“ gesetzt
    */
   autoStartOnSchedule?: boolean | null;
   /**
-   * Automatically set to "Completed" when end time is reached
+   * Wird beim Erreichen des geplanten Endes automatisch auf „Abgeschlossen“ gesetzt
    */
   autoCompleteOnSchedule?: boolean | null;
   /**
-   * Optional timeline of updates for this maintenance
+   * Optionaler Verlauf der Aktualisierungen zu dieser Wartung
    */
   updates?:
     | {
         /**
-         * Status at the time of this update
+         * Status zum Zeitpunkt dieser Aktualisierung
          */
         status: 'upcoming' | 'in_progress' | 'completed' | 'cancelled';
         /**
-         * Update message
+         * Text der Aktualisierung
          */
         message: string;
         /**
-         * When this update was posted
+         * Zeitpunkt dieser Aktualisierung
          */
         createdAt: string;
         id?: string | null;
@@ -330,7 +377,7 @@ export interface Maintenance {
   createdAt: string;
 }
 /**
- * Manage and send notifications to subscribers
+ * Benachrichtigungen an Abonnenten verwalten und senden
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "notifications".
@@ -338,7 +385,7 @@ export interface Maintenance {
 export interface Notification {
   id: number;
   /**
-   * Internal title for this notification (auto-generated)
+   * Interner Titel dieser Benachrichtigung (automatisch erzeugt)
    */
   title: string;
   relatedIncident?: (number | null) | Incident;
@@ -347,15 +394,15 @@ export interface Notification {
   channel: 'email' | 'sms' | 'both';
   status: 'draft' | 'scheduled' | 'sent' | 'failed';
   /**
-   * Subject line for email notifications
+   * Betreffzeile der E-Mail-Benachrichtigungen
    */
   subject?: string | null;
   /**
-   * Full email message content. Use {{siteUrl}} for the site URL.
+   * Vollständiger Text der E-Mail. {{siteUrl}} steht für die Adresse der Statusseite.
    */
   emailBody?: string | null;
   /**
-   * Short SMS message (160 characters recommended)
+   * Kurze SMS (empfohlen: höchstens 160 Zeichen)
    */
   smsBody?: string | null;
   recipientCount?: number | null;
@@ -371,35 +418,35 @@ export interface Notification {
 export interface Subscriber {
   id: number;
   /**
-   * Type of subscription
+   * Art des Abonnements
    */
   type: 'email' | 'sms';
   /**
-   * Required if subscription type is email
+   * Erforderlich bei Abonnement per E-Mail
    */
   email?: string | null;
   /**
-   * Required if subscription type is SMS (include country code)
+   * Erforderlich bei Abonnement per SMS (mit Ländervorwahl)
    */
   phone?: string | null;
   /**
-   * Whether the subscription has been verified
+   * Gibt an, ob das Abonnement bestätigt wurde
    */
   verified?: boolean | null;
   /**
-   * Token used for email/phone verification
+   * Token zur Bestätigung von E-Mail-Adresse oder Rufnummer
    */
   verificationToken?: string | null;
   /**
-   * Token used for one-click unsubscribe
+   * Token zum Abbestellen mit einem Klick
    */
   unsubscribeToken?: string | null;
   /**
-   * Whether the subscription is active
+   * Gibt an, ob das Abonnement aktiv ist
    */
   active?: boolean | null;
   /**
-   * IP address used when subscribing (for rate limiting)
+   * IP-Adresse beim Abonnieren (zur Begrenzung der Anfragen)
    */
   ipAddress?: string | null;
   updatedAt: string;
@@ -413,7 +460,7 @@ export interface User {
   id: number;
   name?: string | null;
   /**
-   * User role for access control
+   * Rolle des Benutzers für die Zugriffssteuerung
    */
   role: 'admin' | 'editor';
   updatedAt: string;
@@ -440,7 +487,7 @@ export interface User {
 export interface Media {
   id: number;
   /**
-   * Alternative text for accessibility
+   * Alternativtext für die Barrierefreiheit
    */
   alt: string;
   updatedAt: string;
@@ -580,6 +627,10 @@ export interface PayloadLockedDocument {
         value: number | Service;
       } | null)
     | ({
+        relationTo: 'service-status-events';
+        value: number | ServiceStatusEvent;
+      } | null)
+    | ({
         relationTo: 'incidents';
         value: number | Incident;
       } | null)
@@ -654,6 +705,7 @@ export interface ServiceGroupsSelect<T extends boolean = true> {
   name?: T;
   slug?: T;
   description?: T;
+  icon?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -673,6 +725,17 @@ export interface ServicesSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "service-status-events_select".
+ */
+export interface ServiceStatusEventsSelect<T extends boolean = true> {
+  service?: T;
+  status?: T;
+  changedAt?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "incidents_select".
  */
 export interface IncidentsSelect<T extends boolean = true> {
@@ -681,6 +744,7 @@ export interface IncidentsSelect<T extends boolean = true> {
   status?: T;
   resolvedAt?: T;
   affectedServices?: T;
+  impact?: T;
   updates?:
     | T
     | {
@@ -874,15 +938,15 @@ export interface PayloadMigrationsSelect<T extends boolean = true> {
 export interface Setting {
   id: number;
   /**
-   * The name of your organization/site
+   * Name der Organisation bzw. der Website
    */
   siteName: string;
   /**
-   * A brief description of your status page
+   * Kurze Beschreibung der Statusseite
    */
   siteDescription?: string | null;
   /**
-   * Text displayed in the footer. Supports bold, italic, underline, and links.
+   * Text in der Fußzeile. Unterstützt Fett, Kursiv, Unterstrichen und Links.
    */
   footerText?: {
     root: {
@@ -900,41 +964,45 @@ export interface Setting {
     [k: string]: unknown;
   } | null;
   /**
-   * Title shown in browser tabs and search results (leave empty to use Site Name)
+   * Titel in Browser-Tabs und Suchergebnissen (leer lassen, um den Namen der Website zu verwenden)
    */
   metaTitle?: string | null;
   /**
-   * Description shown in search results
+   * Beschreibung in Suchergebnissen
    */
   metaDescription?: string | null;
   /**
-   * Title for the incident history page (use {{date}} for dynamic date)
+   * Titel der Störungshistorie (mit {{date}} für das jeweilige Datum)
    */
   historyMetaTitle?: string | null;
   /**
-   * Description for the incident history page (use {{date}} for dynamic date)
+   * Beschreibung der Störungshistorie (mit {{date}} für das jeweilige Datum)
    */
   historyMetaDescription?: string | null;
   /**
-   * Site favicon (recommended: 32x32 or 64x64 PNG, ICO, or SVG). Leave empty to use default favicon.
+   * Favicon der Website (empfohlen: PNG mit 32×32 oder 64×64 Pixeln, ICO oder SVG). Leer lassen für das Standard-Favicon.
    */
   favicon?: (number | null) | Media;
   /**
-   * Logo to display on light backgrounds (recommended: SVG or PNG with transparent background)
+   * Logo für helle Hintergründe (empfohlen: SVG oder PNG mit transparentem Hintergrund)
    */
   logoLight?: (number | null) | Media;
   /**
-   * Logo to display on dark backgrounds (recommended: SVG or PNG with transparent background)
+   * Logo für dunkle Hintergründe (empfohlen: SVG oder PNG mit transparentem Hintergrund)
    */
   logoDark?: (number | null) | Media;
   /**
-   * Force display of maintenance banner regardless of service status
+   * Wartungshinweis immer anzeigen, unabhängig vom Status der Dienste
    */
   maintenanceModeEnabled?: boolean | null;
   /**
-   * Override the default status banner message (leave empty to use automatic)
+   * Ersetzt die Standardmeldung im Statusbanner (leer lassen für die automatische Meldung)
    */
   customStatusMessage?: string | null;
+  /**
+   * Lagebild je Dienstgruppe auf der Startseite. Variante A zeigt Kacheln und darunter die Balken der letzten 12 Stunden. Variante B zeigt in jeder Kachel einen kleinen Balken. „Beide“ zeigt beide Varianten nacheinander, um sie zu vergleichen.
+   */
+  lagebildVariant?: ('off' | 'a' | 'b' | 'both') | null;
   /**
    * How long completed and cancelled maintenances stay visible on the status page after they enter a terminal state.
    */
@@ -1012,39 +1080,39 @@ export interface Setting {
 export interface EmailSetting {
   id: number;
   /**
-   * Allow users to subscribe via email (requires SMTP to be configured)
+   * Nutzern das Abonnieren per E-Mail erlauben (setzt einen eingerichteten SMTP-Server voraus)
    */
   enabled?: boolean | null;
   /**
-   * SMTP server hostname (e.g., smtp.gmail.com, smtp.sendgrid.net)
+   * Hostname des SMTP-Servers (z. B. smtp.example.org)
    */
   smtpHost?: string | null;
   /**
-   * SMTP port (typically 587 for TLS, 465 for SSL, 25 for unencrypted)
+   * SMTP-Port (üblich: 587 für TLS, 465 für SSL, 25 unverschlüsselt)
    */
   smtpPort?: number | null;
   /**
-   * Connection security method
+   * Verfahren zur Absicherung der Verbindung
    */
   smtpSecure?: ('tls' | 'ssl' | 'none') | null;
   /**
-   * Username for SMTP authentication (often your email address)
+   * Benutzername für die SMTP-Anmeldung (häufig die E-Mail-Adresse)
    */
   smtpUsername?: string | null;
   /**
-   * Password or API key for SMTP authentication. Leave empty to keep existing value.
+   * Passwort oder API-Schlüssel für die SMTP-Anmeldung. Leer lassen, um den vorhandenen Wert zu behalten.
    */
   smtpPassword?: string | null;
   /**
-   * Email address that notifications will be sent from
+   * E-Mail-Adresse, von der Benachrichtigungen gesendet werden
    */
   smtpFromAddress?: string | null;
   /**
-   * Display name for the sender (e.g., "Acme Status")
+   * Anzeigename des Absenders (z. B. „Musterstadt Status“)
    */
   smtpFromName?: string | null;
   /**
-   * Optional reply-to email address (leave empty to use From address)
+   * Optionale Antwortadresse (leer lassen, um die Absenderadresse zu verwenden)
    */
   smtpReplyTo?: string | null;
   updatedAt?: string | null;
@@ -1057,47 +1125,47 @@ export interface EmailSetting {
 export interface SmsSetting {
   id: number;
   /**
-   * Allow users to subscribe via SMS (requires Twilio to be configured)
+   * Nutzern das Abonnieren per SMS erlauben (setzt eine eingerichtete Twilio-Anbindung voraus)
    */
   enabled?: boolean | null;
   /**
-   * Your Twilio Account SID (starts with AC...)
+   * Ihre Twilio-Account-SID (beginnt mit AC…)
    */
   twilioAccountSid?: string | null;
   /**
-   * Your Twilio Auth Token. Leave empty to keep existing value.
+   * Ihr Twilio-Auth-Token. Leer lassen, um den vorhandenen Wert zu behalten.
    */
   twilioAuthToken?: string | null;
   /**
-   * Your Twilio phone number (e.g., +1234567890). Required if not using a Messaging Service.
+   * Ihre Twilio-Rufnummer (z. B. +491701234567). Erforderlich, wenn kein Messaging Service verwendet wird.
    */
   twilioFromNumber?: string | null;
   /**
-   * Use a Messaging Service instead of a phone number for better deliverability. Required if not using a From Phone Number.
+   * Statt einer Rufnummer einen Messaging Service verwenden, das verbessert die Zustellung. Erforderlich, wenn keine Absender-Rufnummer angegeben ist.
    */
   twilioMessagingServiceSid?: string | null;
   /**
-   * Maximum characters for {{title}} placeholder. Longer titles will be truncated.
+   * Höchstzahl der Zeichen für {{title}}. Längere Titel werden gekürzt.
    */
   templateTitleMaxLength?: number | null;
   /**
-   * Maximum characters for {{message}} placeholder. Longer messages will be truncated.
+   * Höchstzahl der Zeichen für {{message}}. Längere Meldungen werden gekürzt.
    */
   templateMessageMaxLength?: number | null;
   /**
-   * Template for new incident notifications
+   * Vorlage für Benachrichtigungen zu neuen Störungen
    */
   templateIncidentNew?: string | null;
   /**
-   * Template for incident update notifications
+   * Vorlage für Benachrichtigungen zu Störungsaktualisierungen
    */
   templateIncidentUpdate?: string | null;
   /**
-   * Template for new scheduled maintenance notifications. {{schedule}} includes start/end times.
+   * Vorlage für Benachrichtigungen zu neu geplanten Wartungen. {{schedule}} enthält Beginn und Ende.
    */
   templateMaintenanceNew?: string | null;
   /**
-   * Template for maintenance update notifications
+   * Vorlage für Benachrichtigungen zu Wartungsaktualisierungen
    */
   templateMaintenanceUpdate?: string | null;
   updatedAt?: string | null;
@@ -1120,6 +1188,7 @@ export interface SettingsSelect<T extends boolean = true> {
   logoDark?: T;
   maintenanceModeEnabled?: T;
   customStatusMessage?: T;
+  lagebildVariant?: T;
   maintenanceTerminalRetentionHours?: T;
   timezone?: T;
   locale?: T;

@@ -157,6 +157,22 @@ export const en = {
   'ical.calendar': 'Maintenance',
   'ical.affected': 'Affected services:',
   'ical.duration': 'Expected duration:',
+  'lagebild.title': 'Situation overview',
+  'lagebild.barsTitle': 'Status of the last 12 hours',
+  'lagebild.periodsTitle': 'Disruptions of the last 14 days',
+  'lagebild.allGroups': 'All groups',
+  'lagebild.filterLabel': 'Filter by group',
+  'lagebild.noEntries': 'No entries',
+  'lagebild.noData': 'No data',
+  'lagebild.ongoing': 'ongoing',
+  'lagebild.hoursAgo': '12 hours ago',
+  'lagebild.now': 'now',
+  'lagebild.variantA': 'Variant A',
+  'lagebild.variantB': 'Variant B',
+  'lagebild.testNotice': 'Test mode: both variants are shown for comparison.',
+  'lagebild.periodTitle': '{status}: {group}',
+  'lagebild.relatedIncident': 'Related incident: {title}',
+  'lagebild.barRange': '{from} – {to}: {status}',
 } as const
 
 export type TranslationKey = keyof typeof en

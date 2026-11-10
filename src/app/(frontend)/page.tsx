@@ -14,6 +14,8 @@ import { ServiceGroup } from '@/components/status/ServiceGroup'
 import { MaintenanceCard } from '@/components/status/MaintenanceCard'
 import { IncidentTimelineWithLinks } from '@/components/status/IncidentTimeline'
 import { StatusLegend } from '@/components/status/StatusLegend'
+import { Lagebild } from '@/components/status/lagebild/Lagebild'
+import { loadLagebild } from '@/lib/lagebild'
 import {
   addZonedDays,
   formatDate,
@@ -177,7 +179,13 @@ async function getStatusData() {
 
   const overallStatus = computeOverallStatus(services.docs, settings)
 
+  // Lagebild nur laden, wenn es in den Website-Einstellungen aktiviert ist
+  const lagebildVariant = settings.lagebildVariant ?? 'off'
+  const lagebild = lagebildVariant === 'off' ? null : await loadLagebild(payload, dt)
+
   return {
+    lagebildVariant,
+    lagebild,
     settings,
     overallStatus,
     serviceGroups: groupedServices,
@@ -186,8 +194,15 @@ async function getStatusData() {
   }
 }
 
-export default async function StatusPage() {
-  const { settings, overallStatus, serviceGroups, maintenances, pastIncidents } = await getStatusData()
+export default async function StatusPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ gruppe?: string | string[] }>
+}) {
+  const { settings, overallStatus, serviceGroups, maintenances, pastIncidents, lagebild, lagebildVariant } =
+    await getStatusData()
+  const { gruppe } = await searchParams
+  const initialGroup = typeof gruppe === 'string' ? gruppe : null
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
@@ -205,6 +220,13 @@ export default async function StatusPage() {
         <section className="mb-8 animate-fade-in">
           <StatusBanner status={overallStatus} message={settings.customStatusMessage ?? undefined} />
         </section>
+
+        {/* Lagebild je Dienstgruppe (Website-Einstellungen → Lagebild) */}
+        {lagebild && lagebildVariant !== 'off' && (
+          <div className="mb-10">
+            <Lagebild variant={lagebildVariant} data={lagebild} initialGroup={initialGroup} />
+          </div>
+        )}
 
         {/* Service Groups */}
         <section className="mb-10 space-y-4">

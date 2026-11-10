@@ -62,6 +62,10 @@ if (oidcPlugin) {
 }
 
 const isVercelBlobEnabled = !!process.env.BLOB_READ_WRITE_TOKEN
+
+// Im Entwicklungsmodus schreibt Payload `src/payload-types.ts` und die Import-Map neu. Die Testumgebung schaltet das
+// ab (PAYLOAD_AUTO_GENERATE=false), sonst ändert jeder Testlauf diese Dateien im Arbeitsverzeichnis.
+const autoGenerate = process.env.PAYLOAD_AUTO_GENERATE !== 'false'
 plugins.push(
   vercelBlobStorage({
     enabled: isVercelBlobEnabled,
@@ -99,6 +103,7 @@ export default buildConfig({
     components: {
       beforeDashboard: ['@/components/admin/DashboardWidgets#DashboardWidgets'],
     },
+    importMap: { autoGenerate },
   },
   collections: [
     // Status collections
@@ -130,6 +135,7 @@ export default buildConfig({
   secret: process.env.PAYLOAD_SECRET || 'default-secret-change-me',
   typescript: {
     outputFile: path.resolve(dirname, 'src/payload-types.ts'),
+    autoGenerate,
   },
   db: postgresAdapter({
     pool: {

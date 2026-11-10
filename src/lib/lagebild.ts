@@ -1,7 +1,7 @@
 import type { Payload } from 'payload'
 import type { Service } from '@/payload-types'
 import { DEFAULT_GROUP_ICON } from '@/lib/group-icons'
-import { formatDate, formatDateSlug, formatDateTime, formatTime, type DateTimeConfig } from '@/lib/datetime'
+import { formatClockTime, formatDate, formatDateSlug, formatDateTime, formatTime, type DateTimeConfig } from '@/lib/datetime'
 import { t, tf } from '@/lib/i18n'
 
 /**
@@ -11,7 +11,8 @@ import { t, tf } from '@/lib/i18n'
 
 export type LagebildStatus = Service['status']
 
-export const BAR_SLOT_MINUTES = 5
+/** Anzahl der Striche eines Balkens: 12 Stunden zu 5 Minuten (24 Stunden zu 10 Minuten). */
+export const BAR_SLOTS = 144
 export const BAR_HOURS = 12
 export const PERIOD_DAYS = 14
 
@@ -68,37 +69,57 @@ export function groupStatusAt(timelines: Timeline[], time: number): LagebildStat
 export type BarRun = {
   /** `null`: keine Daten */
   status: LagebildStatus | null
-  /** Anzahl der 5-Minuten-Fenster */
+  /** Anzahl der Striche (Abschnitte) mit diesem Zustand */
   slots: number
-  from: string
-  to: string
 }
 
-/** Balken der letzten 12 Stunden, zusammengefasst zu Abschnitten gleichen Zustands. */
-export function computeBarRuns(timelines: Timeline[], now: number, dt: DateTimeConfig): BarRun[] {
-  const slotMs = BAR_SLOT_MINUTES * MINUTE
-  const count = (BAR_HOURS * HOUR) / slotMs
-  const start = now - BAR_HOURS * HOUR
-  // Abschnitte zuerst nur mit Zeitpunkten bilden. Die Uhrzeit wird danach einmal je Abschnittsrand
-  // formatiert, nicht je Fenster: `formatTime` kostet etwa 0,6 ms, und die Seite rechnet je Dienst einen Balken.
-  const runs: Array<{ status: LagebildStatus | null; slots: number; startAt: number; endAt: number }> = []
-  for (let i = 0; i < count; i++) {
-    const slotEnd = start + (i + 1) * slotMs
-    const status = groupStatusAt(timelines, slotEnd - 1)
-    const last = runs[runs.length - 1]
-    if (last && last.status === status) {
-      last.slots += 1
-      last.endAt = slotEnd
-    } else {
-      runs.push({ status, slots: 1, startAt: start + i * slotMs, endAt: slotEnd })
+/** Zeitfenster eines Balkens. Die Uhrzeit eines Strichs berechnet die Oberfläche aus `startMs`, `slotMinutes` und der Nummer. */
+export type BarWindow = {
+  /** Beginn des ersten Abschnitts in Millisekunden */
+  startMs: number
+  slotMinutes: number
+  slots: number
+  /** Zeitpunkt der Berechnung. Der letzte Abschnitt endet rechnerisch später, sein Ende zeigt die Oberfläche als „jetzt“. */
+  nowMs: number
+}
+
+/** Fenster des Balkens. Die Abschnitte enden auf volle Vielfache ihrer Länge (12:05, 12:10 …), der letzte enthält `now`. */
+export function computeBarWindow(now: number, hours: number = BAR_HOURS): BarWindow {
+  const slotMinutes = (hours * 60) / BAR_SLOTS
+  const slotMs = slotMinutes * MINUTE
+  const endMs = Math.ceil(now / slotMs) * slotMs
+  return { startMs: endMs - BAR_SLOTS * slotMs, slotMinutes, slots: BAR_SLOTS, nowMs: now }
+}
+
+/** Schlechtester Zustand der Zeitleisten im Abschnitt [from, to). `null`: im Abschnitt ist kein Zustand bekannt. */
+function worstInSlot(timelines: Timeline[], from: number, to: number): LagebildStatus | null {
+  let worst: LagebildStatus | null = null
+  for (const timeline of timelines) {
+    worst = worstStatus([worst, statusAt(timeline, from)])
+    for (const entry of timeline) {
+      if (entry.at >= to) break
+      if (entry.at > from) worst = worstStatus([worst, entry.status])
     }
   }
-  return runs.map((run) => ({
-    status: run.status,
-    slots: run.slots,
-    from: formatTime(new Date(run.startAt), dt),
-    to: formatTime(new Date(run.endAt), dt),
-  }))
+  return worst
+}
+
+/**
+ * Balken als Folge von Abschnitten gleichen Zustands. Jeder Strich zeigt den schlechtesten Zustand seines Abschnitts,
+ * damit ein kurzer Ausfall nicht zwischen zwei Abschnittsgrenzen verschwindet. Es wird keine Uhrzeit formatiert:
+ * Das kostet je Aufruf 0,6 ms, und die Seite rechnet je Dienst einen Balken (Fork-Issue #23).
+ */
+export function computeBarRuns(timelines: Timeline[], window: BarWindow): BarRun[] {
+  const slotMs = window.slotMinutes * MINUTE
+  const runs: BarRun[] = []
+  for (let i = 0; i < window.slots; i++) {
+    const from = window.startMs + i * slotMs
+    const status = worstInSlot(timelines, from, from + slotMs)
+    const last = runs[runs.length - 1]
+    if (last && last.status === status) last.slots += 1
+    else runs.push({ status, slots: 1 })
+  }
+  return runs
 }
 
 export type RawPeriod = {
@@ -212,8 +233,11 @@ export type LagebildData = {
   periodDays: PeriodDays
   /** Tage der Rückschau, neuester zuerst */
   days: Array<{ dayKey: string; dayLabel: string }>
+  /** Beginn und Ende des Balkens als Uhrzeit, z. B. „09:10“ und „21:10“ */
   barsFrom: string
   barsTo: string
+  /** Angaben, aus denen die Oberfläche die Uhrzeit eines Strichs berechnet */
+  bar: BarWindow & { locale: string; timeZone: string }
 }
 
 export function statusLabel(status: LagebildStatus): string {
@@ -242,6 +266,7 @@ export async function loadLagebild(
 ): Promise<LagebildData> {
   const now = nowDate.getTime()
   const windowStart = now - periodDays * DAY
+  const barWindow = computeBarWindow(now)
 
   const [groupsResult, servicesResult] = await Promise.all([
     payload.find({ collection: 'service-groups', sort: '_order', depth: 0, pagination: false }),
@@ -335,7 +360,7 @@ export async function loadLagebild(
       name: group.name,
       icon,
       status: worstStatus(groupServices.map((service) => service.status)) ?? 'operational',
-      bars: computeBarRuns(groupTimelines, now, dt),
+      bars: computeBarRuns(groupTimelines, barWindow),
       services: groupServices.map((service) => {
         const timeline = timelines.get(String(service.id)) ?? []
         const availability = computeAvailability(timeline, windowStart, now)
@@ -343,7 +368,7 @@ export async function loadLagebild(
           id: String(service.id),
           name: service.name,
           status: service.status,
-          bars: computeBarRuns([timeline], now, dt),
+          bars: computeBarRuns([timeline], barWindow),
           availability,
           availabilityLabel: formatAvailability(availability, dt.locale),
         }
@@ -395,7 +420,8 @@ export async function loadLagebild(
     periods,
     periodDays,
     days,
-    barsFrom: formatTime(new Date(now - BAR_HOURS * HOUR), dt),
-    barsTo: formatTime(nowDate, dt),
+    barsFrom: formatClockTime(new Date(barWindow.startMs), dt),
+    barsTo: formatClockTime(new Date(barWindow.nowMs), dt),
+    bar: { ...barWindow, locale: dt.locale, timeZone: dt.timezone },
   }
 }

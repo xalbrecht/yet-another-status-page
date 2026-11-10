@@ -118,14 +118,23 @@ function LagebildView({
               {variant === 'a' ? (
                 <TileA group={group} active={open} onSelect={() => select(group.id)} />
               ) : (
-                <TileB group={group} active={open} onSelect={() => select(group.id)} from={data.barsFrom} to={data.barsTo} />
+                <TileB
+                  group={group}
+                  active={open}
+                  onSelect={() => select(group.id)}
+                  bar={data.bar}
+                  from={data.barsFrom}
+                  to={data.barsTo}
+                />
               )}
               {panelGroup && panelInRow && (
                 <ServicePanel
                   group={panelGroup}
                   periodDays={data.periodDays}
                   caretPercent={(((panelIndex % columns) + 0.5) / columns) * 100}
+                  bar={data.bar}
                   from={data.barsFrom}
+                  to={data.barsTo}
                   onClose={() => select(panelGroup.id)}
                 />
               )}
@@ -181,13 +190,17 @@ function ServicePanel({
   group,
   periodDays,
   caretPercent,
+  bar,
   from,
+  to,
   onClose,
 }: {
   group: LagebildGroup
   periodDays: PeriodDays
   caretPercent: number
+  bar: LagebildData['bar']
   from: string
+  to: string
   onClose: () => void
 }) {
   const periodName = t(`lagebild.period.${periodDays}` as const)
@@ -224,10 +237,20 @@ function ServicePanel({
       </div>
 
       <div>
-        <div className="hidden grid-cols-[minmax(8rem,12rem)_minmax(0,1fr)_5.5rem] gap-4 pb-1.5 text-[11px] text-muted-foreground sm:grid">
+        <div className="hidden grid-cols-[minmax(8rem,12rem)_minmax(0,1fr)_5.5rem] items-end gap-4 pb-1.5 text-[11px] text-muted-foreground sm:grid">
           <span>{t('lagebild.colService')}</span>
-          <span>{t('lagebild.colBar')}</span>
+          <span className="flex flex-col gap-0.5">
+            <span>{t('lagebild.colBar')}</span>
+            <span className="flex justify-between text-xs font-semibold tabular-nums text-foreground">
+              <span>{from}</span>
+              <span>{to}</span>
+            </span>
+          </span>
           <span className="text-right">{t('lagebild.colAvailability')}</span>
+        </div>
+        <div className="flex justify-between pb-1.5 text-xs font-semibold tabular-nums text-foreground sm:hidden">
+          <span>{from}</span>
+          <span>{to}</span>
         </div>
         <ul>
           {group.services.map((service) => (
@@ -242,7 +265,12 @@ function ServicePanel({
                 </span>
               </span>
               <span className="order-last col-span-2 sm:order-none sm:col-span-1">
-                <StatusBar runs={service.bars} heightClass="h-5" label={`${service.name}: ${statusLabel(service.status)}`} />
+                <StatusBar
+                  runs={service.bars}
+                  window={bar}
+                  heightClass="h-5"
+                  label={`${service.name}: ${statusLabel(service.status)}`}
+                />
               </span>
               <span className="text-right text-sm font-semibold tabular-nums text-foreground">
                 {service.availabilityLabel || '–'}
@@ -251,19 +279,19 @@ function ServicePanel({
             </li>
           ))}
         </ul>
-        <div className="mt-1 flex justify-between text-[11px] text-muted-foreground sm:ml-[calc(min(12rem,30%)+1rem)] sm:mr-[6.5rem]">
-          <span>{from}</span>
-          <span>{t('lagebild.now')}</span>
-        </div>
       </div>
 
       <div className="flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-muted-foreground">
         {(['operational', 'degraded', 'partial', 'major', 'maintenance'] as const).map((status) => (
           <span key={status} className="inline-flex items-center gap-1.5">
-            <span className={cn('h-2.5 w-2.5 rounded-sm', statusBg[status])} aria-hidden="true" />
+            <span className={cn('h-3 w-1 rounded-[1px]', statusBg[status])} aria-hidden="true" />
             {statusLabel(status)}
           </span>
         ))}
+        <span className="inline-flex items-center gap-1.5">
+          <span className="h-3 w-1 rounded-[1px] bg-border" aria-hidden="true" />
+          {t('lagebild.noData')}
+        </span>
       </div>
     </div>
   )
@@ -273,12 +301,14 @@ function TileB({
   group,
   active,
   onSelect,
+  bar,
   from,
   to,
 }: {
   group: LagebildGroup
   active: boolean
   onSelect: () => void
+  bar: LagebildData['bar']
   from: string
   to: string
 }) {
@@ -303,7 +333,7 @@ function TileB({
         <Badge className={cn('h-5 w-5 shrink-0', statusText[group.status])} aria-hidden="true" />
       </span>
       <span className="block">
-        <StatusBar runs={group.bars} heightClass="h-3" label={`${group.name}: ${statusLabel(group.status)}`} />
+        <StatusBar runs={group.bars} window={bar} heightClass="h-3" label={`${group.name}: ${statusLabel(group.status)}`} />
         <span className="mt-1 flex justify-between text-[11px] text-muted-foreground">
           <span>{from}</span>
           <span>{to}</span>

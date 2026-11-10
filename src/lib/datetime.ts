@@ -301,6 +301,15 @@ export function formatTime(date: Date, config: DateTimeConfig): string {
   })
 }
 
+/** Uhrzeit ohne Zeitzonenkürzel, z. B. „09:10“. */
+export function formatClockTime(date: Date, config: DateTimeConfig): string {
+  return date.toLocaleTimeString(safeLocale(config.locale), {
+    hour: '2-digit',
+    minute: '2-digit',
+    timeZone: safeTimeZone(config.timezone),
+  })
+}
+
 export function formatDateTime(date: Date, config: DateTimeConfig): string {
   return date.toLocaleString(safeLocale(config.locale), {
     month: 'short',

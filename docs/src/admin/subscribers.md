@@ -21,7 +21,8 @@ Each subscriber has one type. Users who want both should create two subscription
    - **Type** - Email or SMS
    - **Email** - Email address (for email type)
    - **Phone** - Phone number with country code (for SMS type)
-   - **Verified** - Whether the subscription is verified
+   - **Approved** (Freigegeben) - Operator approval, see [Approval and confirmation](#approval-and-confirmation)
+   - **Address confirmed** (Adresse bestätigt) - Whether the subscriber clicked the confirmation link
    - **Active** - Whether to send notifications
 4. Click **Save**
 
@@ -30,8 +31,10 @@ Each subscriber has one type. Users who want both should create two subscription
 Users can subscribe via the public status page:
 
 1. Click the "Subscribe" button on the status page
-2. Enter their email or phone number
-3. They appear in the Subscribers list
+2. Enter their email address
+3. They receive a confirmation email and appear in the Subscribers list
+
+SMS subscriptions through the status page are disabled, because there is no way to confirm a phone number. `POST /api/subscribe` with `type: "sms"` answers with HTTP 503.
 
 ## Subscriber Fields
 
@@ -40,7 +43,8 @@ Users can subscribe via the public status page:
 | Type | Email or SMS |
 | Email | Email address (for email subscribers) |
 | Phone | Phone number with country code (for SMS) |
-| Verified | Whether the subscription is verified |
+| Approved (`verified`) | Operator approval |
+| Address confirmed (`addressConfirmed`) | Subscriber clicked the link in the confirmation email |
 | Active | Whether to receive notifications |
 | Verification Token | Auto-generated token for verification |
 | Unsubscribe Token | Auto-generated token for unsubscribe links |
@@ -81,11 +85,18 @@ SMS phone numbers must include the country code:
 - ❌ `415-555-1234` (missing country code)
 - ❌ `(415) 555-1234` (missing country code)
 
-## Verification
+## Approval and confirmation
 
-The **Verified** field indicates whether the email/phone has been confirmed. 
+A new email subscription from the status page needs two steps before notifications are sent:
 
-For manually added subscribers, you can set this to true if you've verified the contact information.
+1. **Address confirmation.** The subscriber receives an email with a link. The link opens a page with a **Confirm** button. Only the click sets **Address confirmed**. The token works once.
+2. **Approval.** The operator sets **Approved** on the subscriber. The dashboard shows a notice with the number of subscribers who wait for approval or confirmation and links to the list.
+
+Notifications and the recipient count include only **email** subscribers that are **active**, **approved** and **address confirmed**. SMS subscribers need only **Active**.
+
+To be told about every new request, enter an address under **Settings → Email Settings → Address for new subscription requests**. It receives the mail "New subscription request on <host>" with a link to the subscriber. Leave the field empty to send none.
+
+Subscribers created in the admin area are not confirmed by link: set both **Approved** and **Address confirmed** by hand when you trust the address.
 
 ## Bulk Operations
 

@@ -13,6 +13,7 @@ export async function GET() {
       scheduledNotifications,
       emailSubscribers,
       smsSubscribers,
+      pendingSubscribers,
       allIncidents,
       upcomingMaintenances,
     ] = await Promise.all([
@@ -46,6 +47,22 @@ export async function GET() {
           ],
         },
       }),
+      // Email subscribers waiting for approval or address confirmation
+      payload.count({
+        collection: 'subscribers',
+        where: {
+          and: [
+            { type: { equals: 'email' } },
+            { active: { equals: true } },
+            {
+              or: [
+                { verified: { not_equals: true } },
+                { addressConfirmed: { not_equals: true } },
+              ],
+            },
+          ],
+        },
+      }),
       // Fetch all incidents to compute active count
       // (Incidents don't have a top-level status field - it's derived from updates)
       payload.find({
@@ -75,6 +92,7 @@ export async function GET() {
       scheduledNotifications: scheduledNotifications.totalDocs,
       emailSubscribers: emailSubscribers.totalDocs,
       smsSubscribers: smsSubscribers.totalDocs,
+      pendingSubscribers: pendingSubscribers.totalDocs,
       activeIncidents: activeIncidentsCount,
       upcomingMaintenances: upcomingMaintenances.totalDocs,
     })

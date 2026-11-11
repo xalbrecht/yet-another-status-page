@@ -348,6 +348,7 @@ export async function seedDemoData(payload: Payload) {
         type: 'email',
         email: 'user1@example.com',
         verified: true,
+        addressConfirmed: true,
         active: true,
       },
     })

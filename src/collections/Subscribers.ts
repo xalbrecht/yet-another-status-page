@@ -15,6 +15,7 @@ interface SubscriberData {
   email?: string
   phone?: string
   verified?: boolean
+  addressConfirmed?: boolean
   active?: boolean
 }
 
@@ -23,7 +24,7 @@ export const Subscribers: CollectionConfig = {
   labels: { singular: ta('Subscriber', 'Abonnent'), plural: ta('Subscribers', 'Abonnenten') },
   admin: {
     useAsTitle: 'email',
-    defaultColumns: ['type', 'email', 'phone', 'verified', 'active', 'createdAt'],
+    defaultColumns: ['type', 'email', 'phone', 'verified', 'addressConfirmed', 'active', 'createdAt'],
     group: ta('Notifications'),
   },
   access: {
@@ -135,9 +136,18 @@ export const Subscribers: CollectionConfig = {
       name: 'verified',
       type: 'checkbox',
       defaultValue: false,
-      label: ta('Verified'),
+      label: ta('Approved'),
       admin: {
-        description: ta('Whether the subscription has been verified'),
+        description: ta('Operator approval. Email subscribers receive notifications only when approved and the address is confirmed'),
+      },
+    },
+    {
+      name: 'addressConfirmed',
+      type: 'checkbox',
+      defaultValue: false,
+      label: ta('Address confirmed'),
+      admin: {
+        description: ta('Set when the subscriber clicked the link in the confirmation email'),
       },
     },
     {

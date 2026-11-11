@@ -457,9 +457,13 @@ export interface Subscriber {
    */
   phone?: string | null;
   /**
-   * Gibt an, ob das Abonnement bestätigt wurde
+   * Freigabe durch den Betreiber. E-Mail-Abonnenten erhalten Meldungen nur, wenn sie freigegeben sind und die Adresse bestätigt ist
    */
   verified?: boolean | null;
+  /**
+   * Wird gesetzt, wenn der Abonnent den Link in der Bestätigungsmail angeklickt hat
+   */
+  addressConfirmed?: boolean | null;
   /**
    * Token zur Bestätigung von E-Mail-Adresse oder Rufnummer
    */
@@ -840,6 +844,7 @@ export interface SubscribersSelect<T extends boolean = true> {
   email?: T;
   phone?: T;
   verified?: T;
+  addressConfirmed?: T;
   verificationToken?: T;
   unsubscribeToken?: T;
   active?: T;
@@ -1150,6 +1155,10 @@ export interface EmailSetting {
    * Optionale Antwortadresse (leer lassen, um die Absenderadresse zu verwenden)
    */
   smtpReplyTo?: string | null;
+  /**
+   * Erhält zu jeder neuen Anmeldung eine Nachricht, damit sie freigegeben werden kann. Leer lassen, um keine zu senden
+   */
+  subscriberRequestTo?: string | null;
   updatedAt?: string | null;
   createdAt?: string | null;
 }
@@ -1248,6 +1257,7 @@ export interface EmailSettingsSelect<T extends boolean = true> {
   smtpFromAddress?: T;
   smtpFromName?: T;
   smtpReplyTo?: T;
+  subscriberRequestTo?: T;
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;

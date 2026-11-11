@@ -2,7 +2,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import { t } from '@/lib/i18n'
 import { getPayload } from 'payload'
 import config from '@payload-config'
-import type { EmailSetting, SmsSetting } from '@/payload-types'
+import type { EmailSetting, Media, Setting } from '@/payload-types'
+import { getServerUrl } from '@/lib/utils'
+import { sendSubscriptionConfirmationEmail, sendSubscriptionRequestEmail } from '@/lib/email'
 
 // Rate limit configuration: 5 subscription attempts per IP per hour
 const RATE_LIMIT_MAX = 5
@@ -13,15 +15,6 @@ function isEmailConfigured(emailSettings: EmailSetting): boolean {
     emailSettings.smtpHost &&
     emailSettings.smtpFromAddress &&
     emailSettings.enabled
-  )
-}
-
-function isSmsConfigured(smsSettings: SmsSetting): boolean {
-  return Boolean(
-    smsSettings.twilioAccountSid &&
-    smsSettings.twilioAuthToken &&
-    (smsSettings.twilioFromNumber || smsSettings.twilioMessagingServiceSid) &&
-    smsSettings.enabled
   )
 }
 
@@ -102,7 +95,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { type, email, phone } = body
+    const { type, email } = body
 
     // Validate input
     if (!type || !['email', 'sms'].includes(type)) {
@@ -112,13 +105,17 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Fetch email and SMS settings
+    // SMS subscriptions are disabled: there is no way to confirm a phone number
+    if (type === 'sms') {
+      return NextResponse.json(
+        { error: t('api.smsUnavailable') },
+        { status: 503 }
+      )
+    }
+
     const emailSettings = await payload.findGlobal({
       slug: 'email-settings',
     }) as EmailSetting
-    const smsSettings = await payload.findGlobal({
-      slug: 'sms-settings',
-    }) as SmsSetting
 
     if (type === 'email') {
       // Check if SMTP is configured
@@ -156,69 +153,57 @@ export async function POST(request: NextRequest) {
         )
       }
 
-      // Create subscriber with IP address
-      await payload.create({
+      // Create subscriber with IP address (needs address confirmation and operator approval)
+      const subscriber = await payload.create({
         collection: 'subscribers',
         data: {
           type: 'email',
           email,
           verified: false,
+          addressConfirmed: false,
           active: true,
           ipAddress: clientIp,
         },
       })
-    } else if (type === 'sms') {
-      // Check if SMS is configured
-      if (!isSmsConfigured(smsSettings)) {
-        return NextResponse.json(
-          { error: t('api.smsUnavailable') },
-          { status: 503 }
-        )
+
+      // A failed mail must not fail the subscription: log and continue
+      try {
+        const siteUrl = getServerUrl()
+        const settings = await payload.findGlobal({ slug: 'settings', depth: 1 }) as Setting
+        const siteName = settings.siteName || 'Status Page'
+        const logoLight = settings.logoLight as Media | number | null | undefined
+        const logoUrl = logoLight && typeof logoLight === 'object' ? logoLight.url ?? undefined : undefined
+
+        if (subscriber.verificationToken) {
+          const result = await sendSubscriptionConfirmationEmail(emailSettings, {
+            to: email,
+            token: subscriber.verificationToken,
+            siteName,
+            siteUrl,
+            logoUrl,
+          })
+          if (!result.success) console.error('Confirmation email failed:', result.error)
+        }
+
+        if (emailSettings.subscriberRequestTo) {
+          const result = await sendSubscriptionRequestEmail(emailSettings, {
+            to: emailSettings.subscriberRequestTo,
+            subscriberEmail: email,
+            subscriberId: subscriber.id,
+            siteName,
+            siteUrl,
+            logoUrl,
+          })
+          if (!result.success) console.error('Subscription request email failed:', result.error)
+        }
+      } catch (mailError) {
+        console.error('Error sending subscription emails:', mailError)
       }
-
-      if (!phone || !/^\+?[1-9]\d{6,14}$/.test(phone)) {
-        return NextResponse.json(
-          { error: t('api.invalidPhone') },
-          { status: 400 }
-        )
-      }
-
-      // Check if phone already exists
-      const existing = await payload.find({
-        collection: 'subscribers',
-        where: {
-          phone: {
-            equals: phone,
-          },
-          type: {
-            equals: 'sms',
-          },
-        },
-      })
-
-      if (existing.docs.length > 0) {
-        return NextResponse.json(
-          { error: t('api.phoneExists') },
-          { status: 409 }
-        )
-      }
-
-      // Create subscriber with IP address
-      await payload.create({
-        collection: 'subscribers',
-        data: {
-          type: 'sms',
-          phone,
-          verified: false,
-          active: true,
-          ipAddress: clientIp,
-        },
-      })
     }
 
     return NextResponse.json({
       success: true,
-      message: `Successfully subscribed via ${type}`,
+      message: 'Successfully subscribed via email',
     })
   } catch (error) {
     console.error('Error creating subscription:', error)
@@ -236,13 +221,10 @@ export async function GET() {
     const emailSettings = await payload.findGlobal({
       slug: 'email-settings',
     }) as EmailSetting
-    const smsSettings = await payload.findGlobal({
-      slug: 'sms-settings',
-    }) as SmsSetting
 
     return NextResponse.json({
       email: isEmailConfigured(emailSettings),
-      sms: isSmsConfigured(smsSettings),
+      sms: false,
     })
   } catch (error) {
     console.error('Error checking subscription availability:', error)

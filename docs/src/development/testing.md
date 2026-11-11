@@ -24,6 +24,13 @@ The file runs in `serial` mode, because the tests change the **global settings**
 | incident sets service status | Incident impact sets the status and resolving resets it |
 | worst open status wins | Two open incidents on one service |
 
+### Availability target and reconstruction
+
+- `tests/e2e/availability-target.spec.ts` (serial, resets the setting): default 99, saving 99.5, value above 100 rejected.
+- `tests/unit/availability.test.ts`: availability rules and target resolution (service, group, global).
+- `tests/unit/incident-classification.test.ts` and `tests/unit/status-reconstruction.test.ts`: classification of incidents and the reconstructed status log.
+- The E2E environment creates the schema by schema push, so the SQL of the migrations `20261112_100000` and `20261112_100100` does not run there. Run them against a copy of a database with real incidents (`npx payload migrate` with `DATABASE_URI` pointing to the copy) and check the counts the second migration logs.
+
 ### Not covered
 
 - Mobile layout and tooltips by touch (checked by hand, see [Browser checklist](./browser-checklist.md)).

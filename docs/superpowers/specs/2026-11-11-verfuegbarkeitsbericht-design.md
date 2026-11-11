@@ -93,7 +93,7 @@ Das Lagebild und der Bericht rechnen mit denselben Regeln und demselben Code. Ei
 - Die Berechnung (Verfügbarkeit nach 4.1, Dauer je Status, Zeiträume) liegt in einer gemeinsamen Funktion. Das Lagebild (`src/lib/lagebild.ts`) und der Bericht rufen sie auf.
 - Die Nachrechnung aus Abschnitt 5 wirkt dadurch auch im Lagebild: Die Rückschau 90, 180 und 365 Tage zeigt echte Werte statt „seit 10.11.2026“.
 - Für Zeiten ab dem 10.11.2026 bleiben die Zahlen des Lagebilds unverändert. Ein Test prüft das mit festen Eingaben.
-- Ob das Lagebild den Zielwert oder einen Gruppenwert zeigt, ist nicht entschieden (Abschnitt 10).
+- Gemeinsam sind nur die Rechenregeln. Das Lagebild zeigt in der ersten Fassung weder den Zielwert noch eine Verfügbarkeit je Gruppe (entschieden am 12.11.2026, Zielwert im Lagebild später).
 
 ## 5. Nachrechnung vor dem 10.11.2026
 
@@ -175,4 +175,4 @@ Je Teil entsteht ein eigenes Issue mit Verweis auf Issue #46.
 - Wer pflegt später Zielwerte auf Gruppen- und Komponentenebene, und in welchem Rhythmus?
 - Aufnahme der Browser-Prüfliste und der Berichtsprüfung in die Prüfliste des Deployment-Projekts (`frank.albrecht/yasp`, Issue #47 im GitLab).
 - Ob Kundenberater und Kunden einen eigenen, einfacheren Bericht bekommen (spätere Fassung).
-- Ob das Lagebild künftig den Zielwert (z. B. als Vermerk „unter Ziel“) oder eine Verfügbarkeit je Gruppe zeigt.
+- Ob und wann das Lagebild den Zielwert (z. B. als Vermerk „unter Ziel“) zeigt. Ein späteres Issue klärt das. Dasselbe gilt für eine Verfügbarkeit je Gruppe im Lagebild.

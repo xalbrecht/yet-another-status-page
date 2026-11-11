@@ -1,5 +1,5 @@
 import type { CollectionConfig } from 'payload'
-import { authenticatedOrTestWrite } from '@/lib/access'
+import { authenticatedOrTestWrite, authenticatedOrTestWriteField, isTestMode } from '@/lib/access'
 import { generateShortId } from '@/lib/shortId'
 import { ta } from '@/lib/i18n/admin'
 
@@ -15,6 +15,7 @@ interface SubscriberData {
   email?: string
   phone?: string
   verified?: boolean
+  addressConfirmed?: boolean
   active?: boolean
 }
 
@@ -23,7 +24,7 @@ export const Subscribers: CollectionConfig = {
   labels: { singular: ta('Subscriber', 'Abonnent'), plural: ta('Subscribers', 'Abonnenten') },
   admin: {
     useAsTitle: 'email',
-    defaultColumns: ['type', 'email', 'phone', 'verified', 'active', 'createdAt'],
+    defaultColumns: ['type', 'email', 'phone', 'verified', 'addressConfirmed', 'active', 'createdAt'],
     group: ta('Notifications'),
   },
   access: {
@@ -134,15 +135,30 @@ export const Subscribers: CollectionConfig = {
     {
       name: 'verified',
       type: 'checkbox',
+      // Public sign-ups must not approve themselves
+      access: { create: authenticatedOrTestWriteField, update: authenticatedOrTestWriteField },
       defaultValue: false,
-      label: ta('Verified'),
+      label: ta('Approved'),
       admin: {
-        description: ta('Whether the subscription has been verified'),
+        description: ta('Operator approval. Email subscribers receive notifications only when approved and the address is confirmed'),
+      },
+    },
+    {
+      name: 'addressConfirmed',
+      type: 'checkbox',
+      // Public sign-ups must not approve themselves
+      access: { create: authenticatedOrTestWriteField, update: authenticatedOrTestWriteField },
+      defaultValue: false,
+      label: ta('Address confirmed'),
+      admin: {
+        description: ta('Set when the subscriber clicked the link in the confirmation email'),
       },
     },
     {
       name: 'verificationToken',
       type: 'text',
+      // The response to a public create must not reveal the token
+      access: { read: authenticatedOrTestWriteField },
       label: ta('Verification Token'),
       admin: {
         description: ta('Token used for email/phone verification'),
@@ -150,8 +166,9 @@ export const Subscribers: CollectionConfig = {
       },
       hooks: {
         beforeValidate: [
-          ({ value, operation }) => {
-            if (operation === 'create' && !value) {
+          ({ value, operation, req }) => {
+            // A public sign-up must not choose its own token: always generate one
+            if (operation === 'create' && (!value || !(req.user || isTestMode()))) {
               // Generate a secure random verification token
               return generateShortId(24)
             }
@@ -163,6 +180,8 @@ export const Subscribers: CollectionConfig = {
     {
       name: 'unsubscribeToken',
       type: 'text',
+      // The response to a public create must not reveal the token
+      access: { read: authenticatedOrTestWriteField },
       label: ta('Unsubscribe Token'),
       unique: true,
       admin: {
@@ -171,8 +190,8 @@ export const Subscribers: CollectionConfig = {
       },
       hooks: {
         beforeValidate: [
-          ({ value, operation }) => {
-            if (operation === 'create' && !value) {
+          ({ value, operation, req }) => {
+            if (operation === 'create' && (!value || !(req.user || isTestMode()))) {
               // Generate a secure unique unsubscribe token
               return generateShortId(32)
             }

@@ -7,6 +7,7 @@ import './DashboardWidgets.scss'
 
 interface WidgetData {
   pendingNotifications: number
+  pendingSubscribers: number
   scheduledNotifications: number
   emailSubscribers: number
   smsSubscribers: number
@@ -62,6 +63,28 @@ export const DashboardWidgets: React.FC = () => {
   return (
     <div className="dashboard-widgets">
       <h2 className="dashboard-widgets__title">{ta('Status Overview')}</h2>
+
+      {data.pendingSubscribers > 0 && (
+        <Link
+          href="/admin/collections/subscribers?where[verified][not_equals]=true"
+          data-testid="pending-subscribers-notice"
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            gap: '1rem',
+            padding: '0.75rem 1rem',
+            marginBottom: '1rem',
+            borderRadius: '4px',
+            border: '1px solid var(--theme-warning-500, #d97706)',
+            background: 'var(--theme-warning-100, #fef3c7)',
+            color: 'var(--theme-warning-800, #92400e)',
+            textDecoration: 'none',
+          }}
+        >
+          <span>{ta('{count} subscription(s) waiting for approval or confirmation').replace('{count}', String(data.pendingSubscribers))}</span>
+          <strong>{ta('Review subscribers')}</strong>
+        </Link>
+      )}
       
       <div className="dashboard-widgets__grid">
         {/* Active Incidents */}

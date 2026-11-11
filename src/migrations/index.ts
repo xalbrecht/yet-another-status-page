@@ -9,6 +9,7 @@ import * as migration_20261110_180000_add_lagebild_period_days from './20261110_
 import * as migration_20261110_190000_add_group_icons from './20261110_190000_add_group_icons';
 import * as migration_20261110_190100_set_group_icons from './20261110_190100_set_group_icons';
 import * as migration_20261110_200000_add_lagebild_bar_hours from './20261110_200000_add_lagebild_bar_hours';
+import * as migration_20261111_100000_add_subscriber_confirmation from './20261111_100000_add_subscriber_confirmation';
 
 export const migrations = [
   {
@@ -65,5 +66,10 @@ export const migrations = [
     up: migration_20261110_200000_add_lagebild_bar_hours.up,
     down: migration_20261110_200000_add_lagebild_bar_hours.down,
     name: '20261110_200000_add_lagebild_bar_hours',
+  },
+  {
+    up: migration_20261111_100000_add_subscriber_confirmation.up,
+    down: migration_20261111_100000_add_subscriber_confirmation.down,
+    name: '20261111_100000_add_subscriber_confirmation',
   },
 ];

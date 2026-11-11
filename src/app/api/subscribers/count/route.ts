@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getPayload } from 'payload'
 import config from '@payload-config'
+import { deliverableSubscribersWhere } from '@/lib/subscriber-filter'
 
 export async function GET(request: NextRequest) {
   try {
@@ -13,10 +14,7 @@ export async function GET(request: NextRequest) {
     if (channel === 'email' || channel === 'both') {
       const emailCount = await payload.count({
         collection: 'subscribers',
-        where: {
-          type: { equals: 'email' },
-          active: { equals: true },
-        },
+        where: deliverableSubscribersWhere('email'),
       })
       count += emailCount.totalDocs
     }
@@ -24,10 +22,7 @@ export async function GET(request: NextRequest) {
     if (channel === 'sms' || channel === 'both') {
       const smsCount = await payload.count({
         collection: 'subscribers',
-        where: {
-          type: { equals: 'sms' },
-          active: { equals: true },
-        },
+        where: deliverableSubscribersWhere('sms'),
       })
       count += smsCount.totalDocs
     }

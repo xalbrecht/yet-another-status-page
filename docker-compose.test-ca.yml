@@ -1,0 +1,14 @@
+# Optional override for docker-compose.test.yml: mounts a corporate CA into the app container.
+# Needed behind a proxy that replaces TLS certificates, otherwise `npm install` fails with
+# UNABLE_TO_VERIFY_LEAF_SIGNATURE. scripts/run-e2e-tests.sh adds this file when E2E_CA_FILE is set.
+#
+# By hand:
+#   E2E_CA_FILE=/path/to/ca.pem docker compose -p yasp-test \
+#     -f docker-compose.test.yml -f docker-compose.test-ca.yml up -d
+
+services:
+  app:
+    environment:
+      - NODE_EXTRA_CA_CERTS=/etc/ssl/corporate.pem
+    volumes:
+      - ${E2E_CA_FILE:?Set E2E_CA_FILE to the path of the CA file}:/etc/ssl/corporate.pem:ro

@@ -2,7 +2,7 @@
 
 This directory contains the test suite for Yet Another Status Page.
 
-Running the tests behind a TLS-intercepting proxy, the situation overview tests, known pitfalls and how to measure performance and memory are described in [docs/src/development/testing.md](../docs/src/development/testing.md).
+Running the tests behind a TLS-intercepting proxy (set `E2E_CA_FILE` to the CA file), the situation overview tests, known pitfalls and how to measure performance and memory are described in [docs/src/development/testing.md](../docs/src/development/testing.md).
 
 ## E2E Tests (Playwright)
 

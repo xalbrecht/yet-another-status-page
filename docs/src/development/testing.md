@@ -44,24 +44,22 @@ The script starts the app on `http://localhost:3001` and a fresh database, seeds
 
 ### Behind a TLS-intercepting proxy
 
-`docker-compose.test.yml` runs `npm install` inside the container. A proxy that replaces TLS certificates makes it fail with `UNABLE_TO_VERIFY_LEAF_SIGNATURE`. `scripts/run-e2e-tests.sh` then waits 60 times and ends with "Application failed to start" and **empty container logs**. Look at `docker logs yasp-test-app-1` for the npm error.
+`docker-compose.test.yml` runs `npm install` inside the container. A proxy that replaces TLS certificates makes it fail with `UNABLE_TO_VERIFY_LEAF_SIGNATURE`.
 
-Mount the proxy CA through an override file that is **not** committed. Replace the path with your CA file:
-
-```yaml
-# ca-override.yml
-services:
-  app:
-    environment:
-      - NODE_EXTRA_CA_CERTS=/etc/ssl/corporate.pem
-    volumes:
-      - /path/to/corporate-ca.pem:/etc/ssl/corporate.pem:ro
-```
-
-Then run the steps of the script by hand:
+Set `E2E_CA_FILE` to the CA file of the proxy. `scripts/run-e2e-tests.sh` then adds `docker-compose.test-ca.yml`, which mounts the file into the `app` container and sets `NODE_EXTRA_CA_CERTS`:
 
 ```bash
-docker compose -p yasp-test -f docker-compose.test.yml -f ca-override.yml up -d
+E2E_CA_FILE=/path/to/corporate-ca.pem npm run test:e2e
+E2E_CA_FILE=/path/to/corporate-ca.pem npm run test:e2e -- tests/e2e/lagebild.spec.ts --workers=1 --timeout=120000
+```
+
+Without `E2E_CA_FILE` nothing changes. If the `app` container stops (for example because `npm install` fails), the script ends at once, prints the container logs and, for the certificate error, a hint to set `E2E_CA_FILE`.
+
+To run the steps of the script by hand:
+
+```bash
+E2E_CA_FILE=/path/to/corporate-ca.pem docker compose -p yasp-test \
+  -f docker-compose.test.yml -f docker-compose.test-ca.yml up -d
 # wait until the container is healthy (npm install takes a few minutes the first time)
 until [ "$(docker inspect -f '{{.State.Health.Status}}' yasp-test-app-1)" = healthy ]; do sleep 5; done
 
@@ -71,12 +69,10 @@ curl -s -o /dev/null http://localhost:3001/          # warm up, see below
 PLAYWRIGHT_BASE_URL=http://localhost:3001 CI= PAYLOAD_PUBLIC_ALLOW_WRITES=true \
   npx playwright test --project=chromium --workers=1 --timeout=120000 tests/e2e/lagebild.spec.ts
 
-docker compose -p yasp-test -f docker-compose.test.yml down -v --remove-orphans
+docker compose -p yasp-test -f docker-compose.test.yml -f docker-compose.test-ca.yml down -v --remove-orphans
 ```
 
 The seed script reads `API_BASE`, Playwright reads `PLAYWRIGHT_BASE_URL`. Both default to different ports (`3001` and `3000`), so set them when you run steps by hand.
-
-Including the CA permanently in the test compose file is tracked in issue #22.
 
 ## Rules when running
 

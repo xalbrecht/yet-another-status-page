@@ -115,3 +115,21 @@ export function formatAvailability(value: number | null, locale: string): string
   const floored = Math.floor(value * 100) / 100
   return `${new Intl.NumberFormat(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(floored)} %`
 }
+
+/** Gesamtzielwert in Prozent, wenn weder Gruppe noch Dienst einen eigenen Wert hat und die Einstellung leer ist. */
+export const DEFAULT_AVAILABILITY_TARGET = 99
+
+/**
+ * Zielwert eines Dienstes in Prozent: der erste gesetzte Wert in der Reihenfolge Dienst, Gruppe, Gesamt (Konzept 4.4).
+ * `0` ist ein gültiger Wert. Nur `null` und `undefined` gelten als nicht gesetzt.
+ */
+export function resolveAvailabilityTarget(levels: {
+  service?: number | null
+  group?: number | null
+  global?: number | null
+}): number {
+  for (const value of [levels.service, levels.group, levels.global]) {
+    if (value !== null && value !== undefined) return value
+  }
+  return DEFAULT_AVAILABILITY_TARGET
+}

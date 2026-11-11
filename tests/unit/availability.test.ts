@@ -5,6 +5,7 @@ import {
   computeStatusDurations,
   formatAvailability,
   knownSince,
+  resolveAvailabilityTarget,
   worstStatus,
   type Timeline,
 } from '@/lib/availability'
@@ -62,4 +63,15 @@ test('schlechtester Zustand', () => {
   assert.equal(worstStatus(['operational', 'maintenance', 'degraded']), 'degraded')
   assert.equal(worstStatus([null, undefined]), null)
   assert.equal(worstStatus(['partial', 'major']), 'major')
+})
+
+test('Zielwert: Komponente vor Gruppe vor Gesamt, Standard 99', () => {
+  assert.equal(resolveAvailabilityTarget({ global: 99 }), 99)
+  assert.equal(resolveAvailabilityTarget({ group: 98, global: 99 }), 98)
+  assert.equal(resolveAvailabilityTarget({ service: 99.9, group: 98, global: 99 }), 99.9)
+  assert.equal(resolveAvailabilityTarget({}), 99)
+})
+
+test('Zielwert: 0 ist ein gültiger Wert und fällt nicht auf die nächste Stufe durch', () => {
+  assert.equal(resolveAvailabilityTarget({ service: 0, group: 98, global: 99 }), 0)
 })

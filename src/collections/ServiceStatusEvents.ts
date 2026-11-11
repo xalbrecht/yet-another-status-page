@@ -67,5 +67,19 @@ export const ServiceStatusEvents: CollectionConfig = {
       defaultValue: () => new Date().toISOString(),
       label: ta('Changed at', 'Geändert am'),
     },
+    {
+      // „reconstructed“: aus Vorfällen nachgerechnet (Konzept 5.3), „operation“: im Betrieb entstanden
+      name: 'source',
+      type: 'select',
+      required: true,
+      defaultValue: 'operation',
+      label: ta('Source', 'Quelle'),
+      options: [
+        { label: ta('Operation', 'Betrieb'), value: 'operation' },
+        { label: ta('Reconstructed from incidents', 'Aus Vorfällen nachgerechnet'), value: 'reconstructed' },
+      ],
+      access: { create: () => false, update: () => false },
+      admin: { readOnly: true },
+    },
   ],
 }

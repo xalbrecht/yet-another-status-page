@@ -76,5 +76,14 @@ export const ServiceGroups: CollectionConfig = {
         description: ta('Icon for this group in the situation overview on the status page'),
       },
     },
+    {
+      // Zielwert der Gruppe (Konzept 4.4). Noch ohne Eingabe im Admin, leer = erbt vom Gesamtzielwert.
+      name: 'availabilityTarget',
+      type: 'number',
+      label: ta('Availability target (%)', 'Zielwert Verfügbarkeit (%)'),
+      min: 0,
+      max: 100,
+      admin: { hidden: true },
+    },
   ],
 }

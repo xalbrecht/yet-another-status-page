@@ -10,6 +10,7 @@ import * as migration_20261110_190000_add_group_icons from './20261110_190000_ad
 import * as migration_20261110_190100_set_group_icons from './20261110_190100_set_group_icons';
 import * as migration_20261110_200000_add_lagebild_bar_hours from './20261110_200000_add_lagebild_bar_hours';
 import * as migration_20261111_100000_add_subscriber_confirmation from './20261111_100000_add_subscriber_confirmation';
+import * as migration_20261112_100000_add_availability_target_and_event_source from './20261112_100000_add_availability_target_and_event_source';
 
 export const migrations = [
   {
@@ -71,5 +72,10 @@ export const migrations = [
     up: migration_20261111_100000_add_subscriber_confirmation.up,
     down: migration_20261111_100000_add_subscriber_confirmation.down,
     name: '20261111_100000_add_subscriber_confirmation',
+  },
+  {
+    up: migration_20261112_100000_add_availability_target_and_event_source.up,
+    down: migration_20261112_100000_add_availability_target_and_event_source.down,
+    name: '20261112_100000_add_availability_target_and_event_source',
   },
 ];

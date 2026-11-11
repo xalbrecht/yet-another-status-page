@@ -14,16 +14,19 @@ export function buildReconstructedEvents(input: {
   incidents: Array<{
     serviceIds: number[]
     from: number
-    to: number
+    /** `null`: Vorfall ist noch offen, gilt bis zum ersten Betriebseintrag des Dienstes */
+    to: number | null
     status: Exclude<AvailabilityStatus, 'operational'>
   }>
 }): ReconstructedEvent[] {
   const result: ReconstructedEvent[] = []
   for (const service of input.services) {
     const intervals = input.incidents
-      .filter((incident) => incident.to > incident.from && incident.serviceIds.includes(service.id))
-      .map((incident) => ({ from: incident.from, to: incident.to, status: incident.status }))
-    const boundaries = Array.from(new Set(intervals.flatMap((interval) => [interval.from, interval.to]))).sort((a, b) => a - b)
+      .filter((incident) => (incident.to === null || incident.to > incident.from) && incident.serviceIds.includes(service.id))
+      .map((incident) => ({ from: incident.from, to: incident.to ?? Number.POSITIVE_INFINITY, status: incident.status }))
+    const boundaries = Array.from(new Set(intervals.flatMap((interval) => [interval.from, interval.to])))
+      .filter((at) => Number.isFinite(at))
+      .sort((a, b) => a - b)
 
     const events: Array<{ at: number; status: AvailabilityStatus }> = [{ at: input.anchorAt, status: 'operational' }]
     for (const at of boundaries) {

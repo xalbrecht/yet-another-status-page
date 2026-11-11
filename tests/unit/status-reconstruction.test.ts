@@ -85,3 +85,18 @@ test('beginnt ein Vorfall genau am Anker, ersetzt er den Anker statt einen zweit
   const events = build([{ serviceIds: [1], from: A, to: A + 2 * H, status: 'partial' }])
   assert.deepEqual(forService(events, 1), [[0, 'partial'], [2 * H, 'operational']])
 })
+
+test('ein offener Vorfall (to = null) gilt bis zum ersten Betriebseintrag des Dienstes', () => {
+  const events = build([{ serviceIds: [1], from: A + 10 * H, to: null, status: 'partial' }])
+  assert.deepEqual(forService(events, 1), [[0, 'operational'], [10 * H, 'partial']])
+  assert.deepEqual(forService(events, 2), [[0, 'operational']])
+})
+
+test('ein offener Vorfall erzeugt für einen Dienst ohne Betriebseintrag keinen Eintrag am Ende der Zeit', () => {
+  const events = buildReconstructedEvents({
+    anchorAt: A,
+    services: [{ id: 1, firstEventAt: null }],
+    incidents: [{ serviceIds: [1], from: A + 10 * H, to: null, status: 'partial' }],
+  })
+  assert.deepEqual(events.map((event) => [event.at - A, event.status]), [[0, 'operational'], [10 * H, 'partial']])
+})

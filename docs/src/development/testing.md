@@ -4,7 +4,8 @@ This page describes how the tests of this fork are run, what they cover and whic
 
 ## What exists
 
-- **End-to-end tests only** (Playwright, project `chromium`, folder `tests/e2e/`). There is no unit test setup.
+- **End-to-end tests** (Playwright, project `chromium`, folder `tests/e2e/`).
+- **Unit tests for pure calculation code** (`npm run test:unit`, folder `tests/unit/`, `tsx --test`). They need neither a browser nor a running server. They cover the availability rules in `src/lib/availability.ts`.
 - The tests run against **`next dev`** in a Docker container, not against the production image. Behavior that differs in the production build (compile times, memory) is not covered.
 - Most tests create their own data through the Payload REST API (`tests/utils/payload-helpers.ts`) and use unique names (`Date.now()`), so they do not depend on the seed data.
 

@@ -29,7 +29,7 @@ export const Subscribers: CollectionConfig = {
   },
   access: {
     read: authenticatedOrTestWrite,
-    create: () => true, // Public subscription
+    create: authenticatedOrTestWrite, // Public sign-ups go through POST /api/subscribe (local API)
     update: authenticatedOrTestWrite,
     delete: authenticatedOrTestWrite,
   },

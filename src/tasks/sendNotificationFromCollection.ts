@@ -1,5 +1,6 @@
 import type { BasePayload } from 'payload'
 import { t, tf } from '@/lib/i18n'
+import { deliverableSubscribersWhere } from '@/lib/subscriber-filter'
 import { sendBulkEmails, generateEmailHtml } from '@/lib/email'
 import { sendBulkSms, formatSmsMessage } from '@/lib/sms'
 import { getServerUrl } from '@/lib/utils'
@@ -68,10 +69,7 @@ export async function sendNotificationFromCollectionHandler({ input, req }: Task
     while (hasMore) {
       const result = await payload.find({
         collection: 'subscribers',
-        where: {
-          active: { equals: true },
-          type: { equals: type },
-        },
+        where: deliverableSubscribersWhere(type),
         limit: pageSize,
         page,
       })

@@ -120,6 +120,14 @@ export const EmailSettings: GlobalConfig = {
             description: ta('Optional reply-to email address (leave empty to use From address)'),
           },
         },
+        {
+          name: 'subscriberRequestTo',
+          type: 'email',
+          label: ta('Address for new subscription requests'),
+          admin: {
+            description: ta('Receives a message for every new subscription so that it can be approved. Leave empty to send none'),
+          },
+        },
       ],
     },
   ],

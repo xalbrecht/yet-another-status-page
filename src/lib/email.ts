@@ -1,5 +1,5 @@
 import nodemailer from 'nodemailer'
-import { lang, t } from '@/lib/i18n'
+import { lang, t, tf } from '@/lib/i18n'
 import type { EmailSetting } from '@/payload-types'
 
 interface EmailOptions {
@@ -212,4 +212,67 @@ export function generateEmailHtml(options: {
 </body>
 </html>
 `
+}
+
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+}
+
+/**
+ * Bestätigungsmail an einen neuen Abonnenten (Link zur Bestätigungsseite).
+ */
+export async function sendSubscriptionConfirmationEmail(
+  emailSettings: EmailSetting,
+  options: { to: string; token: string; siteName: string; siteUrl: string; logoUrl?: string }
+): Promise<EmailResult> {
+  const { to, token, siteName, siteUrl, logoUrl } = options
+  const confirmUrl = `${siteUrl}/confirm/${token}`
+  const html = generateEmailHtml({
+    siteName,
+    title: t('mail.confirmTitle'),
+    body: tf('mail.confirmBody', { siteName }),
+    ctaText: t('mail.confirmCta'),
+    ctaUrl: confirmUrl,
+    siteUrl,
+    logoUrl,
+  })
+  return sendEmail(emailSettings, {
+    to,
+    subject: tf('mail.confirmSubject', { siteName }),
+    html,
+  })
+}
+
+/**
+ * Hinweis an den Betreiber: neuer Abonnementantrag wartet auf Freigabe.
+ */
+export async function sendSubscriptionRequestEmail(
+  emailSettings: EmailSetting,
+  options: { to: string; subscriberEmail: string; subscriberId: number | string; siteName: string; siteUrl: string; logoUrl?: string }
+): Promise<EmailResult> {
+  const { to, subscriberEmail, subscriberId, siteName, siteUrl, logoUrl } = options
+  let host = siteUrl
+  try {
+    host = new URL(siteUrl).host
+  } catch {
+    // siteUrl ist keine gültige URL: unverändert verwenden
+  }
+  const html = generateEmailHtml({
+    siteName,
+    title: t('mail.requestTitle'),
+    body: tf('mail.requestBody', { email: escapeHtml(subscriberEmail), siteName }),
+    ctaText: t('mail.requestCta'),
+    ctaUrl: `${siteUrl}/admin/collections/subscribers/${subscriberId}`,
+    siteUrl,
+    logoUrl,
+  })
+  return sendEmail(emailSettings, {
+    to,
+    subject: tf('mail.requestSubject', { host }),
+    html,
+  })
 }

@@ -1,4 +1,5 @@
 import type { CollectionConfig } from 'payload'
+import { deliverableSubscribersWhere } from '@/lib/subscriber-filter'
 import { localizedDateAdmin } from '@/lib/localizedDateAdmin'
 import { ta } from '@/lib/i18n/admin'
 
@@ -45,10 +46,7 @@ export const Notifications: CollectionConfig = {
             if (channel === 'email' || channel === 'both') {
               const emailCount = await req.payload.count({
                 collection: 'subscribers',
-                where: {
-                  type: { equals: 'email' },
-                  active: { equals: true },
-                },
+                where: deliverableSubscribersWhere('email'),
               })
               count += emailCount.totalDocs
             }
@@ -56,10 +54,7 @@ export const Notifications: CollectionConfig = {
             if (channel === 'sms' || channel === 'both') {
               const smsCount = await req.payload.count({
                 collection: 'subscribers',
-                where: {
-                  type: { equals: 'sms' },
-                  active: { equals: true },
-                },
+                where: deliverableSubscribersWhere('sms'),
               })
               count += smsCount.totalDocs
             }

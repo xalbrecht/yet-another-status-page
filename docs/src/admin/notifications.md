@@ -117,7 +117,7 @@ Configure **Title Max Length** and **Message Max Length** to control how content
 The notification form shows the estimated recipient count based on:
 
 - Selected channel (Email/SMS/Both)
-- Active subscribers matching that channel
+- Active subscribers matching that channel (email subscribers also need approval and a confirmed address, see [Managing Subscribers](./subscribers.md#approval-and-confirmation))
 
 After sending, it shows the actual number of recipients.
 

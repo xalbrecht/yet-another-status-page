@@ -29,7 +29,7 @@ Zielgruppe der ersten Fassung: Geschäftsführung, Bereichsleiter, Abteilungslei
 - Kein Bericht auf der öffentlichen Statusseite. Die Berichte sind nur für angemeldete Administratoren sichtbar (Annahme, Abschnitt 9).
 - Keine Pflege von Zielwerten für Gruppen und Komponenten in der ersten Fassung. Das Datenmodell sieht die drei Stufen vor, die Eingabe kommt später (entschieden).
 - Kein Ersatz für die Folien. YASP liefert Zahlen und Grafiken, kein PowerPoint.
-- Keine Änderung der bestehenden Lagebild-Seite.
+- Kein neues Aussehen der Lagebild-Seite. Ihre Berechnung ändert sich aber (Abschnitt 4.6).
 
 **Ausschlusskriterium (Anti-Ziel):** Ein Bericht, der 18 Monate lang 100 % Verfügbarkeit ausweist, weil Vorfälle falsch eingeordnet wurden, ist ein Fehlschlag, auch wenn er technisch funktioniert.
 
@@ -86,6 +86,15 @@ Vorschlag für das Datenmodell (Annahme): Zahlenfeld `availabilityTarget` in ein
 
 Anzahl einstellbar, Standard 5, Minimum 3, Maximum 10. Es zählen nur Dienste mit mindestens einem Ausfall im Zeitraum, sortiert nach Verfügbarkeit aufsteigend.
 
+### 4.6 Gemeinsame Berechnung mit dem Lagebild (entschieden am 12.11.2026)
+
+Das Lagebild und der Bericht rechnen mit denselben Regeln und demselben Code. Eine Verfügbarkeit, die das Lagebild für einen Dienst und einen Zeitraum zeigt, stimmt mit der Zahl im Bericht überein.
+
+- Die Berechnung (Verfügbarkeit nach 4.1, Dauer je Status, Zeiträume) liegt in einer gemeinsamen Funktion. Das Lagebild (`src/lib/lagebild.ts`) und der Bericht rufen sie auf.
+- Die Nachrechnung aus Abschnitt 5 wirkt dadurch auch im Lagebild: Die Rückschau 90, 180 und 365 Tage zeigt echte Werte statt „seit 10.11.2026“.
+- Für Zeiten ab dem 10.11.2026 bleiben die Zahlen des Lagebilds unverändert. Ein Test prüft das mit festen Eingaben.
+- Ob das Lagebild den Zielwert oder einen Gruppenwert zeigt, ist nicht entschieden (Abschnitt 10).
+
 ## 5. Nachrechnung vor dem 10.11.2026
 
 Das Statusprotokoll wird rückwirkend aus den Vorfällen gefüllt. Aus jedem Vorfall mit Dienstverknüpfung entsteht je Dienst ein Zeitraum vom Anlegen bis zum Lösen (`created_at` bis `resolved_at`) mit einem Status. Überlappende Zeiträume eines Dienstes zählen mit dem schlechtesten Status einmal. Nach dem Lösen gilt „Betriebsbereit“.
@@ -137,7 +146,7 @@ Der Entwurf mit echten Dev-Daten liegt als Artifact: https://claude.ai/artifact/
 
 ## 7. Teile und Reihenfolge
 
-1. **Daten:** Zielwertfelder, Kennzeichen am Statusprotokoll, Migration zur Nachrechnung. Die Migration ist nicht umkehrbar (Regel „Migrationen laufen beim ersten Aufruf von /admin“).
+1. **Daten:** Zielwertfelder, Kennzeichen am Statusprotokoll, Migration zur Nachrechnung. Die Migration ist nicht umkehrbar (Regel „Migrationen laufen beim ersten Aufruf von /admin“). Dazu gehört die gemeinsame Berechnung nach 4.6, damit das Lagebild von Anfang an dieselben Zahlen zeigt.
 2. **Berichtsseite** im Admin-Bereich (angemeldete Administratoren), mit Zeitraum, Gruppenwahl, Rechenart, Anzahl schwächster Dienste, Wartung ein/aus. Die Berechnung liegt in einer eigenen Funktion mit Tests, getrennt von der Darstellung.
 3. **Export** als PDF und Excel. Excel enthält die Rohwerte je Dienst und Monat in Tabellenform, damit eine Person per Filter „ihre“ Gruppen wählen kann. PDF enthält die Grafiken.
 
@@ -166,3 +175,4 @@ Je Teil entsteht ein eigenes Issue mit Verweis auf Issue #46.
 - Wer pflegt später Zielwerte auf Gruppen- und Komponentenebene, und in welchem Rhythmus?
 - Aufnahme der Browser-Prüfliste und der Berichtsprüfung in die Prüfliste des Deployment-Projekts (`frank.albrecht/yasp`, Issue #47 im GitLab).
 - Ob Kundenberater und Kunden einen eigenen, einfacheren Bericht bekommen (spätere Fassung).
+- Ob das Lagebild künftig den Zielwert (z. B. als Vermerk „unter Ziel“) oder eine Verfügbarkeit je Gruppe zeigt.

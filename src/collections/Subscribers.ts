@@ -1,5 +1,5 @@
 import type { CollectionConfig } from 'payload'
-import { authenticatedOrTestWrite } from '@/lib/access'
+import { authenticatedOrTestWrite, authenticatedOrTestWriteField, isTestMode } from '@/lib/access'
 import { generateShortId } from '@/lib/shortId'
 import { ta } from '@/lib/i18n/admin'
 
@@ -135,6 +135,8 @@ export const Subscribers: CollectionConfig = {
     {
       name: 'verified',
       type: 'checkbox',
+      // Public sign-ups must not approve themselves
+      access: { create: authenticatedOrTestWriteField, update: authenticatedOrTestWriteField },
       defaultValue: false,
       label: ta('Approved'),
       admin: {
@@ -144,6 +146,8 @@ export const Subscribers: CollectionConfig = {
     {
       name: 'addressConfirmed',
       type: 'checkbox',
+      // Public sign-ups must not approve themselves
+      access: { create: authenticatedOrTestWriteField, update: authenticatedOrTestWriteField },
       defaultValue: false,
       label: ta('Address confirmed'),
       admin: {
@@ -153,6 +157,8 @@ export const Subscribers: CollectionConfig = {
     {
       name: 'verificationToken',
       type: 'text',
+      // The response to a public create must not reveal the token
+      access: { read: authenticatedOrTestWriteField },
       label: ta('Verification Token'),
       admin: {
         description: ta('Token used for email/phone verification'),
@@ -160,8 +166,9 @@ export const Subscribers: CollectionConfig = {
       },
       hooks: {
         beforeValidate: [
-          ({ value, operation }) => {
-            if (operation === 'create' && !value) {
+          ({ value, operation, req }) => {
+            // A public sign-up must not choose its own token: always generate one
+            if (operation === 'create' && (!value || !(req.user || isTestMode()))) {
               // Generate a secure random verification token
               return generateShortId(24)
             }
@@ -173,6 +180,8 @@ export const Subscribers: CollectionConfig = {
     {
       name: 'unsubscribeToken',
       type: 'text',
+      // The response to a public create must not reveal the token
+      access: { read: authenticatedOrTestWriteField },
       label: ta('Unsubscribe Token'),
       unique: true,
       admin: {
@@ -181,8 +190,8 @@ export const Subscribers: CollectionConfig = {
       },
       hooks: {
         beforeValidate: [
-          ({ value, operation }) => {
-            if (operation === 'create' && !value) {
+          ({ value, operation, req }) => {
+            if (operation === 'create' && (!value || !(req.user || isTestMode()))) {
               // Generate a secure unique unsubscribe token
               return generateShortId(32)
             }

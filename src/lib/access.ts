@@ -1,4 +1,4 @@
-import type { Access } from 'payload'
+import type { Access, FieldAccess } from 'payload'
 
 /**
  * Access control helpers
@@ -8,7 +8,7 @@ import type { Access } from 'payload'
  * are allowed without authentication to facilitate testing.
  */
 
-const isTestMode = (): boolean => {
+export const isTestMode = (): boolean => {
   return process.env.PAYLOAD_PUBLIC_ALLOW_WRITES === 'true'
 }
 
@@ -22,6 +22,15 @@ export const publicRead: Access = () => true
  * or everyone in test mode
  */
 export const authenticatedOrTestWrite: Access = ({ req: { user } }) => {
+  if (isTestMode()) return true
+  return !!user
+}
+
+/**
+ * Field-level variant of `authenticatedOrTestWrite`: for fields that the public
+ * must not set or read (approval flags, tokens) on collections with public create.
+ */
+export const authenticatedOrTestWriteField: FieldAccess = ({ req: { user } }) => {
   if (isTestMode()) return true
   return !!user
 }

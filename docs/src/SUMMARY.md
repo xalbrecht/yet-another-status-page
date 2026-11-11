@@ -25,6 +25,7 @@
 - [Docker Compose](./development/docker-compose.md)
 - [Architecture](./development/architecture.md)
 - [Testing](./development/testing.md)
+- [Browser-Prüfliste Lagebild](./development/browser-checklist.md)
 
 # API Reference
 

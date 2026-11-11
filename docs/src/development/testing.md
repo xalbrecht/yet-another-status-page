@@ -25,7 +25,7 @@ The file runs in `serial` mode, because the tests change the **global settings**
 
 ### Not covered
 
-- Mobile layout and tooltips by touch.
+- Mobile layout and tooltips by touch (checked by hand, see [Browser checklist](./browser-checklist.md)).
 - The German interface (the test environment runs in English). Only the specs of this fork that accept both languages would notice a missing German text.
 - German time formats (the test environment uses `en-US`, so times show as `08:37 PM` and the "yesterday" prefix is not checked).
 - Production build, memory and response time under load (see [Measuring](#measuring-performance-and-memory)).

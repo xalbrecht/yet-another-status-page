@@ -45,4 +45,12 @@ test.describe('Verfügbarkeitsbericht (Route)', () => {
     expect(response.status()).toBe(200)
     expect((await response.json()).weakest.length).toBeLessThanOrEqual(10)
   })
+
+  // Läuft nur, wenn der Server mit PAYLOAD_PUBLIC_ALLOW_WRITES=false gestartet wurde (E2E_ACCESS_LOCKED=1),
+  // da die Testumgebung sonst alle Routen offen lässt.
+  test('anonyme Anfrage wird mit Status 401 abgewiesen', async ({ request }) => {
+    test.skip(process.env.E2E_ACCESS_LOCKED !== '1', 'Server läuft mit offenen Schreibrechten')
+    const response = await report(request, `period=${currentMonth()}`)
+    expect(response.status()).toBe(401)
+  })
 })

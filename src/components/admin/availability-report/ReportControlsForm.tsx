@@ -10,7 +10,6 @@ export type ReportControlsFormProps = {
   params: ReportParams
   periodKey: string
   periodOptions: Array<{ value: string; label: string }>
-  groups: Array<{ id: number; name: string }>
   onChange?: React.FormEventHandler<HTMLFormElement>
 }
 
@@ -26,9 +25,11 @@ export function shouldSubmitOnChange(target: { type: string; name: string; value
 
 const TOP_N_VALUES = Array.from({ length: TOP_N_MAX - TOP_N_MIN + 1 }, (_, index) => TOP_N_MIN + index)
 
-export function ReportControlsForm({ params, periodKey, periodOptions, groups, onChange }: ReportControlsFormProps) {
+export function ReportControlsForm({ params, periodKey, periodOptions, onChange }: ReportControlsFormProps) {
   return (
     <form method="get" className="availability-report__controls" onChange={onChange}>
+      <input type="hidden" name="view" value={params.view} />
+      {params.view === 'groups' && params.group && <input type="hidden" name="group" value={params.group} />}
       <label>
         {ta('Period', 'Zeitraum')}
         <select name="period" defaultValue={periodKey}>
@@ -44,15 +45,6 @@ export function ReportControlsForm({ params, periodKey, periodOptions, groups, o
       <label>
         {ta('To (custom period)', 'Bis (freier Zeitraum)')}
         <input type="date" name="to" defaultValue={params.to ?? ''} />
-      </label>
-      <label>
-        {ta('Group', 'Gruppe')}
-        <select name="group" defaultValue={params.group ?? ''}>
-          <option value="" selected={!params.group}>{ta('All groups', 'Alle Gruppen')}</option>
-          {groups.map((group) => (
-            <option key={group.id} value={String(group.id)} selected={String(group.id) === params.group}>{group.name}</option>
-          ))}
-        </select>
       </label>
       <label>
         {ta('Calculation', 'Rechenart')}

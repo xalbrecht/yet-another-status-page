@@ -25,11 +25,9 @@ export async function AvailabilityReportView({ initPageResult, params, searchPar
   const result = await loadReport(req.payload, search, now)
   const reportParams = parseReportParams(search)
   const options = periodOptions(now, dt.timezone, dt.locale)
-  const groupsResult = await req.payload.find({ collection: 'service-groups', sort: '_order', depth: 0, pagination: false })
-  const groups = groupsResult.docs.map((group) => ({ id: Number(group.id), name: group.name }))
   const periodKey = result.ok ? result.period.key : reportParams.period ?? options[1]?.value ?? 'custom'
 
-  const controls = <ReportControls params={reportParams} periodKey={periodKey} periodOptions={options} groups={groups} />
+  const controls = <ReportControls params={reportParams} periodKey={periodKey} periodOptions={options} />
 
   return (
     <DefaultTemplate

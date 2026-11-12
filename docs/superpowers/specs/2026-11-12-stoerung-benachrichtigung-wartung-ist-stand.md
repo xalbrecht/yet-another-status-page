@@ -163,6 +163,7 @@ Ein Zustand gilt von seinem Eintrag bis zum nächsten. Verfügbarkeit = Anteil d
 7. Benachrichtigungsvorlagen bearbeitbar (Konsole oder Admin) und je Störung auswählbar.
 8. ntfy als dritter Kanal neben E-Mail und SMS. Die aktiven Kanäle und die Konfiguration von ntfy (Tokens, Upstream) im Admin einstellbar.
 9. Wartungen melden Beginn und Ende an die Abonnenten (Issue #52 im Fork).
+10. Wartung läuft parallel zum Zustand. Die Statusseite zeigt eine laufende oder in 24 Stunden beginnende Wartung neben dem Zustandspunkt (Issue #54 im Fork, umgesetzt). Der Zustand „Wartung“ am Dienst bleibt Anzeige, der Zeitgeber setzt ihn später (Issue #52). Der Bericht nimmt die Wartungszeit aus den erfassten Wartungen und bietet drei Berechnungsarten (Konzept 4.7).
 
 ## 10. Bausteine für BPMN-Modelle (Vorschlag)
 

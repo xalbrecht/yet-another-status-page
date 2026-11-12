@@ -95,6 +95,35 @@ function parseDay(value: string | undefined): { year: number; month: number; day
   return check.getUTCMonth() === parts.month - 1 && check.getUTCDate() === parts.day ? parts : null
 }
 
+/** Auswahl für die Zeitraumwahl: letzte 12 Monate, Quartale, Halbjahre, Jahre (neueste zuerst), zuletzt der freie Zeitraum. */
+export function periodOptions(now: number, timeZone: string, locale: string): Array<{ value: string; label: string }> {
+  const today = parseDateSlug(formatDateSlug(new Date(now), timeZone))
+  if (!today) return []
+  const options: Array<{ value: string; label: string }> = []
+  const push = (kind: 'month' | 'quarter' | 'half' | 'year', span: Span) => {
+    const period = spanToPeriod(kind, span, now, locale, timeZone)
+    if (period.start <= now) options.push({ value: period.key, label: period.label })
+  }
+  let month: Span = { startYear: today.year, startMonth: today.month, months: 1 }
+  for (let i = 0; i < 12; i++) {
+    push('month', month)
+    month = shiftSpan(month, -1)
+  }
+  let quarter: Span = { startYear: today.year, startMonth: Math.floor((today.month - 1) / 3) * 3 + 1, months: 3 }
+  for (let i = 0; i < 4; i++) {
+    push('quarter', quarter)
+    quarter = shiftSpan(quarter, -1)
+  }
+  let half: Span = { startYear: today.year, startMonth: today.month <= 6 ? 1 : 7, months: 6 }
+  for (let i = 0; i < 3; i++) {
+    push('half', half)
+    half = shiftSpan(half, -1)
+  }
+  for (let year = today.year; year > today.year - 3; year--) push('year', { startYear: year, startMonth: 1, months: 12 })
+  options.push({ value: 'custom', label: 'Freier Zeitraum' })
+  return options
+}
+
 export function resolvePeriod(
   input: { period?: string; from?: string; to?: string },
   now: number,

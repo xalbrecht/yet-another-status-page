@@ -102,8 +102,15 @@ export default buildConfig({
     },
     components: {
       beforeDashboard: ['@/components/admin/DashboardWidgets#DashboardWidgets'],
-      afterNavLinks: ['@/components/admin/status-log/StatusLogNavLink#StatusLogNavLink'],
+      afterNavLinks: [
+        '@/components/admin/availability-report/AvailabilityReportNavLink#AvailabilityReportNavLink',
+        '@/components/admin/status-log/StatusLogNavLink#StatusLogNavLink',
+      ],
       views: {
+        availabilityReport: {
+          Component: '@/components/admin/availability-report#AvailabilityReportView',
+          path: '/verfuegbarkeitsbericht',
+        },
         statusLog: {
           Component: '@/components/admin/status-log#StatusLogAdminView',
           path: '/protokoll-pflege',

@@ -117,3 +117,17 @@ test('periodMonths zerlegt einen Zeitraum in Kalendermonate, Randmonate gekürzt
   assert.equal(open[0].end, NOW)
   assert.equal(open[0].partial, true)
 })
+
+test('periodOptions bietet Monate, Quartale, Halbjahre, Jahre und den freien Zeitraum an', async () => {
+  const { periodOptions } = await import('@/lib/report/period')
+  const options = periodOptions(NOW, TZ, 'de-DE')
+  const values = options.map((option) => option.value)
+  assert.ok(values.includes('2026-10'))
+  assert.ok(values.includes('2026-11'))
+  assert.ok(values.includes('2026-Q3'))
+  assert.ok(values.includes('2026-H1'))
+  assert.ok(values.includes('2026'))
+  assert.equal(values[values.length - 1], 'custom')
+  assert.equal(options.find((option) => option.value === '2026-10')?.label, 'Oktober 2026')
+  assert.equal(values.filter((value) => /^\d{4}-\d{2}$/.test(value)).length, 12)
+})

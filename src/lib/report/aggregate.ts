@@ -1,4 +1,6 @@
 import { resolveAvailabilityTarget, type Timeline } from '@/lib/availability'
+import { buildGroupSheet, type GroupSheetData } from '@/lib/report/group-sheet'
+import { heatClass, type HeatLevel } from '@/lib/report/heat'
 import { computeServiceMetrics, type ServiceMetrics } from '@/lib/report/metrics'
 import type { ReportParams } from '@/lib/report/params'
 import { periodMonths, type ReportPeriod } from '@/lib/report/period'
@@ -46,6 +48,16 @@ export type RankingRow = {
   history: Array<number | null>
 }
 
+/** Eintrag der Gruppenliste (Konzept 4): Gruppenwert als Mittelwert der Dienste, `level` ist die Farbstufe der Wärmekarte. */
+export type GroupListEntry = {
+  id: number
+  name: string
+  serviceCount: number
+  availability: number | null
+  target: number
+  level: HeatLevel
+}
+
 export type ReportData = {
   /** Text bei ungültiger Eingabe, die übrigen Felder sind dann leer */
   error?: string
@@ -72,6 +84,10 @@ export type ReportData = {
     rows: Array<{ name: string; values: Array<number | null>; total?: boolean }>
   }
   ranking: RankingRow[]
+  /** alle Gruppen mit Diensten, schwächste zuerst, unabhängig von der Gruppenwahl */
+  groupList: GroupListEntry[]
+  /** Störungen des letzten Monats im Zeitraum, nur bei gewählter Gruppe */
+  sheet: GroupSheetData | null
   footnotes: { unsure: number; withoutService: number }
 }
 
@@ -102,6 +118,8 @@ const emptyData = (input: ReportInput, error: string): ReportData => ({
   trend: [],
   heat: { columns: [], rows: [] },
   ranking: [],
+  groupList: [],
+  sheet: null,
   footnotes: input.footnotes,
 })
 
@@ -129,12 +147,18 @@ export function buildReport(input: ReportInput): ReportData {
     return metricsFor(service, range).availability
   }
 
+  const periodValues = new Map<number, number | null>()
+  const periodValue = (service: ReportInput['services'][number]): number | null => {
+    if (!periodValues.has(service.id)) periodValues.set(service.id, valueFor(service, period, periodParts))
+    return periodValues.get(service.id) ?? null
+  }
+
   const target = scopeGroup ? resolveAvailabilityTarget({ group: scopeGroup.target, global: input.globalTarget }) : input.globalTarget
 
   const rows = services.map((service) => {
     const group = groupById.get(service.groupId)
     const whole = metricsFor(service, period)
-    const availability = valueFor(service, period, periodParts)
+    const availability = periodValue(service)
     const serviceTarget = resolveAvailabilityTarget({ service: service.target, group: group?.target, global: input.globalTarget })
     const row: RankingRow = {
       serviceId: service.id,
@@ -190,6 +214,32 @@ export function buildReport(input: ReportInput): ReportData {
   heatRows.sort((a, b) => worstOf(a.values) - worstOf(b.values) || a.name.localeCompare(b.name, 'de'))
   const trendValues = historyOf(services)
 
+  const groupList: GroupListEntry[] = input.groups
+    .flatMap((group) => {
+      const members = input.services.filter((service) => service.groupId === group.id)
+      if (members.length === 0) return []
+      const availability = mean(members.map(periodValue))
+      const groupTarget = resolveAvailabilityTarget({ group: group.target, global: input.globalTarget })
+      return [{ id: group.id, name: group.name, serviceCount: members.length, availability, target: groupTarget, level: heatClass(availability, groupTarget) }]
+    })
+    .sort((a, b) => {
+      if (a.availability === null || b.availability === null) {
+        return Number(a.availability === null) - Number(b.availability === null) || a.name.localeCompare(b.name, 'de')
+      }
+      return a.availability - b.availability || a.name.localeCompare(b.name, 'de')
+    })
+
+  const lastMonth = periodParts[periodParts.length - 1]
+  const sheet =
+    scopeGroup && lastMonth
+      ? buildGroupSheet({
+          month: lastMonth,
+          services: services.map(({ id, name, timeline, windows }) => ({ id, name, timeline, windows })),
+          mode: params.maintenance,
+          timeZone,
+        })
+      : null
+
   return {
     scope: { groupId: scopeGroup?.id ?? null, groupName: scopeGroup?.name ?? null, serviceCount: services.length },
     kpis: {
@@ -214,6 +264,8 @@ export function buildReport(input: ReportInput): ReportData {
       rows: [{ name: 'Gesamt', values: trendValues, total: true }, ...heatRows],
     },
     ranking,
+    groupList,
+    sheet,
     footnotes: input.footnotes,
   }
 }

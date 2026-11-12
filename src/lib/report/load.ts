@@ -79,42 +79,42 @@ export async function loadReport(
     }
   }
 
-  // Fußnoten: Vorfälle im ganzen angezeigten Bereich (Verlauf und Zeitraum), bei gewählter Gruppe nur deren Dienste
-  const groupServiceIds = params.group
-    ? serviceDocs.docs.filter((service) => String(idOf(service.group)) === params.group).map((service) => Number(service.id))
-    : null
-  const footnotes = countFootnotes(
-    incidentDocs.docs.map((incident) => ({
-      title: incident.title,
-      messages: (incident.updates || []).map((update) => update.message),
-      availabilityClass: incident.availabilityClass,
-      createdAt: new Date(incident.createdAt).getTime(),
-      resolvedAt: incident.resolvedAt ? new Date(incident.resolvedAt).getTime() : null,
-      serviceIds: (incident.affectedServices || []).map(idOf),
-    })),
-    { rangeStart: Math.min(period.start, months[0]?.start ?? period.start), rangeEnd: dataEnd, firstOperationAt, groupServiceIds },
-  )
-
   const groups = groupDocs.docs.map((group) => ({ id: Number(group.id), name: group.name, target: group.availabilityTarget ?? null }))
-  const data = buildReport({
-    period,
-    previous,
-    months,
-    params,
-    globalTarget: settings.availabilityTarget ?? DEFAULT_AVAILABILITY_TARGET,
-    groups,
-    services: serviceDocs.docs.map((service) => ({
-      id: Number(service.id),
-      name: service.name,
-      groupId: idOf(service.group),
-      target: service.availabilityTarget ?? null,
-      timeline: timelines.get(Number(service.id)) ?? [],
-      windows: windows.get(Number(service.id)) ?? [],
-    })),
-    footnotes,
-    now,
-    timeZone: dt.timezone,
-    locale: dt.locale,
-  })
-  return { ok: true, data, params, period, groups: groups.map(({ id, name }) => ({ id, name })) }
+  const globalTarget = settings.availabilityTarget ?? DEFAULT_AVAILABILITY_TARGET
+  const services = serviceDocs.docs.map((service) => ({
+    id: Number(service.id),
+    name: service.name,
+    groupId: idOf(service.group),
+    target: service.availabilityTarget ?? null,
+    timeline: timelines.get(Number(service.id)) ?? [],
+    windows: windows.get(Number(service.id)) ?? [],
+  }))
+
+  // Fußnoten: Vorfälle im ganzen angezeigten Bereich (Verlauf und Zeitraum), bei gewählter Gruppe nur deren Dienste
+  const buildFor = (group: string | undefined) => {
+    const scoped: ReportParams = { ...params, group }
+    const groupServiceIds = group
+      ? serviceDocs.docs.filter((service) => String(idOf(service.group)) === group).map((service) => Number(service.id))
+      : null
+    const footnotes = countFootnotes(
+      incidentDocs.docs.map((incident) => ({
+        title: incident.title,
+        messages: (incident.updates || []).map((update) => update.message),
+        availabilityClass: incident.availabilityClass,
+        createdAt: new Date(incident.createdAt).getTime(),
+        resolvedAt: incident.resolvedAt ? new Date(incident.resolvedAt).getTime() : null,
+        serviceIds: (incident.affectedServices || []).map(idOf),
+      })),
+      { rangeStart: Math.min(period.start, months[0]?.start ?? period.start), rangeEnd: dataEnd, firstOperationAt, groupServiceIds },
+    )
+    const data = buildReport({ period, previous, months, params: scoped, globalTarget, groups, services, footnotes, now, timeZone: dt.timezone, locale: dt.locale })
+    return { data, scoped }
+  }
+
+  let built = buildFor(params.group)
+  // Gruppenberichte ohne Gruppenwahl: die schwächste Gruppe ist vorgewählt
+  if (params.view === 'groups' && !params.group && built.data.groupList.length > 0) {
+    built = buildFor(String(built.data.groupList[0].id))
+  }
+  return { ok: true, data: built.data, params: built.scoped, period, groups: groups.map(({ id, name }) => ({ id, name })) }
 }

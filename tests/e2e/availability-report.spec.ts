@@ -46,6 +46,42 @@ test.describe('Verfügbarkeitsbericht (Route)', () => {
     expect((await response.json()).weakest.length).toBeLessThanOrEqual(10)
   })
 
+  test('ohne Gruppenwahl liefert die Gesamtansicht die Gruppenliste und kein Gruppenblatt', async ({ request }) => {
+    const id = Date.now()
+    const group = await createServiceGroup({ name: `Liste ${id}`, icon: 'Server' })
+    await createService({ name: `Liste Dienst A ${id}`, group: group.id })
+    await createService({ name: `Liste Dienst B ${id}`, group: group.id })
+
+    const response = await report(request, `period=${currentMonth()}`)
+    expect(response.status()).toBe(200)
+    const data = await response.json()
+    expect(data.sheet).toBeNull()
+    const entry = data.groupList.find((item: { id: number }) => item.id === group.id)
+    expect(entry.serviceCount).toBe(2)
+  })
+
+  test('view=groups ohne Gruppe wählt die schwächste Gruppe und liefert das Gruppenblatt', async ({ request }) => {
+    const id = Date.now()
+    const group = await createServiceGroup({ name: `Blatt ${id}`, icon: 'Server' })
+    await createService({ name: `Blatt Dienst ${id}`, group: group.id })
+
+    const response = await report(request, `period=${currentMonth()}&view=groups`)
+    expect(response.status()).toBe(200)
+    const data = await response.json()
+    expect(data.groupList.length).toBeGreaterThan(0)
+    expect(data.scope.groupId).toBe(data.groupList[0].id)
+    expect(data.sheet).not.toBeNull()
+    expect(data.sheet.month.key).toBe(currentMonth())
+    expect(data.sheet.perDay.length).toBeGreaterThanOrEqual(1)
+    expect(data.sheet.perDay.length).toBeLessThanOrEqual(31)
+  })
+
+  test('view=groups mit unbekannter Gruppe ergibt Status 400', async ({ request }) => {
+    const response = await report(request, `period=${currentMonth()}&view=groups&group=99999999`)
+    expect(response.status()).toBe(400)
+    expect(typeof (await response.json()).error).toBe('string')
+  })
+
   // Läuft nur, wenn der Server mit PAYLOAD_PUBLIC_ALLOW_WRITES=false gestartet wurde (E2E_ACCESS_LOCKED=1),
   // da die Testumgebung sonst alle Routen offen lässt.
   test('anonyme Anfrage wird mit Status 401 abgewiesen', async ({ request }) => {

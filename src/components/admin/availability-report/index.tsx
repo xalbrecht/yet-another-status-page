@@ -6,9 +6,13 @@ import { Gutter } from '@payloadcms/ui'
 import { loadReport } from '@/lib/report/load'
 import { periodOptions } from '@/lib/report/period'
 import { resolveDateTimeConfig } from '@/lib/datetime'
-import { parseReportParams } from '@/lib/report/params'
+import { ta } from '@/lib/i18n/admin'
+import { parseReportParams, reportHref, reportTabHrefs } from '@/lib/report/params'
+import { GroupList } from './GroupList'
+import { GroupSheet } from './GroupSheet'
 import { ReportControls } from './ReportControls'
 import { ReportView } from './ReportView'
+import { ViewTabs } from './ViewTabs'
 import './report.scss'
 
 /** Die Ansicht wird bei jedem Aufruf auf dem Server gerendert, die aktuelle Zeit ist Teil der Eingabe. */
@@ -22,14 +26,19 @@ export async function AvailabilityReportView({ initPageResult, params, searchPar
   const now = currentTime()
   const settings = await req.payload.findGlobal({ slug: 'settings' })
   const dt = resolveDateTimeConfig(settings)
-  const result = await loadReport(req.payload, search, now)
-  const reportParams = parseReportParams(search)
+  const requested = parseReportParams(search)
+  // Der Gesamtbericht zeigt immer alle Gruppen: eine Gruppe in der Adresse gilt nur für die Gruppenberichte
+  const result = await loadReport(req.payload, requested.view === 'overall' ? { ...search, group: undefined } : search, now)
+  // Bei ungültiger Gruppe (z. B. gelöscht, altes Lesezeichen) gilt keine Gruppe mehr: Formular und Tabs tragen sie nicht weiter
+  const groupInvalid = result.ok && Boolean(result.data.error) && Boolean(requested.group)
+  const reportParams = { ...(result.ok ? result.params : requested), ...(groupInvalid ? { group: undefined } : {}) }
   const options = periodOptions(now, dt.timezone, dt.locale)
-  const groupsResult = await req.payload.find({ collection: 'service-groups', sort: '_order', depth: 0, pagination: false })
-  const groups = groupsResult.docs.map((group) => ({ id: Number(group.id), name: group.name }))
-  const periodKey = result.ok ? result.period.key : reportParams.period ?? options[1]?.value ?? 'custom'
+  const periodKey = result.ok ? result.period.key : requested.period ?? options[1]?.value ?? 'custom'
 
-  const controls = <ReportControls params={reportParams} periodKey={periodKey} periodOptions={options} groups={groups} />
+  const controls = <ReportControls params={reportParams} periodKey={periodKey} periodOptions={options} />
+  const tabs = (
+    <ViewTabs active={requested.view} hrefs={reportTabHrefs(search, groupInvalid)} />
+  )
 
   return (
     <DefaultTemplate
@@ -44,11 +53,29 @@ export async function AvailabilityReportView({ initPageResult, params, searchPar
     >
       <Gutter>
         {result.ok ? (
-          <ReportView data={result.data} params={result.params} period={result.period} locale={dt.locale} controls={controls} />
+          <ReportView data={result.data} params={result.params} period={result.period} locale={dt.locale} controls={controls} tabs={tabs}>
+            {requested.view === 'groups' &&
+              (result.data.groupList.length === 0 ? (
+                <p className="availability-report__muted">{ta('No groups with services.', 'Keine Gruppen mit Diensten.')}</p>
+              ) : (
+                <div className="availability-report__layout">
+                  <GroupList
+                    groups={result.data.groupList}
+                    selectedId={result.data.scope.groupId}
+                    hrefFor={(id) => reportHref(search, { view: 'groups', group: String(id) })}
+                    locale={dt.locale}
+                  />
+                  <div className="availability-report__layout-main">
+                    <GroupSheet data={result.data} locale={dt.locale} />
+                  </div>
+                </div>
+              ))}
+          </ReportView>
         ) : (
           <div className="availability-report">
             <h1>Verfügbarkeitsbericht</h1>
             {controls}
+            {tabs}
             <p role="alert" className="availability-report__error">{result.error}</p>
           </div>
         )}

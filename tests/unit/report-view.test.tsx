@@ -3,7 +3,9 @@ import assert from 'node:assert/strict'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { ReportView } from '@/components/admin/availability-report/ReportView'
 import { ReportControlsForm, shouldSubmitOnChange } from '@/components/admin/availability-report/ReportControlsForm'
-import type { ReportData, RankingRow } from '@/lib/report/aggregate'
+import { GroupList } from '@/components/admin/availability-report/GroupList'
+import { ViewTabs } from '@/components/admin/availability-report/ViewTabs'
+import type { GroupListEntry, ReportData, RankingRow } from '@/lib/report/aggregate'
 import { parseReportParams } from '@/lib/report/params'
 
 const MIN = 60_000
@@ -49,6 +51,8 @@ const data: ReportData = {
     ],
   },
   ranking: [row('Infoma', 93.74, true), row('VPN', 99.9, false)],
+  groupList: [],
+  sheet: null,
   footnotes: { unsure: 78, withoutService: 19 },
 }
 const params = parseReportParams({ maintenance: 'B', calc: 'monthly', topN: '7' })
@@ -108,7 +112,6 @@ test('die Auswahlfelder zeigen die gesetzten Werte', () => {
       params={params}
       periodKey="2026-10"
       periodOptions={[{ value: '2026-10', label: 'Oktober 2026' }, { value: 'custom', label: 'Freier Zeitraum' }]}
-      groups={[{ id: 1, name: 'Haushalt' }]}
     />,
   )
   assert.match(markup, /<option value="B" selected/)
@@ -149,9 +152,65 @@ test('Datumsfelder und die Wahl „Freier Zeitraum“ senden nicht sofort ab, Au
 
 test('die Datumsfelder und die Schaltfläche „Anwenden“ stehen immer da', () => {
   const markup = renderToStaticMarkup(
-    <ReportControlsForm params={params} periodKey="2026-10" periodOptions={[{ value: '2026-10', label: 'Oktober 2026' }]} groups={[]} />,
+    <ReportControlsForm params={params} periodKey="2026-10" periodOptions={[{ value: '2026-10', label: 'Oktober 2026' }]} />,
   )
   assert.match(markup, /name="from"/)
   assert.match(markup, /name="to"/)
   assert.match(markup, /<button type="submit"/)
+})
+
+const formWith = (search: Record<string, string>) =>
+  renderToStaticMarkup(
+    <ReportControlsForm params={parseReportParams(search)} periodKey="2026-10" periodOptions={[{ value: '2026-10', label: 'Oktober 2026' }]} />,
+  )
+
+test('im Gruppentab trägt das Formular Ansicht und Gruppe weiter, ein Auswahlfeld „Gruppe“ gibt es nicht', () => {
+  const markup = formWith({ view: 'groups', group: '7' })
+  assert.match(markup, /name="view" value="groups"/)
+  assert.match(markup, /name="group" value="7"/)
+  assert.doesNotMatch(markup, /<select name="group"/)
+})
+
+test('im Gesamtbericht trägt das Formular keine Gruppe weiter', () => {
+  const markup = formWith({ group: '7' })
+  assert.match(markup, /name="view" value="overall"/)
+  assert.doesNotMatch(markup, /name="group"/)
+})
+
+test('die Tabs markieren nur die aktive Ansicht', () => {
+  const markup = renderToStaticMarkup(<ViewTabs active="groups" hrefs={{ overall: '/a', groups: '/b' }} />)
+  assert.equal((markup.match(/aria-current="page"/g) ?? []).length, 1)
+  assert.match(markup, /<a[^>]*href="\/b"[^>]*aria-current="page"/)
+  assert.match(markup, /Gesamtbericht/)
+  assert.match(markup, /Gruppenberichte/)
+})
+
+const entry = (id: number, name: string, availability: number | null, level: GroupListEntry['level']): GroupListEntry => ({ id, name, serviceCount: 1, availability, target: 99, level })
+
+test('die Gruppenliste behält die Reihenfolge, markiert die gewählte Gruppe und zeigt „–“ ohne Wert', () => {
+  const markup = renderToStaticMarkup(
+    <GroupList groups={[entry(1, 'Eins', 98.1, 4), entry(2, 'Zwei', 99.9, 1), entry(3, 'Drei', null, 0)]} selectedId={2} hrefFor={(id) => `/g/${id}`} locale="de-DE" />,
+  )
+  assert.match(markup, /data-testid="group-list"/)
+  assert.ok(markup.indexOf('Eins') < markup.indexOf('Zwei') && markup.indexOf('Zwei') < markup.indexOf('Drei'))
+  assert.equal((markup.match(/aria-current="true"/g) ?? []).length, 1)
+  assert.match(markup, /href="\/g\/2"[^>]*aria-current="true"/)
+  assert.match(markup, /98,10 %/)
+  assert.match(markup, /Drei[\s\S]*–/)
+  assert.match(markup, /heat-4/)
+})
+
+test('die Gruppenansicht des Gesamtberichts ist entfernt: Wärmekarte nach Dienstgruppen, Spalte „Gruppe“ bleibt', () => {
+  const markup = render({ data: { ...data, scope: { groupId: 1, groupName: 'Haushalt', serviceCount: 2 } } })
+  assert.match(markup, /Wärmekarte nach Dienstgruppen|Heat map by service group/)
+  assert.doesNotMatch(markup, /Dienste der Gruppe|Services of the group/)
+  assert.match(markup, /<th>(Gruppe|Group)<\/th>/)
+})
+
+test('die Tabs stehen unter den Auswahlfeldern, übergebene Inhalte ersetzen den Gesamtbericht', () => {
+  const markup = render({ tabs: <nav data-testid="tabs" />, children: <div data-testid="eigener-inhalt" /> })
+  assert.ok(markup.indexOf('data-testid="controls"') < markup.indexOf('data-testid="tabs"'))
+  assert.match(markup, /data-testid="eigener-inhalt"/)
+  assert.doesNotMatch(markup, /data-testid="report-ranking"/)
+  assert.match(render({ tabs: <nav data-testid="tabs" /> }), /data-testid="report-ranking"/)
 })

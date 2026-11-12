@@ -4,6 +4,7 @@ import { formatAvailability } from '@/lib/availability'
 import type { RankingRow, ReportData } from '@/lib/report/aggregate'
 import type { ReportParams } from '@/lib/report/params'
 import type { ReportPeriod } from '@/lib/report/period'
+import { formatDuration } from './format'
 import { Heatmap } from './Heatmap'
 import { TrendChart } from './TrendChart'
 
@@ -17,18 +18,13 @@ export type ReportViewProps = {
   locale: string
   /** Auswahlfelder (ReportControls) */
   controls: React.ReactNode
+  /** Tabs (ViewTabs), stehen unter den Auswahlfeldern */
+  tabs?: React.ReactNode
+  /** Eigener Inhalt statt des Gesamtberichts, z. B. die Gruppenberichte */
+  children?: React.ReactNode
 }
 
 const RANKING_VISIBLE = 10
-
-function formatDuration(ms: number): string {
-  const total = Math.round(ms / 60_000)
-  if (total <= 0) return `0 ${ta('min', 'Min.')}`
-  const hours = Math.floor(total / 60)
-  const minutes = total % 60
-  if (hours === 0) return `${minutes} ${ta('min', 'Min.')}`
-  return `${hours} ${ta('h', 'Std.')}${minutes ? ` ${minutes} ${ta('min', 'Min.')}` : ''}`
-}
 
 function Delta(props: { current: number | null; previous: number | null; locale: string }) {
   const { current, previous } = props
@@ -119,7 +115,7 @@ function RankingTable(props: { rows: RankingRow[]; maxDown: number; showGroup: b
   )
 }
 
-export function ReportView({ data, params, period, locale, controls }: ReportViewProps) {
+export function ReportView({ data, params, period, locale, controls, tabs, children }: ReportViewProps) {
   const { kpis } = data
   const targetMet = kpis.availability !== null && kpis.availability >= kpis.target
   const scopeText = data.scope.groupName ?? ta('All groups', 'Alle Gruppen')
@@ -133,9 +129,12 @@ export function ReportView({ data, params, period, locale, controls }: ReportVie
         {period.partial ? `. ${ta('The period is not complete yet.', 'Der Zeitraum ist noch nicht abgeschlossen.')}` : ''}
       </p>
       {controls}
+      {tabs}
 
       {data.error ? (
         <p role="alert" className="availability-report__error">{data.error}</p>
+      ) : children ? (
+        children
       ) : (
         <>
           <section className="availability-report__kpis" aria-label={ta('Key figures', 'Kennzahlen')}>
@@ -205,18 +204,18 @@ export function ReportView({ data, params, period, locale, controls }: ReportVie
           </section>
 
           <section className="availability-report__card">
-            <h2>{data.scope.groupName ? `${ta('Services of the group', 'Dienste der Gruppe')} ${data.scope.groupName}` : ta('Heat map by service group', 'Wärmekarte nach Dienstgruppen')}</h2>
+            <h2>{ta('Heat map by service group', 'Wärmekarte nach Dienstgruppen')}</h2>
             <Heatmap heat={data.heat} target={kpis.target} locale={locale} />
           </section>
 
           <section className="availability-report__card" data-testid="report-ranking">
             <h2>{ta('Services, weakest first', 'Dienste, schwächste zuerst')}</h2>
             <div className="availability-report__scroll">
-              <RankingTable rows={data.ranking.slice(0, RANKING_VISIBLE)} maxDown={maxDown} showGroup={!data.scope.groupName} locale={locale} />
+              <RankingTable rows={data.ranking.slice(0, RANKING_VISIBLE)} maxDown={maxDown} showGroup locale={locale} />
               {data.ranking.length > RANKING_VISIBLE && (
                 <details>
                   <summary>{ta('Show all services', 'Alle Dienste zeigen')} ({data.ranking.length})</summary>
-                  <RankingTable rows={data.ranking.slice(RANKING_VISIBLE)} maxDown={maxDown} showGroup={!data.scope.groupName} locale={locale} />
+                  <RankingTable rows={data.ranking.slice(RANKING_VISIBLE)} maxDown={maxDown} showGroup locale={locale} />
                 </details>
               )}
             </div>

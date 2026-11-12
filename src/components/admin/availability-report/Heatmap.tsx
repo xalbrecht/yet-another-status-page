@@ -2,18 +2,9 @@ import React from 'react'
 import { ta } from '@/lib/i18n/admin'
 import { formatAvailability } from '@/lib/availability'
 import type { ReportData } from '@/lib/report/aggregate'
+import { chunkRows, HEAT_CHUNK_SIZE, heatClass } from '@/lib/report/heat'
 
-/** Wärmekarte: Zeilen mal Monate. Farbstufen Blau, Gelb, Rot (kein Rot-Grün-Paar). Die ersten Zeilen stehen sofort, die übrigen aufklappbar. */
-const VISIBLE_ROWS = 12
-
-export function heatClass(value: number | null, target: number): number {
-  if (value === null) return 0
-  if (value >= 100) return 0
-  if (value >= 99.9) return 1
-  if (value >= 99.5) return 2
-  if (value >= target) return 3
-  return 4
-}
+/** Wärmekarte: Zeilen mal Monate. Farbstufen Blau, Gelb, Rot (kein Rot-Grün-Paar). Der erste Block (12 Zeilen) steht sofort, jeder weitere ist aufklappbar. */
 
 function cellText(value: number | null, locale: string): string {
   if (value === null) return '–'
@@ -40,7 +31,7 @@ function Row(props: { row: ReportData['heat']['rows'][number]; columns: ReportDa
 export function Heatmap(props: { heat: ReportData['heat']; target: number; locale: string }) {
   const { heat, target, locale } = props
   const total = heat.rows.filter((row) => row.total)
-  const rest = heat.rows.filter((row) => !row.total)
+  const [firstChunk = [], ...moreChunks] = chunkRows(heat.rows.filter((row) => !row.total))
   const head = (
     <thead>
       <tr>
@@ -65,20 +56,23 @@ export function Heatmap(props: { heat: ReportData['heat']; target: number; local
           {head}
           <tbody>
             {total.map((row) => <Row key="total" row={row} columns={heat.columns} target={target} locale={locale} />)}
-            {rest.slice(0, VISIBLE_ROWS).map((row) => <Row key={row.name} row={row} columns={heat.columns} target={target} locale={locale} />)}
+            {firstChunk.map((row) => <Row key={row.name} row={row} columns={heat.columns} target={target} locale={locale} />)}
           </tbody>
         </table>
-        {rest.length > VISIBLE_ROWS && (
-          <details>
-            <summary>{ta('Show all rows', 'Alle Zeilen zeigen')} ({rest.length})</summary>
-            <table className="availability-report__heat">
-              {head}
-              <tbody>
-                {rest.slice(VISIBLE_ROWS).map((row) => <Row key={row.name} row={row} columns={heat.columns} target={target} locale={locale} />)}
-              </tbody>
-            </table>
-          </details>
-        )}
+        {moreChunks.map((chunk, index) => {
+          const from = (index + 1) * HEAT_CHUNK_SIZE + 1
+          return (
+            <details key={from}>
+              <summary>{ta('Rows', 'Zeilen')} {from} {ta('to', 'bis')} {from + chunk.length - 1}</summary>
+              <table className="availability-report__heat">
+                {head}
+                <tbody>
+                  {chunk.map((row) => <Row key={row.name} row={row} columns={heat.columns} target={target} locale={locale} />)}
+                </tbody>
+              </table>
+            </details>
+          )
+        })}
       </div>
       <div className="availability-report__legend">
         {legend.map(([text, level]) => (

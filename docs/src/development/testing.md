@@ -38,6 +38,13 @@ The file runs in `serial` mode, because the tests change the **global settings**
 - `tests/unit/maintenance-conversion.test.ts`, `tests/unit/status-log-view.test.tsx` and the additions to `tests/unit/incident-classification.test.ts`: planning of the conversion, display of the admin page, classification by hand.
 - The admin page itself is not covered by an automatic browser test. Check it by hand: create a user (`POST /api/users/first-register` on a fresh test environment), log in, open `/admin/protokoll-pflege`, run both previews.
 
+### Availability report
+
+- `tests/unit/report-period.test.ts`, `report-maintenance-time.test.ts`, `report-metrics.test.ts`, `report-params.test.ts`, `report-aggregate.test.ts`: periods in the time zone of the settings (including the daylight saving change), maintenance time, the three maintenance types with the example from the concept, selection from the address and the aggregation (group value, months with target met, weakest services).
+- `tests/unit/report-view.test.tsx`: display of the page and of the selection fields as text.
+- `tests/e2e/availability-report.spec.ts`: the JSON route `/api/availability-report` (data of a group, invalid input gives status 400, at most 10 weakest services).
+- The admin page itself is not covered by an automatic browser test. Check it by hand (see the note under "Status log maintenance"): open `/admin/verfuegbarkeitsbericht`, change every selection, compare a month with known outages.
+
 ### Not covered
 
 - Mobile layout and tooltips by touch (checked by hand, see [Browser checklist](./browser-checklist.md)).

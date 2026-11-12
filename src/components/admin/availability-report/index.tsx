@@ -8,6 +8,7 @@ import { periodOptions } from '@/lib/report/period'
 import { resolveDateTimeConfig } from '@/lib/datetime'
 import { ta } from '@/lib/i18n/admin'
 import { parseReportParams, reportHref, reportTabHrefs } from '@/lib/report/params'
+import { ExportButtons } from './ExportButtons'
 import { GroupList } from './GroupList'
 import { GroupSheet } from './GroupSheet'
 import { ReportControls } from './ReportControls'
@@ -36,8 +37,12 @@ export async function AvailabilityReportView({ initPageResult, params, searchPar
   const periodKey = result.ok ? result.period.key : requested.period ?? options[1]?.value ?? 'custom'
 
   const controls = <ReportControls params={reportParams} periodKey={periodKey} periodOptions={options} />
+  const exportable = result.ok && !result.data.error
   const tabs = (
-    <ViewTabs active={requested.view} hrefs={reportTabHrefs(search, groupInvalid)} />
+    <>
+      {exportable && <ExportButtons search={search} groupId={requested.view === 'groups' ? result.data.scope.groupId : null} />}
+      <ViewTabs active={requested.view} hrefs={reportTabHrefs(search, groupInvalid)} />
+    </>
   )
 
   return (

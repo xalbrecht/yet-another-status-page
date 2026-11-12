@@ -4,6 +4,7 @@ import { formatAvailability } from '@/lib/availability'
 import type { RankingRow, ReportData } from '@/lib/report/aggregate'
 import type { ReportParams } from '@/lib/report/params'
 import type { ReportPeriod } from '@/lib/report/period'
+import { formatDuration } from './format'
 import { Heatmap } from './Heatmap'
 import { TrendChart } from './TrendChart'
 
@@ -20,15 +21,6 @@ export type ReportViewProps = {
 }
 
 const RANKING_VISIBLE = 10
-
-function formatDuration(ms: number): string {
-  const total = Math.round(ms / 60_000)
-  if (total <= 0) return `0 ${ta('min', 'Min.')}`
-  const hours = Math.floor(total / 60)
-  const minutes = total % 60
-  if (hours === 0) return `${minutes} ${ta('min', 'Min.')}`
-  return `${hours} ${ta('h', 'Std.')}${minutes ? ` ${minutes} ${ta('min', 'Min.')}` : ''}`
-}
 
 function Delta(props: { current: number | null; previous: number | null; locale: string }) {
   const { current, previous } = props

@@ -18,11 +18,24 @@ export type LoadedReport =
 
 const idOf = (value: unknown): number => Number(typeof value === 'object' && value !== null ? (value as { id: unknown }).id : value)
 
-export async function loadReport(
+/**
+ * Geladene Daten eines Berichts. `build` baut den Bericht für alle Gruppen (ohne Angabe) oder für eine Gruppe,
+ * ohne die Datenbank erneut zu fragen. Der Export ruft es je Gruppe nacheinander auf.
+ */
+export type ReportContext = {
+  period: ReportPeriod
+  params: ReportParams
+  locale: string
+  timeZone: string
+  groups: Array<{ id: number; name: string }>
+  build(group?: string): { data: ReportData; params: ReportParams }
+}
+
+export async function loadReportContext(
   payload: Payload,
   search: Record<string, string | string[] | undefined>,
   now: number = Date.now(),
-): Promise<LoadedReport> {
+): Promise<{ ok: true; context: ReportContext } | { ok: false; error: string }> {
   const settings = await payload.findGlobal({ slug: 'settings' })
   const dt = resolveDateTimeConfig(settings)
   const params = parseReportParams(search)
@@ -111,10 +124,34 @@ export async function loadReport(
     return { data, scoped }
   }
 
-  let built = buildFor(params.group)
-  // Gruppenberichte ohne Gruppenwahl: die schwächste Gruppe ist vorgewählt
-  if (params.view === 'groups' && !params.group && built.data.groupList.length > 0) {
-    built = buildFor(String(built.data.groupList[0].id))
+  return {
+    ok: true,
+    context: {
+      period,
+      params,
+      locale: dt.locale,
+      timeZone: dt.timezone,
+      groups: groups.map(({ id, name }) => ({ id, name })),
+      build: (group) => {
+        const built = buildFor(group)
+        return { data: built.data, params: built.scoped }
+      },
+    },
   }
-  return { ok: true, data: built.data, params: built.scoped, period, groups: groups.map(({ id, name }) => ({ id, name })) }
+}
+
+export async function loadReport(
+  payload: Payload,
+  search: Record<string, string | string[] | undefined>,
+  now: number = Date.now(),
+): Promise<LoadedReport> {
+  const loaded = await loadReportContext(payload, search, now)
+  if (!loaded.ok) return loaded
+  const { context } = loaded
+  let built = context.build(context.params.group)
+  // Gruppenberichte ohne Gruppenwahl: die schwächste Gruppe ist vorgewählt
+  if (context.params.view === 'groups' && !context.params.group && built.data.groupList.length > 0) {
+    built = context.build(String(built.data.groupList[0].id))
+  }
+  return { ok: true, data: built.data, params: built.params, period: context.period, groups: context.groups }
 }

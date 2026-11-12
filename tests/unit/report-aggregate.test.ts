@@ -241,3 +241,22 @@ test('eine Gruppe mit einem Dienst hat Eintrag in der Liste und ein Blatt', () =
   assert.ok(data.sheet)
   assert.deepEqual(data.sheet.perService, [])
 })
+
+test('die Rangliste nennt je Dienst die einzelnen Ausfälle sowie die Dauer Eingeschränkt und Wartung', () => {
+  const HOUR = 3_600_000
+  const t = octoberLength.start
+  const timeline: Timeline = [
+    { at: ANCHOR, status: 'operational' },
+    { at: t + HOUR, status: 'degraded' },
+    { at: t + 1.5 * HOUR, status: 'operational' },
+    { at: t + 3 * HOUR, status: 'partial' },
+    { at: t + 5 * HOUR, status: 'operational' },
+  ]
+  const data = buildReport(input('2026-10', [service(1, 'A', timeline)]))
+  const entry = data.ranking[0]
+  assert.equal(entry.outages.length, 1)
+  assert.equal(entry.outages[0].status, 'partial')
+  assert.equal(entry.outages[0].to - entry.outages[0].from, 2 * HOUR)
+  assert.equal(entry.degradedMs, 0.5 * HOUR)
+  assert.equal(entry.maintenanceMs, 0)
+})

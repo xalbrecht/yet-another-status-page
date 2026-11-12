@@ -1,15 +1,27 @@
 import type { Payload } from 'payload'
-import type { Service } from '@/payload-types'
 import { DEFAULT_GROUP_ICON } from '@/lib/group-icons'
 import { formatClockTime, formatDate, formatDateSlug, formatDateTime, formatTime, type DateTimeConfig } from '@/lib/datetime'
 import { t, tf } from '@/lib/i18n'
+import {
+  computeAvailability,
+  formatAvailability,
+  groupStatusAt,
+  knownSince,
+  statusAt,
+  worstStatus,
+  type AvailabilityStatus,
+  type Timeline,
+} from '@/lib/availability'
+
+export { computeAvailability, formatAvailability, groupStatusAt, knownSince, statusAt, worstStatus }
+export type { Timeline }
 
 /**
  * Lagebild: Balken der letzten 12 Stunden, Verfügbarkeit je Dienst und Einschränkungen der gewählten Rückschau.
  * Grundlage ist das Statusprotokoll (Collection „service-status-events“).
  */
 
-export type LagebildStatus = Service['status']
+export type LagebildStatus = AvailabilityStatus
 
 /** Anzahl der Striche eines Balkens: 12 Stunden zu 5 Minuten (24 Stunden zu 10 Minuten). */
 export const BAR_SLOTS = 144
@@ -52,42 +64,6 @@ export function parsePeriodDays(value: unknown, fallback: PeriodDays = PERIOD_DA
 const MINUTE = 60_000
 const HOUR = 60 * MINUTE
 const DAY = 24 * HOUR
-
-const SEVERITY: Record<LagebildStatus, number> = {
-  operational: 0,
-  maintenance: 1,
-  degraded: 2,
-  partial: 3,
-  major: 4,
-}
-
-/** Zustandsfolge eines Dienstes, aufsteigend nach Zeitpunkt (Millisekunden). */
-export type Timeline = Array<{ at: number; status: LagebildStatus }>
-
-/** Zustand eines Dienstes zum Zeitpunkt `time`. `null`: vor dem ersten Protokolleintrag unbekannt. */
-export function statusAt(timeline: Timeline, time: number): LagebildStatus | null {
-  let result: LagebildStatus | null = null
-  for (const entry of timeline) {
-    if (entry.at <= time) result = entry.status
-    else break
-  }
-  return result
-}
-
-/** Schlechtester bekannter Zustand. `null`, wenn kein Zustand bekannt ist. */
-export function worstStatus(statuses: Array<LagebildStatus | null | undefined>): LagebildStatus | null {
-  let worst: LagebildStatus | null = null
-  for (const status of statuses) {
-    if (!status) continue
-    if (worst === null || SEVERITY[status] > SEVERITY[worst]) worst = status
-  }
-  return worst
-}
-
-/** Zustand einer Gruppe: schlechtester Zustand ihrer Dienste zum Zeitpunkt `time`. */
-export function groupStatusAt(timelines: Timeline[], time: number): LagebildStatus | null {
-  return worstStatus(timelines.map((timeline) => statusAt(timeline, time)))
-}
 
 export type BarRun = {
   /** `null`: keine Daten */
@@ -156,50 +132,6 @@ export type RawPeriod = {
   start: number
   /** `null`: dauert an */
   end: number | null
-}
-
-/**
- * Verfügbarkeit eines Dienstes in Prozent: Anteil der bekannten Zeit seit `windowStart`, in der der Dienst
- * weder „Teilausfall“ noch „Schwerer Ausfall“ hatte. „Eingeschränkt“ und „Wartung“ zählen als verfügbar.
- * `null`: im Zeitraum ist kein Zustand bekannt.
- */
-export function computeAvailability(timeline: Timeline, windowStart: number, now: number): number | null {
-  let known = 0
-  let down = 0
-  let status = statusAt(timeline, windowStart)
-  let cursor = windowStart
-  const close = (until: number) => {
-    if (status === null || until <= cursor) return
-    known += until - cursor
-    if (status === 'partial' || status === 'major') down += until - cursor
-  }
-  for (const entry of timeline) {
-    if (entry.at <= windowStart) continue
-    if (entry.at > now) break
-    if (status === null) cursor = entry.at
-    else close(entry.at)
-    status = entry.status
-    cursor = entry.at
-  }
-  close(now)
-  return known === 0 ? null : ((known - down) / known) * 100
-}
-
-/**
- * Zeitpunkt, ab dem im Fenster ein Zustand bekannt ist. `windowStart`, wenn schon vor dem Fenster einer bekannt war,
- * sonst der erste Eintrag im Fenster. `null`: im Fenster ist kein Zustand bekannt.
- */
-export function knownSince(timeline: Timeline, windowStart: number, now: number): number | null {
-  if (statusAt(timeline, windowStart) !== null) return windowStart
-  const first = timeline.find((entry) => entry.at > windowStart && entry.at <= now)
-  return first ? first.at : null
-}
-
-/** Verfügbarkeit mit zwei Nachkommastellen, abgerundet: 99,996 % erscheint nicht als 100,00 %. */
-export function formatAvailability(value: number | null, locale: string): string {
-  if (value === null) return ''
-  const floored = Math.floor(value * 100) / 100
-  return `${new Intl.NumberFormat(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(floored)} %`
 }
 
 /** Zeiträume der letzten `periodDays` Tage, in denen eine Gruppe nicht „Betriebsbereit“ war. */

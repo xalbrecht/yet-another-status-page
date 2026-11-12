@@ -30,7 +30,7 @@ export const Services: CollectionConfig = {
         if (operation === 'create' || previousDoc?.status !== doc.status) {
           await req.payload.create({
             collection: 'service-status-events',
-            data: { service: doc.id, status: doc.status, changedAt: new Date().toISOString() },
+            data: { service: doc.id, status: doc.status, changedAt: new Date().toISOString(), source: 'operation' },
             req,
           })
         }
@@ -106,6 +106,15 @@ export const Services: CollectionConfig = {
       admin: {
         description: ta('Current status of the service'),
       },
+    },
+    {
+      // Zielwert des Dienstes (Konzept 4.4). Noch ohne Eingabe im Admin, leer = erbt von Gruppe oder Gesamt.
+      name: 'availabilityTarget',
+      type: 'number',
+      label: ta('Availability target (%)', 'Zielwert Verfügbarkeit (%)'),
+      min: 0,
+      max: 100,
+      admin: { hidden: true },
     },
   ],
 }

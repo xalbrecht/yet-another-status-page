@@ -213,6 +213,20 @@ export const Settings: GlobalConfig = {
             ),
           },
         },
+        {
+          name: 'availabilityTarget',
+          type: 'number',
+          label: ta('Availability target (%)', 'Zielwert Verfügbarkeit (%)'),
+          defaultValue: 99,
+          min: 0,
+          max: 100,
+          admin: {
+            description: ta(
+              'Applies to all services until a group or a service has its own value. Used by the availability report.',
+              'Gilt für alle Dienste, bis eine Gruppe oder ein Dienst einen eigenen Wert hat. Grundlage des Verfügbarkeitsberichts.',
+            ),
+          },
+        },
       ],
     },
     {

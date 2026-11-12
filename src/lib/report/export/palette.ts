@@ -18,3 +18,7 @@ export const MUTED_COLOR = '#5b6672'
 export const LINE_COLOR = '#1f5fae'
 export const GRID_COLOR = '#d9dee4'
 export const TARGET_COLOR = '#b3261e'
+
+/** Balkenfarben je Stufe der Wärmekarte: kräftiger als `HEAT_COLOR`, damit auch 100 % als Balken sichtbar ist. */
+export const BAR_COLOR = ['#1f5fae', '#6f9fd8', '#e6c455', '#e8903a', '#c8402f'] as const
+export const TRACK_COLOR = '#eef1f5'

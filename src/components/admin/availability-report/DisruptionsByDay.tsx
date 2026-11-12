@@ -12,6 +12,7 @@ const RIGHT = 10
 const TOP = 16
 const BASE = 170
 const NAME_MAX = 16
+const MAX_NAMED_BARS = 2
 
 const shortName = (name: string) => (name.length > NAME_MAX ? `${name.slice(0, NAME_MAX - 1)}…` : name)
 
@@ -38,6 +39,8 @@ export function DisruptionsByDay({ sheet }: { sheet: GroupSheetData }) {
           const count = day.bars.length
           const barWidth = Math.min(14, (slot * 0.9) / Math.max(1, count))
           const left = center - (barWidth * count) / 2
+          // Ab drei Balken überlappen die senkrechten Namen: dann nur die Zahl der Dienste, die Namen stehen im Tooltip
+          const showNames = count <= MAX_NAMED_BARS
           const labelled = day.bars.length > 0 || day.dayOfMonth === 1 || day.dayOfMonth % 5 === 0 || index === sheet.perDay.length - 1
           return (
             <g key={day.day}>
@@ -49,10 +52,11 @@ export function DisruptionsByDay({ sheet }: { sheet: GroupSheetData }) {
                     <rect x={x} y={BASE - height} width={Math.max(1, barWidth - 1)} height={height} className={`availability-report__sev-${bar.status}`}>
                       <title>{`${bar.name}, ${day.dayOfMonth}.: ${(bar.ms / 3_600_000).toFixed(1)} ${hoursLabel}`}</title>
                     </rect>
-                    <text transform={`translate(${x + barWidth / 2 - 4},${BASE + 22}) rotate(90)`}>{shortName(bar.name)}</text>
+                    {showNames && <text transform={`translate(${x + barWidth / 2 - 4},${BASE + 22}) rotate(90)`}>{shortName(bar.name)}</text>}
                   </g>
                 )
               })}
+              {!showNames && <text transform={`translate(${center - 4},${BASE + 22}) rotate(90)`}>{count} {ta('services', 'Dienste')}</text>}
               {labelled && <text x={center} y={BASE + 14} textAnchor="middle">{day.dayOfMonth}</text>}
             </g>
           )

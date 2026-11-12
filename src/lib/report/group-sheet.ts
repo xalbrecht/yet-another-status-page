@@ -21,14 +21,25 @@ export type GroupSheetData = {
   }>
 }
 
+/**
+ * Beginn des nächsten Tages in der Zeitzone. Gibt es Mitternacht am Umstellungstag nicht (z. B. America/Santiago), liefert
+ * `startOfZonedDay` den Ausgangspunkt selbst zurück. Dann geht es stundenweise weiter, damit die Schleifen enden.
+ */
+function nextDayStart(cursor: number, timeZone: string): number {
+  const next = startOfZonedDay(addZonedDays(new Date(cursor), 1, timeZone), timeZone).getTime()
+  return next > cursor ? next : cursor + 3_600_000
+}
+
 /** Teilt einen Ausfall an den Tagesgrenzen der Zeitzone. `day` ist `YYYY-MM-DD`, die Summe der `ms` gleich `to - from`. */
 export function splitOutageByDay(outage: { from: number; to: number }, timeZone: string): Array<{ day: string; ms: number }> {
   const parts: Array<{ day: string; ms: number }> = []
   let cursor = outage.from
   while (cursor < outage.to) {
-    const nextMidnight = startOfZonedDay(addZonedDays(new Date(cursor), 1, timeZone), timeZone).getTime()
-    const end = Math.min(outage.to, nextMidnight)
-    parts.push({ day: formatDateSlug(new Date(cursor), timeZone), ms: end - cursor })
+    const end = Math.min(outage.to, nextDayStart(cursor, timeZone))
+    const day = formatDateSlug(new Date(cursor), timeZone)
+    const last = parts[parts.length - 1]
+    if (last && last.day === day) last.ms += end - cursor
+    else parts.push({ day, ms: end - cursor })
     cursor = end
   }
   return parts
@@ -45,10 +56,12 @@ export function buildGroupSheet(input: {
   const dayIndex = new Map<string, GroupSheetData['perDay'][number]>()
   for (let cursor = startOfZonedDay(new Date(month.start), timeZone).getTime(); cursor < month.end; ) {
     const day = formatDateSlug(new Date(cursor), timeZone)
-    const entry = { day, dayOfMonth: Number.parseInt(day.slice(8, 10), 10), bars: [] }
-    days.push(entry)
-    dayIndex.set(day, entry)
-    cursor = startOfZonedDay(addZonedDays(new Date(cursor), 1, timeZone), timeZone).getTime()
+    if (!dayIndex.has(day)) {
+      const entry = { day, dayOfMonth: Number.parseInt(day.slice(8, 10), 10), bars: [] }
+      days.push(entry)
+      dayIndex.set(day, entry)
+    }
+    cursor = nextDayStart(cursor, timeZone)
   }
 
   const perService: GroupSheetData['perService'] = []

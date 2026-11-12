@@ -19,7 +19,8 @@ export function GroupBars(props: { rows: RankingRow[]; locale: string }) {
           <div className="availability-report__bar-text">
             {row.availability === null ? '–' : formatAvailability(row.availability, locale)}
             {' · '}
-            {row.downMs > 0 ? formatDuration(row.downMs) : ta('no outage', 'kein Ausfall')}
+            {row.downMs - row.maintenanceDownMs > 0 ? formatDuration(row.downMs - row.maintenanceDownMs) : ta('no outage', 'kein Ausfall')}
+            {row.maintenanceDownMs > 0 && ` + ${formatDuration(row.maintenanceDownMs)} ${ta('maintenance (counts as outage)', 'Wartung (zählt als Ausfall)')}`}
           </div>
         </div>
       ))}

@@ -129,3 +129,38 @@ test('ohne sheet (keine Monate) fehlen Block 3 und 4, der Rest erscheint', () =>
   assert.doesNotMatch(markup, /data-testid="sheet-by-service"/)
   assert.match(markup, /data-testid="report-heat"/)
 })
+
+const bar = (id: number, name: string, status: 'partial' | 'major', ms: number) => ({ serviceId: id, name, status, ms })
+
+test('Block 4: an einem Tag mit zwei Balken stehen beide Dienstnamen', () => {
+  const sheet: GroupSheetData = { ...sheetWithOutages, perDay: days({ 20: [bar(1, 'Eins', 'major', HOUR), bar(2, 'Zwei', 'partial', HOUR)] }) }
+  const block = dayBlock(render(dataWith({ sheet })))
+  assert.match(block, />Eins</)
+  assert.match(block, />Zwei</)
+})
+
+test('Block 4: ab drei Balken an einem Tag steht die Zahl der Dienste statt der überlappenden Namen', () => {
+  const sheet: GroupSheetData = {
+    ...sheetWithOutages,
+    perDay: days({ 20: [bar(1, 'Alpha', 'major', 3 * HOUR), bar(2, 'Beta', 'major', 2 * HOUR), bar(3, 'Gamma', 'partial', HOUR)] }),
+  }
+  const block = dayBlock(render(dataWith({ sheet })))
+  assert.equal((block.match(/<rect/g) ?? []).length, 3, 'die Balken bleiben')
+  assert.doesNotMatch(block, />Alpha</)
+  assert.match(block, />3 Dienste<|>3 services</)
+  assert.match(block, /<title>Alpha, 20\./, 'der Name steht im Tooltip')
+})
+
+test('Block 2 nennt bei Wartungsart B den Wartungsanteil getrennt von der Störungsdauer', () => {
+  const withMaintenance: RankingRow = { ...row(1, 'MACH', 97, 5 * HOUR), maintenanceDownMs: 3 * HOUR, outageCount: 1 }
+  const markup = render(dataWith({ ranking: [withMaintenance] }))
+  const services = markup.slice(markup.indexOf('data-testid="sheet-services"'))
+  assert.match(services, /2 Std\.|2 h/)
+  assert.match(services, /3 Std\. Wartung|3 h maintenance/)
+  assert.match(services, /zählt als Ausfall|counts as outage/)
+})
+
+test('Block 2 zeigt ohne Wartungsanteil nur die Dauer', () => {
+  const services = render(dataWith()).slice(render(dataWith()).indexOf('data-testid="sheet-services"'))
+  assert.doesNotMatch(services.slice(0, services.indexOf('</section>')), /Wartung|maintenance/)
+})

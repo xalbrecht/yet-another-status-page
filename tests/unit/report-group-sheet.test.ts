@@ -93,3 +93,22 @@ test('buildGroupSheet endet im laufenden Monat mit dem heutigen Tag', () => {
   assert.equal(sheet.perDay.length, 14)
   assert.equal(sheet.perDay[13].dayOfMonth, 14)
 })
+
+// Zeitzone, in der die Sommerzeit um Mitternacht beginnt: der 6.9.2026 hat dort keinen Tagesbeginn 00:00
+const SANTIAGO = 'America/Santiago'
+
+test('splitOutageByDay endet auch in einer Zeitzone ohne Mitternacht am Umstellungstag und behält die Summe', () => {
+  const from = ms('2026-09-05T12:00:00Z')
+  const to = ms('2026-09-08T12:00:00Z')
+  const parts = splitOutageByDay({ from, to }, SANTIAGO)
+  assert.equal(parts.reduce((sum, part) => sum + part.ms, 0), to - from)
+  assert.ok(parts.length <= 5, `zu viele Einträge: ${parts.length}`)
+  assert.equal(new Set(parts.map((part) => part.day)).size, parts.length, 'jeder Tag höchstens einmal')
+})
+
+test('buildGroupSheet endet in dieser Zeitzone und führt jeden Tag genau einmal auf', () => {
+  const september = { key: '2026-09', label: 'September 2026', start: ms('2026-09-01T04:00:00Z'), end: ms('2026-10-01T03:00:00Z'), partial: false }
+  const sheet = buildGroupSheet({ month: september, services: [serviceOf(1, 'A', [baseline])], mode: 'A', timeZone: SANTIAGO })
+  assert.equal(sheet.perDay.length, 30)
+  assert.equal(new Set(sheet.perDay.map((day) => day.day)).size, 30)
+})

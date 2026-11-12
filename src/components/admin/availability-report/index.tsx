@@ -7,7 +7,7 @@ import { loadReport } from '@/lib/report/load'
 import { periodOptions } from '@/lib/report/period'
 import { resolveDateTimeConfig } from '@/lib/datetime'
 import { ta } from '@/lib/i18n/admin'
-import { parseReportParams, reportHref } from '@/lib/report/params'
+import { parseReportParams, reportHref, reportTabHrefs } from '@/lib/report/params'
 import { GroupList } from './GroupList'
 import { GroupSheet } from './GroupSheet'
 import { ReportControls } from './ReportControls'
@@ -29,16 +29,15 @@ export async function AvailabilityReportView({ initPageResult, params, searchPar
   const requested = parseReportParams(search)
   // Der Gesamtbericht zeigt immer alle Gruppen: eine Gruppe in der Adresse gilt nur für die Gruppenberichte
   const result = await loadReport(req.payload, requested.view === 'overall' ? { ...search, group: undefined } : search, now)
-  const reportParams = result.ok ? result.params : requested
+  // Bei ungültiger Gruppe (z. B. gelöscht, altes Lesezeichen) gilt keine Gruppe mehr: Formular und Tabs tragen sie nicht weiter
+  const groupInvalid = result.ok && Boolean(result.data.error) && Boolean(requested.group)
+  const reportParams = { ...(result.ok ? result.params : requested), ...(groupInvalid ? { group: undefined } : {}) }
   const options = periodOptions(now, dt.timezone, dt.locale)
   const periodKey = result.ok ? result.period.key : requested.period ?? options[1]?.value ?? 'custom'
 
   const controls = <ReportControls params={reportParams} periodKey={periodKey} periodOptions={options} />
   const tabs = (
-    <ViewTabs
-      active={requested.view}
-      hrefs={{ overall: reportHref(search, { view: 'overall' }), groups: reportHref(search, { view: 'groups' }) }}
-    />
+    <ViewTabs active={requested.view} hrefs={reportTabHrefs(search, groupInvalid)} />
   )
 
   return (

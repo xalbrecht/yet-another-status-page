@@ -60,3 +60,18 @@ export function reportHref(
     .join('&')
   return query ? `${REPORT_PATH}?${query}` : REPORT_PATH
 }
+
+/**
+ * Adressen der beiden Tabs. Beide behalten die Auswahl samt Gruppe. Ist die Gruppe ungültig (Fehlertext statt Bericht),
+ * entfällt sie, sonst führt jeder Klick wieder zum Fehler.
+ */
+export function reportTabHrefs(
+  search: Record<string, string | string[] | undefined>,
+  groupInvalid: boolean,
+): { overall: string; groups: string } {
+  const keep = groupInvalid ? { group: undefined } : {}
+  return {
+    overall: reportHref(search, { ...keep, view: 'overall' }),
+    groups: reportHref(search, { ...keep, view: 'groups' }),
+  }
+}

@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { parseReportParams, reportHref } from '@/lib/report/params'
+import { parseReportParams, reportHref, reportTabHrefs } from '@/lib/report/params'
 
 test('ohne Angaben gelten die Standardwerte', () => {
   assert.deepEqual(parseReportParams({}), {
@@ -54,4 +54,18 @@ test('reportHref baut die Adresse aus der Auswahl und den Änderungen, Schlüsse
 test('reportHref entfernt einen Wert mit undefined und lässt leere Werte weg', () => {
   assert.equal(reportHref({ group: '7' }, { group: undefined }), '/admin/verfuegbarkeitsbericht')
   assert.equal(reportHref({ period: ['2026-10', '2026-09'], from: '' }, {}), '/admin/verfuegbarkeitsbericht?period=2026-10')
+})
+
+test('reportTabHrefs behält die Gruppe, solange sie gültig ist', () => {
+  assert.deepEqual(reportTabHrefs({ view: 'groups', group: '7', period: '2026-10' }, false), {
+    overall: '/admin/verfuegbarkeitsbericht?group=7&period=2026-10&view=overall',
+    groups: '/admin/verfuegbarkeitsbericht?group=7&period=2026-10&view=groups',
+  })
+})
+
+test('reportTabHrefs lässt eine ungültige Gruppe weg, damit die Tabs keine Sackgasse sind', () => {
+  assert.deepEqual(reportTabHrefs({ view: 'groups', group: '99999999', period: '2026-10' }, true), {
+    overall: '/admin/verfuegbarkeitsbericht?period=2026-10&view=overall',
+    groups: '/admin/verfuegbarkeitsbericht?period=2026-10&view=groups',
+  })
 })

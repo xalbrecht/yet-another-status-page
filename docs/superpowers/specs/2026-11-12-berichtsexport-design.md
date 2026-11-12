@@ -69,14 +69,14 @@ Ein Blatt je Gruppe mit fünf Blöcken von oben nach unten (entschieden, Mockup 
    - Als Einzelbild stehen nur die Tage mit Störung (Fassung B), damit die Namen lesbar bleiben (entschieden).
 5. **Wärmekarte der Dienste:** Dienste mal Monate, Farbstufen wie auf der Berichtsseite.
 
-Block 3 und 4 erscheinen nur, wenn die Gruppe im Monat mindestens eine Störung hatte (entschieden).
+Block 3 und 4 erscheinen nur, wenn die Gruppe im Monat mindestens eine Störung hatte (entschieden). Block 3 erscheint bei Ausfall oder Einschränkung, Block 4 nur bei mindestens einem Ausfall: „Eingeschränkt“ hat in der Berechnung keine eigenen Zeitabschnitte (Festlegung im Plan `docs/superpowers/plans/2026-11-12-gruppenblatt.md`).
 
 Das Gruppenblatt ist auch auf der Berichtsseite sichtbar. Die Seite bekommt zwei Tabs (entschieden):
 
 - **Gesamtbericht:** der bisherige Bericht, unverändert.
 - **Gruppenberichte:** links eine Liste aller Gruppen, schwächste zuerst, mit Farbpunkt (unter Ziel, nahe am Ziel, im Ziel) und Verfügbarkeit. Rechts steht das Gruppenblatt der gewählten Gruppe. Beim Öffnen ist die schwächste Gruppe gewählt. Das Auswahlfeld „Gruppe“ entfällt.
 
-Die Auswahl über den Tabs (Zeitraum, Rechenart, Wartung) und die Schaltfläche „Alles herunterladen (ZIP)“ gelten für beide Tabs. Die Adresse enthält Ansicht und Gruppe (`?ansicht=gruppen&gruppe=<id>`), damit sich ein Blatt als Link weitergeben lässt. Die Zahlen werden einmal für den ganzen Zeitraum berechnet, ein Gruppenblatt zeichnet sich erst beim Klick.
+Die Auswahl über den Tabs (Zeitraum, Rechenart, Wartung) und die Schaltfläche „Alles herunterladen (ZIP)“ gelten für beide Tabs. Die Adresse enthält Ansicht und Gruppe (`?view=groups&group=<id>`), damit sich ein Blatt als Link weitergeben lässt. Die Zahlen werden einmal für den ganzen Zeitraum berechnet, ein Gruppenblatt zeichnet sich erst beim Klick.
 
 Auf Dev gibt es 36 Gruppen mit 166 Diensten, elf Gruppen haben nur einen Dienst (Stand 12.11.2026). Solche Gruppen werden wie alle anderen geführt: volles Gruppenblatt, normale Stelle in der Liste (entschieden). Block 2 und 5 zeigen dann dieselbe Zeile.
 

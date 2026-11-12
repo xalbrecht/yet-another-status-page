@@ -31,6 +31,13 @@ The file runs in `serial` mode, because the tests change the **global settings**
 - `tests/unit/incident-classification.test.ts` and `tests/unit/status-reconstruction.test.ts`: classification of incidents and the reconstructed status log.
 - The E2E environment creates the schema by schema push, so the SQL of the migrations `20261112_100000` and `20261112_100100` does not run there. Run them against a copy of a database with real incidents (`npx payload migrate` with `DATABASE_URI` pointing to the copy) and check the counts the second migration logs.
 
+### Status log maintenance
+
+- `tests/e2e/status-log-rebuild.spec.ts` (serial): the preview writes nothing, running replaces only reconstructed entries and keeps the operation entries, a second run changes nothing.
+- `tests/e2e/maintenance-conversion.spec.ts` (serial): preview, conversion of a resolved maintenance incident (completed maintenance, incident deleted, no notification draft), second run finds nothing, open incidents and incidents classified by hand stay.
+- `tests/unit/maintenance-conversion.test.ts`, `tests/unit/status-log-view.test.tsx` and the additions to `tests/unit/incident-classification.test.ts`: planning of the conversion, display of the admin page, classification by hand.
+- The admin page itself is not covered by an automatic browser test. Check it by hand: create a user (`POST /api/users/first-register` on a fresh test environment), log in, open `/admin/protokoll-pflege`, run both previews.
+
 ### Not covered
 
 - Mobile layout and tooltips by touch (checked by hand, see [Browser checklist](./browser-checklist.md)).

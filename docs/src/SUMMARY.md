@@ -14,6 +14,7 @@
 - [Overview](./admin/overview.md)
 - [Managing Services](./admin/services.md)
 - [Situation Overview](./admin/situation-overview.md)
+- [Maintaining the Status Log](./admin/status-log-maintenance.md)
 - [Incidents](./admin/incidents.md)
 - [Maintenances](./admin/maintenances.md)
 - [Notifications](./admin/notifications.md)

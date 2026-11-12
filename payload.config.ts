@@ -102,6 +102,13 @@ export default buildConfig({
     },
     components: {
       beforeDashboard: ['@/components/admin/DashboardWidgets#DashboardWidgets'],
+      afterNavLinks: ['@/components/admin/status-log/StatusLogNavLink#StatusLogNavLink'],
+      views: {
+        statusLog: {
+          Component: '@/components/admin/status-log#StatusLogAdminView',
+          path: '/protokoll-pflege',
+        },
+      },
     },
     importMap: { autoGenerate },
   },

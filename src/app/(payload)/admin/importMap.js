@@ -11,9 +11,11 @@ import { ItalicFeatureClient as ItalicFeatureClient_e70f5e05f09f93e00b997edb1ef0
 import { ParagraphFeatureClient as ParagraphFeatureClient_e70f5e05f09f93e00b997edb1ef0c864 } from '@payloadcms/richtext-lexical/client'
 import { SendNotificationCollectionButton as SendNotificationCollectionButton_d01a4935353b96154d106bbf01b3d3d7 } from '@/components/admin/SendNotificationCollectionButton'
 import { RecipientCountField as RecipientCountField_a92dd7a84f1ac5bf2f0c7a2ae42e7fcd } from '@/components/admin/RecipientCountField'
+import { StatusLogNavLink as StatusLogNavLink_aaf557aedce5b7e65dd708b4b56f4d66 } from '@/components/admin/status-log/StatusLogNavLink'
 import { DashboardWidgets as DashboardWidgets_55e8c9f1aba7d352d950aef48719be05 } from '@/components/admin/DashboardWidgets'
-import { VercelBlobClientUploadHandler as VercelBlobClientUploadHandler_16c82c5e25f430251a3e3ba57219ff4e } from '@payloadcms/storage-vercel-blob/client'
+import { StatusLogAdminView as StatusLogAdminView_99d04bdba5865d3d3bff5f4a304dc81d } from '@/components/admin/status-log'
 import { CollectionCards as CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1 } from '@payloadcms/next/rsc'
+import { VercelBlobClientUploadHandler as VercelBlobClientUploadHandler_16c82c5e25f430251a3e3ba57219ff4e } from '@payloadcms/storage-vercel-blob/client'
 
 /** @type import('payload').ImportMap */
 export const importMap = {
@@ -30,7 +32,9 @@ export const importMap = {
   "@payloadcms/richtext-lexical/client#ParagraphFeatureClient": ParagraphFeatureClient_e70f5e05f09f93e00b997edb1ef0c864,
   "@/components/admin/SendNotificationCollectionButton#SendNotificationCollectionButton": SendNotificationCollectionButton_d01a4935353b96154d106bbf01b3d3d7,
   "@/components/admin/RecipientCountField#RecipientCountField": RecipientCountField_a92dd7a84f1ac5bf2f0c7a2ae42e7fcd,
+  "@/components/admin/status-log/StatusLogNavLink#StatusLogNavLink": StatusLogNavLink_aaf557aedce5b7e65dd708b4b56f4d66,
   "@/components/admin/DashboardWidgets#DashboardWidgets": DashboardWidgets_55e8c9f1aba7d352d950aef48719be05,
-  "@payloadcms/storage-vercel-blob/client#VercelBlobClientUploadHandler": VercelBlobClientUploadHandler_16c82c5e25f430251a3e3ba57219ff4e,
-  "@payloadcms/next/rsc#CollectionCards": CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1
+  "@/components/admin/status-log#StatusLogAdminView": StatusLogAdminView_99d04bdba5865d3d3bff5f4a304dc81d,
+  "@payloadcms/next/rsc#CollectionCards": CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1,
+  "@payloadcms/storage-vercel-blob/client#VercelBlobClientUploadHandler": VercelBlobClientUploadHandler_16c82c5e25f430251a3e3ba57219ff4e
 }

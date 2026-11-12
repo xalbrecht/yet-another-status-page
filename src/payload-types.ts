@@ -295,6 +295,10 @@ export interface Incident {
    */
   impact: 'degraded' | 'partial' | 'major';
   /**
+   * Gilt für die Nachrechnung des Verfügbarkeitsverlaufs vor dem 10.11.2026. „Automatisch“ bewertet Titel und Text der Aktualisierungen.
+   */
+  availabilityClass?: ('auto' | 'none' | 'degraded' | 'partial' | 'major') | null;
+  /**
    * Verlauf der Aktualisierungen zu dieser Störung. Mindestens eine Aktualisierung ist erforderlich.
    */
   updates: {
@@ -782,6 +786,7 @@ export interface IncidentsSelect<T extends boolean = true> {
   resolvedAt?: T;
   affectedServices?: T;
   impact?: T;
+  availabilityClass?: T;
   updates?:
     | T
     | {

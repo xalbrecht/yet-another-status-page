@@ -95,6 +95,18 @@ Das Lagebild und der Bericht rechnen mit denselben Regeln und demselben Code. Ei
 - Für Zeiten ab dem 10.11.2026 bleiben die Zahlen des Lagebilds unverändert. Ein Test prüft das mit festen Eingaben.
 - Gemeinsam sind nur die Rechenregeln. Das Lagebild zeigt in der ersten Fassung weder den Zielwert noch eine Verfügbarkeit je Gruppe (entschieden am 12.11.2026, Zielwert im Lagebild später).
 
+### 4.7 Wartung in der Berechnung (entschieden am 12.11.2026)
+
+Die Wartungszeit kommt aus den **erfassten Wartungen** (Beginn bis Ende, je betroffenem Dienst), nicht aus dem Zustand „Wartung“ am Dienst. Dieser Zustand bleibt eine Anzeige für die Statusseite. Der Bericht legt die Wartungszeit über den Verlauf des Zustands und bietet drei Berechnungsarten zur Auswahl:
+
+| Art | Wartung wird behandelt als | Rechnung | Beispiel (44.640 Minuten, Störung 90 Minuten außerhalb der Wartung, Wartung 600 Minuten) |
+|---|---|---|---|
+| **A** (Voreinstellung) | verfügbare Zeit, Störungen in der Wartung zählen nicht | (T − Ausfall) / T | 99,79 % |
+| **B** | Ausfallzeit | (T − Ausfall − Wartung) / T | 98,45 % |
+| **C** | aus der Gesamtzeit herausgenommen | (T − Wartung − Ausfall) / (T − Wartung) | 99,79 % |
+
+Dabei ist T die Zeit des Berichtszeitraums. Art A entspricht der Regel in Abschnitt 4.1 und dem Lagebild. Die Wartungszeit steht in allen Arten als eigene Zeile. Gründe für die Arten: ITIL und SAP nehmen geplante Wartung aus der vereinbarten Servicezeit aus (Art C), AWS rät davon ab (Art B), Atlassian Statuspage zählt Wartung nicht als Ausfall (Art A). Später möglich, jetzt nicht vorgesehen: Gewichtung des Teilausfalls (Atlassian: 30 %) und Servicezeiten (zum Beispiel Montag bis Freitag 7 bis 18 Uhr).
+
 ## 5. Nachrechnung vor dem 10.11.2026
 
 Das Statusprotokoll wird rückwirkend aus den Vorfällen gefüllt. Aus jedem Vorfall mit Dienstverknüpfung entsteht je Dienst ein Zeitraum vom Anlegen bis zum Lösen (`created_at` bis `resolved_at`) mit einem Status. Überlappende Zeiträume eines Dienstes zählen mit dem schlechtesten Status einmal. Nach dem Lösen gilt „Betriebsbereit“.

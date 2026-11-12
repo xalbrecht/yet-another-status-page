@@ -70,3 +70,42 @@ test('Zusammenfassung zählt unsichere Vorfälle und Vorfälle ohne Dienst', () 
     { unsure: 1, withoutService: 2 },
   )
 })
+
+test('Einordnung von Hand gilt immer und zählt als eindeutig', () => {
+  assert.deepEqual(
+    classifyIncident({ title: 'Störung Autista - Analysephase', messages: [boilerplate], availabilityClass: 'major' }),
+    { status: 'major', sure: true },
+  )
+  assert.deepEqual(
+    classifyIncident({ title: 'Vollständiger Serviceausfall X', messages: [], availabilityClass: 'none' }),
+    { status: 'none', sure: true },
+  )
+})
+
+test('Einordnung von Hand gewinnt gegen Wartung im Titel und gegen Stichwörter im Text', () => {
+  assert.deepEqual(
+    classifyIncident({ title: 'Nichtverfügbarkeit des Services X aufgrund von Wartungsarbeiten', messages: [], availabilityClass: 'degraded' }),
+    { status: 'degraded', sure: true },
+  )
+  assert.deepEqual(
+    classifyIncident({ title: 'Teilweiser Ausfall X', messages: ['Es gibt Performance-Probleme.'], availabilityClass: 'partial' }),
+    { status: 'partial', sure: true },
+  )
+})
+
+test('Automatisch und fehlender Wert verhalten sich wie bisher', () => {
+  const input = { title: 'Störung Autista - Analysephase', messages: [boilerplate] }
+  assert.deepEqual(classifyIncident({ ...input, availabilityClass: 'auto' }), { status: 'partial', sure: false })
+  assert.deepEqual(classifyIncident({ ...input, availabilityClass: null }), { status: 'partial', sure: false })
+  assert.deepEqual(classifyIncident(input), { status: 'partial', sure: false })
+})
+
+test('Zusammenfassung zählt Vorfälle mit Einordnung von Hand nicht als unsicher', () => {
+  assert.deepEqual(
+    summarizeClassification([
+      { title: 'Störung Autista - Analysephase', messages: [], serviceCount: 1, availabilityClass: 'partial' },
+      { title: 'Störung Exchange - Analysephase', messages: [], serviceCount: 1 },
+    ]),
+    { unsure: 1, withoutService: 0 },
+  )
+})

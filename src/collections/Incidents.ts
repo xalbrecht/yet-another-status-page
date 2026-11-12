@@ -207,6 +207,27 @@ export const Incidents: CollectionConfig = {
       },
     },
     {
+      // Einordnung für die Nachrechnung des Verlaufs vor dem 10.11.2026 (Konzept 5). Ein Wert ungleich „auto“ gilt immer.
+      name: 'availabilityClass',
+      type: 'select',
+      defaultValue: 'auto',
+      label: ta('Classification for the availability report', 'Einordnung für den Verfügbarkeitsbericht'),
+      options: [
+        { label: ta('Automatic', 'Automatisch'), value: 'auto' },
+        { label: ta('No impact', 'Keine Auswirkung'), value: 'none' },
+        { label: ta('Degraded Performance'), value: 'degraded' },
+        { label: ta('Partial Outage'), value: 'partial' },
+        { label: ta('Major Outage'), value: 'major' },
+      ],
+      admin: {
+        position: 'sidebar',
+        description: ta(
+          'Applies to the reconstruction of the availability history before 10 Nov 2026. "Automatic" rates the title and the text of the updates.',
+          'Gilt für die Nachrechnung des Verfügbarkeitsverlaufs vor dem 10.11.2026. „Automatisch“ bewertet Titel und Text der Aktualisierungen.',
+        ),
+      },
+    },
+    {
       name: 'updates',
       type: 'array',
       required: true,

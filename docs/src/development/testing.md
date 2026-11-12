@@ -4,7 +4,8 @@ This page describes how the tests of this fork are run, what they cover and whic
 
 ## What exists
 
-- **End-to-end tests only** (Playwright, project `chromium`, folder `tests/e2e/`). There is no unit test setup.
+- **End-to-end tests** (Playwright, project `chromium`, folder `tests/e2e/`).
+- **Unit tests for pure calculation code** (`npm run test:unit`, folder `tests/unit/`, `tsx --test`). They need neither a browser nor a running server. They cover the availability rules in `src/lib/availability.ts`.
 - The tests run against **`next dev`** in a Docker container, not against the production image. Behavior that differs in the production build (compile times, memory) is not covered.
 - Most tests create their own data through the Payload REST API (`tests/utils/payload-helpers.ts`) and use unique names (`Date.now()`), so they do not depend on the seed data.
 
@@ -22,6 +23,13 @@ The file runs in `serial` mode, because the tests change the **global settings**
 | filter per group | Group filter, address (`?gruppe=`) |
 | incident sets service status | Incident impact sets the status and resolving resets it |
 | worst open status wins | Two open incidents on one service |
+
+### Availability target and reconstruction
+
+- `tests/e2e/availability-target.spec.ts` (serial, resets the setting): default 99, saving 99.5, value above 100 rejected.
+- `tests/unit/availability.test.ts`: availability rules and target resolution (service, group, global).
+- `tests/unit/incident-classification.test.ts` and `tests/unit/status-reconstruction.test.ts`: classification of incidents and the reconstructed status log.
+- The E2E environment creates the schema by schema push, so the SQL of the migrations `20261112_100000` and `20261112_100100` does not run there. Run them against a copy of a database with real incidents (`npx payload migrate` with `DATABASE_URI` pointing to the copy) and check the counts the second migration logs.
 
 ### Not covered
 

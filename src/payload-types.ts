@@ -217,6 +217,7 @@ export interface ServiceGroup {
         | 'House'
       )
     | null;
+  availabilityTarget?: number | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -244,6 +245,7 @@ export interface Service {
    * Aktueller Status des Dienstes
    */
   status: 'operational' | 'degraded' | 'partial' | 'major' | 'maintenance';
+  availabilityTarget?: number | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -258,6 +260,7 @@ export interface ServiceStatusEvent {
   service: number | Service;
   status: 'operational' | 'degraded' | 'partial' | 'major' | 'maintenance';
   changedAt: string;
+  source: 'operation' | 'reconstructed';
   updatedAt: string;
   createdAt: string;
 }
@@ -737,6 +740,7 @@ export interface ServiceGroupsSelect<T extends boolean = true> {
   slug?: T;
   description?: T;
   icon?: T;
+  availabilityTarget?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -751,6 +755,7 @@ export interface ServicesSelect<T extends boolean = true> {
   description?: T;
   group?: T;
   status?: T;
+  availabilityTarget?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -762,6 +767,7 @@ export interface ServiceStatusEventsSelect<T extends boolean = true> {
   service?: T;
   status?: T;
   changedAt?: T;
+  source?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -1044,6 +1050,10 @@ export interface Setting {
    */
   lagebildBarHours?: ('12' | '24') | null;
   /**
+   * Gilt für alle Dienste, bis eine Gruppe oder ein Dienst einen eigenen Wert hat. Grundlage des Verfügbarkeitsberichts.
+   */
+  availabilityTarget?: number | null;
+  /**
    * How long completed and cancelled maintenances stay visible on the status page after they enter a terminal state.
    */
   maintenanceTerminalRetentionHours?: number | null;
@@ -1235,6 +1245,7 @@ export interface SettingsSelect<T extends boolean = true> {
   lagebildVariant?: T;
   lagebildPeriodDays?: T;
   lagebildBarHours?: T;
+  availabilityTarget?: T;
   maintenanceTerminalRetentionHours?: T;
   timezone?: T;
   locale?: T;

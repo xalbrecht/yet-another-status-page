@@ -191,3 +191,53 @@ test('Art B: ein Dienst mit nur Wartung zählt als schwächster Dienst, die Wart
   assert.equal(modeA.weakest.length, 0)
   assert.equal(modeA.ranking[0].maintenanceDownMs, 0)
 })
+
+const inOctober = (share: number): Timeline => timelineWith([[octoberLength.start, octoberLength.start + octoberLength.ms * share]])
+const fourGroups: ReportInput['groups'] = [
+  { id: 1, name: 'Eins' },
+  { id: 2, name: 'Zwei' },
+  { id: 3, name: 'Drei' },
+  { id: 4, name: 'Vier' },
+]
+const fourGroupServices = () => [
+  service(1, 'A', inOctober(0.019), { groupId: 1 }),
+  service(2, 'B', inOctober(0.0095), { groupId: 2 }),
+  service(3, 'C', timelineWith([]), { groupId: 3 }),
+  service(4, 'D', [], { groupId: 4 }),
+]
+
+test('groupList: schwächste Gruppe zuerst, Gruppe ohne bekannte Zustände zuletzt mit Verfügbarkeit null', () => {
+  const data = buildReport(input('2026-10', fourGroupServices(), { groups: fourGroups }))
+  assert.deepEqual(data.groupList.map((entry) => entry.name), ['Eins', 'Zwei', 'Drei', 'Vier'])
+  near(data.groupList[0].availability, 98.1, 1e-3)
+  near(data.groupList[1].availability, 99.05, 1e-3)
+  assert.equal(data.groupList[3].availability, null)
+  assert.deepEqual(data.groupList.map((entry) => entry.level), [4, 3, 0, 0])
+  assert.equal(data.groupList[0].serviceCount, 1)
+  assert.equal(data.groupList[0].target, 99)
+})
+
+test('groupList enthält nur Gruppen mit Diensten und gilt unabhängig von der Gruppenwahl', () => {
+  const groups = [...fourGroups, { id: 5, name: 'Leer' }]
+  const all = buildReport(input('2026-10', fourGroupServices(), { groups }))
+  const scoped = buildReport(input('2026-10', fourGroupServices(), { groups, params: { group: '2' } }))
+  assert.equal(all.groupList.length, 4)
+  assert.deepEqual(scoped.groupList, all.groupList)
+})
+
+test('sheet ist ohne Gruppenwahl null, mit Gruppenwahl der letzte Monat des Zeitraums', () => {
+  const unscoped = buildReport(input('2026-10', fourGroupServices(), { groups: fourGroups }))
+  assert.equal(unscoped.sheet, null)
+  const quarter = buildReport(input('2026-Q3', fourGroupServices(), { groups: fourGroups, params: { group: '1' } }))
+  assert.equal(quarter.sheet?.month.key, '2026-09')
+  const month = buildReport(input('2026-10', fourGroupServices(), { groups: fourGroups, params: { group: '1' } }))
+  assert.equal(month.sheet?.month.key, '2026-10')
+  assert.equal(month.sheet?.perService.length, 1)
+})
+
+test('eine Gruppe mit einem Dienst hat Eintrag in der Liste und ein Blatt', () => {
+  const data = buildReport(input('2026-10', fourGroupServices(), { groups: fourGroups, params: { group: '3' } }))
+  assert.equal(data.groupList.find((entry) => entry.id === 3)?.serviceCount, 1)
+  assert.ok(data.sheet)
+  assert.deepEqual(data.sheet.perService, [])
+})

@@ -1,6 +1,6 @@
 # Availability Report
 
-The availability report (Verfügbarkeitsbericht, `/admin/verfuegbarkeitsbericht`, menu entry below the collections) shows how available the services were in a period. It is meant for management and product managers: key figures, the weakest services, the development over 12 months, a heat map and a ranking of all services. Only signed-in users can open it.
+The availability report (Verfügbarkeitsbericht, `/admin/verfuegbarkeitsbericht`, menu entry below the collections) shows how available the services were in a period. It is meant for management and product managers. Only signed-in users can open it. The page has two views, **Overall report** and **Group reports** (see [Views](#views)).
 
 The report calculates from the status log (see [Maintaining the Status Log](./status-log-maintenance.md)). It does not read incidents.
 
@@ -11,13 +11,30 @@ All choices are on the page. Changing a selection reloads the page and puts the 
 | Field | Meaning |
 |---|---|
 | Period | a month, quarter, half year, year or a custom period (from and to, both days included) |
-| Group | all groups, or one group with its individual services |
 | Calculation | **One value for the period** (default) or **Mean of the monthly values** |
 | Maintenance | A, B or C, see below. With B the maintenance time is part of the outage time and is named next to the outages in the ranking |
 | Weakest services | 3 to 10, default 5 |
 | Show maintenance time | shows or hides the maintenance line, no effect on the percentage |
 
 The previous period has the same length and directly precedes the selected one. A period that has not ended yet ends now and is marked as not complete.
+
+## Views
+
+Two tabs below the selection switch the view. The selection (period, calculation, maintenance) applies to both. The address holds the view (`view=groups`) and the group (`group=<id>`), so a group sheet can be shared as a link.
+
+**Overall report:** key figures, the weakest services, the development over 12 months, a heat map by service group and a ranking of all services. The heat map shows 12 rows at once, further rows are folded in blocks of 12.
+
+**Group reports:** a list of all groups on the left, weakest first. Each row shows a colored dot (the level of the heat map) and the availability of the group. The weakest group is selected when the view opens. A click shows the group sheet on the right:
+
+| Block | Content |
+|---|---|
+| 1 | Development of the group over 12 months with the target line |
+| 2 | The services of the group, weakest first, with availability and outage duration |
+| 3 | Disruptions in the month by service: Major Outage, Partial Outage and Degraded Performance in hours. Only if the group had a disruption |
+| 4 | Disruptions in the month by day: for every affected service on a day a narrow bar, the service name stands upright below it. Only if the group had an outage |
+| 5 | Heat map of the services |
+
+Blocks 3 and 4 show the **last month of the selected period**. For a quarter that is the third month, for a month that has not ended yet only the days up to now. Block 4 shows Partial Outage and Major Outage only, because Degraded Performance has no separate time segments in the calculation.
 
 ## Availability
 

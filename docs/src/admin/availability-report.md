@@ -6,14 +6,14 @@ The report calculates from the status log (see [Maintaining the Status Log](./st
 
 ## Selection
 
-All choices are on the page. Every change reloads the page and puts the choice into the address, so a selection can be shared as a link.
+All choices are on the page. Changing a selection reloads the page and puts the choice into the address, so a selection can be shared as a link. The two date fields for a custom period do not reload the page: choose "Custom period", enter the dates and click **Apply**.
 
 | Field | Meaning |
 |---|---|
 | Period | a month, quarter, half year, year or a custom period (from and to, both days included) |
 | Group | all groups, or one group with its individual services |
 | Calculation | **One value for the period** (default) or **Mean of the monthly values** |
-| Maintenance | A, B or C, see below |
+| Maintenance | A, B or C, see below. With B the maintenance time is part of the outage time and is named next to the outages in the ranking |
 | Weakest services | 3 to 10, default 5 |
 | Show maintenance time | shows or hides the maintenance line, no effect on the percentage |
 

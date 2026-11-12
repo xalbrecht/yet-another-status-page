@@ -70,6 +70,11 @@ function trailingMonths(periodEnd: number, now: number, locale: string, timeZone
   return months
 }
 
+/** Bis hierhin werden Daten geladen: das Ende des Zeitraums oder, falls später, das Ende des letzten Monats des Verlaufs. */
+export function reportDataEnd(period: ReportPeriod, months: ReportPeriod[]): number {
+  return Math.max(period.end, months.length > 0 ? months[months.length - 1].end : period.end)
+}
+
 /** Zerlegt einen Zeitraum in Kalendermonate. Der erste und der letzte Monat werden auf den Zeitraum gekürzt. */
 export function periodMonths(period: ReportPeriod, now: number, locale: string, timeZone: string): ReportPeriod[] {
   const first = parseDateSlug(formatDateSlug(new Date(period.start), timeZone))

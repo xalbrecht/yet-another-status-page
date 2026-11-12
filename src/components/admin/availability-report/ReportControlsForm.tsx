@@ -14,6 +14,16 @@ export type ReportControlsFormProps = {
   onChange?: React.FormEventHandler<HTMLFormElement>
 }
 
+/**
+ * Soll eine Änderung das Formular absenden? Nicht bei Datumsfeldern (die Eingabe ist erst mit „Anwenden“ vollständig)
+ * und nicht bei der Wahl „Freier Zeitraum“ (erst Daten eintragen).
+ */
+export function shouldSubmitOnChange(target: { type: string; name: string; value: string }): boolean {
+  if (target.type === 'date') return false
+  if (target.name === 'period' && target.value === 'custom') return false
+  return true
+}
+
 const TOP_N_VALUES = Array.from({ length: TOP_N_MAX - TOP_N_MIN + 1 }, (_, index) => TOP_N_MIN + index)
 
 export function ReportControlsForm({ params, periodKey, periodOptions, groups, onChange }: ReportControlsFormProps) {
@@ -27,18 +37,14 @@ export function ReportControlsForm({ params, periodKey, periodOptions, groups, o
           ))}
         </select>
       </label>
-      {periodKey === 'custom' && (
-        <>
-          <label>
-            {ta('From', 'Von')}
-            <input type="date" name="from" defaultValue={params.from ?? ''} />
-          </label>
-          <label>
-            {ta('To', 'Bis')}
-            <input type="date" name="to" defaultValue={params.to ?? ''} />
-          </label>
-        </>
-      )}
+      <label>
+        {ta('From (custom period)', 'Von (freier Zeitraum)')}
+        <input type="date" name="from" defaultValue={params.from ?? ''} />
+      </label>
+      <label>
+        {ta('To (custom period)', 'Bis (freier Zeitraum)')}
+        <input type="date" name="to" defaultValue={params.to ?? ''} />
+      </label>
       <label>
         {ta('Group', 'Gruppe')}
         <select name="group" defaultValue={params.group ?? ''}>
@@ -76,9 +82,7 @@ export function ReportControlsForm({ params, periodKey, periodOptions, groups, o
         {ta('Show maintenance time', 'Wartungszeit anzeigen')}
         <input type="hidden" name="showMaintenance" value="false" />
       </label>
-      <noscript>
-        <button type="submit">{ta('Apply', 'Anwenden')}</button>
-      </noscript>
+      <button type="submit">{ta('Apply', 'Anwenden')}</button>
     </form>
   )
 }

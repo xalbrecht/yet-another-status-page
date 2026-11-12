@@ -170,3 +170,24 @@ test('Fußnoten werden durchgereicht', () => {
   const data = buildReport(input('2026-10', [service(1, 'A', timelineWith([]))]))
   assert.deepEqual(data.footnotes, { unsure: 78, withoutService: 19 })
 })
+
+test('Rechenart 2 über ein Jahr mit 166 Diensten bleibt unter 3 Sekunden', () => {
+  const services = Array.from({ length: 166 }, (_, index) => service(index + 1, `Dienst ${index + 1}`, timelineWith([[octoberLength.start, octoberLength.start + 3_600_000]])))
+  const startedAt = Date.now()
+  const data = buildReport(input('2026', services, { params: { calc: 'monthly' } }))
+  const elapsed = Date.now() - startedAt
+  assert.equal(data.kpis.serviceCount, 166)
+  assert.ok(elapsed < 3000, `Rechenart 2 brauchte ${elapsed} ms`)
+})
+
+test('Art B: ein Dienst mit nur Wartung zählt als schwächster Dienst, die Wartung steht als eigene Ausfallzeit', () => {
+  const window = { from: octoberLength.start, to: octoberLength.start + octoberLength.ms * 0.1 }
+  const services = [service(1, 'nur Wartung', timelineWith([]), { windows: [window] }), service(2, 'ohne alles', timelineWith([]))]
+  const modeB = buildReport(input('2026-10', services, { params: { maintenance: 'B' } }))
+  assert.deepEqual(modeB.weakest.map((row) => row.name), ['nur Wartung'])
+  assert.equal(modeB.ranking[0].outageCount, 0)
+  near(modeB.ranking[0].maintenanceDownMs / octoberLength.ms, 0.1)
+  const modeA = buildReport(input('2026-10', services, { params: { maintenance: 'A' } }))
+  assert.equal(modeA.weakest.length, 0)
+  assert.equal(modeA.ranking[0].maintenanceDownMs, 0)
+})

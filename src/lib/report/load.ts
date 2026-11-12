@@ -2,11 +2,11 @@ import type { Payload } from 'payload'
 import type { Timeline } from '@/lib/availability'
 import { DEFAULT_AVAILABILITY_TARGET } from '@/lib/availability'
 import { resolveDateTimeConfig } from '@/lib/datetime'
-import { classifyIncident } from '@/lib/incident-classification'
 import { buildReport, type ReportData } from '@/lib/report/aggregate'
+import { countFootnotes } from '@/lib/report/footnotes'
 import { maintenanceWindow } from '@/lib/report/maintenance-time'
 import { parseReportParams, type ReportParams } from '@/lib/report/params'
-import { resolvePeriod, type ReportPeriod } from '@/lib/report/period'
+import { reportDataEnd, resolvePeriod, type ReportPeriod } from '@/lib/report/period'
 
 /**
  * Lädt die Daten für den Verfügbarkeitsbericht und baut daraus die Berichtsdaten (Konzept 6). Gemeinsam genutzt von
@@ -29,13 +29,15 @@ export async function loadReport(
   const resolved = resolvePeriod({ period: params.period, from: params.from, to: params.to }, now, dt.timezone, dt.locale)
   if (!resolved.ok) return { ok: false, error: resolved.error }
   const { period, previous, months } = resolved
+  // Verlauf und Wärmekarte zeigen ganze Monate: die Daten reichen bis zum Ende des letzten Monats
+  const dataEnd = reportDataEnd(period, months)
 
   const [groupDocs, serviceDocs, eventDocs, maintenanceDocs, incidentDocs] = await Promise.all([
     payload.find({ collection: 'service-groups', sort: '_order', depth: 0, pagination: false }),
     payload.find({ collection: 'services', depth: 0, pagination: false }),
     payload.find({
       collection: 'service-status-events',
-      where: { changedAt: { less_than: new Date(period.end).toISOString() } },
+      where: { changedAt: { less_than: new Date(dataEnd).toISOString() } },
       sort: 'changedAt',
       depth: 0,
       pagination: false,
@@ -77,26 +79,21 @@ export async function loadReport(
     }
   }
 
-  // Fußnoten: Vorfälle im Zeitraum vor dem ersten Betriebseintrag, deren Einordnung nicht eindeutig ist oder die keinen Dienst haben
-  let unsure = 0
-  let withoutService = 0
-  for (const incident of incidentDocs.docs) {
-    const from = new Date(incident.createdAt).getTime()
-    const to = incident.resolvedAt ? new Date(incident.resolvedAt).getTime() : Number.POSITIVE_INFINITY
-    if (firstOperationAt !== null && from >= firstOperationAt) continue
-    if (from >= period.end || to <= period.start) continue
-    const serviceCount = (incident.affectedServices || []).length
-    if (serviceCount === 0) {
-      withoutService++
-      continue
-    }
-    const result = classifyIncident({
+  // Fußnoten: Vorfälle im ganzen angezeigten Bereich (Verlauf und Zeitraum), bei gewählter Gruppe nur deren Dienste
+  const groupServiceIds = params.group
+    ? serviceDocs.docs.filter((service) => String(idOf(service.group)) === params.group).map((service) => Number(service.id))
+    : null
+  const footnotes = countFootnotes(
+    incidentDocs.docs.map((incident) => ({
       title: incident.title,
       messages: (incident.updates || []).map((update) => update.message),
       availabilityClass: incident.availabilityClass,
-    })
-    if (!result.sure) unsure++
-  }
+      createdAt: new Date(incident.createdAt).getTime(),
+      resolvedAt: incident.resolvedAt ? new Date(incident.resolvedAt).getTime() : null,
+      serviceIds: (incident.affectedServices || []).map(idOf),
+    })),
+    { rangeStart: Math.min(period.start, months[0]?.start ?? period.start), rangeEnd: dataEnd, firstOperationAt, groupServiceIds },
+  )
 
   const groups = groupDocs.docs.map((group) => ({ id: Number(group.id), name: group.name, target: group.availabilityTarget ?? null }))
   const data = buildReport({
@@ -114,7 +111,7 @@ export async function loadReport(
       timeline: timelines.get(Number(service.id)) ?? [],
       windows: windows.get(Number(service.id)) ?? [],
     })),
-    footnotes: { unsure, withoutService },
+    footnotes,
     now,
     timeZone: dt.timezone,
     locale: dt.locale,

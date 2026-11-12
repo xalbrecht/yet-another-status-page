@@ -131,3 +131,13 @@ test('periodOptions bietet Monate, Quartale, Halbjahre, Jahre und den freien Zei
   assert.equal(options.find((option) => option.value === '2026-10')?.label, 'Oktober 2026')
   assert.equal(values.filter((value) => /^\d{4}-\d{2}$/.test(value)).length, 12)
 })
+
+test('reportDataEnd lädt Daten bis zum Ende des letzten Monats des Verlaufs, auch bei freiem Zeitraum mitten im Monat', async () => {
+  const { reportDataEnd } = await import('@/lib/report/period')
+  const mid = ok({ period: 'custom', from: '2026-10-01', to: '2026-10-15' })
+  assert.equal(reportDataEnd(mid.period, mid.months), local(2026, 11))
+  const month = ok({ period: '2026-10' })
+  assert.equal(reportDataEnd(month.period, month.months), local(2026, 11))
+  const current = ok({ period: '2026-11' })
+  assert.equal(reportDataEnd(current.period, current.months), NOW)
+})

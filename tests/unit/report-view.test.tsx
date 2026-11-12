@@ -2,7 +2,7 @@ import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { ReportView } from '@/components/admin/availability-report/ReportView'
-import { ReportControlsForm } from '@/components/admin/availability-report/ReportControlsForm'
+import { ReportControlsForm, shouldSubmitOnChange } from '@/components/admin/availability-report/ReportControlsForm'
 import type { ReportData, RankingRow } from '@/lib/report/aggregate'
 import { parseReportParams } from '@/lib/report/params'
 
@@ -17,6 +17,7 @@ const row = (name: string, availability: number | null, belowTarget: boolean): R
   downMs: belowTarget ? 2793 * MIN : 0,
   outageCount: belowTarget ? 1 : 0,
   longestOutageMs: belowTarget ? 2793 * MIN : 0,
+  maintenanceDownMs: 0,
   target: 99,
   belowTarget,
   history: Array.from({ length: 12 }, () => availability),
@@ -115,4 +116,42 @@ test('die Auswahlfelder zeigen die gesetzten Werte', () => {
   assert.match(markup, /<option value="7" selected/)
   assert.match(markup, /<option value="2026-10" selected/)
   assert.match(markup, /name="showMaintenance"[^>]*checked/)
+})
+
+test('ein Wert knapp unter 100 Prozent erscheint nicht als 100 in der Wärmekarte', () => {
+  const heat = { ...data.heat, rows: [{ name: 'Gesamt', values: months.map(() => 99.99596), total: true }] }
+  const markup = render({ data: { ...data, heat } })
+  const cells = markup.slice(markup.indexOf('data-testid="report-heat"'))
+  assert.match(cells, />99,9</)
+  assert.doesNotMatch(cells, />100</)
+})
+
+test('der Zielstatus nennt den Abstand in Punkten', () => {
+  const missed = render({ data: { ...data, kpis: { ...data.kpis, availability: 98.5 } } })
+  assert.match(missed, /verfehlt um 0,50 Punkte|missed by 0\.50 points/)
+})
+
+test('Wartung als Ausfall (Art B) ohne Störung steht in der Ausfalldauer, nicht als „kein Ausfall“', () => {
+  const maintenanceOnly: RankingRow = { ...row('Nur Wartung', 98.65, true), downMs: 600 * MIN, outageCount: 0, longestOutageMs: 0, maintenanceDownMs: 600 * MIN }
+  const markup = render({ data: { ...data, ranking: [maintenanceOnly], weakest: [maintenanceOnly] } })
+  const ranking = markup.slice(markup.indexOf('data-testid="report-ranking"'))
+  assert.doesNotMatch(ranking, /kein Ausfall|no outage/)
+  assert.match(ranking, /Wartung|maintenance/i)
+})
+
+test('Datumsfelder und die Wahl „Freier Zeitraum“ senden nicht sofort ab, Auswahlfelder schon', () => {
+  assert.equal(shouldSubmitOnChange({ type: 'date', name: 'from', value: '2026-1' }), false)
+  assert.equal(shouldSubmitOnChange({ type: 'select-one', name: 'period', value: 'custom' }), false)
+  assert.equal(shouldSubmitOnChange({ type: 'select-one', name: 'period', value: '2026-10' }), true)
+  assert.equal(shouldSubmitOnChange({ type: 'select-one', name: 'maintenance', value: 'B' }), true)
+  assert.equal(shouldSubmitOnChange({ type: 'checkbox', name: 'showMaintenance', value: 'true' }), true)
+})
+
+test('die Datumsfelder und die Schaltfläche „Anwenden“ stehen immer da', () => {
+  const markup = renderToStaticMarkup(
+    <ReportControlsForm params={params} periodKey="2026-10" periodOptions={[{ value: '2026-10', label: 'Oktober 2026' }]} groups={[]} />,
+  )
+  assert.match(markup, /name="from"/)
+  assert.match(markup, /name="to"/)
+  assert.match(markup, /<button type="submit"/)
 })

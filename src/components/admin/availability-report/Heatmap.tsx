@@ -8,7 +8,7 @@ const VISIBLE_ROWS = 12
 
 export function heatClass(value: number | null, target: number): number {
   if (value === null) return 0
-  if (value >= 99.995) return 0
+  if (value >= 100) return 0
   if (value >= 99.9) return 1
   if (value >= 99.5) return 2
   if (value >= target) return 3
@@ -17,7 +17,7 @@ export function heatClass(value: number | null, target: number): number {
 
 function cellText(value: number | null, locale: string): string {
   if (value === null) return '–'
-  if (value >= 99.995) return '100'
+  if (value >= 100) return '100'
   return new Intl.NumberFormat(locale, { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(Math.floor(value * 10) / 10)
 }
 

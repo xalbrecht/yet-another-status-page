@@ -93,12 +93,17 @@ function RankingTable(props: { rows: RankingRow[]; maxDown: number; showGroup: b
                 {diff === null ? '–' : Math.abs(diff) < 0.005 ? '= 0,00' : `${diff > 0 ? '▲ +' : '▼ −'}${nf.format(Math.abs(diff))}`}
               </td>
               <td>
-                {row.outageCount > 0 ? (
+                {row.downMs > 0 ? (
                   <div className="availability-report__dur">
                     <div className="availability-report__bar" style={{ width: `${Math.max(2, Math.round((row.downMs / maxDown) * 100))}%` }} />
                     <small>
-                      {formatDuration(row.downMs)} {ta('in', 'in')} {row.outageCount} {ta('outage(s)', 'Ausfall/Ausfällen')}
+                      {row.outageCount > 0
+                        ? `${formatDuration(row.downMs - row.maintenanceDownMs)} ${ta('in', 'in')} ${row.outageCount} ${ta('outage(s)', 'Ausfall/Ausfällen')}`
+                        : null}
                       {row.outageCount > 1 ? `, ${ta('longest', 'längster')} ${formatDuration(row.longestOutageMs)}` : ''}
+                      {row.maintenanceDownMs > 0
+                        ? `${row.outageCount > 0 ? ' + ' : ''}${formatDuration(row.maintenanceDownMs)} ${ta('maintenance (counts as outage)', 'Wartung (zählt als Ausfall)')}`
+                        : null}
                     </small>
                   </div>
                 ) : (
@@ -139,7 +144,12 @@ export function ReportView({ data, params, period, locale, controls }: ReportVie
               <div className="availability-report__value">{kpis.availability === null ? '–' : formatAvailability(kpis.availability, locale)}</div>
               <div><Delta current={kpis.availability} previous={kpis.previousAvailability} locale={locale} /></div>
               <div className={kpis.availability === null ? 'availability-report__muted' : targetMet ? 'availability-report__up' : 'availability-report__down'}>
-                {ta('Target', 'Ziel')} {formatAvailability(kpis.target, locale)}: {kpis.availability === null ? '–' : targetMet ? ta('met', 'erreicht') : ta('missed', 'verfehlt')}
+                {ta('Target', 'Ziel')} {formatAvailability(kpis.target, locale)}:{' '}
+                {kpis.availability === null
+                  ? '–'
+                  : targetMet
+                    ? ta('met', 'erreicht')
+                    : `${ta('missed by', 'verfehlt um')} ${new Intl.NumberFormat(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(kpis.target - kpis.availability)} ${ta('points', 'Punkte')}`}
               </div>
             </div>
             <div className="availability-report__kpi">

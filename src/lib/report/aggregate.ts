@@ -35,9 +35,12 @@ export type RankingRow = {
   groupName: string
   availability: number | null
   previousAvailability: number | null
+  /** Ausfallzeit, wie sie in den Wert eingeht (bei Wartungsart B einschließlich der Wartung) */
   downMs: number
   outageCount: number
   longestOutageMs: number
+  /** Anteil der Wartung an `downMs`, nur bei Wartungsart B */
+  maintenanceDownMs: number
   target: number
   belowTarget: boolean
   history: Array<number | null>
@@ -116,12 +119,13 @@ export function buildReport(input: ReportInput): ReportData {
   const metricsFor = (service: ReportInput['services'][number], range: ReportPeriod): ServiceMetrics =>
     computeServiceMetrics({ timeline: service.timeline, windows: service.windows, start: range.start, end: range.end, mode: params.maintenance })
 
+  // Die Zerlegung in Monate ist teuer und gilt für alle Dienste: einmal je Zeitraum berechnen
+  const periodParts = periodMonths(period, now, locale, timeZone)
+  const previousParts = periodMonths(previous, now, locale, timeZone)
+
   /** Wert eines Dienstes für einen Zeitraum: Rechenart 1 ein Wert, Rechenart 2 Mittel der Monatswerte */
-  const valueFor = (service: ReportInput['services'][number], range: ReportPeriod): number | null => {
-    if (params.calc === 'monthly') {
-      const parts = periodMonths(range, now, locale, timeZone)
-      if (parts.length > 0) return mean(parts.map((part) => metricsFor(service, part).availability))
-    }
+  const valueFor = (service: ReportInput['services'][number], range: ReportPeriod, parts: ReportPeriod[]): number | null => {
+    if (params.calc === 'monthly' && parts.length > 0) return mean(parts.map((part) => metricsFor(service, part).availability))
     return metricsFor(service, range).availability
   }
 
@@ -130,17 +134,18 @@ export function buildReport(input: ReportInput): ReportData {
   const rows = services.map((service) => {
     const group = groupById.get(service.groupId)
     const whole = metricsFor(service, period)
-    const availability = valueFor(service, period)
+    const availability = valueFor(service, period, periodParts)
     const serviceTarget = resolveAvailabilityTarget({ service: service.target, group: group?.target, global: input.globalTarget })
     const row: RankingRow = {
       serviceId: service.id,
       name: service.name,
       groupName: group?.name ?? '',
       availability,
-      previousAvailability: valueFor(service, previous),
+      previousAvailability: valueFor(service, previous, previousParts),
       downMs: whole.downMs,
       outageCount: whole.outages.length,
       longestOutageMs: Math.max(0, ...whole.outages.map((outage) => outage.to - outage.from)),
+      maintenanceDownMs: params.maintenance === 'B' ? whole.maintenanceMs : 0,
       target: serviceTarget,
       belowTarget: availability !== null && availability < serviceTarget,
       history: months.map((month) => metricsFor(service, month).availability),
@@ -165,7 +170,6 @@ export function buildReport(input: ReportInput): ReportData {
     }
   }
 
-  const periodParts = periodMonths(period, now, locale, timeZone)
   const monthValues = periodParts.map((part) => mean(services.map((service) => metricsFor(service, part).availability)))
   const monthsTotal = monthValues.filter((value) => value !== null).length
   const monthsMet = monthValues.filter((value) => value !== null && value >= target).length
@@ -203,7 +207,7 @@ export function buildReport(input: ReportInput): ReportData {
       monthsTotal,
       target,
     },
-    weakest: ranking.filter((row) => row.outageCount > 0).slice(0, params.topN),
+    weakest: ranking.filter((row) => row.downMs > 0).slice(0, params.topN),
     trend: months.map((month, index) => ({ key: month.key, label: month.label, availability: trendValues[index] })),
     heat: {
       columns: months.map((month) => ({ key: month.key, label: month.label })),

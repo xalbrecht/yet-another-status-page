@@ -94,3 +94,26 @@ test('ungültige Eingaben ergeben eine deutsche Fehlermeldung statt einer Ausnah
     if (!result.ok) assert.ok(result.error.length > 5)
   }
 })
+
+test('periodMonths zerlegt einen Zeitraum in Kalendermonate, Randmonate gekürzt', async () => {
+  const { periodMonths } = await import('@/lib/report/period')
+  const quarter = ok({ period: '2026-Q3' }).period
+  const months = periodMonths(quarter, NOW, 'de-DE', TZ)
+  assert.equal(months.length, 3)
+  assert.equal(months[0].start, local(2026, 7))
+  assert.equal(months[2].end, local(2026, 10))
+
+  const custom = ok({ period: 'custom', from: '2026-09-20', to: '2026-10-10' }).period
+  const parts = periodMonths(custom, NOW, 'de-DE', TZ)
+  assert.equal(parts.length, 2)
+  assert.equal(parts[0].start, local(2026, 9, 20))
+  assert.equal(parts[0].end, local(2026, 10))
+  assert.equal(parts[1].start, local(2026, 10))
+  assert.equal(parts[1].end, local(2026, 10, 11))
+
+  const current = ok({ period: '2026-11' }).period
+  const open = periodMonths(current, NOW, 'de-DE', TZ)
+  assert.equal(open.length, 1)
+  assert.equal(open[0].end, NOW)
+  assert.equal(open[0].partial, true)
+})

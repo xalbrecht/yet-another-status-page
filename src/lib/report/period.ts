@@ -70,6 +70,23 @@ function trailingMonths(periodEnd: number, now: number, locale: string, timeZone
   return months
 }
 
+/** Zerlegt einen Zeitraum in Kalendermonate. Der erste und der letzte Monat werden auf den Zeitraum gekürzt. */
+export function periodMonths(period: ReportPeriod, now: number, locale: string, timeZone: string): ReportPeriod[] {
+  const first = parseDateSlug(formatDateSlug(new Date(period.start), timeZone))
+  if (!first) return []
+  let span: Span = { startYear: first.year, startMonth: first.month, months: 1 }
+  const result: ReportPeriod[] = []
+  for (let guard = 0; guard < 600; guard++) {
+    const full = spanToPeriod('month', span, Number.POSITIVE_INFINITY, locale, timeZone)
+    if (full.start >= period.end) break
+    const from = Math.max(full.start, period.start)
+    const to = Math.min(full.end, period.end)
+    if (to > from) result.push({ key: full.key, label: full.label, start: from, end: to, partial: now >= from && now < full.end && to === now })
+    span = shiftSpan(span, 1)
+  }
+  return result
+}
+
 function parseDay(value: string | undefined): { year: number; month: number; day: number } | null {
   if (!value) return null
   const parts = parseDateSlug(value)

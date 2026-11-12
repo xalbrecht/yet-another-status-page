@@ -122,6 +122,8 @@ Die Wartungszeit eines Dienstes ist die **tatsächliche Zeit, soweit erfasst, so
 
 Beispiel: Geplant ist 20:00 bis 22:00. Die Aktualisierung „Läuft“ kam um 20:10, „Abgeschlossen“ um 23:15. Die Wartungszeit ist 20:10 bis 23:15 (185 Minuten), nicht die geplanten 120 Minuten. Sie wirkt in den Arten B und C auf die Prozentzahl. Die Tabelle gehört in das Handbuch für Admins und Servicedesk.
 
+Die Wartungszeit kommt **nur** aus den erfassten Wartungen. Ein Zustand „Wartung“ im Protokoll zählt nicht. Die 17 Wartungen, die aus dem Vorgängerverfahren als Störungen übernommen wurden, werden in Wartungen umgewandelt (Issue #57 im Fork), damit die Berechnung einheitlich ist.
+
 ## 5. Nachrechnung vor dem 10.11.2026
 
 Das Statusprotokoll wird rückwirkend aus den Vorfällen gefüllt. Aus jedem Vorfall mit Dienstverknüpfung entsteht je Dienst ein Zeitraum vom Anlegen bis zum Lösen (`created_at` bis `resolved_at`) mit einem Status. Überlappende Zeiträume eines Dienstes zählen mit dem schlechtesten Status einmal. Nach dem Lösen gilt „Betriebsbereit“.

@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, Wrench } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { StatusIndicator, type ServiceStatus } from "./StatusIndicator";
@@ -9,6 +9,8 @@ export interface Service {
   name: string;
   status: ServiceStatus;
   description?: string;
+  /** Wartung neben dem Zustand, z. B. „Wartung bis 22:00“ */
+  maintenanceNotice?: string;
 }
 
 interface ServiceGroupProps {
@@ -60,6 +62,7 @@ export function ServiceGroup({ name, services, defaultExpanded = true }: Service
             {services.map((service) => (
               <div
                 key={service.name}
+                data-testid="service-row"
                 className="flex items-center justify-between gap-2 px-5 py-4 transition-colors hover:bg-muted/30"
               >
                 <div className="flex flex-col gap-0.5">
@@ -68,7 +71,18 @@ export function ServiceGroup({ name, services, defaultExpanded = true }: Service
                     <span className="text-xs text-justify text-muted-foreground">{service.description}</span>
                   )}
                 </div>
-                <StatusIndicator status={service.status} />
+                <div className="flex shrink-0 flex-col items-end gap-1">
+                  <StatusIndicator status={service.status} />
+                  {service.maintenanceNotice && (
+                    <span
+                      data-testid="service-maintenance"
+                      className="inline-flex items-center gap-1 text-xs text-status-maintenance"
+                    >
+                      <Wrench className="h-3 w-3" aria-hidden="true" />
+                      {service.maintenanceNotice}
+                    </span>
+                  )}
+                </div>
               </div>
             ))}
           </div>

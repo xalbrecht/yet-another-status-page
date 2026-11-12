@@ -57,6 +57,8 @@ Incidents set the status of their affected services:
 
 Maintenance windows do **not** change the service status. Set **Under Maintenance** by hand when work starts and reset it afterwards.
 
+Next to the status dot, the status page shows a **maintenance notice** for a service when a maintenance that affects it is running ("Maintenance until 22:00") or starts within the next 24 hours ("Maintenance 20:00 – 22:00"). The notice comes from the entered maintenance (start, end and status), not from the service status. A service can therefore show a partial outage and a running maintenance at the same time. Completed and cancelled maintenances, and maintenances that start later than 24 hours from now, show no notice.
+
 You can also change the status by hand at any time. A manual status stays until an incident for that service is saved or resolved.
 
 ## Best Practices

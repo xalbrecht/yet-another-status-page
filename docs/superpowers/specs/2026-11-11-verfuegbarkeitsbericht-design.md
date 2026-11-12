@@ -107,6 +107,23 @@ Die Wartungszeit kommt aus den **erfassten Wartungen** (Beginn bis Ende, je betr
 
 Dabei ist T die Zeit des Berichtszeitraums. Art A entspricht der Regel in Abschnitt 4.1 und dem Lagebild. Die Wartungszeit steht in allen Arten als eigene Zeile. Gründe für die Arten: ITIL und SAP nehmen geplante Wartung aus der vereinbarten Servicezeit aus (Art C), AWS rät davon ab (Art B), Atlassian Statuspage zählt Wartung nicht als Ausfall (Art A). Später möglich, jetzt nicht vorgesehen: Gewichtung des Teilausfalls (Atlassian: 30 %) und Servicezeiten (zum Beispiel Montag bis Freitag 7 bis 18 Uhr).
 
+### 4.8 Wartungszeit (entschieden am 12.11.2026)
+
+Die Wartungszeit eines Dienstes ist die **tatsächliche Zeit, soweit erfasst, sonst die geplante Zeit**. Sie ergibt sich je Wartung so:
+
+| Fall | Beginn der Wartungszeit | Ende der Wartungszeit |
+|---|---|---|
+| Wartung abgeschlossen, Aktualisierungen „Läuft“ und „Abgeschlossen“ von Hand | Zeitpunkt der Aktualisierung „Läuft“ | Zeitpunkt der Aktualisierung „Abgeschlossen“ |
+| Wartung ohne Aktualisierungen, nur automatisch umgestellt | geplanter Beginn | geplantes Ende |
+| Wartung läuft noch (zum Beispiel am Monatsende) | wie oben | Ende des Berichtszeitraums oder jetzt, je nachdem, was früher liegt |
+| Wartung abgebrochen, vorher gestartet | wie oben | Zeitpunkt des Abbruchs |
+| Wartung abgebrochen, nie gestartet | keine Wartungszeit | keine Wartungszeit |
+| Wartung noch geplant | keine Wartungszeit | keine Wartungszeit |
+
+Beispiel: Geplant ist 20:00 bis 22:00. Die Aktualisierung „Läuft“ kam um 20:10, „Abgeschlossen“ um 23:15. Die Wartungszeit ist 20:10 bis 23:15 (185 Minuten), nicht die geplanten 120 Minuten. Sie wirkt in den Arten B und C auf die Prozentzahl. Die Tabelle gehört in das Handbuch für Admins und Servicedesk.
+
+Die Wartungszeit kommt **nur** aus den erfassten Wartungen. Ein Zustand „Wartung“ im Protokoll zählt nicht. Die 17 Wartungen, die aus dem Vorgängerverfahren als Störungen übernommen wurden, werden in Wartungen umgewandelt (Issue #57 im Fork), damit die Berechnung einheitlich ist.
+
 ## 5. Nachrechnung vor dem 10.11.2026
 
 Das Statusprotokoll wird rückwirkend aus den Vorfällen gefüllt. Aus jedem Vorfall mit Dienstverknüpfung entsteht je Dienst ein Zeitraum vom Anlegen bis zum Lösen (`created_at` bis `resolved_at`) mit einem Status. Überlappende Zeiträume eines Dienstes zählen mit dem schlechtesten Status einmal. Nach dem Lösen gilt „Betriebsbereit“.

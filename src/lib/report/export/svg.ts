@@ -20,3 +20,13 @@ export function svgDocument(width: number, height: number, body: string): string
     `<rect width="${width}" height="${height}" fill="#ffffff"/>${body}</svg>`
   )
 }
+
+export type TextOptions = { size?: number; weight?: 'bold' | 'normal'; anchor?: 'start' | 'middle' | 'end'; fill?: string; rotate?: number }
+
+/** Ein `<text>`-Element mit maskiertem Inhalt. `rotate` dreht um den Punkt (x, y), 90 lässt den Text nach unten laufen. */
+export function textEl(x: number, y: number, content: string, options: TextOptions = {}): string {
+  const { size = 12, weight = 'normal', anchor = 'start', fill, rotate } = options
+  const transform = rotate ? ` transform="rotate(${rotate} ${x} ${y})"` : ''
+  const color = fill ? ` fill="${fill}"` : ''
+  return `<text x="${x}" y="${y}" font-size="${size}" font-weight="${weight}" text-anchor="${anchor}"${color}${transform}>${escapeXml(content)}</text>`
+}

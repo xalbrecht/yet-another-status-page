@@ -2,15 +2,9 @@ import React from 'react'
 import { ta } from '@/lib/i18n/admin'
 import { formatAvailability } from '@/lib/availability'
 import type { ReportData } from '@/lib/report/aggregate'
-import { chunkRows, HEAT_CHUNK_SIZE, heatClass } from '@/lib/report/heat'
+import { chunkRows, HEAT_CHUNK_SIZE, heatCellText, heatClass } from '@/lib/report/heat'
 
 /** Wärmekarte: Zeilen mal Monate. Farbstufen Blau, Gelb, Rot (kein Rot-Grün-Paar). Der erste Block (12 Zeilen) steht sofort, jeder weitere ist aufklappbar. */
-
-function cellText(value: number | null, locale: string): string {
-  if (value === null) return '–'
-  if (value >= 100) return '100'
-  return new Intl.NumberFormat(locale, { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(Math.floor(value * 10) / 10)
-}
 
 function Row(props: { row: ReportData['heat']['rows'][number]; columns: ReportData['heat']['columns']; target: number; locale: string }) {
   const { row, columns, target, locale } = props
@@ -20,7 +14,7 @@ function Row(props: { row: ReportData['heat']['rows'][number]; columns: ReportDa
       {row.values.map((value, index) => (
         <td key={columns[index].key}>
           <span className={`availability-report__cell heat-${heatClass(value, target)}`} title={`${row.name}, ${columns[index].label}: ${value === null ? '–' : formatAvailability(value, locale)}`}>
-            {cellText(value, locale)}
+            {heatCellText(value, locale)}
           </span>
         </td>
       ))}

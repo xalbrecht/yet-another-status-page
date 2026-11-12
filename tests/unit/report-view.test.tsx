@@ -49,6 +49,8 @@ const data: ReportData = {
     ],
   },
   ranking: [row('Infoma', 93.74, true), row('VPN', 99.9, false)],
+  groupList: [],
+  sheet: null,
   footnotes: { unsure: 78, withoutService: 19 },
 }
 const params = parseReportParams({ maintenance: 'B', calc: 'monthly', topN: '7' })

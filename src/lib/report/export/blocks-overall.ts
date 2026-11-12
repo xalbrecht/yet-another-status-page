@@ -5,7 +5,7 @@ import { formatDuration } from '@/lib/report/format'
 import { chunkRows } from '@/lib/report/heat'
 import { heatLegend, heatTable, heatTableHeight, trendChart } from './charts'
 import { GRID_COLOR, MUTED_COLOR, SEVERITY_COLOR, TARGET_COLOR } from './palette'
-import { svgDocument, textEl, truncate } from './svg'
+import { fitText, svgDocument, textEl, truncate } from './svg'
 
 /**
  * Bilder des Gesamtberichts (Konzept 3): Kennzahlen, Entwicklung, schwächste Dienste, Wärmekarte nach Gruppen und
@@ -68,9 +68,9 @@ function kpiBlock(data: ReportData, locale: string, subtitle: string): string {
       const x = index * (width + gap)
       return (
         `<rect x="${x}" y="0" width="${width}" height="112" rx="6" fill="#fff" stroke="${GRID_COLOR}"/>` +
-        textEl(x + 12, 22, truncate(tile.label, 26), { size: 11, fill: MUTED_COLOR }) +
+        fitText(x + 12, 22, tile.label, width - 24, { size: 11, fill: MUTED_COLOR }) +
         textEl(x + 12, 56, tile.value, { size: Math.min(26, Math.floor((width - 24) / (tile.value.length * 0.66))), weight: 'bold' }) +
-        tile.lines.filter(Boolean).map((line, row) => textEl(x + 12, 78 + row * 16, truncate(line, 30), { size: 11, fill: MUTED_COLOR })).join('')
+        tile.lines.filter(Boolean).map((line, row) => fitText(x + 12, 78 + row * 16, line, width - 24, { size: 11, fill: MUTED_COLOR })).join('')
       )
     })
     .join('')
@@ -95,10 +95,10 @@ function weakestBlock(data: ReportData, locale: string, subtitle: string): strin
       const y = Math.floor(index / WEAKEST_COLUMNS) * 112
       return (
         `<rect x="${x}" y="${y}" width="${width}" height="100" rx="6" fill="#fff" stroke="${GRID_COLOR}"/>` +
-        textEl(x + 12, y + 22, truncate(row.name, 22), { size: 13, weight: 'bold' }) +
-        textEl(x + 12, y + 38, truncate(row.groupName, 26), { size: 11, fill: MUTED_COLOR }) +
+        fitText(x + 12, y + 22, row.name, width - 24, { size: 13, weight: 'bold' }) +
+        fitText(x + 12, y + 38, row.groupName, width - 24, { size: 11, fill: MUTED_COLOR }) +
         textEl(x + 12, y + 66, row.availability === null ? '–' : formatAvailability(row.availability, locale), { size: 22, weight: 'bold' }) +
-        textEl(x + 12, y + 86, truncate(`${formatDuration(row.downMs)} ${ta('in', 'in')} ${row.outageCount} ${ta('outage(s)', 'Ausfall/Ausfällen')}`, 32), { size: 11, fill: MUTED_COLOR })
+        fitText(x + 12, y + 86, `${formatDuration(row.downMs)} ${ta('in', 'in')} ${row.outageCount} ${ta('outage(s)', 'Ausfall/Ausfällen')}`, width - 24, { size: 11, fill: MUTED_COLOR })
       )
     })
     .join('')

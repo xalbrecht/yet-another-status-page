@@ -41,3 +41,23 @@ test('lange Textzeilen werden umbrochen und laufen nicht aus der Seite', async (
   pdf.addText([`Sehr ${'lang '.repeat(200)}`])
   assert.ok((await PDFDocument.load(await pdf.finish())).getPageCount() >= 1)
 })
+
+test('eine Überschrift steht mit ihrem Bild auf derselben Seite, auch bei einem seitenhohen Bild', async () => {
+  const pdf = await createPdfBuilder('Titel')
+  await pdf.addImage(await png(1000, 1400), 'Gruppe Haushalt')
+  assert.equal((await PDFDocument.load(await pdf.finish())).getPageCount(), 1)
+})
+
+test('eingebettete Bilder bleiben nicht unkomprimiert im Speicher (40 Bilder unter 300 MiB Zuwachs)', async () => {
+  const { default: sharp } = await import('sharp')
+  const noise = await sharp({ create: { width: 2000, height: 3000, channels: 3, background: '#eef1f5' } }).png().toBuffer()
+  const pdf = await createPdfBuilder('Titel')
+  const before = process.memoryUsage().rss
+  let peak = 0
+  for (let index = 0; index < 40; index++) {
+    await pdf.addImage(noise)
+    peak = Math.max(peak, process.memoryUsage().rss - before)
+  }
+  await pdf.finish()
+  assert.ok(peak < 300 * 1024 * 1024, `Zuwachs ${Math.round(peak / 1048576)} MiB`)
+})

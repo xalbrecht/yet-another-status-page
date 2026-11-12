@@ -64,11 +64,13 @@ test.describe('Verfügbarkeitsbericht (Export)', () => {
   })
 
   test('ungültige Eingaben ergeben Status 400 mit Fehlertext', async ({ request }) => {
+    const empty = await createServiceGroup({ name: `Export leer ${Date.now()}`, icon: 'Server' })
     for (const query of [
       `period=${currentMonth()}`,
       `format=csv&period=${currentMonth()}`,
       'format=xlsx&period=2026-13',
       `format=zip&group=99999999&period=${currentMonth()}`,
+      `format=zip&group=${empty.id}&period=${currentMonth()}`,
     ]) {
       const response = await exportOf(request, query)
       expect(response.status(), query).toBe(400)

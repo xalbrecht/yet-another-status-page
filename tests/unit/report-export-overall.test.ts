@@ -1,6 +1,7 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { overallBlocks } from '@/lib/report/export/blocks-overall'
+import { fitText } from '@/lib/report/export/svg'
 import { svgToPng } from '@/lib/report/export/render'
 import { HOUR, makeReportData, months, rankingRow } from './export-fixtures'
 
@@ -65,4 +66,16 @@ test('ohne Dienste entstehen alle fünf Bilder trotzdem', async () => {
 test('ohne Ausfall steht im Bild der schwächsten Dienste ein Hinweis', () => {
   const svg = overallBlocks(makeReportData({ weakest: [] }), 'de-DE')[2].svg
   assert.match(svg, /Kein Ausfall in diesem Zeitraum|No outage in this period/)
+})
+
+test('fitText verkleinert oder kürzt, damit der Text in die Kachel passt', () => {
+  const widthOf = (svg: string) => {
+    const size = Number(/font-size="([\d.]+)"/.exec(svg)![1])
+    const text = />([^<]*)</.exec(svg)![1]
+    return text.length * size * 0.7
+  }
+  for (const name of ['Kasse', 'Dienst 75 Fachanwendung', 'GROSSBUCHSTABEN FACHVERFAHREN KOMMUNAL', 'X'.repeat(120)]) {
+    assert.ok(widthOf(fitText(0, 0, name, 158, { size: 13, weight: 'bold' })) <= 160, name)
+  }
+  assert.match(fitText(0, 0, 'Kasse', 158, { size: 13 }), /font-size="13"/)
 })

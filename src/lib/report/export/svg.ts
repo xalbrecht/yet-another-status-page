@@ -30,3 +30,15 @@ export function textEl(x: number, y: number, content: string, options: TextOptio
   const color = fill ? ` fill="${fill}"` : ''
   return `<text x="${x}" y="${y}" font-size="${size}" font-weight="${weight}" text-anchor="${anchor}"${color}${transform}>${escapeXml(content)}</text>`
 }
+
+/**
+ * Text in einer Spalte von `maxWidth` Einheiten: die Schrift schrumpft bis 9, danach wird gekürzt. Die Breite ist
+ * geschätzt (DejaVu Sans, fett breiter), weil `sharp` keine Textmessung liefert.
+ */
+export function fitText(x: number, y: number, content: string, maxWidth: number, options: TextOptions = {}): string {
+  const base = options.size ?? 12
+  const factor = options.weight === 'bold' ? 0.7 : 0.62
+  const size = Math.max(9, Math.min(base, Math.floor(maxWidth / (content.length * factor))))
+  const chars = Math.max(1, Math.floor(maxWidth / (size * factor)))
+  return textEl(x, y, truncate(content, chars), { ...options, size })
+}

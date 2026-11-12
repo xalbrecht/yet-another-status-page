@@ -1,7 +1,7 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import type { ReportData } from '@/lib/report/aggregate'
-import { exportFiles, slugify, uniqueSlugs, type ExportFile } from '@/lib/report/export/files'
+import { exportFiles, pdfBlockFiles, slugify, uniqueSlugs, type ExportFile } from '@/lib/report/export/files'
 import type { ReportContext } from '@/lib/report/load'
 import { parseReportParams } from '@/lib/report/params'
 import { emptyDays, HOUR, makeReportData, rankingRow } from './export-fixtures'
@@ -111,4 +111,21 @@ test('die Gruppen werden nacheinander gebaut: build für die nächste Gruppe ers
 
 test('eine unbekannte Gruppe wirft einen Fehler', async () => {
   await assert.rejects(() => collect(exportFiles(context([{ id: 1, name: 'Bauen' }]), { groupId: 99 })), /99/)
+})
+
+test('uniqueSlugs bleibt eindeutig, auch wenn ein angehängter Name schon vergeben ist', () => {
+  const slugs = uniqueSlugs([{ id: 1, name: 'Bauen' }, { id: 2, name: 'Bauen' }, { id: 3, name: 'Bauen 1' }, { id: 4, name: '***' }, { id: 5, name: 'Gruppe 4' }])
+  assert.equal(new Set(slugs.values()).size, 5, [...slugs.values()].join(','))
+})
+
+test('pdfOnly liefert nur die PDF-Datei', async () => {
+  const files = await collect(exportFiles(context([{ id: 1, name: 'Bauen' }]), { pdfOnly: true }))
+  assert.deepEqual(files.map((file) => file.path), ['verfuegbarkeitsbericht-2026-10/verfuegbarkeitsbericht-2026-10.pdf'])
+})
+
+test('pdfBlockFiles nimmt ein kurzes Gruppenblatt ganz, ein langes in Einzelblöcken', () => {
+  const block = (file: string, height: number) => ({ file, svg: `<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="${height}"></svg>` })
+  const parts = ['01-entwicklung-12-monate.png', '02-dienste-schwaechste-zuerst.png', '05-waermekarte-dienste.png']
+  assert.deepEqual(pdfBlockFiles([block('00-gruppenblatt.png', 1200), ...parts.map((file) => block(file, 300))]), ['00-gruppenblatt.png'])
+  assert.deepEqual(pdfBlockFiles([block('00-gruppenblatt.png', 3200), ...parts.map((file) => block(file, 300))]), parts)
 })

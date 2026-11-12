@@ -7,7 +7,8 @@ import { PDFDocument, StandardFonts, rgb, type PDFFont, type PDFPage } from 'pdf
  */
 export type PdfBuilder = {
   addHeading(text: string): void
-  addImage(png: Uint8Array): Promise<void>
+  /** Bild auf Satzbreite, mit optionaler Überschrift auf derselben Seite. Gibt die Rohdaten nach dem Zeichnen frei. */
+  addImage(png: Uint8Array, caption?: string): Promise<void>
   addText(lines: string[]): void
   finish(): Promise<Uint8Array>
 }
@@ -88,14 +89,21 @@ export async function createPdfBuilder(title: string): Promise<PdfBuilder> {
       page!.drawText(safe(text), { x: MARGIN, y: y - 14, size: 14, font: bold })
       y -= 26
     },
-    async addImage(png) {
+    async addImage(png, caption) {
       const image = await doc.embedPng(png)
-      const scale = Math.min(contentWidth / image.width, (contentTop - contentBottom) / image.height)
+      const captionHeight = caption ? 26 : 0
+      const scale = Math.min(contentWidth / image.width, (contentTop - contentBottom - captionHeight) / image.height)
       const width = image.width * scale
       const height = image.height * scale
-      ensure(height)
+      ensure(height + captionHeight)
+      if (caption) {
+        page!.drawText(safe(caption), { x: MARGIN, y: y - 14, size: 14, font: bold })
+        y -= captionHeight
+      }
       page!.drawImage(image, { x: MARGIN, y: y - height, width, height })
       y -= height + 12
+      // Ohne das hält pdf-lib jedes Bild unkomprimiert bis zum Speichern (41 Bilder: über 1 GiB)
+      await image.embed()
     },
     addText(lines) {
       for (const text of lines) {

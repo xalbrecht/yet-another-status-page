@@ -89,7 +89,8 @@ export async function GET(request: NextRequest) {
     let groupId: number | undefined
     if (format === 'zip' && typeof search.group === 'string' && search.group.trim()) {
       groupId = Number(search.group)
-      if (!context.groups.some((group) => group.id === groupId)) return fail(ta('The selected group was not found.', 'Die gewählte Gruppe wurde nicht gefunden.'))
+      const hasServices = context.build(undefined).data.groupList.some((entry) => entry.id === groupId)
+      if (!hasServices) return fail(ta('The selected group was not found.', 'Die gewählte Gruppe wurde nicht gefunden.'))
     }
 
     if (format === 'xlsx') {
@@ -99,7 +100,7 @@ export async function GET(request: NextRequest) {
     }
 
     if (format === 'pdf') {
-      for await (const file of exportFiles(context)) {
+      for await (const file of exportFiles(context, { pdfOnly: true })) {
         if (file.path.endsWith('.pdf')) return new Response(new Uint8Array(file.data), { headers: { 'Content-Type': TYPES.pdf, 'Content-Disposition': attachment(`${base}.pdf`) } })
       }
       return fail(ta('Unknown error', 'Unbekannter Fehler'), 500)

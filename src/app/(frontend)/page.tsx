@@ -7,6 +7,7 @@ import { getMediaUrl } from '@/lib/utils'
 import { Header } from '@/components/status/Header'
 import { Footer } from '@/components/status/Footer'
 import { t, tf } from '@/lib/i18n'
+import { MAINTENANCE_NOTICE_LEAD_MS, maintenanceNoticeFor } from '@/lib/maintenance-notice'
 import { Subscribe } from '@/components/status/SubscribeDialog'
 import { LoginButton } from '@/components/status/LoginButton'
 import { StatusBanner } from '@/components/status/StatusBanner'
@@ -77,6 +78,37 @@ async function getStatusData(requestedPeriod: unknown, requestedBar: unknown) {
     limit: 10,
   })
 
+  // Wartungen für die Anzeige am Dienst: noch nicht beendet und in den nächsten 24 Stunden beginnend. Der Status wird beim
+  // Lesen nach Zeitplan umgestellt, deshalb filtert maintenanceNoticeFor noch einmal nach dem gelesenen Status.
+  const nowMs = Date.now()
+  const noticeMaintenances = await payload.find({
+    collection: 'maintenances',
+    where: {
+      and: [
+        { status: { not_in: ['completed', 'cancelled'] } },
+        { scheduledStartAt: { less_than_equal: new Date(nowMs + MAINTENANCE_NOTICE_LEAD_MS).toISOString() } },
+      ],
+    },
+    depth: 0,
+    pagination: false,
+  })
+  const noticeInput = noticeMaintenances.docs.map((m) => ({
+    status: m.status,
+    scheduledStartAt: m.scheduledStartAt,
+    scheduledEndAt: m.scheduledEndAt,
+    serviceIds: (m.affectedServices || []).map((s) => String(typeof s === 'object' && s !== null ? s.id : s)),
+  }))
+  const noticeText = (serviceId: string): string | undefined => {
+    const notice = maintenanceNoticeFor(noticeInput, serviceId, nowMs)
+    if (!notice) return undefined
+    const start = formatDateTime(new Date(notice.start), dt)
+    const end = notice.end === null ? null : formatDateTime(new Date(notice.end), dt)
+    if (notice.kind === 'running') {
+      return end === null ? t('maintenance.noticeRunningOpen') : tf('maintenance.noticeRunning', { end })
+    }
+    return end === null ? tf('maintenance.noticeSoonOpen', { start }) : tf('maintenance.noticeSoon', { start, end })
+  }
+
   const incidents = await payload.find({
     collection: 'incidents',
     sort: '-createdAt',
@@ -99,6 +131,7 @@ async function getStatusData(requestedPeriod: unknown, requestedBar: unknown) {
         name: service.name,
         status: (service.status || 'operational') as ServiceStatus,
         description: service.description || undefined,
+        maintenanceNotice: noticeText(String(service.id)),
       })),
     }
   }).filter((group) => group.services.length > 0)

@@ -199,3 +199,18 @@ test('die Gruppenliste behält die Reihenfolge, markiert die gewählte Gruppe un
   assert.match(markup, /Drei[\s\S]*–/)
   assert.match(markup, /heat-4/)
 })
+
+test('die Gruppenansicht des Gesamtberichts ist entfernt: Wärmekarte nach Dienstgruppen, Spalte „Gruppe“ bleibt', () => {
+  const markup = render({ data: { ...data, scope: { groupId: 1, groupName: 'Haushalt', serviceCount: 2 } } })
+  assert.match(markup, /Wärmekarte nach Dienstgruppen|Heat map by service group/)
+  assert.doesNotMatch(markup, /Dienste der Gruppe|Services of the group/)
+  assert.match(markup, /<th>(Gruppe|Group)<\/th>/)
+})
+
+test('die Tabs stehen unter den Auswahlfeldern, übergebene Inhalte ersetzen den Gesamtbericht', () => {
+  const markup = render({ tabs: <nav data-testid="tabs" />, children: <div data-testid="eigener-inhalt" /> })
+  assert.ok(markup.indexOf('data-testid="controls"') < markup.indexOf('data-testid="tabs"'))
+  assert.match(markup, /data-testid="eigener-inhalt"/)
+  assert.doesNotMatch(markup, /data-testid="report-ranking"/)
+  assert.match(render({ tabs: <nav data-testid="tabs" /> }), /data-testid="report-ranking"/)
+})

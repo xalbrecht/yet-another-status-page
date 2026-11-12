@@ -27,11 +27,19 @@ export type IncidentForConversion = {
   updates: Array<{ status: string; message: string; createdAt: string }>
 }
 
-export type ConversionPlan = { skip: 'open' | 'manual' | 'not-maintenance' } | { maintenance: MaintenanceDraft }
+export type ConversionPlan = { skip: 'open' | 'manual' | 'not-maintenance' | 'after-start' } | { maintenance: MaintenanceDraft }
 
-export function planMaintenanceFromIncident(incident: IncidentForConversion): ConversionPlan {
+/**
+ * `cutoffAt`: Zeitpunkt des ersten Betriebseintrags im Statusprotokoll. Vorfälle, die danach in YASP erfasst wurden,
+ * sind keine übernommenen und werden nicht umgewandelt.
+ */
+export function planMaintenanceFromIncident(
+  incident: IncidentForConversion,
+  options: { cutoffAt?: string | null } = {},
+): ConversionPlan {
   if (!incident.title.toLowerCase().includes('wartung')) return { skip: 'not-maintenance' }
   if (incident.availabilityClass && incident.availabilityClass !== 'auto') return { skip: 'manual' }
+  if (options.cutoffAt && new Date(incident.createdAt).getTime() >= new Date(options.cutoffAt).getTime()) return { skip: 'after-start' }
   if (!incident.resolvedAt) return { skip: 'open' }
   return {
     maintenance: {
@@ -58,6 +66,8 @@ export type ConversionResult = {
   converted: Array<{ incidentId: string; title: string; services: number; from: string; to: string }>
   skipped: Array<{ incidentId: string; title: string; reason: string }>
   rebuild?: RebuildResult
+  /** Fehlertext, wenn die Nachrechnung nach der Umwandlung scheiterte. Die Umwandlung selbst ist dann abgeschlossen. */
+  rebuildError?: string
 }
 
 /** Die Beschreibung einer Wartung ist ein Lexical-Dokument. Ein Absatz mit dem Text genügt. */
@@ -90,7 +100,15 @@ const idOf = (value: unknown): number | string =>
 export async function convertMaintenanceIncidents(payload: Payload, options: { dryRun: boolean }): Promise<ConversionResult> {
   const incidents = await payload.find({ collection: 'incidents', depth: 0, pagination: false, sort: 'createdAt' })
   const result: ConversionResult = { dryRun: options.dryRun, converted: [], skipped: [] }
-  const context = { skipNotificationCreation: true, skipAutoStatusUpdate: true }
+  const context = { skipNotificationCreation: true, skipAutoStatusUpdate: true, skipServiceSync: true }
+  const firstOperation = await payload.find({
+    collection: 'service-status-events',
+    where: { source: { equals: 'operation' } },
+    sort: 'changedAt',
+    limit: 1,
+    depth: 0,
+  })
+  const cutoffAt = firstOperation.docs[0]?.changedAt ?? null
 
   for (const doc of incidents.docs) {
     const plan = planMaintenanceFromIncident({
@@ -102,7 +120,7 @@ export async function convertMaintenanceIncidents(payload: Payload, options: { d
       availabilityClass: doc.availabilityClass,
       serviceIds: (doc.affectedServices || []).map(idOf),
       updates: (doc.updates || []).map((update) => ({ status: update.status, message: update.message, createdAt: update.createdAt })),
-    })
+    }, { cutoffAt })
     const incidentId = String(doc.id)
     if ('skip' in plan) {
       if (plan.skip !== 'not-maintenance') result.skipped.push({ incidentId, title: doc.title, reason: plan.skip })
@@ -115,12 +133,21 @@ export async function convertMaintenanceIncidents(payload: Payload, options: { d
       continue
     }
     try {
-      await payload.create({
+      // Nach einem abgebrochenen Lauf besteht die Wartung schon, der Vorfall noch nicht gelöscht: nicht doppelt anlegen
+      const existing = await payload.find({
         collection: 'maintenances',
-        data: { ...draft, description: descriptionToLexical(draft.description), affectedServices: draft.affectedServices.map(Number) },
+        where: { and: [{ title: { equals: draft.title } }, { scheduledStartAt: { equals: draft.scheduledStartAt } }] },
+        limit: 1,
         depth: 0,
-        context,
       })
+      if (existing.docs.length === 0) {
+        await payload.create({
+          collection: 'maintenances',
+          data: { ...draft, description: descriptionToLexical(draft.description), affectedServices: draft.affectedServices.map(Number) },
+          depth: 0,
+          context,
+        })
+      }
       await payload.delete({ collection: 'incidents', id: doc.id, depth: 0, context })
       result.converted.push(entry)
     } catch (error) {
@@ -130,7 +157,11 @@ export async function convertMaintenanceIncidents(payload: Payload, options: { d
 
   if (!options.dryRun) {
     const db = (payload.db as unknown as { drizzle: SqlRunner }).drizzle
-    result.rebuild = await rebuildStatusLog(db, { dryRun: false })
+    try {
+      result.rebuild = await rebuildStatusLog(db, { dryRun: false })
+    } catch (error) {
+      result.rebuildError = error instanceof Error ? error.message : String(error)
+    }
   }
   return result
 }

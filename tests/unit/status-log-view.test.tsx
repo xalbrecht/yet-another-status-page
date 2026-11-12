@@ -62,3 +62,22 @@ test('die Zählung nach Einordnung steht mit lesbaren Namen statt mit internen S
   assert.doesNotMatch(markup, /<th>major<\/th>/)
   assert.doesNotMatch(markup, /<th>partial \(nicht eindeutig\)<\/th>/)
 })
+
+test('scheitert die Nachrechnung nach der Umwandlung, steht der Fehler mit der Aufforderung zum erneuten Ausführen da', () => {
+  const markup = renderToStaticMarkup(
+    <StatusLogView rebuild={null} conversion={{ ...conversion, dryRun: false, rebuildError: 'Datenbank nicht erreichbar' }} busy={false} />,
+  )
+  assert.match(markup, /data-testid="convert-rebuild-error"/)
+  assert.match(markup, /Datenbank nicht erreichbar/)
+})
+
+test('der Grund „nach dem Start des Statusprotokolls erfasst“ wird lesbar angezeigt', () => {
+  const markup = renderToStaticMarkup(
+    <StatusLogView
+      rebuild={null}
+      conversion={{ dryRun: true, converted: [], skipped: [{ incidentId: '9', title: 'Störung nach Wartung', reason: 'after-start' }] }}
+      busy={false}
+    />,
+  )
+  assert.doesNotMatch(markup, />after-start</)
+})

@@ -51,3 +51,12 @@ test('ein Vorfall ohne Kurz-ID bekommt eine Beschreibung ohne Kennung', () => {
   assert.ok('maintenance' in plan)
   assert.equal(plan.maintenance.description, 'Übernommen aus einer Störung des Vorgängerverfahrens')
 })
+
+test('ein Vorfall nach dem Start des Statusprotokolls wird nicht umgewandelt', () => {
+  const cutoffAt = '2026-11-10T15:56:00.000Z'
+  assert.deepEqual(planMaintenanceFromIncident({ ...base, title, createdAt: '2026-11-11T08:00:00.000Z' }, { cutoffAt }), { skip: 'after-start' })
+  const before = planMaintenanceFromIncident({ ...base, title }, { cutoffAt })
+  assert.ok('maintenance' in before)
+  const withoutCutoff = planMaintenanceFromIncident({ ...base, title, createdAt: '2026-11-11T08:00:00.000Z' })
+  assert.ok('maintenance' in withoutCutoff)
+})

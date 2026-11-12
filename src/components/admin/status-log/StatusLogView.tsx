@@ -42,6 +42,7 @@ function classLabel(key: string): string {
 function reasonLabel(reason: string): string {
   if (reason === 'open') return ta('open, not resolved', 'offen, nicht behoben')
   if (reason === 'manual') return ta('classified by hand', 'von Hand eingeordnet')
+  if (reason === 'after-start') return ta('entered after the status log started', 'nach dem Start des Statusprotokolls erfasst')
   return reason
 }
 
@@ -109,6 +110,14 @@ export function StatusLogView(props: StatusLogViewProps) {
         {conversion && (
           <div data-testid="convert-result">
             <p>{conversion.dryRun ? ta('Preview, nothing was changed.', 'Vorschau, es wurde nichts geändert.') : ta('Executed.', 'Ausgeführt.')}</p>
+            {conversion.rebuildError && (
+              <p className="status-log__error" role="alert" data-testid="convert-rebuild-error">
+                {ta('The conversion is done, but the reconstruction failed: ', 'Die Umwandlung ist abgeschlossen, die Nachrechnung ist aber gescheitert: ')}
+                {conversion.rebuildError}
+                {' '}
+                {ta('Run the reconstruction again.', 'Die Nachrechnung bitte erneut ausführen.')}
+              </p>
+            )}
             <h3>{ta('Converted', 'Umgewandelt')} ({conversion.converted.length})</h3>
             <table>
               <thead>

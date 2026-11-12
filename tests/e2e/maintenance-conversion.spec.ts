@@ -1,5 +1,5 @@
 import { test, expect, type APIRequestContext } from '@playwright/test'
-import { createIncident, createService, createServiceGroup, updateIncident } from '../utils/payload-helpers'
+import { createIncident, createMaintenance, createService, createServiceGroup, updateIncident, updateService } from '../utils/payload-helpers'
 
 /**
  * Umwandlung von Wartungsvorfällen in Wartungen: Die Vorschau ändert nichts, das Ausführen legt eine abgeschlossene
@@ -90,5 +90,53 @@ test.describe('Umwandlung der Wartungsvorfälle', () => {
     await convert(request, { dryRun: false })
     expect((await request.get(`/api/incidents/${manual.id}`)).status()).toBe(200)
     expect((await request.get(`/api/incidents/${open.id}`)).status()).toBe(200)
+  })
+  test('eine schon vorhandene Wartung mit gleichem Titel und Beginn wird nicht doppelt angelegt', async ({ request }) => {
+    const id = Date.now()
+    const group = await createServiceGroup({ name: `Umwandlung Dopplung ${id}`, icon: 'Server' })
+    const service = await createService({ name: `Umwandlung Dopplung Dienst ${id}`, group: group.id })
+    const title = `Nichtverfügbarkeit des Services Dopplung ${id} aufgrund von Wartungsarbeiten`
+    const { incident, start, end } = await createMaintenanceIncident(title, service.id)
+    // Zustand nach einem abgebrochenen Lauf: Die Wartung besteht schon, der Vorfall noch nicht gelöscht
+    await createMaintenance({ title, status: 'completed', scheduledStartAt: start, scheduledEndAt: end, affectedServices: [service.id] })
+
+    await convert(request, { dryRun: false })
+    expect(await findMaintenances(request, title)).toHaveLength(1)
+    expect((await request.get(`/api/incidents/${incident.id}`)).status()).toBe(404)
+  })
+
+  test('das Löschen des Vorfalls lässt von Hand gesetzte Zustände der Dienste unverändert', async ({ request }) => {
+    const id = Date.now()
+    const group = await createServiceGroup({ name: `Umwandlung Zustand ${id}`, icon: 'Server' })
+    const service = await createService({ name: `Umwandlung Zustand Dienst ${id}`, group: group.id })
+    const title = `Nichtverfügbarkeit des Services Zustand ${id} aufgrund von Wartungsarbeiten`
+    await createMaintenanceIncident(title, service.id)
+    await updateService(service.id, { status: 'partial' })
+
+    await convert(request, { dryRun: false })
+    const response = await request.get(`/api/services/${service.id}`)
+    expect((await response.json()).status).toBe('partial')
+  })
+
+  test('ein Vorfall mit Wartung im Titel nach dem Start des Statusprotokolls bleibt unberührt', async ({ request }) => {
+    const id = Date.now()
+    const group = await createServiceGroup({ name: `Umwandlung Neu ${id}`, icon: 'Server' })
+    const service = await createService({ name: `Umwandlung Neu Dienst ${id}`, group: group.id })
+    const title = `Störung nach Wartung ${id}`
+    const incident = await createIncident({
+      title,
+      updates: [
+        { status: 'investigating', message: 'Wir untersuchen.' },
+        { status: 'resolved', message: 'Behoben.' },
+      ],
+      affectedServices: [service.id],
+    })
+
+    const preview = await convert(request)
+    const reasons = Object.fromEntries(preview.skipped.map((entry: { title: string; reason: string }) => [entry.title, entry.reason]))
+    expect(reasons[title]).toBe('after-start')
+    await convert(request, { dryRun: false })
+    expect((await request.get(`/api/incidents/${incident.id}`)).status()).toBe(200)
+    expect(await findMaintenances(request, title)).toHaveLength(0)
   })
 })

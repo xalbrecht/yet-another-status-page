@@ -8,7 +8,11 @@ import { buildReconstructedEvents } from '@/lib/status-reconstruction'
  * Das Feld `impact` der Vorfälle wird nicht gelesen. Eine Einordnung von Hand (`availability_class`) hat Vorrang.
  * Bei `dryRun: true` wird nichts geschrieben.
  */
-export type SqlRunner = { execute: (query: ReturnType<typeof sql>) => Promise<{ rows: unknown[] }> }
+export type SqlRunner = {
+  execute: (query: ReturnType<typeof sql>) => Promise<{ rows: unknown[] }>
+  /** Vorhanden bei Drizzle. Löschen und Einfügen laufen darin, damit ein Fehler das Protokoll nicht halb gefüllt lässt. */
+  transaction?: <T>(fn: (tx: SqlRunner) => Promise<T>) => Promise<T>
+}
 
 export type RebuildResult = {
   dryRun: boolean
@@ -84,15 +88,19 @@ export async function rebuildStatusLog(db: SqlRunner, options: { dryRun: boolean
   }
 
   if (!options.dryRun) {
-    await db.execute(sql`DELETE FROM service_status_events WHERE source = 'reconstructed'`)
-    for (let offset = 0; offset < events.length; offset += INSERT_BATCH) {
-      const values = events
-        .slice(offset, offset + INSERT_BATCH)
-        .map((event) => sql`(${event.serviceId}, ${event.status}::enum_service_status_events_status, to_timestamp(${event.at} / 1000.0), 'reconstructed')`)
-      await db.execute(sql`
-        INSERT INTO service_status_events (service_id, status, changed_at, source)
-        VALUES ${sql.join(values, sql`, `)}`)
+    const write = async (runner: SqlRunner) => {
+      await runner.execute(sql`DELETE FROM service_status_events WHERE source = 'reconstructed'`)
+      for (let offset = 0; offset < events.length; offset += INSERT_BATCH) {
+        const values = events
+          .slice(offset, offset + INSERT_BATCH)
+          .map((event) => sql`(${event.serviceId}, ${event.status}::enum_service_status_events_status, to_timestamp(${event.at} / 1000.0), 'reconstructed')`)
+        await runner.execute(sql`
+          INSERT INTO service_status_events (service_id, status, changed_at, source)
+          VALUES ${sql.join(values, sql`, `)}`)
+      }
     }
+    if (db.transaction) await db.transaction(write)
+    else await write(db)
   }
 
   return {

@@ -278,6 +278,8 @@ export const Incidents: CollectionConfig = {
         return doc
       },
       async ({ doc, req }) => {
+        // Die Umwandlung in Wartungen löscht gelöste Störungen, ohne Zustände von Hand zurückzusetzen
+        if (req.context?.skipServiceSync) return
         // Gelöschte Störung gibt die Dienste wieder frei
         await syncServiceStatusesFromIncidents(req.payload, uniqueServiceIds(doc.affectedServices), req)
       },

@@ -20,6 +20,8 @@ export interface EmailOptions {
 export interface EmailResult {
   success: boolean
   messageId?: string
+  /** Empfänger, die der Mailserver abgelehnt hat, obwohl die Mail andere erreichte (nodemailer wirft nur, wenn alle abgelehnt werden) */
+  rejected?: string[]
   error?: string
 }
 
@@ -84,6 +86,7 @@ export async function sendEmail(
     return {
       success: true,
       messageId: result.messageId,
+      rejected: (result.rejected ?? []).map(String),
     }
   } catch (error) {
     console.error('Email send error:', error)

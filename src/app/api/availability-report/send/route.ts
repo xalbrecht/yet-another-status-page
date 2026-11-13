@@ -35,6 +35,9 @@ export async function POST(request: NextRequest) {
       search[key] = values.length > 1 ? values : values[0]
     }
 
+    if (Array.isArray(search.resume) || Array.isArray(search.plan)) {
+      return fail('bad-request', ta('resume and plan may be given only once.', 'resume und plan dürfen nur einmal angegeben werden.'), 400)
+    }
     const resumeText = typeof search.resume === 'string' ? search.resume : undefined
     const planId = typeof search.plan === 'string' && search.plan ? search.plan : undefined
     let resume: { from: number; planId: string } | undefined
@@ -70,7 +73,7 @@ export async function POST(request: NextRequest) {
           nextMail: (resume?.from ?? 1) + result.sent,
         })
       }
-      return NextResponse.json({ mails: result.mails, sent: result.sent, planId: result.planId, recipients })
+      return NextResponse.json({ mails: result.mails, sent: result.sent, planId: result.planId, recipients, rejected: result.rejected })
     } catch (error) {
       if (error instanceof ReportMailTooLargeError) return fail('too-large', error.message, 413)
       if (error instanceof ReportMailResumeError) return fail('bad-request', error.message, 400)

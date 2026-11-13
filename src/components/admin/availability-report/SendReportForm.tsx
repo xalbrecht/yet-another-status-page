@@ -9,7 +9,7 @@ export type SendState =
   | { kind: 'idle' }
   | { kind: 'confirm' }
   | { kind: 'sending' }
-  | { kind: 'done'; message: string }
+  | { kind: 'done'; message: string; rejected?: string[] }
   | { kind: 'error'; code: string; message: string; sent?: number; mails?: number; nextMail?: number }
 
 export type SendReportFormProps = {
@@ -27,7 +27,8 @@ const SETTINGS_HREF = '/admin/globals/email-settings'
 
 function ErrorBox(props: { state: Extract<SendState, { kind: 'error' }>; onResume?: () => void; onRestart?: () => void }) {
   const { state, onResume, onRestart } = props
-  const sent = state.sent ?? 0
+  // Die Route zählt nur die Mails dieses Aufrufs. Gesendet ist alles vor der nächsten Mail, auch aus früheren Versuchen.
+  const sent = state.nextMail !== undefined ? state.nextMail - 1 : state.sent ?? 0
   if (state.code === 'plan-changed') {
     return (
       <div role="alert" className="availability-report__send-error">
@@ -42,7 +43,7 @@ function ErrorBox(props: { state: Extract<SendState, { kind: 'error' }>; onResum
     )
   }
   if (state.code === 'send-failed') {
-    const resumable = sent > 0 && state.nextMail !== undefined && state.mails !== undefined
+    const resumable = (state.nextMail ?? 1) > 1 && state.mails !== undefined
     return (
       <div role="alert" className="availability-report__send-error">
         <p>
@@ -55,6 +56,18 @@ function ErrorBox(props: { state: Extract<SendState, { kind: 'error' }>; onResum
         ) : (
           <button type="button" onClick={onRestart}>{ta('Send again', 'Erneut senden')}</button>
         )}
+      </div>
+    )
+  }
+  if (state.code === 'unknown-state') {
+    return (
+      <div role="alert" className="availability-report__send-error">
+        <p>
+          {ta(
+            'Status unknown: the answer of the server is missing. The dispatch may still be running or may be partly done. Please check with the recipients before you start a new dispatch.',
+            'Stand unbekannt: Die Antwort des Servers fehlt. Der Versand läuft möglicherweise noch oder ist teilweise erfolgt. Bitte bei den Empfängern nachsehen, bevor ein neuer Versand gestartet wird.',
+          )}
+        </p>
       </div>
     )
   }
@@ -98,6 +111,11 @@ export function SendReportForm(props: SendReportFormProps) {
         </p>
       )}
       {state.kind === 'done' && <p role="status">{state.message}</p>}
+      {state.kind === 'done' && state.rejected && state.rejected.length > 0 && (
+        <p role="alert" className="availability-report__send-error">
+          {ta('The mail server rejected these recipients, they received nothing', 'Der Mailserver hat diese Empfänger abgelehnt, sie haben nichts erhalten')}: {state.rejected.join(', ')}
+        </p>
+      )}
       {state.kind === 'error' && <ErrorBox state={state} onResume={onResume} onRestart={onRestart} />}
       <p className="availability-report__muted">
         {ta(

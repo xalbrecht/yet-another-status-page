@@ -45,7 +45,7 @@ export async function AvailabilityReportView({ initPageResult, params, searchPar
   const exportable = result.ok && !result.data.error
   const tabs = (
     <>
-      {exportable && <SendReportButton recipients={recipients} query={selectionQuery(search)} />}
+      {exportable && <SendReportButton key={selectionQuery(search)} recipients={recipients} query={selectionQuery(search)} />}
       {exportable && <ExportButtons search={search} groupId={requested.view === 'groups' ? result.data.scope.groupId : null} />}
       <ViewTabs active={requested.view} hrefs={reportTabHrefs(search, groupInvalid)} />
     </>

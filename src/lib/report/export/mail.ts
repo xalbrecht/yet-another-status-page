@@ -39,12 +39,15 @@ export class ReportMailPlanChangedError extends Error {
   }
 }
 
+/** Reihenfolge nach Codepunkten: unabhängig von der Locale des Prozesses, damit Kennung und ZIP-Teile stabil bleiben. */
+const byPath = (a: ExportFile, b: ExportFile) => (a.path < b.path ? -1 : a.path > b.path ? 1 : 0)
+
 const baseName = (path: string) => path.slice(path.lastIndexOf('/') + 1)
 
 /** Kennung der Bilder: SHA-256 über Pfad und Inhalt jeder PNG-Datei in Pfadreihenfolge. PDF und Excel enthalten Zeitstempel und zählen nicht. */
 export function reportPlanId(files: ExportFile[]): string {
   const hash = createHash('sha256')
-  for (const entry of files.filter((item) => item.path.endsWith('.png')).sort((a, b) => a.path.localeCompare(b.path))) {
+  for (const entry of files.filter((item) => item.path.endsWith('.png')).sort(byPath)) {
     hash.update(entry.path).update('\0').update(createHash('sha256').update(entry.data).digest()).update('\0')
   }
   return hash.digest('hex')
@@ -69,7 +72,7 @@ export function planReportMails(files: ExportFile[], limit: number = MAIL_PART_L
   const parts: ExportFile[][] = []
   let current: ExportFile[] = []
   let currentBytes = 0
-  for (const entry of files.filter((item) => item.path.endsWith('.png')).sort((a, b) => a.path.localeCompare(b.path))) {
+  for (const entry of files.filter((item) => item.path.endsWith('.png')).sort(byPath)) {
     if (current.length > 0 && currentBytes + entry.data.length > limit) {
       parts.push(current)
       current = []
@@ -97,7 +100,7 @@ export async function sendReportMail(input: {
   /** Quelle der Dateien, im Test ersetzbar */
   filesOf?: (context: ReportContext) => AsyncIterable<ExportFile>
   limit?: number
-}): Promise<{ mails: number; sent: number; failed: number; errors: string[]; planId: string }> {
+}): Promise<{ mails: number; sent: number; failed: number; errors: string[]; planId: string; rejected: string[] }> {
   const { context, recipients, send, resume } = input
   if (recipients.length === 0) throw new Error(ta('No recipients entered', 'Keine Empfänger eingetragen'))
 
@@ -118,6 +121,7 @@ export async function sendReportMail(input: {
 
   let sent = 0
   const errors: string[] = []
+  const rejected = new Set<string>()
   for (let number = first; number <= mails; number++) {
     const part = mails > 1 ? ` (${ta('Part', 'Teil')} ${number} ${ta('of', 'von')} ${mails})` : ''
     const lines = [
@@ -135,9 +139,10 @@ export async function sendReportMail(input: {
     })
     if (!result.success) {
       errors.push(result.error ?? 'Unknown error')
-      return { mails, sent, failed: 1, errors, planId }
+      return { mails, sent, failed: 1, errors, planId, rejected: [...rejected] }
     }
+    for (const address of result.rejected ?? []) rejected.add(address)
     sent++
   }
-  return { mails, sent, failed: 0, errors, planId }
+  return { mails, sent, failed: 0, errors, planId, rejected: [...rejected] }
 }

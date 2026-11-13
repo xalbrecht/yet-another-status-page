@@ -84,3 +84,26 @@ test('selectionQuery trägt nur Zeitraum, Rechenart und Wartungsart, alphabetisc
   )
   assert.equal(selectionQuery({}), '')
 })
+
+test('scheitert „Rest senden“ erneut, zählt die Seite die Mails des ersten Versuchs mit', () => {
+  const sofort = render({ kind: 'error', code: 'send-failed', message: 'Server weg', sent: 0, mails: 4, nextMail: 3 })
+  assert.match(sofort, /2 von 4 Mails sind raus, Mail 3 ist nicht angekommen/)
+  assert.deepEqual(buttons(sofort), ['Rest senden (ab Mail 3 von 4)'])
+  const spaeter = render({ kind: 'error', code: 'send-failed', message: 'Server weg', sent: 1, mails: 4, nextMail: 4 })
+  assert.match(spaeter, /3 von 4 Mails sind raus, Mail 4 ist nicht angekommen/)
+})
+
+test('ohne Antwort des Servers steht „Stand unbekannt“ statt „Es ging keine Mail raus“, ohne Knopf', () => {
+  const markup = render({ kind: 'error', code: 'unknown-state', message: 'x' })
+  assert.match(markup, /Stand unbekannt/)
+  assert.match(markup, /Empfängern nachsehen|check with the recipients/)
+  assert.doesNotMatch(markup, /Es ging keine Mail raus/)
+  assert.deepEqual(buttons(markup), [])
+})
+
+test('die Abschlussmeldung nennt vom Mailserver abgelehnte Empfänger', () => {
+  const markup = render({ kind: 'done', message: 'Versand abgeschlossen: 2 Mails.', rejected: ['b@x.de'] })
+  assert.match(markup, /abgelehnt|rejected/i)
+  assert.match(markup, /b@x\.de/)
+  assert.match(markup, /role="alert"/)
+})

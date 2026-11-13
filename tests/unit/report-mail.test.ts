@@ -144,3 +144,23 @@ test('sendReportMail: ohne Empfänger wird vor jedem Versand geworfen', async ()
   await assert.rejects(() => sendReportMail({ context, recipients: [], send: r.send, filesOf: filesOf(fourMails()) }), /Empfänger|recipients/i)
   assert.equal(r.calls.length, 0)
 })
+
+test('sendReportMail meldet Empfänger, die der Mailserver abgelehnt hat, ohne den Versand abzubrechen', async () => {
+  const calls: EmailOptions[] = []
+  const send = async (options: EmailOptions): Promise<EmailResult> => {
+    calls.push(options)
+    return { success: true, rejected: ['b@x.de'] }
+  }
+  const result = await sendReportMail({ context, recipients: ['a@x.de', 'b@x.de'], send, filesOf: filesOf(fourMails()), limit: 6000 })
+  assert.equal(result.sent, 4)
+  assert.equal(result.failed, 0)
+  assert.deepEqual(result.rejected, ['b@x.de'])
+})
+
+test('die Reihenfolge der Bilder und die Kennung hängen nicht von der Locale ab', () => {
+  const upper = file('gruppen/Zeta/00.png', 10, 1)
+  const lower = file('gruppen/alpha/00.png', 10, 2)
+  assert.equal(reportPlanId([upper, lower]), reportPlanId([lower, upper]))
+  const parts = planReportMails([file('b.pdf', 5), file('b.xlsx', 5), lower, upper], 100)
+  assert.deepEqual(Object.keys(unzipSync(parts[1].attachments[0].content)).map((name) => name.split('/')[2]), ['Zeta', 'alpha'])
+})

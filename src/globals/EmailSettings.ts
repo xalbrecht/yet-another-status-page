@@ -1,3 +1,4 @@
+import { validateRecipients } from '@/lib/report/export/recipients'
 import type { GlobalConfig } from 'payload'
 import { ta } from '@/lib/i18n/admin'
 
@@ -126,6 +127,15 @@ export const EmailSettings: GlobalConfig = {
           label: ta('Address for new subscription requests'),
           admin: {
             description: ta('Receives a message for every new subscription so that it can be approved. Leave empty to send none'),
+          },
+        },
+        {
+          name: 'reportRecipients',
+          type: 'textarea',
+          label: ta('Recipients of the availability report', 'Empfänger des Verfügbarkeitsberichts'),
+          validate: (value: string | null | undefined) => validateRecipients(value),
+          admin: {
+            description: ta('One address per line or separated by commas. Leave empty to send none', 'Eine Adresse je Zeile oder durch Komma getrennt. Leer: kein Versand'),
           },
         },
       ],

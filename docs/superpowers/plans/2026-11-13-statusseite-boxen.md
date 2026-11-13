@@ -15,11 +15,11 @@
 - Branch `feature/73-statusseite-boxen` von `main`, nie direkt auf `main`. Commit `<typ>(<scope>): <Imperativ> (#73)`, erste Zeile höchstens 50 Zeichen, Anhang `Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>`.
 - Gespeicherte Werte von `lagebildVariant` bleiben `off`, `a`, `b`, `both`. Keine Migration dafür, nur neue Beschriftungen. `off` heißt „Variante C (einfache Liste)“, `both` bleibt als Testmodus (entfällt später mit Issue #21).
 - Variante C: Ausgabe der Startseite unverändert, kein Boxen-Layout, kein Tooltip, keine neuen Elemente. Die drei neuen Einstellungen haben bei C keine Wirkung und sind im Admin dann ausgeblendet.
-- Varianten A, B und `both`: Die lange Liste der Gruppen und Dienste (`ServiceGroup`) entfällt. Die Langform von Wartungen und Störungen bleibt wie bisher.
+- Varianten A, B und `both`: Die lange Liste der Gruppen und Dienste (`ServiceGroup`) entfällt. Unter dem Raster steht die Langform in drei Blöcken in dieser Reihenfolge: **„Aktuelle Störungen“** (alle offenen Störungen mit ihren Aktualisierungen, neu), **„Geplante Wartungen“** (wie bisher) und **„Vergangene Störungen“** (nur gelöste Störungen der letzten 5 Tage, wie bisher gruppiert nach Tag, offene Störungen stehen dort nicht mehr). In Variante C bleibt es beim bisherigen Aufbau (offene Störungen stehen im Tageslisting).
 - Neue Einstellungen in `settings`: `statusBoxEntries` (Zahl, 1 bis 10, Voreinstellung 3), `statusBoxContent` (`full` oder `compact`, Voreinstellung `full`), `statusBoxesPlacement` (`before` oder `after`, Voreinstellung `before`). Beschriftungen über `ta('English', 'Deutsch')` aus `@/lib/i18n/admin`, Oberflächentexte über `src/lib/i18n/de.ts` und `en.ts`.
 - Tooltip an der Gruppe: nur die Dienste, je mit Punkt in der Farbe des Zustands, ohne Beschreibung und ohne Zustandstext. Der Zustand steht als versteckter Text (`sr-only`) am Punkt. Die Dienstliste jeder Gruppe liegt immer im HTML der Kachel, nur die Sichtbarkeit wechselt (Suchmaschinen, Screenreader).
 - Tooltip schließt 250 ms nach dem Verlassen von Kachel und Tooltip, nicht früher, und liegt ohne Lücke an der Kachel. Klick in den Tooltip öffnet das Dienstfeld der Gruppe. Esc schließt. Auf Touch zeigt das erste Tippen den Tooltip, das zweite das Dienstfeld.
-- Boxen: Kurzform zeigt höchstens `statusBoxEntries` Einträge je Box, der Rest steht hinter „n weitere anzeigen“ mit Sprung zur Langform (`#maintenance`, `#incidents`). Ist die Box leer, steht ein Satz („Keine aktuellen Störungen.“, „Keine Wartungen geplant oder laufend.“), die Box bleibt sichtbar.
+- Boxen: Kurzform zeigt höchstens `statusBoxEntries` Einträge je Box, der Rest steht hinter „n weitere anzeigen“ mit Sprung zur Langform (`#incidents` für den Block „Aktuelle Störungen“, `#maintenance` für „Geplante Wartungen“). Die Box und der Block „Aktuelle Störungen“ zeigen dieselben Störungen, die Box gekürzt, der Block vollständig. Ist die Box leer, steht ein Satz („Keine aktuellen Störungen.“, „Keine Wartungen geplant oder laufend.“), die Box bleibt sichtbar.
 - Keine Änderung an Berechnung der Verfügbarkeit, am Verfügbarkeitsbericht und an Benachrichtigungen.
 - Prüfen mit `npm run test:unit`, `npx tsc --noEmit`, `npm run lint`. E2E nach `docs/src/development/testing.md`, Umgebung von Hand starten, wenn `scripts/run-e2e-tests.sh` nach 2,5 Minuten abbricht.
 
@@ -29,6 +29,7 @@
 - Mehr offene Störungen oder Wartungen als eingestellt, genau so viele, keine: „weitere anzeigen“ erscheint nur bei Rest, leere Box zeigt den Satz (Task 2, 3).
 - Störung ohne verknüpften Dienst, Wartung ohne Ende (`scheduledEndAt` leer): Eintrag erscheint ohne Dienstliste bzw. ohne Endzeit, kein Absturz (Task 2).
 - Eintrag ohne Aktualisierung (`updates` leer): „letzter Stand“ entfällt statt „undefined“ (Task 2).
+- Eine Störung ist offen und älter als 5 Tage: sie steht im Block „Aktuelle Störungen“ und fehlt in „Vergangene Störungen“, sie geht nicht verloren (Task 5).
 - Wert der Einstellung außerhalb des Bereichs (0, 11, Text, leer): fällt auf die Voreinstellung bzw. wird begrenzt (Task 2).
 - Wechsel der Variante im Admin: bei C erscheinen keine Boxen und kein Tooltip, bei A und B die Boxen auch bei „Alles ruhig“ (Task 5).
 - Tastatur und Touch: Tab erreicht jede Kachel und zeigt den Tooltip, Esc schließt, auf Touch öffnet das zweite Tippen das Dienstfeld (Task 6).
@@ -143,12 +144,12 @@
 ### Task 5: Layout je Variante
 
 **Files:**
-- Modify: `src/app/(frontend)/page.tsx`, `src/components/status/MaintenanceCard.tsx` (Anker), `src/components/status/IncidentTimeline.tsx` (Anker, nur wenn kein Wrapper in `page.tsx` reicht)
+- Modify: `src/app/(frontend)/page.tsx`, `src/components/status/IncidentTimeline.tsx` (nur wenn die Gruppenüberschrift „Aktuelle Störungen“ dort nicht über die Props ausdrückbar ist)
 - Test: `tests/e2e/status-boxes.spec.ts` (Anfang)
 
 **Interfaces:**
 - Consumes: `StatusBoxes`, `parseBoxEntries`, `parseBoxContent`, `parseBoxesPlacement`, `buildIncidentItems`, `buildMaintenanceItems`.
-- Produces: Seitenaufbau, `id="maintenance"` und `id="incidents"` an den Langform-Abschnitten, `data-testid="status-layout"` mit `data-variant` und `data-placement` am Hauptraster.
+- Produces: Seitenaufbau, `id="incidents"` (Aktuelle Störungen), `id="maintenance"` (Geplante Wartungen) und `id="past-incidents"` (Vergangene Störungen) an den Langform-Abschnitten, `data-testid="status-layout"` mit `data-variant` und `data-placement` am Hauptraster.
 
 - [ ] **Step 1: E2E-Test `status-boxes.spec.ts`** (Muster `lagebild.spec.ts`, `serial`, `afterAll` setzt `lagebildVariant: 'off'` zurück):
   - Variante `off`: `status-layout` fehlt, `service-row` ist sichtbar (Liste wie heute).
@@ -157,10 +158,12 @@
   - `statusBoxEntries: 1` bei zwei offenen Störungen: ein `box-item`, `box-more` mit „1 weitere“.
   - `statusBoxContent: 'compact'`: kein `box-service` (Dienstliste) im Eintrag.
   - `statusBoxesPlacement: 'after'`: `data-placement="after"`.
-  - Ohne Störungen: Satz „Keine aktuellen Störungen“ sichtbar.
+  - Ohne Störungen: Satz „Keine aktuellen Störungen“ in der Box und im Block `incidents`.
+  - Mit einer offenen und einer gelösten Störung: Der Block `incidents` enthält nur die offene, der Block `past-incidents` nur die gelöste. Bei vier offenen Störungen und `statusBoxEntries: 3` zeigt die Box drei, der Block alle vier.
+  - Variante `off`: offene Störungen stehen weiter im Tageslisting, es gibt keinen Block `incidents`.
 - [ ] **Step 2: Test laufen lassen.** Erwartet: FAIL.
 - [ ] **Step 3: `getStatusData` erweitern:** Störungen für die Boxen mit `payload.find({ collection: 'incidents', where: { status: { not_equals: 'resolved' } }, sort: '-createdAt', depth: 1, limit: 50 })`, Wartungen aus der vorhandenen Abfrage (`maintenances`, mit `depth: 1` für die Dienstnamen; Filter auf `upcoming` und `in_progress` übernimmt `buildMaintenanceItems`). Einstellungen mit den `parse…`-Funktionen lesen.
-- [ ] **Step 4: Render:** Bei `off` bleibt der Baum der Seite unverändert. Bei `a`, `b`, `both`: Banner, dann Raster `grid` mit `lg:grid-cols-[minmax(0,1.9fr)_minmax(18rem,1fr)]` (Lagebild links, `StatusBoxes` rechts); unter `lg` steht je nach `statusBoxesPlacement` die Box vor oder nach dem Lagebild (`order-first` bzw. `order-last`). Hauptbreite von `max-w-4xl` auf `max-w-6xl` nur in diesen Varianten. `ServiceGroup`-Schleife und `StatusLegend` entfallen in diesen Varianten (Legende: siehe Offene Punkte). Langform darunter wie bisher, Abschnitte bekommen `id`.
+- [ ] **Step 4: Render:** Bei `off` bleibt der Baum der Seite unverändert. Bei `a`, `b`, `both`: Banner, dann Raster `grid` mit `lg:grid-cols-[minmax(0,1.9fr)_minmax(18rem,1fr)]` (Lagebild links, `StatusBoxes` rechts); unter `lg` steht je nach `statusBoxesPlacement` die Box vor oder nach dem Lagebild (`order-first` bzw. `order-last`). Hauptbreite von `max-w-4xl` auf `max-w-6xl` nur in diesen Varianten. `ServiceGroup`-Schleife und `StatusLegend` entfallen in diesen Varianten (Legende: siehe Offene Punkte). Langform darunter in drei Blöcken (siehe Global Constraints). „Aktuelle Störungen“ nutzt `IncidentTimelineWithLinks` mit einer einzigen Gruppe (Überschrift der Gruppe aus dem neuen Text `home.currentIncidents`), „Vergangene Störungen“ übergibt `pastIncidents` ohne offene Störungen (Filter auf den Status der letzten Aktualisierung). Der Block „Aktuelle Störungen“ entfällt, wenn keine Störung offen ist, nur die Box zeigt dann ihren Satz; der Anker `#incidents` führt in diesem Fall nirgends hin, weil die Box dann keinen Rest-Link hat.
 - [ ] **Step 5: Test laufen lassen.** Erwartet: PASS. `npx tsc --noEmit`, `npm run lint`.
 - [ ] **Step 6: Commit:** `feat(statusseite): Teile die Seite in Lagebild und Boxen (#73)`.
 

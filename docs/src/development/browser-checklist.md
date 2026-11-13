@@ -58,8 +58,8 @@ Diese Punkte führt der Betrieb aus, nicht der Prüfer im Browser.
 
 | Nr. | Prüfpunkt | Befehl | Erwartung | Dev | Test | Notiz |
 |---|---|---|---|---|---|---|
-| F1 | Kein Neustart des Containers | Test: `ssh lissrem "docker inspect -f '{{.RestartCount}}' yasp-app"` | Ausgabe `0` | ☐ | ☐ | |
-| F2 | Kein Speicher-Kill | Test: `ssh lissrem "docker events --since 24h --until 0s --filter event=oom"` | Keine Ausgabe | ☐ | ☐ | |
+| F1 | Kein Neustart des Containers | Test: `ssh <test-host> "docker inspect -f '{{.RestartCount}}' yasp-app"` | Ausgabe `0` | ☐ | ☐ | |
+| F2 | Kein Speicher-Kill | Test: `ssh <test-host> "docker events --since 24h --until 0s --filter event=oom"` | Keine Ausgabe | ☐ | ☐ | |
 | F3 | Prüfskript für den Stack | `scripts/check_stack.sh` im Deployment-Projekt ausführen | Läuft ohne Fehler durch | ☐ | ☐ | |
 
 ## PDF erzeugen

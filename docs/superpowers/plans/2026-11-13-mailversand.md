@@ -161,7 +161,7 @@ Lädt jemand die Seite nach einem Fehler neu, kennt sie den Fehler nicht mehr un
 
 ## Nach der Umsetzung (nicht automatisch prüfbar, für den PR-Text)
 
-- **Auf Dev mit dem Auffangserver:** `ssh -L 8025:127.0.0.1:8025 lissrem`, dann `http://localhost:8025`: Mails kommen an, Anhänge öffnen sich (PDF, Excel, ZIP-Teile entpacken), Reihenfolge „Teil i von n“ stimmt.
+- **Auf Dev mit dem Auffangserver:** `ssh -L 8025:127.0.0.1:8025 <test-host>`, dann `http://localhost:8025`: Mails kommen an, Anhänge öffnen sich (PDF, Excel, ZIP-Teile entpacken), Reihenfolge „Teil i von n“ stimmt.
 - **Größe mit echten Daten:** Passt PDF plus Excel unter 6 MB? Im synthetischen Test war das PDF 13 MB. Ist es zu groß, ist das Folgearbeit (PDF-Bilder kleiner einbetten) oder die Grenze von Postfix wird im Projekt `yasp.io` angehoben (`message_size_limit`, Auftrag an die `yasp.io`-Sitzung).
 - **Speicher auf Test (768 MiB):** ein Versand, `RestartCount`, `docker stats`. Der Versand hält alle Dateien (rund 40 MB) und rendert wie der Export.
 - **Von Hand:** Empfängerfeld mit ungültiger Adresse speichern (abgewiesen), Schaltfläche ohne Empfänger, Doppelklick auf „Jetzt senden“, Fortsetzen: auf Dev den Auffangserver oder Postfix mitten im Versand anhalten (`docker stop yasp-mailsink` nach der ersten Mail), „Rest senden“ klicken, Teile 2 bis n kommen genau einmal an.

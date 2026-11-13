@@ -8,7 +8,7 @@
 
 **Tech Stack:** TypeScript, Payload 3.90.2 (eigene Admin-Ansicht über `admin.components.views`), React Server Components, SVG ohne Bibliothek, `tsx --test`, Playwright (nur für die JSON-Route).
 
-**Spec:** `docs/superpowers/specs/2026-11-11-verfuegbarkeitsbericht-design.md`, Abschnitte 4, 5.2, 6 und 9; Ist-Stand `docs/superpowers/specs/2026-11-12-stoerung-benachrichtigung-wartung-ist-stand.md`. Issue #49 im Fork (GitHub). Entwurf der Seite: `https://yasp-test.intra.kommunale.it:8443/_edge/bericht.html`.
+**Spec:** `docs/superpowers/specs/2026-11-11-verfuegbarkeitsbericht-design.md`, Abschnitte 4, 5.2, 6 und 9; Ist-Stand `docs/superpowers/specs/2026-11-12-stoerung-benachrichtigung-wartung-ist-stand.md`. Issue #49 im Fork (GitHub). Entwurf der Seite: `https://<test-host>/_edge/bericht.html`.
 
 ## Global Constraints
 

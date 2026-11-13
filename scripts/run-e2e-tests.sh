@@ -9,7 +9,7 @@
 #
 # Behind a proxy that replaces TLS certificates, point E2E_CA_FILE to the CA file.
 # The file is mounted into the app container (docker-compose.test-ca.yml):
-#   E2E_CA_FILE=~/Vaults/Zertifikate/CAs/proxy.sit.dl.zone.pem ./scripts/run-e2e-tests.sh
+#   E2E_CA_FILE=/path/to/corporate-ca.pem ./scripts/run-e2e-tests.sh
 #
 
 set -e

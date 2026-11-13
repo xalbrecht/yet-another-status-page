@@ -8,7 +8,7 @@
 
 **Tech Stack:** Next.js (App Router, Server Components), Payload CMS 3 (Global `settings`, Postgres-Migration), Tailwind, `node:test` mit `tsx`, Playwright.
 
-**Spec:** Design-Notiz im Issue #73 im Fork (GitHub): https://github.com/xalbrecht/yet-another-status-page/issues/73#issuecomment-6856849713. Mockup (abgenommen am 13.11.2026): `https://yasp-test.intra.kommunale.it:8443/_edge/statusseite-mockup.html`, Anleitung als PDF daneben. Beides liegt außerhalb des Repos, die Notiz im Issue ist maßgeblich.
+**Spec:** Design-Notiz im Issue #73 im Fork (GitHub): https://github.com/xalbrecht/yet-another-status-page/issues/73#issuecomment-6856849713. Mockup (abgenommen am 13.11.2026): `https://<test-host>/_edge/statusseite-mockup.html`, Anleitung als PDF daneben. Beides liegt außerhalb des Repos, die Notiz im Issue ist maßgeblich.
 
 ## Global Constraints
 

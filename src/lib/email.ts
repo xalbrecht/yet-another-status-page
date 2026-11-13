@@ -1,16 +1,23 @@
-import nodemailer from 'nodemailer'
+import nodemailer, { type SendMailOptions } from 'nodemailer'
 import { lang, t, tf } from '@/lib/i18n'
 import type { EmailSetting } from '@/payload-types'
 
-interface EmailOptions {
-  to: string
+export interface EmailAttachment {
+  filename: string
+  content: Uint8Array
+  contentType?: string
+}
+
+export interface EmailOptions {
+  to: string | string[]
   subject: string
   html: string
   text?: string
   unsubscribeUrl?: string
+  attachments?: EmailAttachment[]
 }
 
-interface EmailResult {
+export interface EmailResult {
   success: boolean
   messageId?: string
   error?: string
@@ -39,33 +46,40 @@ export async function createTransporter(emailSettings: EmailSetting) {
   })
 }
 
+/** Baut die Nachricht für nodemailer. Reine Funktion, damit Absender, Empfänger und Anhänge ohne Server prüfbar sind. */
+export function buildMailMessage(emailSettings: EmailSetting, options: EmailOptions): SendMailOptions {
+  const fromName = emailSettings.smtpFromName || t('mail.fromName')
+  const headers: Record<string, string> = {}
+
+  // Add unsubscribe headers for better deliverability
+  if (options.unsubscribeUrl) {
+    headers['List-Unsubscribe'] = `<${options.unsubscribeUrl}>`
+    headers['List-Unsubscribe-Post'] = 'List-Unsubscribe=One-Click'
+  }
+
+  return {
+    from: `"${fromName}" <${emailSettings.smtpFromAddress}>`,
+    to: Array.isArray(options.to) ? options.to.join(', ') : options.to,
+    replyTo: emailSettings.smtpReplyTo || emailSettings.smtpFromAddress || undefined,
+    subject: options.subject,
+    html: options.html,
+    text: options.text || options.html.replace(/<[^>]*>/g, ''),
+    headers,
+    attachments: options.attachments?.map((attachment) => ({
+      filename: attachment.filename,
+      content: Buffer.from(attachment.content),
+      contentType: attachment.contentType,
+    })),
+  }
+}
+
 export async function sendEmail(
   emailSettings: EmailSetting,
   options: EmailOptions
 ): Promise<EmailResult> {
   try {
     const transporter = await createTransporter(emailSettings)
-
-    const fromName = emailSettings.smtpFromName || t('mail.fromName')
-    const from = `"${fromName}" <${emailSettings.smtpFromAddress}>`
-
-    const headers: Record<string, string> = {}
-    
-    // Add unsubscribe headers for better deliverability
-    if (options.unsubscribeUrl) {
-      headers['List-Unsubscribe'] = `<${options.unsubscribeUrl}>`
-      headers['List-Unsubscribe-Post'] = 'List-Unsubscribe=One-Click'
-    }
-
-    const result = await transporter.sendMail({
-      from,
-      to: options.to,
-      replyTo: emailSettings.smtpReplyTo || emailSettings.smtpFromAddress || undefined,
-      subject: options.subject,
-      html: options.html,
-      text: options.text || options.html.replace(/<[^>]*>/g, ''),
-      headers,
-    })
+    const result = await transporter.sendMail(buildMailMessage(emailSettings, options))
 
     return {
       success: true,

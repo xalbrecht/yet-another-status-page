@@ -75,3 +75,13 @@ export function reportTabHrefs(
     groups: reportHref(search, { ...keep, view: 'groups' }),
   }
 }
+
+const SELECTION_KEYS = ['calc', 'from', 'maintenance', 'period', 'to'] as const
+
+/** Auswahl der Seite (Zeitraum, Rechenart, Wartungsart) als Query-String für Export und Versand, ohne Ansicht und Gruppe. */
+export function selectionQuery(search: Record<string, string | string[] | undefined>): string {
+  return SELECTION_KEYS.flatMap((key) => {
+    const value = first(search[key])
+    return value ? [`${key}=${encodeURIComponent(value)}`] : []
+  }).join('&')
+}

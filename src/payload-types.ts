@@ -1174,6 +1174,10 @@ export interface EmailSetting {
    * Erhält zu jeder neuen Anmeldung eine Nachricht, damit sie freigegeben werden kann. Leer lassen, um keine zu senden
    */
   subscriberRequestTo?: string | null;
+  /**
+   * Eine Adresse je Zeile oder durch Komma getrennt. Leer: kein Versand
+   */
+  reportRecipients?: string | null;
   updatedAt?: string | null;
   createdAt?: string | null;
 }
@@ -1274,6 +1278,7 @@ export interface EmailSettingsSelect<T extends boolean = true> {
   smtpFromName?: T;
   smtpReplyTo?: T;
   subscriberRequestTo?: T;
+  reportRecipients?: T;
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;

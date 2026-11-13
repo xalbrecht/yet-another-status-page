@@ -7,12 +7,14 @@ import { loadReport } from '@/lib/report/load'
 import { periodOptions } from '@/lib/report/period'
 import { resolveDateTimeConfig } from '@/lib/datetime'
 import { ta } from '@/lib/i18n/admin'
-import { parseReportParams, reportHref, reportTabHrefs } from '@/lib/report/params'
+import { parseRecipients } from '@/lib/report/export/recipients'
+import { parseReportParams, reportHref, reportTabHrefs, selectionQuery } from '@/lib/report/params'
 import { ExportButtons } from './ExportButtons'
 import { GroupList } from './GroupList'
 import { GroupSheet } from './GroupSheet'
 import { ReportControls } from './ReportControls'
 import { ReportView } from './ReportView'
+import { SendReportButton } from './SendReportButton'
 import { ViewTabs } from './ViewTabs'
 import './report.scss'
 
@@ -27,6 +29,9 @@ export async function AvailabilityReportView({ initPageResult, params, searchPar
   const now = currentTime()
   const settings = await req.payload.findGlobal({ slug: 'settings' })
   const dt = resolveDateTimeConfig(settings)
+  // Empfänger des Berichts: nur angemeldete Nutzer erreichen diese Seite, die lokale API liest das Feld ohne Feldrechte
+  const emailSettings = await req.payload.findGlobal({ slug: 'email-settings' })
+  const recipients = parseRecipients(emailSettings.reportRecipients)
   const requested = parseReportParams(search)
   // Der Gesamtbericht zeigt immer alle Gruppen: eine Gruppe in der Adresse gilt nur für die Gruppenberichte
   const result = await loadReport(req.payload, requested.view === 'overall' ? { ...search, group: undefined } : search, now)
@@ -40,6 +45,7 @@ export async function AvailabilityReportView({ initPageResult, params, searchPar
   const exportable = result.ok && !result.data.error
   const tabs = (
     <>
+      {exportable && <SendReportButton recipients={recipients} query={selectionQuery(search)} />}
       {exportable && <ExportButtons search={search} groupId={requested.view === 'groups' ? result.data.scope.groupId : null} />}
       <ViewTabs active={requested.view} hrefs={reportTabHrefs(search, groupInvalid)} />
     </>

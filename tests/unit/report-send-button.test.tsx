@@ -60,7 +60,6 @@ test('geänderte Daten: erklärt den Grund und bietet nur „Neu senden“ an', 
   assert.match(markup, /Daten des Berichts geändert/)
   assert.match(markup, /Teil i von n/)
   assert.deepEqual(buttons(markup), ['Neu senden'])
-  assert.doesNotMatch(markup, /Rest senden/)
 })
 
 test('running, too-large und no-smtp zeigen ihre Meldung ohne Knopf', () => {

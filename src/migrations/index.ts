@@ -13,6 +13,7 @@ import * as migration_20261111_100000_add_subscriber_confirmation from './202611
 import * as migration_20261112_100000_add_availability_target_and_event_source from './20261112_100000_add_availability_target_and_event_source';
 import * as migration_20261112_100100_backfill_status_events from './20261112_100100_backfill_status_events';
 import * as migration_20261112_200000_add_incident_availability_class from './20261112_200000_add_incident_availability_class';
+import * as migration_20261113_100000_add_report_recipients from './20261113_100000_add_report_recipients';
 
 export const migrations = [
   {
@@ -89,5 +90,10 @@ export const migrations = [
     up: migration_20261112_200000_add_incident_availability_class.up,
     down: migration_20261112_200000_add_incident_availability_class.down,
     name: '20261112_200000_add_incident_availability_class',
+  },
+  {
+    up: migration_20261113_100000_add_report_recipients.up,
+    down: migration_20261113_100000_add_report_recipients.down,
+    name: '20261113_100000_add_report_recipients',
   },
 ];

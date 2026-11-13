@@ -57,6 +57,16 @@ The Excel file has three sheets with a filter in the header row: **Services** (o
 
 The images are drawn on the server from SVG. The image needs a font (`fontconfig` and `font-dejavu` in the `Dockerfile`), otherwise the images show no text.
 
+## Sending by email
+
+The button **Send by email** above the tabs sends the report to the recipients from the email settings. Enter them under **Email Settings**, field **Recipients of the availability report** (one address per line or separated by commas; empty means no dispatch). Invalid addresses are rejected when saving. The recipients are never taken from the address of the page. Only signed-in users can read the field.
+
+- Click **Send by email**. The page names the recipients and asks for a second click on **Send now**. The selection of period, calculation and maintenance applies.
+- Mail 1 holds the PDF and the Excel file. The images follow as ZIP files, one email per part, subject "Part i of n". One email holds at most 6 MB of attachments, because the mail server accepts about 10 MB per email. If PDF and Excel together exceed 6 MB, nothing is sent and the page says so.
+- The emails go out one after the other. Rendering takes about as long as the export, a dispatch takes up to a minute. Only one dispatch runs at a time.
+- If the dispatch breaks off, the page names how many emails are out and offers **Send the rest** from the first email that did not arrive. This only works directly afterwards: reloading the page forgets the state. If the data of the report changed in between (for example a new status entry), the rest cannot be sent, because the emails already sent belong to an older state. The page then explains this and offers **Send again from the start**. The recipients receive all emails again, recognizable by "Part i of n".
+- Messages and reasons: no recipients entered (link to the email settings), SMTP not set up, a dispatch already running, PDF and Excel too large, server not reachable.
+
 ## Availability
 
 The share of the known time without Partial Outage and Major Outage. Degraded Performance counts as available and is shown as its own time. Time before the first log entry of a service is not counted. The value is rounded down to two decimals. The value of a group, and the total, is the mean of its services, every service weighted equally.

@@ -46,6 +46,16 @@
     a:hover { background: var(--theme-elevation-50); }
   }
 
+  &__send {
+    margin-bottom: 0.75rem;
+    font-size: 0.85rem;
+
+    p { margin: 0.25rem 0; }
+    button { padding: 0.4rem 0.9rem; border: 1px solid var(--theme-elevation-300); border-radius: 4px; background: var(--theme-elevation-100); color: var(--theme-text); font: inherit; cursor: pointer; }
+    button:disabled { opacity: 0.5; cursor: wait; }
+  }
+  &__send-error { border: 1px solid var(--theme-error-500); border-radius: 4px; padding: 0.5rem 0.75rem; color: var(--theme-text); }
+
   &__tabs {
     display: flex;
     gap: 0.25rem;

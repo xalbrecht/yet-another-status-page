@@ -3,7 +3,7 @@ import assert from 'node:assert/strict'
 import { unzipSync } from 'fflate'
 import type { EmailOptions, EmailResult } from '@/lib/email'
 import type { ExportFile } from '@/lib/report/export/files'
-import { planReportMails, reportPlanId, ReportMailPlanChangedError, ReportMailTooLargeError, sendReportMail } from '@/lib/report/export/mail'
+import { planReportMails, reportPlanId, ReportMailPlanChangedError, ReportMailResumeError, ReportMailTooLargeError, sendReportMail } from '@/lib/report/export/mail'
 import type { ReportContext } from '@/lib/report/load'
 import { parseReportParams } from '@/lib/report/params'
 
@@ -132,7 +132,7 @@ test('sendReportMail: haben sich die Daten geändert, wird nichts gesendet', asy
 test('sendReportMail: ungültige Startnummern werfen, from 1 sendet alles', async () => {
   const r = recorder()
   for (const from of [0, 5, 1.5]) {
-    await assert.rejects(() => sendReportMail({ context, recipients: ['a@x.de'], send: r.send, filesOf: filesOf(fourMails()), limit: 6000, resume: { from, planId: 'x' } }), Error, String(from))
+    await assert.rejects(() => sendReportMail({ context, recipients: ['a@x.de'], send: r.send, filesOf: filesOf(fourMails()), limit: 6000, resume: { from, planId: 'x' } }), ReportMailResumeError, String(from))
   }
   assert.equal(r.calls.length, 0)
   const all = await sendReportMail({ context, recipients: ['a@x.de'], send: r.send, filesOf: filesOf(fourMails()), limit: 6000, resume: { from: 1, planId: 'egal' } })

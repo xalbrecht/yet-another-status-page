@@ -25,6 +25,13 @@ export class ReportMailTooLargeError extends Error {
   }
 }
 
+export class ReportMailResumeError extends Error {
+  constructor(from: number, mails: number) {
+    super(`${ta('Invalid start mail', 'Ungültige Startmail')}: ${from} (1 ${ta('to', 'bis')} ${mails})`)
+    this.name = 'ReportMailResumeError'
+  }
+}
+
 export class ReportMailPlanChangedError extends Error {
   constructor() {
     super(ta('The data of the report changed since the first attempt.', 'Die Daten des Berichts haben sich seit dem ersten Versuch geändert.'))
@@ -103,7 +110,7 @@ export async function sendReportMail(input: {
   let first = 1
   if (resume) {
     if (!Number.isInteger(resume.from) || resume.from < 1 || resume.from > mails) {
-      throw new Error(`${ta('Invalid start mail', 'Ungültige Startmail')}: ${resume.from} (1 ${ta('to', 'bis')} ${mails})`)
+      throw new ReportMailResumeError(resume.from, mails)
     }
     if (resume.from > 1 && resume.planId !== planId) throw new ReportMailPlanChangedError()
     first = resume.from

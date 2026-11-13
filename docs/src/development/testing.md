@@ -42,7 +42,9 @@ The file runs in `serial` mode, because the tests change the **global settings**
 
 - `tests/unit/report-period.test.ts`, `report-maintenance-time.test.ts`, `report-metrics.test.ts`, `report-params.test.ts`, `report-aggregate.test.ts`: periods in the time zone of the settings (including the daylight saving change), maintenance time, the three maintenance types with the example from the concept, selection from the address and the aggregation (group value, months with target met, weakest services).
 - `tests/unit/report-view.test.tsx`: display of the page and of the selection fields as text.
+- `tests/unit/report-export-*.test.ts(x)`, `report-group-sheet*.test.ts(x)`, `report-heat.test.ts`: the export (SVG of the blocks and rendering to PNG, Excel read back with `exceljs`, PDF page counts, file list and folder names, buttons) and the group sheet. Shared test data is in `tests/unit/export-fixtures.ts`. Text in the images is not checked: the font comes from the image, see "Export" in the availability report manual.
 - `tests/e2e/availability-report.spec.ts`: the JSON route `/api/availability-report` (data of a group, invalid input gives status 400, at most 10 weakest services).
+- `tests/e2e/availability-report-export.spec.ts`: the export route `/api/availability-report/export` (Excel, PDF, ZIP with all groups and with one group, invalid input gives status 400). Rendering all groups takes a few seconds per group, the file sets a timeout of 240 s.
 - The admin page itself is not covered by an automatic browser test. Check it by hand (see the note under "Status log maintenance"): open `/admin/verfuegbarkeitsbericht`, change every selection, compare a month with known outages.
 
 ### Not covered

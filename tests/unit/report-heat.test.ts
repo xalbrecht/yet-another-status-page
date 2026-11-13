@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { chunkRows, heatClass } from '@/lib/report/heat'
+import { chunkRows, heatCellText, heatClass } from '@/lib/report/heat'
 
 const numbers = (count: number) => Array.from({ length: count }, (_, index) => index)
 
@@ -27,4 +27,11 @@ test('heatClass ordnet die Farbstufen zu', () => {
   assert.equal(heatClass(99.6, 99), 2)
   assert.equal(heatClass(99.2, 99), 3)
   assert.equal(heatClass(98, 99), 4)
+})
+
+test('heatCellText rundet nie auf 100 auf und zeigt unbekannt als Strich', () => {
+  assert.equal(heatCellText(99.99596, 'de-DE'), '99,9')
+  assert.equal(heatCellText(100, 'de-DE'), '100')
+  assert.equal(heatCellText(null, 'de-DE'), '–')
+  assert.equal(heatCellText(98.12, 'en-US'), '98.1')
 })

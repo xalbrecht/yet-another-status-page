@@ -3,7 +3,7 @@ import { ta } from '@/lib/i18n/admin'
 import { formatAvailability } from '@/lib/availability'
 import type { RankingRow } from '@/lib/report/aggregate'
 import { heatClass } from '@/lib/report/heat'
-import { formatDuration } from './format'
+import { formatDuration } from '@/lib/report/format'
 
 /** Block 2 des Gruppenblatts: ein Balken je Dienst nach Verfügbarkeit, schwächste zuerst. Die Reihenfolge kommt von außen. */
 export function GroupBars(props: { rows: RankingRow[]; locale: string }) {

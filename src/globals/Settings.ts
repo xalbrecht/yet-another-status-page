@@ -169,13 +169,16 @@ export const Settings: GlobalConfig = {
           label: ta('Display'),
           defaultValue: 'off',
           options: [
-            { label: ta('Off'), value: 'off' },
-            { label: ta('Variant A (tiles, bars below)'), value: 'a' },
-            { label: ta('Variant B (tiles with own bar)'), value: 'b' },
+            { label: ta('Variant C (simple list)', 'Variante C (einfache Liste)'), value: 'off' },
+            { label: ta('Variant A (tiles, services with bars on click)', 'Variante A (Kacheln, Dienste mit Balken beim Anklicken)'), value: 'a' },
+            { label: ta('Variant B (tiles with own bar)', 'Variante B (Kacheln mit eigenem Balken)'), value: 'b' },
             { label: ta('Both (for testing)'), value: 'both' },
           ],
           admin: {
-            description: ta('Situation overview per service group on the start page. Variant A shows tiles with the bars of the last 12 hours below. Variant B shows a small bar in every tile. "Both" displays both variants one after the other to compare them.'),
+            description: ta(
+              'Layout of the start page. Variants A and B show the situation overview on the left and boxes for disruptions and maintenance on the right. Variant A shows tiles, a click shows the services with bars. Variant B shows a small bar in every tile. "Both" displays both variants one after the other to compare them. Variant C is the simple list without situation overview. The three settings below apply to A, B and "Both" only.',
+              'Aufbau der Startseite. Die Varianten A und B zeigen links das Lagebild und rechts Boxen für Störungen und Wartungen. Variante A zeigt Kacheln, ein Klick zeigt die Dienste mit Balken. Variante B zeigt einen kleinen Balken in jeder Kachel. „Beide“ zeigt beide Varianten nacheinander zum Vergleichen. Variante C ist die einfache Liste ohne Lagebild. Die drei Einstellungen darunter gelten nur für A, B und „Beide“.',
+            ),
           },
         },
         {
@@ -211,6 +214,47 @@ export const Settings: GlobalConfig = {
               'Default period of the bars in the situation overview. Visitors can change it on the status page.',
               'Vorgabe für den Zeitraum der Balken im Lagebild. Besucher können ihn auf der Statusseite ändern.',
             ),
+          },
+        },
+        {
+          name: 'statusBoxEntries',
+          type: 'number',
+          label: ta('Entries per box', 'Einträge je Box'),
+          defaultValue: 3,
+          min: 1,
+          max: 10,
+          admin: {
+            condition: (data) => data?.lagebildVariant !== 'off',
+            description: ta(
+              'How many disruptions and maintenances each box on the start page shows. The rest is behind "show more".',
+              'Wie viele Störungen und Wartungen jede Box auf der Startseite zeigt. Der Rest steht hinter „weitere anzeigen“.',
+            ),
+          },
+        },
+        {
+          name: 'statusBoxContent',
+          type: 'select',
+          label: ta('Content of the boxes', 'Inhalt der Boxen'),
+          defaultValue: 'full',
+          options: [
+            { label: ta('With services and latest update', 'Mit Diensten und letztem Stand'), value: 'full' },
+            { label: ta('Title and time only', 'Nur Titel und Zeit'), value: 'compact' },
+          ],
+          admin: {
+            condition: (data) => data?.lagebildVariant !== 'off',
+          },
+        },
+        {
+          name: 'statusBoxesPlacement',
+          type: 'select',
+          label: ta('Boxes on narrow screens', 'Boxen auf schmalen Bildschirmen'),
+          defaultValue: 'before',
+          options: [
+            { label: ta('Before the situation overview', 'Vor dem Lagebild'), value: 'before' },
+            { label: ta('After the situation overview', 'Nach dem Lagebild'), value: 'after' },
+          ],
+          admin: {
+            condition: (data) => data?.lagebildVariant !== 'off',
           },
         },
         {

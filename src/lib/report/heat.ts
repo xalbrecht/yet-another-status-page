@@ -22,3 +22,10 @@ export function chunkRows<T>(rows: T[], size: number = HEAT_CHUNK_SIZE): T[][] {
   for (let start = 0; start < rows.length; start += size) chunks.push(rows.slice(start, start + size))
   return chunks
 }
+
+/** Text einer Zelle der Wärmekarte: eine Nachkommastelle, abgerundet (99,996 bleibt 99,9), 100 ohne Stelle, unbekannt als Strich. */
+export function heatCellText(value: number | null, locale: string): string {
+  if (value === null) return '–'
+  if (value >= 100) return '100'
+  return new Intl.NumberFormat(locale, { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(Math.floor(value * 10) / 10)
+}

@@ -43,6 +43,11 @@ export type RankingRow = {
   longestOutageMs: number
   /** Anteil der Wartung an `downMs`, nur bei Wartungsart B */
   maintenanceDownMs: number
+  /** Dauer „Eingeschränkt“ und Wartungszeit im Zeitraum (für den Export) */
+  degradedMs: number
+  maintenanceMs: number
+  /** einzelne Ausfälle im Zeitraum, aneinandergrenzende zusammengefasst */
+  outages: Array<{ from: number; to: number; status: 'partial' | 'major' }>
   target: number
   belowTarget: boolean
   history: Array<number | null>
@@ -170,6 +175,9 @@ export function buildReport(input: ReportInput): ReportData {
       outageCount: whole.outages.length,
       longestOutageMs: Math.max(0, ...whole.outages.map((outage) => outage.to - outage.from)),
       maintenanceDownMs: params.maintenance === 'B' ? whole.maintenanceMs : 0,
+      degradedMs: whole.degradedMs,
+      maintenanceMs: whole.maintenanceMs,
+      outages: whole.outages,
       target: serviceTarget,
       belowTarget: availability !== null && availability < serviceTarget,
       history: months.map((month) => metricsFor(service, month).availability),

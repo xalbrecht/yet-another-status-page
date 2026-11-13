@@ -1,7 +1,7 @@
 import React from 'react'
 import { ta } from '@/lib/i18n/admin'
 import type { GroupSheetData } from '@/lib/report/group-sheet'
-import { formatDuration } from './format'
+import { formatDuration } from '@/lib/report/format'
 
 /** Block 3 des Gruppenblatts: je Dienst ein Balken, aufgeteilt nach Schwerer Ausfall, Teilausfall und Eingeschränkt. Ohne Störungen entfällt der Block. */
 export function DisruptionsByService({ sheet }: { sheet: GroupSheetData }) {

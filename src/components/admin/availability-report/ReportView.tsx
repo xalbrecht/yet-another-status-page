@@ -4,7 +4,7 @@ import { formatAvailability } from '@/lib/availability'
 import type { RankingRow, ReportData } from '@/lib/report/aggregate'
 import type { ReportParams } from '@/lib/report/params'
 import type { ReportPeriod } from '@/lib/report/period'
-import { formatDuration } from './format'
+import { formatDuration } from '@/lib/report/format'
 import { Heatmap } from './Heatmap'
 import { TrendChart } from './TrendChart'
 

@@ -36,6 +36,27 @@ Two tabs below the selection switch the view. The selection (period, calculation
 
 Blocks 3 and 4 show the **last month of the selected period**. For a quarter that is the third month, for a month that has not ended yet only the days up to now. Block 4 shows Partial Outage and Major Outage only, because Degraded Performance has no separate time segments in the calculation.
 
+## Export
+
+Above the tabs, links download the report. The selection of period, calculation and maintenance applies to the files.
+
+| Link | Content |
+|---|---|
+| Download everything (ZIP) | PDF, Excel and all images of all groups |
+| PDF | the overall report and one sheet per group, one image per block, notes at the end |
+| Excel | the Excel file alone |
+| Download this group only | in the group reports: the images of the selected group (a ZIP file without PDF and Excel) |
+
+The ZIP file has one folder `verfuegbarkeitsbericht-<period>` with the PDF and the Excel file, the folder `gesamt` and a folder `gruppen/<group>`. File names have no umlauts or spaces. Two groups with the same name get the id appended.
+
+- `gesamt`: `01-kennzahlen.png`, `02-entwicklung-12-monate.png`, `03-schwaechste-dienste.png`, `04-waermekarte-gruppen-<n>.png` (12 groups per image, the total row in every image), `05-dienste-schwaechste-zuerst.png` (the first 12 services).
+- `gruppen/<group>`: `00-gruppenblatt.png` (all blocks below each other, block 4 with all days) and the blocks alone: `01-entwicklung-12-monate.png`, `02-dienste-schwaechste-zuerst.png`, `03-stoerungen-je-dienst.png`, `04-stoerungen-je-tag.png` (only the days with an outage), `05-waermekarte-dienste.png` (12 services per image). Blocks 3 and 4 are missing if the group had no disruption in the month.
+- All images are PNG with a white background and 2000 pixels width.
+
+The Excel file has three sheets with a filter in the header row: **Services** (one row per service with group, target, value for the period, the 12 monthly values and the durations in minutes, so a person can filter by "their" groups), **Outages** (one row per outage with start, end, duration and type) and **Notes** (selection and footnotes). An unknown value is an empty cell, not 0.
+
+The images are drawn on the server from SVG. The image needs a font (`fontconfig` and `font-dejavu` in the `Dockerfile`), otherwise the images show no text.
+
 ## Availability
 
 The share of the known time without Partial Outage and Major Outage. Degraded Performance counts as available and is shown as its own time. Time before the first log entry of a service is not counted. The value is rounded down to two decimals. The value of a group, and the total, is the mean of its services, every service weighted equally.

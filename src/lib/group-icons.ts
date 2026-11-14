@@ -1,8 +1,6 @@
-import { ta } from '@/lib/i18n/admin'
-
 /**
  * Icons für Dienstgruppen (Namen aus lucide-react).
- * Diese Datei enthält nur die Auswahl für den Admin-Bereich. Die Zuordnung zu den
+ * Diese Datei enthält nur die Namen und den Standard. Die Auswahl mit Beschriftungen steht in group-icon-options.ts, die Zuordnung zu den
  * React-Komponenten steht in src/components/status/lagebild/GroupIcon.tsx.
  */
 export const GROUP_ICON_NAMES = [
@@ -58,53 +56,3 @@ export const GROUP_ICON_NAMES = [
 export type GroupIconName = (typeof GROUP_ICON_NAMES)[number]
 
 export const DEFAULT_GROUP_ICON: GroupIconName = 'LayoutGrid'
-
-export const groupIconOptions = [
-  { label: ta('Generic'), value: 'LayoutGrid' },
-  { label: ta('Server'), value: 'Server' },
-  { label: ta('Database'), value: 'Database' },
-  { label: ta('Storage'), value: 'HardDrive' },
-  { label: ta('Processor'), value: 'Cpu' },
-  { label: ta('Cloud'), value: 'Cloud' },
-  { label: ta('Network'), value: 'Network' },
-  { label: ta('Wireless network'), value: 'Wifi' },
-  { label: ta('Internet / portal'), value: 'Globe' },
-  { label: ta('Email'), value: 'Mail' },
-  { label: ta('Telephony'), value: 'Phone' },
-  { label: ta('Mobile devices'), value: 'Smartphone' },
-  { label: ta('Workstation'), value: 'Monitor' },
-  { label: ta('Printing'), value: 'Printer' },
-  { label: ta('Security'), value: 'ShieldCheck' },
-  { label: ta('Access / login'), value: 'Lock' },
-  { label: ta('Users / directory'), value: 'Users' },
-  { label: ta('Documents / specialist applications'), value: 'FileText' },
-  { label: ta('Administration'), value: 'Landmark' },
-  { label: ta('Buildings / locations'), value: 'Building2' },
-  { label: ta('Applications'), value: 'AppWindow' },
-  { label: ta('Foreign nationals'), value: 'Languages' },
-  { label: ta('Building supervision'), value: 'ClipboardCheck' },
-  { label: ta('Construction'), value: 'HardHat' },
-  { label: ta('Education'), value: 'GraduationCap' },
-  { label: ta('Fines'), value: 'Receipt' },
-  { label: ta('Consulting'), value: 'Lightbulb' },
-  { label: ta('Facility management'), value: 'Wrench' },
-  { label: ta('Driving licence'), value: 'IdCard' },
-  { label: ta('Leisure'), value: 'Trees' },
-  { label: ta('Cemetery'), value: 'Flower2' },
-  { label: ta('Geoinformation'), value: 'Map' },
-  { label: ta('Trade'), value: 'Store' },
-  { label: ta('Budget and finance'), value: 'Euro' },
-  { label: ta('Wide area network'), value: 'Waypoints' },
-  { label: ta('Vehicle registration'), value: 'Car' },
-  { label: ta('Children and youth'), value: 'Baby' },
-  { label: ta('Civil registry'), value: 'Heart' },
-  { label: ta('Records management'), value: 'FolderOpen' },
-  { label: ta('Schools'), value: 'School' },
-  { label: ta('School authority'), value: 'BookOpen' },
-  { label: ta('Council meetings'), value: 'Presentation' },
-  { label: ta('Social welfare'), value: 'HeartHandshake' },
-  { label: ta('Environment'), value: 'Leaf' },
-  { label: ta('Events'), value: 'CalendarDays' },
-  { label: ta('Websites'), value: 'LayoutTemplate' },
-  { label: ta('Housing benefit'), value: 'House' },
-] as const

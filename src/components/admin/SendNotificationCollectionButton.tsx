@@ -2,10 +2,11 @@
 
 import React, { useState } from 'react'
 import { useDocumentInfo, useField } from '@payloadcms/ui'
-import { ta } from '@/lib/i18n/admin'
+import { useAdminText } from '@/lib/i18n/admin-client'
 import './SendNotificationButton.scss'
 
 export const SendNotificationCollectionButton: React.FC = () => {
+  const ta = useAdminText()
   const [sending, setSending] = useState(false)
   const [result, setResult] = useState<{ success: boolean; message: string } | null>(null)
 

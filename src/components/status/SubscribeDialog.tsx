@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { t, tf } from '@/lib/i18n'
+import { useTranslation } from '@/lib/i18n/client'
+import type { Translate } from '@/lib/i18n/core'
 import { Mail, MessageSquare, X, Bell, AlertCircle } from "lucide-react";
 import { z } from "zod";
 import { cn } from "@/lib/utils";
@@ -13,7 +14,7 @@ interface SubscriptionAvailability {
   sms: boolean;
 }
 
-const emailSchema = z.object({
+const makeEmailSchema = (t: Translate) => z.object({
   email: z
     .email({ message: t("sub.emailInvalid") })
     .trim()
@@ -21,7 +22,7 @@ const emailSchema = z.object({
     .max(255, { message: t("sub.emailTooLong") }),
 });
 
-const smsSchema = z.object({
+const makeSmsSchema = (t: Translate) => z.object({
   phone: z
     .string()
     .trim()
@@ -37,6 +38,7 @@ interface SubscribeDialogProps {
 }
 
 export function SubscribeDialog({ isOpen, onClose }: SubscribeDialogProps) {
+  const { t, tf } = useTranslation()
   const [method, setMethod] = useState<SubscriptionMethod>("email");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
@@ -87,7 +89,7 @@ export function SubscribeDialog({ isOpen, onClose }: SubscribeDialogProps) {
 
     try {
       if (method === "email") {
-        const result = emailSchema.safeParse({ email });
+        const result = makeEmailSchema(t).safeParse({ email });
         if (!result.success) {
           setErrors({ email: result.error.issues[0].message });
           setIsSubmitting(false);
@@ -114,7 +116,7 @@ export function SubscribeDialog({ isOpen, onClose }: SubscribeDialogProps) {
         setSuccessMessage(tf("sub.successEmail", { email }));
         setEmail("");
       } else {
-        const result = smsSchema.safeParse({ phone });
+        const result = makeSmsSchema(t).safeParse({ phone });
         if (!result.success) {
           setErrors({ phone: result.error.issues[0].message });
           setIsSubmitting(false);
@@ -402,6 +404,7 @@ interface SubscribeButtonProps {
 }
 
 export function SubscribeButton({ onClick }: SubscribeButtonProps) {
+  const { t } = useTranslation()
   return (
     <button
       onClick={onClick}

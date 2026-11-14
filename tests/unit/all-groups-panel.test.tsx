@@ -3,6 +3,7 @@ import assert from 'node:assert/strict'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { AllGroupsPanel } from '@/components/status/lagebild/AllGroupsPanel'
 import type { LagebildData, LagebildGroup } from '@/lib/lagebild'
+import { withI18n } from './i18n-helpers'
 
 const group = (n: number, over: Partial<LagebildGroup> = {}): LagebildGroup => ({
   id: String(n),
@@ -29,7 +30,7 @@ const data = (groups: LagebildGroup[]): LagebildData => ({
 })
 
 const render = (groups: LagebildGroup[]) =>
-  renderToStaticMarkup(<AllGroupsPanel data={data(groups)} onSelect={() => {}} onClose={() => {}} />)
+  renderToStaticMarkup(withI18n(<AllGroupsPanel data={data(groups)} onSelect={() => {}} onClose={() => {}} />))
 
 test('Panel „Alle“ zeigt je Gruppe eine Zeile mit Name, Zustand und Verfügbarkeit der Gruppe', () => {
   const markup = render([

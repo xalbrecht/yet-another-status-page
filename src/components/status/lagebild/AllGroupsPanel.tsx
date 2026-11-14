@@ -1,7 +1,7 @@
 'use client'
 
 import { statusLabel, worstStatus, type LagebildData } from '@/lib/lagebild'
-import { t, tf } from '@/lib/i18n'
+import { useTranslation } from '@/lib/i18n/client'
 import { cn } from '@/lib/utils'
 import { BarLegend } from './BarLegend'
 import { GroupIcon } from './GroupIcon'
@@ -22,6 +22,7 @@ export function AllGroupsPanel({
   onClose: () => void
   caretPercent?: number
 }) {
+  const { t, tf } = useTranslation()
   const status = worstStatus(data.groups.map((group) => group.status)) ?? 'operational'
   const periodName = t(`lagebild.period.${data.periodDays}` as const)
   return (
@@ -79,7 +80,7 @@ export function AllGroupsPanel({
                   <span className="min-w-0">
                     <span className="block break-words text-sm font-semibold text-foreground">{group.name}</span>
                     <span className={cn('block text-xs font-semibold', statusText[group.status])}>
-                      {statusLabel(group.status)}
+                      {statusLabel(group.status, t)}
                     </span>
                   </span>
                 </span>
@@ -88,7 +89,7 @@ export function AllGroupsPanel({
                     runs={group.bars}
                     window={data.bar}
                     heightClass="h-5"
-                    label={`${group.name}: ${statusLabel(group.status)}`}
+                    label={`${group.name}: ${statusLabel(group.status, t)}`}
                   />
                 </span>
                 <span className="text-right text-sm font-semibold tabular-nums text-foreground">

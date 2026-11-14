@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { statusLabel, type LagebildStatus } from '@/lib/lagebild'
+import { useTranslation } from '@/lib/i18n/client'
 import { cn } from '@/lib/utils'
 import { statusBg } from './status-styles'
 
@@ -56,6 +57,7 @@ type Props = {
  * und bleibt innerhalb des Rasters (`data-lagebild-grid`).
  */
 export function GroupTooltip({ id, title, items, footer, open, onEnter, onLeave, onActivate }: Props) {
+  const { t } = useTranslation()
   const ref = useRef<HTMLDivElement>(null)
   const [place, setPlace] = useState({ width: MAX_WIDTH, shift: 0 })
 
@@ -95,7 +97,7 @@ export function GroupTooltip({ id, title, items, footer, open, onEnter, onLeave,
           <li key={`${item.name}-${index}`} className="flex items-center gap-2 text-xs text-foreground">
             <span aria-hidden="true" className={cn('h-2 w-2 shrink-0 rounded-full', statusBg[item.status])} />
             <span className="min-w-0 break-words">{item.name}</span>
-            <span className="sr-only">{statusLabel(item.status)}</span>
+            <span className="sr-only">{statusLabel(item.status, t)}</span>
           </li>
         ))}
       </ul>

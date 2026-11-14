@@ -1,7 +1,7 @@
 import type { Payload } from 'payload'
 import { DEFAULT_GROUP_ICON } from '@/lib/group-icons'
 import { formatClockTime, formatDate, formatDateSlug, formatDateTime, formatTime, type DateTimeConfig } from '@/lib/datetime'
-import { t, tf } from '@/lib/i18n'
+import type { Translate, TranslateFormat } from '@/lib/i18n/core'
 import {
   computeAvailability,
   formatAvailability,
@@ -103,9 +103,9 @@ export function computeBarWindow(now: number, hours: BarHours = BAR_HOURS): BarW
 }
 
 /** Uhrzeit für Anfang und Ende des Balkens. Liegt sie nicht am heutigen Tag, steht „gestern“ davor. */
-function formatBarClock(date: Date, now: Date, dt: DateTimeConfig): string {
+function formatBarClock(date: Date, now: Date, dt: DateTimeConfig, yesterday: string): string {
   const clock = formatClockTime(date, dt)
-  return formatDateSlug(date, dt.timezone) === formatDateSlug(now, dt.timezone) ? clock : `${t('lagebild.yesterday')} ${clock}`
+  return formatDateSlug(date, dt.timezone) === formatDateSlug(now, dt.timezone) ? clock : `${yesterday} ${clock}`
 }
 
 /** Schlechtester Zustand der Zeitleisten im Abschnitt [from, to). `null`: im Abschnitt ist kein Zustand bekannt. */
@@ -233,7 +233,7 @@ export type LagebildData = {
   bar: BarWindow & { locale: string; timeZone: string; yesterday: string }
 }
 
-export function statusLabel(status: LagebildStatus): string {
+export function statusLabel(status: LagebildStatus, t: Translate): string {
   switch (status) {
     case 'operational':
       return t('status.operational')
@@ -254,6 +254,7 @@ type Related = { title: string; href: string; serviceIds: string[]; from: number
 export async function loadLagebild(
   payload: Payload,
   dt: DateTimeConfig,
+  { t, tf }: { t: Translate; tf: TranslateFormat },
   periodDays: PeriodDays = PERIOD_DAYS,
   barHours: BarHours = BAR_HOURS,
   nowDate = new Date(),
@@ -400,7 +401,7 @@ export async function loadLagebild(
         groupIcon: icon,
         status: period.status,
         start: period.start,
-        title: tf('lagebild.periodTitle', { status: statusLabel(period.status), group: group.name }),
+        title: tf('lagebild.periodTitle', { status: statusLabel(period.status, t), group: group.name }),
         dayKey: formatDateSlug(startDate, dt.timezone),
         dayLabel: formatDate(startDate, dt),
         range: `${formatTime(startDate, dt)} – ${endLabel}`,
@@ -424,8 +425,8 @@ export async function loadLagebild(
     periods,
     periodDays,
     days,
-    barsFrom: formatBarClock(new Date(barWindow.startMs), nowDate, dt),
-    barsTo: formatBarClock(nowDate, nowDate, dt),
+    barsFrom: formatBarClock(new Date(barWindow.startMs), nowDate, dt, t('lagebild.yesterday')),
+    barsTo: formatBarClock(nowDate, nowDate, dt, t('lagebild.yesterday')),
     barHours,
     bar: { ...barWindow, locale: dt.locale, timeZone: dt.timezone, yesterday: t('lagebild.yesterday') },
   }

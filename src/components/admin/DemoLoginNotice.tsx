@@ -1,10 +1,11 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { ta } from '@/lib/i18n/admin'
+import { useAdminText } from '@/lib/i18n/admin-client'
 import './DemoLoginNotice.scss'
 
 export function DemoLoginNotice() {
+  const ta = useAdminText()
   const [isDemoMode, setIsDemoMode] = useState(false)
   const [isLoginPage, setIsLoginPage] = useState(false)
   const [demoEmail, setDemoEmail] = useState('')

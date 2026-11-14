@@ -1,7 +1,7 @@
 'use client'
 
 import React from 'react'
-import { ta } from '@/lib/i18n/admin'
+import { useAdminText } from '@/lib/i18n/admin-client'
 import { SendReportForm, type SendState } from './SendReportForm'
 
 /**
@@ -11,6 +11,7 @@ import { SendReportForm, type SendState } from './SendReportForm'
 type Resume = { planId: string; nextMail: number }
 
 export function SendReportButton(props: { recipients: string[]; query: string }) {
+  const ta = useAdminText()
   const { recipients, query } = props
   const [state, setState] = React.useState<SendState>({ kind: 'idle' })
   const [resume, setResume] = React.useState<Resume | null>(null)

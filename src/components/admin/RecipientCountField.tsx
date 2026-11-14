@@ -2,10 +2,11 @@
 
 import React, { useEffect, useState } from 'react'
 import { useField, useDocumentInfo } from '@payloadcms/ui'
-import { ta } from '@/lib/i18n/admin'
+import { useAdminText } from '@/lib/i18n/admin-client'
 import './RecipientCountField.scss'
 
 export const RecipientCountField: React.FC = () => {
+  const ta = useAdminText()
   const [count, setCount] = useState<number | null>(null)
   const [loading, setLoading] = useState(false)
 

@@ -1,6 +1,11 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { renderToStaticMarkup } from 'react-dom/server'
+import type { ReactElement } from 'react'
+import { renderToStaticMarkup as renderPlain } from 'react-dom/server'
+import { withAdminText } from './i18n-helpers'
+
+// Admin-Komponenten lesen ihre Texte aus dem Kontext (AdminTextProvider im Layout von Payload).
+const renderToStaticMarkup = (node: ReactElement) => renderPlain(withAdminText(node))
 import { ReportView } from '@/components/admin/availability-report/ReportView'
 import { ReportControlsForm, shouldSubmitOnChange } from '@/components/admin/availability-report/ReportControlsForm'
 import { GroupList } from '@/components/admin/availability-report/GroupList'

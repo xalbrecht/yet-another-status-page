@@ -1,7 +1,7 @@
 'use client'
 
 import { RichText } from '@/components/RichText'
-import { t } from '@/lib/i18n'
+import { useTranslation } from '@/lib/i18n/client'
 import { DEFAULT_TIMEZONE, formatTimezoneNotice } from '@/lib/datetime'
 
 interface FooterProps {
@@ -18,6 +18,7 @@ function hasRichTextContent(node: unknown): boolean {
 }
 
 export function Footer({ footerText, timezone }: FooterProps) {
+  const { t, tf } = useTranslation()
   const hasContent = hasRichTextContent((footerText as { root?: unknown } | null)?.root)
 
   return (
@@ -29,7 +30,7 @@ export function Footer({ footerText, timezone }: FooterProps) {
               <RichText content={footerText} className="text-sm text-muted-foreground [&_strong]:font-semibold [&_strong]:text-foreground [&_em]:italic [&_u]:underline [&_s]:line-through [&_a]:text-primary [&_a]:underline [&_a]:hover:text-primary/80 [&_p]:mb-0" />
             ) : null}
             <p className="text-xs text-muted-foreground/80">
-              {formatTimezoneNotice(timezone || DEFAULT_TIMEZONE)}
+              {formatTimezoneNotice(timezone || DEFAULT_TIMEZONE, tf)}
             </p>
             <nav aria-label={t('footer.machineReadable')} className="flex gap-3 text-xs text-muted-foreground/80">
               <a href="https://docs.yasp.io/api/public-api.html" target="_blank" rel="noopener noreferrer" className="hover:text-foreground">API</a>

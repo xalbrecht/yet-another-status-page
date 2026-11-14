@@ -1,5 +1,5 @@
 import type { Incident, Maintenance } from '@/payload-types'
-import { t, tf } from '@/lib/i18n'
+import { t, tf, type TranslationKey } from '@/lib/i18n'
 import { incidentStatusConfig, maintenanceStatusConfig } from '@/lib/status-config'
 import { lexicalToHtml } from '@/lib/lexical'
 import { getServerUrl } from '@/lib/utils'
@@ -18,13 +18,13 @@ interface Entry {
 
 function updatesHtml(
   updates: Array<{ status: string; message: string; createdAt: string }>,
-  labels: Record<string, { label: string }>,
+  labels: Record<string, { labelKey: TranslationKey }>,
 ): string {
   return [...updates]
     .reverse()
     .map(
       (u) =>
-        `<p><strong>${esc(labels[u.status]?.label ?? u.status)}</strong> <small>${esc(u.createdAt)}</small><br>${esc(u.message).replace(/\n/g, '<br>')}</p>`,
+        `<p><strong>${esc(labels[u.status] ? t(labels[u.status].labelKey) : u.status)}</strong> <small>${esc(u.createdAt)}</small><br>${esc(u.message).replace(/\n/g, '<br>')}</p>`,
     )
     .join('')
 }
@@ -37,7 +37,7 @@ function latestUpdateAt(doc: { updates?: Array<{ createdAt: string }> | null; up
 
 export function incidentEntry(doc: Incident): Entry {
   const url = `${getServerUrl()}/i/${doc.shortId}`
-  const label = incidentStatusConfig[doc.status]?.label ?? doc.status
+  const label = incidentStatusConfig[doc.status] ? t(incidentStatusConfig[doc.status].labelKey) : doc.status
   return {
     id: url,
     title: `[${label}] ${doc.title}`,
@@ -50,7 +50,7 @@ export function incidentEntry(doc: Incident): Entry {
 
 export function maintenanceEntry(doc: Maintenance): Entry {
   const url = `${getServerUrl()}/m/${doc.shortId}`
-  const label = maintenanceStatusConfig[doc.status]?.label ?? doc.status
+  const label = maintenanceStatusConfig[doc.status] ? t(maintenanceStatusConfig[doc.status].labelKey) : doc.status
   const schedule = `<p>${t('feed.scheduled')} ${esc(doc.scheduledStartAt)}${doc.scheduledEndAt ? ` – ${esc(doc.scheduledEndAt)}` : ''}${doc.duration ? ` (${esc(doc.duration)})` : ''}</p>`
   return {
     id: url,

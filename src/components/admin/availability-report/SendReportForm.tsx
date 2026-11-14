@@ -1,5 +1,5 @@
 import React from 'react'
-import { ta } from '@/lib/i18n/admin'
+import { useAdminText } from '@/lib/i18n/admin-client'
 
 /**
  * Darstellung des Mailversands auf der Berichtsseite (Issue #65). Reine Komponente: der Zustand kommt von außen
@@ -26,6 +26,7 @@ export type SendReportFormProps = {
 const SETTINGS_HREF = '/admin/globals/email-settings'
 
 function ErrorBox(props: { state: Extract<SendState, { kind: 'error' }>; onResume?: () => void; onRestart?: () => void }) {
+  const ta = useAdminText()
   const { state, onResume, onRestart } = props
   // Die Route zählt nur die Mails dieses Aufrufs. Gesendet ist alles vor der nächsten Mail, auch aus früheren Versuchen.
   const sent = state.nextMail !== undefined ? state.nextMail - 1 : state.sent ?? 0
@@ -81,6 +82,7 @@ function ErrorBox(props: { state: Extract<SendState, { kind: 'error' }>; onResum
 }
 
 export function SendReportForm(props: SendReportFormProps) {
+  const ta = useAdminText()
   const { recipients, state, onAsk, onCancel, onConfirm, onResume, onRestart } = props
   if (recipients.length === 0) {
     return (

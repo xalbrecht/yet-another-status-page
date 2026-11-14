@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { t } from '@/lib/i18n'
+import { useTranslation } from '@/lib/i18n/client'
 import Link from "next/link";
 import { ThemeToggle } from "./ThemeToggle";
 import { cn } from "@/lib/utils";
@@ -22,11 +22,13 @@ export function Header({
   siteName,
   logoLightUrl,
   logoDarkUrl,
-  subtitle = t("header.subtitle"),
+  subtitle,
   badge,
   badgeTitle,
   children,
 }: HeaderProps) {
+  const { t } = useTranslation();
+  const subtitleText = subtitle ?? t("header.subtitle");
   const hasLogo = Boolean(logoLightUrl || logoDarkUrl);
 
   return (
@@ -65,7 +67,7 @@ export function Header({
             )}
           </Link>
           <div className="hidden h-6 w-px bg-border sm:block" />
-          <p className="hidden text-sm font-medium text-muted-foreground sm:block">{subtitle}</p>
+          <p className="hidden text-sm font-medium text-muted-foreground sm:block">{subtitleText}</p>
           {badge && (
             <span
               data-testid="test-badge"

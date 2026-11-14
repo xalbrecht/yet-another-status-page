@@ -42,7 +42,7 @@ export function MaintenanceUpdatesTimeline({ updates }: MaintenanceUpdatesTimeli
                 <div className="flex-1">
                   <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-3">
                     <span className={cn("text-sm font-semibold", config.color)}>
-                      {config.label}
+                      {t(config.labelKey)}
                     </span>
                     <span className="text-xs text-muted-foreground">{update.dateTime}</span>
                   </div>

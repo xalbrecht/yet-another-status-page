@@ -28,7 +28,7 @@ const hoursOf = (ms: number) => ms / 3_600_000
 
 function trendSection(data: ReportData, locale: string): Section {
   return {
-    title: ta('Development of the last 12 months', 'Entwicklung der letzten 12 Monate'),
+    title: ta('Development of the last 12 months'),
     height: 300,
     body: trendChart(data.trend, data.kpis.target, locale, CONTENT_WIDTH, 300),
   }
@@ -41,8 +41,8 @@ function servicesSection(data: ReportData, locale: string): Section {
       const share = row.availability === null ? 0 : Math.max(0, Math.min(100, row.availability)) / 100
       const duration =
         row.downMs > 0
-          ? `${formatDuration(row.downMs - row.maintenanceDownMs)}${row.maintenanceDownMs > 0 ? ` + ${formatDuration(row.maintenanceDownMs)} ${ta('maintenance', 'Wartung')}` : ''}`
-          : ta('no outage', 'kein Ausfall')
+          ? `${formatDuration(row.downMs - row.maintenanceDownMs)}${row.maintenanceDownMs > 0 ? ` + ${formatDuration(row.maintenanceDownMs)} ${ta('maintenance')}` : ''}`
+          : ta('no outage')
       return (
         textEl(TRACK_X - 10, y + 17, truncate(row.name, 28), { size: 12, anchor: 'end' }) +
         `<rect data-row="service" x="${TRACK_X}" y="${y + 3}" width="${TRACK_WIDTH}" height="18" fill="${TRACK_COLOR}"/>` +
@@ -51,15 +51,15 @@ function servicesSection(data: ReportData, locale: string): Section {
       )
     })
     .join('')
-  return { title: ta('Services of the group, weakest first', 'Dienste der Gruppe, schwächste zuerst'), height: Math.max(1, data.ranking.length) * ROW_HEIGHT, body }
+  return { title: ta('Services of the group, weakest first'), height: Math.max(1, data.ranking.length) * ROW_HEIGHT, body }
 }
 
 function severityLegend(x: number, y: number, withDegraded: boolean): string {
   const entries: Array<[string, string]> = [
-    [ta('Major Outage', 'Schwerer Ausfall'), SEVERITY_COLOR.major],
-    [ta('Partial Outage', 'Teilausfall'), SEVERITY_COLOR.partial],
+    [ta('Major Outage'), SEVERITY_COLOR.major],
+    [ta('Partial Outage'), SEVERITY_COLOR.partial],
   ]
-  if (withDegraded) entries.push([ta('Degraded Performance', 'Eingeschränkt'), SEVERITY_COLOR.degraded])
+  if (withDegraded) entries.push([ta('Degraded Performance'), SEVERITY_COLOR.degraded])
   let cursor = x
   let body = ''
   for (const [label, color] of entries) {
@@ -89,7 +89,7 @@ function byServiceSection(sheet: GroupSheetData): Section | null {
     .join('')
   const height = sheet.perService.length * ROW_HEIGHT + 30
   return {
-    title: `${ta('Disruptions in', 'Störungen im')} ${sheet.month.label}, ${ta('by service', 'je Dienst')}`,
+    title: `${ta('Disruptions in')} ${sheet.month.label}, ${ta('by service')}`,
     height,
     body: rows + severityLegend(TRACK_X, height - 18, sheet.perService.some((entry) => entry.degradedMs > 0)),
   }
@@ -105,7 +105,7 @@ function byDaySection(sheet: GroupSheetData, mode: 'all-days' | 'disruption-days
   const maxHours = Math.max(1, Math.ceil(hoursOf(Math.max(...withBars.flatMap((day) => day.bars.map((bar) => bar.ms))))))
   const perHour = (DAY_BASE - 16) / maxHours
   const slot = (CONTENT_WIDTH - left - right) / days.length
-  const hoursLabel = ta('h', 'Std.')
+  const hoursLabel = ta('h')
   let body = ''
   let longestLabel = 0 // Zeichen des längsten senkrechten Textes, bestimmt die Höhe unter der Achse
   for (const hours of new Set([0, Math.round(maxHours / 2), maxHours])) {
@@ -129,7 +129,7 @@ function byDaySection(sheet: GroupSheetData, mode: 'all-days' | 'disruption-days
       }
     })
     if (!showNames) {
-      const label = `${count} ${ta('services', 'Dienste')}`
+      const label = `${count} ${ta('services')}`
       longestLabel = Math.max(longestLabel, label.length)
       body += textEl(center + 4, DAY_BASE + 22, label, { size: 12, rotate: 90 })
     }
@@ -138,7 +138,7 @@ function byDaySection(sheet: GroupSheetData, mode: 'all-days' | 'disruption-days
   })
   const height = DAY_BASE + 22 + Math.ceil(longestLabel * 7.8) + 40
   body += `<line x1="${left}" x2="${CONTENT_WIDTH - right}" y1="${DAY_BASE}" y2="${DAY_BASE}" stroke="${GRID_COLOR}"/>` + severityLegend(left, height - 18, false)
-  return { title: `${ta('Disruptions in', 'Störungen im')} ${sheet.month.label}, ${ta('by day', 'je Tag')}`, height, body }
+  return { title: `${ta('Disruptions in')} ${sheet.month.label}, ${ta('by day')}`, height, body }
 }
 
 function heatSections(data: ReportData, locale: string): Section[] {
@@ -149,7 +149,7 @@ function heatSections(data: ReportData, locale: string): Section[] {
     const tableHeight = heatTableHeight(rows.length)
     const part = chunks.length > 1 ? ` (${index + 1}/${chunks.length})` : ''
     return {
-      title: `${ta('Heat map of the services', 'Wärmekarte der Dienste')}${part}`,
+      title: `${ta('Heat map of the services')}${part}`,
       height: tableHeight + 34,
       body: heatTable(data.heat, rows, data.kpis.target, locale, CONTENT_WIDTH) + heatLegend(data.kpis.target, locale, 0, tableHeight + 14),
     }
@@ -159,7 +159,7 @@ function heatSections(data: ReportData, locale: string): Section[] {
 /** Das ganze Blatt: Kopfzeile, danach alle Abschnitte untereinander. */
 function sheetImage(name: string, meta: string, sections: Section[]): string {
   let y = 70
-  let body = textEl(20, 30, `${ta('Group sheet', 'Gruppenblatt')}: ${truncate(name, 60)}`, { size: 20, weight: 'bold' }) + textEl(20, 50, meta, { size: 13, fill: MUTED_COLOR })
+  let body = textEl(20, 30, `${ta('Group sheet')}: ${truncate(name, 60)}`, { size: 20, weight: 'bold' }) + textEl(20, 50, meta, { size: 13, fill: MUTED_COLOR })
   for (const section of sections) {
     body += textEl(20, y + 16, section.title, { size: 15, weight: 'bold' }) + `<g transform="translate(20,${y + 30})">${section.body}</g>`
     y += 30 + section.height + 24
@@ -173,9 +173,9 @@ export function groupBlocks(data: ReportData, locale: string, periodLabel: strin
   const subtitle = [name, periodLabel].filter(Boolean).join(' · ')
   const meta = [
     periodLabel,
-    `${ta('Availability', 'Verfügbarkeit')} ${data.kpis.availability === null ? '–' : formatAvailability(data.kpis.availability, locale)}`,
-    `${ta('Target', 'Ziel')} ${formatAvailability(data.kpis.target, locale)}`,
-    `${data.scope.serviceCount} ${data.scope.serviceCount === 1 ? ta('service', 'Dienst') : ta('services', 'Dienste')}`,
+    `${ta('Availability')} ${data.kpis.availability === null ? '–' : formatAvailability(data.kpis.availability, locale)}`,
+    `${ta('Target')} ${formatAvailability(data.kpis.target, locale)}`,
+    `${data.scope.serviceCount} ${data.scope.serviceCount === 1 ? ta('service') : ta('services')}`,
   ]
     .filter(Boolean)
     .join(' · ')

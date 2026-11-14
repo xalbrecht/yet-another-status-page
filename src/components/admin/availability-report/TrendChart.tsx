@@ -27,7 +27,7 @@ export function TrendChart(props: {
   const points = trend.map((point, index) => (point.availability === null ? null : `${x(index)},${y(point.availability)}`)).filter(Boolean).join(' ')
 
   return (
-    <svg data-testid="report-trend" viewBox={`0 0 ${W} ${H}`} className="availability-report__trend" role="img" aria-label={ta('Availability of the last 12 months', 'Verfügbarkeit der letzten 12 Monate')}>
+    <svg data-testid="report-trend" viewBox={`0 0 ${W} ${H}`} className="availability-report__trend" role="img" aria-label={ta('Availability of the last 12 months')}>
       {grid.map((value) => (
         <g key={value}>
           <line x1={L} x2={W - R} y1={y(value)} y2={y(value)} className="availability-report__grid" />
@@ -35,7 +35,7 @@ export function TrendChart(props: {
         </g>
       ))}
       <line x1={L} x2={W - R} y1={y(target)} y2={y(target)} className="availability-report__target" />
-      <text x={W - R} y={y(target) - 6} textAnchor="end" className="availability-report__target-label">{ta('Target', 'Ziel')} {formatAvailability(target, locale)}</text>
+      <text x={W - R} y={y(target) - 6} textAnchor="end" className="availability-report__target-label">{ta('Target')} {formatAvailability(target, locale)}</text>
       <polyline points={points} fill="none" className="availability-report__line" />
       {trend.map((point, index) =>
         point.availability === null ? null : (

@@ -29,20 +29,20 @@ function classLabel(key: string): string {
     case 'degraded':
       return ta('Degraded Performance')
     case 'maintenance':
-      return ta('Maintenance', 'Wartung')
+      return ta('Maintenance')
     case 'none':
-      return ta('No impact', 'Keine Auswirkung')
+      return ta('No impact')
     case 'partial (nicht eindeutig)':
-      return `${ta('Partial Outage')} ${ta('(not clearly classified)', '(nicht eindeutig)')}`
+      return `${ta('Partial Outage')} ${ta('(not clearly classified)')}`
     default:
       return key
   }
 }
 
 function reasonLabel(reason: string): string {
-  if (reason === 'open') return ta('open, not resolved', 'offen, nicht behoben')
-  if (reason === 'manual') return ta('classified by hand', 'von Hand eingeordnet')
-  if (reason === 'after-start') return ta('entered after the status log started', 'nach dem Start des Statusprotokolls erfasst')
+  if (reason === 'open') return ta('open, not resolved')
+  if (reason === 'manual') return ta('classified by hand')
+  if (reason === 'after-start') return ta('entered after the status log started')
   return reason
 }
 
@@ -53,35 +53,34 @@ export function StatusLogView(props: StatusLogViewProps) {
 
   return (
     <div className="status-log">
-      <h1>{ta('Maintain the status log', 'Statusprotokoll pflegen')}</h1>
+      <h1>{ta('Maintain the status log')}</h1>
       {error && <p className="status-log__error" role="alert">{error}</p>}
 
       <section className="status-log__section">
-        <h2>{ta('Reconstruction', 'Nachrechnung')}</h2>
+        <h2>{ta('Reconstruction')}</h2>
         <p>
           {ta(
             'Recalculates the availability history before the first operation entry of each service from the incidents. Entries from operation stay unchanged. A classification set by hand on an incident always applies.',
-            'Rechnet den Verfügbarkeitsverlauf vor dem ersten Betriebseintrag jedes Dienstes aus den Vorfällen neu. Einträge aus dem Betrieb bleiben unverändert. Eine Einordnung von Hand am Vorfall gilt immer.',
           )}
         </p>
         <div className="status-log__actions">
           <button type="button" data-testid="rebuild-preview" disabled={busy} onClick={props.onPreviewRebuild}>
-            {ta('Preview', 'Vorschau')}
+            {ta('Preview')}
           </button>
           <button type="button" data-testid="rebuild-run" disabled={!canRunRebuild} onClick={props.onRunRebuild}>
-            {ta('Run', 'Ausführen')}
+            {ta('Run')}
           </button>
         </div>
         {rebuild && (
           <div data-testid="rebuild-result">
-            <p>{rebuild.dryRun ? ta('Preview, nothing was written.', 'Vorschau, es wurde nichts geschrieben.') : ta('Executed.', 'Ausgeführt.')}</p>
+            <p>{rebuild.dryRun ? ta('Preview, nothing was written.') : ta('Executed.')}</p>
             <table>
               <tbody>
-                <tr><th>{ta('Incidents', 'Vorfälle')}</th><td>{rebuild.incidents}</td></tr>
-                <tr><th>{ta('Entries before', 'Einträge vorher')}</th><td>{rebuild.reconstructedBefore}</td></tr>
-                <tr><th>{ta('Entries after', 'Einträge nachher')}</th><td>{rebuild.reconstructedAfter}</td></tr>
-                <tr><th>{ta('Not clearly classified (counted as partial outage)', 'Nicht eindeutig eingeordnet (als Teilausfall gewertet)')}</th><td>{rebuild.unsure}</td></tr>
-                <tr><th>{ta('Without service (not considered)', 'Ohne Dienst (nicht berücksichtigt)')}</th><td>{rebuild.withoutService}</td></tr>
+                <tr><th>{ta('Incidents', 'log')}</th><td>{rebuild.incidents}</td></tr>
+                <tr><th>{ta('Entries before')}</th><td>{rebuild.reconstructedBefore}</td></tr>
+                <tr><th>{ta('Entries after')}</th><td>{rebuild.reconstructedAfter}</td></tr>
+                <tr><th>{ta('Not clearly classified (counted as partial outage)')}</th><td>{rebuild.unsure}</td></tr>
+                <tr><th>{ta('Without service (not considered)')}</th><td>{rebuild.withoutService}</td></tr>
                 {Object.entries(rebuild.counts).map(([key, value]) => (
                   <tr key={key}><th>{classLabel(key)}</th><td>{value}</td></tr>
                 ))}
@@ -92,36 +91,35 @@ export function StatusLogView(props: StatusLogViewProps) {
       </section>
 
       <section className="status-log__section">
-        <h2>{ta('Maintenances entered as incidents', 'Wartungen aus Störungen')}</h2>
+        <h2>{ta('Maintenances entered as incidents')}</h2>
         <p>
           {ta(
             'Turns resolved incidents with "Wartung" in the title into completed maintenances without notification drafts, deletes the incident and reconstructs the log. Create a backup first.',
-            'Wandelt gelöste Störungen mit „Wartung“ im Titel in abgeschlossene Wartungen um, ohne Benachrichtigungsentwurf, löscht die Störung und rechnet das Protokoll neu nach. Vorher eine Sicherung anlegen.',
           )}
         </p>
         <div className="status-log__actions">
           <button type="button" data-testid="convert-preview" disabled={busy} onClick={props.onPreviewConversion}>
-            {ta('Preview', 'Vorschau')}
+            {ta('Preview')}
           </button>
           <button type="button" data-testid="convert-run" disabled={!canRunConversion} onClick={props.onRunConversion}>
-            {ta('Run', 'Ausführen')}
+            {ta('Run')}
           </button>
         </div>
         {conversion && (
           <div data-testid="convert-result">
-            <p>{conversion.dryRun ? ta('Preview, nothing was changed.', 'Vorschau, es wurde nichts geändert.') : ta('Executed.', 'Ausgeführt.')}</p>
+            <p>{conversion.dryRun ? ta('Preview, nothing was changed.') : ta('Executed.')}</p>
             {conversion.rebuildError && (
               <p className="status-log__error" role="alert" data-testid="convert-rebuild-error">
-                {ta('The conversion is done, but the reconstruction failed: ', 'Die Umwandlung ist abgeschlossen, die Nachrechnung ist aber gescheitert: ')}
+                {ta('The conversion is done, but the reconstruction failed: ')}
                 {conversion.rebuildError}
                 {' '}
-                {ta('Run the reconstruction again.', 'Die Nachrechnung bitte erneut ausführen.')}
+                {ta('Run the reconstruction again.')}
               </p>
             )}
-            <h3>{ta('Converted', 'Umgewandelt')} ({conversion.converted.length})</h3>
+            <h3>{ta('Converted')} ({conversion.converted.length})</h3>
             <table>
               <thead>
-                <tr><th>{ta('Incident', 'Störung')}</th><th>{ta('Services', 'Dienste')}</th><th>{ta('From', 'Von')}</th><th>{ta('To', 'Bis')}</th></tr>
+                <tr><th>{ta('Incident')}</th><th>{ta('Services')}</th><th>{ta('From')}</th><th>{ta('To')}</th></tr>
               </thead>
               <tbody>
                 {conversion.converted.map((entry) => (
@@ -131,7 +129,7 @@ export function StatusLogView(props: StatusLogViewProps) {
                 ))}
               </tbody>
             </table>
-            <h3>{ta('Skipped', 'Übersprungen')} ({conversion.skipped.length})</h3>
+            <h3>{ta('Skipped')} ({conversion.skipped.length})</h3>
             <table>
               <tbody>
                 {conversion.skipped.map((entry) => (

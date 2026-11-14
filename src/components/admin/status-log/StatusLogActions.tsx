@@ -41,12 +41,12 @@ export const StatusLogActions: React.FC = () => {
       error={error}
       onPreviewRebuild={() => call<RebuildResult>('/api/status-log/rebuild', true, setRebuild)}
       onRunRebuild={() => {
-        if (!window.confirm(ta('Replace the reconstructed entries now?', 'Die nachgerechneten Einträge jetzt ersetzen?'))) return
+        if (!window.confirm(ta('Replace the reconstructed entries now?'))) return
         void call<RebuildResult>('/api/status-log/rebuild', false, setRebuild)
       }}
       onPreviewConversion={() => call<ConversionResult>('/api/status-log/convert-maintenance', true, setConversion)}
       onRunConversion={() => {
-        if (!window.confirm(ta('Convert these incidents into maintenances and delete the incidents? This cannot be undone. Did you create a backup?', 'Diese Störungen in Wartungen umwandeln und die Störungen löschen? Das lässt sich nicht rückgängig machen. Ist die Sicherung angelegt?'))) return
+        if (!window.confirm(ta('Convert these incidents into maintenances and delete the incidents? This cannot be undone. Did you create a backup?'))) return
         void call<ConversionResult>('/api/status-log/convert-maintenance', false, setConversion)
       }}
     />

@@ -15,7 +15,7 @@ export type ServiceStatus = (typeof serviceStatusOptions)[number]['value']
 
 export const Services: CollectionConfig = {
   slug: 'services',
-  labels: { singular: ta('Service', 'Dienst'), plural: ta('Services', 'Dienste') },
+  labels: { singular: ta('Service'), plural: ta('Services') },
   admin: {
     useAsTitle: 'name',
     defaultColumns: ['name', 'group', 'status', 'updatedAt'],
@@ -98,7 +98,7 @@ export const Services: CollectionConfig = {
     },
     {
       name: 'status',
-      label: ta('Status', 'Status'),
+      label: ta('Status'),
       type: 'select',
       required: true,
       defaultValue: 'operational',
@@ -111,7 +111,7 @@ export const Services: CollectionConfig = {
       // Zielwert des Dienstes (Konzept 4.4). Noch ohne Eingabe im Admin, leer = erbt von Gruppe oder Gesamt.
       name: 'availabilityTarget',
       type: 'number',
-      label: ta('Availability target (%)', 'Zielwert Verfügbarkeit (%)'),
+      label: ta('Availability target (%)'),
       min: 0,
       max: 100,
       admin: { hidden: true },

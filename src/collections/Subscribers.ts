@@ -21,7 +21,7 @@ interface SubscriberData {
 
 export const Subscribers: CollectionConfig = {
   slug: 'subscribers',
-  labels: { singular: ta('Subscriber', 'Abonnent'), plural: ta('Subscribers', 'Abonnenten') },
+  labels: { singular: ta('Subscriber'), plural: ta('Subscribers') },
   admin: {
     useAsTitle: 'email',
     defaultColumns: ['type', 'email', 'phone', 'verified', 'addressConfirmed', 'active', 'createdAt'],
@@ -36,7 +36,7 @@ export const Subscribers: CollectionConfig = {
   fields: [
     {
       name: 'type',
-      label: ta('Type', 'Art'),
+      label: ta('Type'),
       type: 'select',
       required: true,
       defaultValue: 'email',

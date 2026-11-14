@@ -23,7 +23,7 @@ export function SendReportButton(props: { recipients: string[]; query: string })
       const body = (await response.json().catch(() => null)) as { error?: string; code?: string; sent?: number; mails?: number; planId?: string; nextMail?: number; recipients?: string[]; rejected?: string[] } | null
       if (response.ok && body) {
         setResume(null)
-        setState({ kind: 'done', message: `${ta('Dispatch finished', 'Versand abgeschlossen')}: ${body.sent ?? 0} ${ta('emails to', 'Mails an')} ${(body.recipients ?? recipients).join(', ')}.`, rejected: body.rejected })
+        setState({ kind: 'done', message: `${ta('Dispatch finished')}: ${body.sent ?? 0} ${ta('emails to')} ${(body.recipients ?? recipients).join(', ')}.`, rejected: body.rejected })
         return
       }
       // Ohne auswertbare Antwort (Zeitüberschreitung eines Proxys, Abbruch) ist offen, ob der Versand läuft oder fertig ist
@@ -33,7 +33,7 @@ export function SendReportButton(props: { recipients: string[]; query: string })
         return
       }
       setResume(body.code === 'send-failed' && body.planId && body.nextMail ? { planId: body.planId, nextMail: body.nextMail } : null)
-      setState({ kind: 'error', code: body.code, message: body.error ?? ta('Unknown error', 'Unbekannter Fehler'), sent: body.sent, mails: body.mails, nextMail: body.nextMail })
+      setState({ kind: 'error', code: body.code, message: body.error ?? ta('Unknown error'), sent: body.sent, mails: body.mails, nextMail: body.nextMail })
     } catch {
       setResume(null)
       setState({ kind: 'error', code: 'unknown-state', message: '' })

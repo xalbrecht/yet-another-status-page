@@ -70,9 +70,9 @@ export async function* exportFiles(context: ReportContext, options: { groupId?: 
   }
 
   const overall = context.build(undefined)
-  const pdf = await createPdfBuilder(`${ta('Availability report', 'Verfügbarkeitsbericht')} ${context.period.label}`)
+  const pdf = await createPdfBuilder(`${ta('Availability report')} ${context.period.label}`)
 
-  pdf.addHeading(ta('Overall report', 'Gesamtbericht'))
+  pdf.addHeading(ta('Overall report'))
   for (const block of overallBlocks(overall.data, context.locale, context.period.label)) {
     const png = await svgToPng(block.svg)
     await pdf.addImage(png)
@@ -96,10 +96,10 @@ export async function* exportFiles(context: ReportContext, options: { groupId?: 
     }
   }
 
-  pdf.addHeading(ta('Notes', 'Hinweise'))
+  pdf.addHeading(ta('Notes'))
   pdf.addText([
-    `${ta('Incidents not clearly classified, counted as Partial Outage', 'Nicht eindeutig eingeordnete Vorfälle, als Teilausfall gewertet')}: ${overall.data.footnotes.unsure}.`,
-    `${ta('Incidents without a service, not considered', 'Vorfälle ohne Dienst, nicht berücksichtigt')}: ${overall.data.footnotes.withoutService}.`,
+    `${ta('Incidents not clearly classified, counted as Partial Outage')}: ${overall.data.footnotes.unsure}.`,
+    `${ta('Incidents without a service, not considered')}: ${overall.data.footnotes.withoutService}.`,
   ])
   if (!options.pdfOnly) {
     yield { path: `${base}/${base}.xlsx`, data: await buildWorkbook({ data: overall.data, params: overall.params, period: context.period, timeZone: context.timeZone }) }

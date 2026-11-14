@@ -193,7 +193,7 @@ async function createMaintenanceNotificationDeferred(data: DeferredNotification)
 
 export const Maintenances: CollectionConfig = {
   slug: 'maintenances',
-  labels: { singular: ta('Maintenance', 'Wartung'), plural: ta('Maintenances', 'Wartungen') },
+  labels: { singular: ta('Maintenance'), plural: ta('Maintenances') },
   admin: {
     useAsTitle: 'title',
     defaultColumns: ['title', 'shortId', 'status', 'scheduledStartAt', 'updatedAt'],
@@ -290,7 +290,7 @@ export const Maintenances: CollectionConfig = {
     },
     {
       name: 'status',
-      label: ta('Status', 'Status'),
+      label: ta('Status'),
       type: 'select',
       required: true,
       defaultValue: 'upcoming',
@@ -331,14 +331,14 @@ export const Maintenances: CollectionConfig = {
       name: 'updates',
       type: 'array',
       label: ta('Updates'),
-      labels: { singular: ta('Update', 'Aktualisierung'), plural: ta('Updates') },
+      labels: { singular: ta('Update'), plural: ta('Updates') },
       admin: {
         description: ta('Optional timeline of updates for this maintenance'),
       },
       fields: [
         {
           name: 'status',
-          label: ta('Status', 'Status'),
+          label: ta('Status'),
           type: 'select',
           required: true,
           options: [...maintenanceStatusOptions],
@@ -348,7 +348,7 @@ export const Maintenances: CollectionConfig = {
         },
         {
           name: 'message',
-          label: ta('Message', 'Nachricht'),
+          label: ta('Message'),
           type: 'textarea',
           required: true,
           admin: {
@@ -357,7 +357,7 @@ export const Maintenances: CollectionConfig = {
         },
         {
           name: 'createdAt',
-          label: ta('Created At', 'Erstellt am'),
+          label: ta('Created At'),
           type: 'date',
           required: true,
           defaultValue: () => new Date().toISOString(),

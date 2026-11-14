@@ -12,8 +12,8 @@ import { serviceStatusOptions } from './Services'
 export const ServiceStatusEvents: CollectionConfig = {
   slug: 'service-status-events',
   labels: {
-    singular: ta('Status log entry', 'Protokolleintrag'),
-    plural: ta('Status log', 'Statusprotokoll'),
+    singular: ta('Status log entry'),
+    plural: ta('Status log'),
   },
   admin: {
     useAsTitle: 'changedAt',
@@ -50,14 +50,14 @@ export const ServiceStatusEvents: CollectionConfig = {
       relationTo: 'services',
       required: true,
       index: true,
-      label: ta('Service', 'Dienst'),
+      label: ta('Service'),
     },
     {
       name: 'status',
       type: 'select',
       required: true,
       options: [...serviceStatusOptions],
-      label: ta('Status', 'Status'),
+      label: ta('Status'),
     },
     {
       name: 'changedAt',
@@ -65,7 +65,7 @@ export const ServiceStatusEvents: CollectionConfig = {
       required: true,
       index: true,
       defaultValue: () => new Date().toISOString(),
-      label: ta('Changed at', 'Geändert am'),
+      label: ta('Changed at'),
     },
     {
       // „reconstructed“: aus Vorfällen nachgerechnet (Konzept 5.3), „operation“: im Betrieb entstanden
@@ -73,10 +73,10 @@ export const ServiceStatusEvents: CollectionConfig = {
       type: 'select',
       required: true,
       defaultValue: 'operation',
-      label: ta('Source', 'Quelle'),
+      label: ta('Source'),
       options: [
-        { label: ta('Operation', 'Betrieb'), value: 'operation' },
-        { label: ta('Reconstructed from incidents', 'Aus Vorfällen nachgerechnet'), value: 'reconstructed' },
+        { label: ta('Operation'), value: 'operation' },
+        { label: ta('Reconstructed from incidents'), value: 'reconstructed' },
       ],
       access: { create: () => false, update: () => false },
       admin: { readOnly: true },

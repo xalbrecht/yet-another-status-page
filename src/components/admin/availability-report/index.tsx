@@ -67,7 +67,7 @@ export async function AvailabilityReportView({ initPageResult, params, searchPar
           <ReportView data={result.data} params={result.params} period={result.period} locale={dt.locale} controls={controls} tabs={tabs}>
             {requested.view === 'groups' &&
               (result.data.groupList.length === 0 ? (
-                <p className="availability-report__muted">{ta('No groups with services.', 'Keine Gruppen mit Diensten.')}</p>
+                <p className="availability-report__muted">{ta('No groups with services.')}</p>
               ) : (
                 <div className="availability-report__layout">
                   <GroupList

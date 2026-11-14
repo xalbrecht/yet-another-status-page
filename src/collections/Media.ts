@@ -3,7 +3,7 @@ import { ta } from '@/lib/i18n/admin'
 
 export const Media: CollectionConfig = {
   slug: 'media',
-  labels: { singular: ta('Media', 'Medium'), plural: ta('Media', 'Medien') },
+  labels: { singular: ta('Media', 'single'), plural: ta('Media') },
   admin: {
     group: ta('Admin'),
   },

@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
     }
 
     if (Array.isArray(search.resume) || Array.isArray(search.plan)) {
-      return fail('bad-request', ta('resume and plan may be given only once.', 'resume und plan dürfen nur einmal angegeben werden.'), 400)
+      return fail('bad-request', ta('resume and plan may be given only once.'), 400)
     }
     const resumeText = typeof search.resume === 'string' ? search.resume : undefined
     const planId = typeof search.plan === 'string' && search.plan ? search.plan : undefined
@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
     if (resumeText !== undefined || planId !== undefined) {
       const from = Number(resumeText)
       if (resumeText === undefined || planId === undefined || !Number.isInteger(from) || from < 1) {
-        return fail('bad-request', ta('resume and plan must be given together, resume is a number from 1.', 'resume und plan gehören zusammen, resume ist eine Zahl ab 1.'), 400)
+        return fail('bad-request', ta('resume and plan must be given together, resume is a number from 1.'), 400)
       }
       resume = { from, planId }
     }
@@ -55,18 +55,18 @@ export async function POST(request: NextRequest) {
     const settings = (await payload.findGlobal({ slug: 'email-settings' })) as EmailSetting
     const recipients = parseRecipients(settings.reportRecipients)
     if (recipients.length === 0) {
-      return fail('no-recipients', ta('Enter recipients in the email settings.', 'Empfänger in den E-Mail-Einstellungen eintragen.'), 400)
+      return fail('no-recipients', ta('Enter recipients in the email settings.'), 400)
     }
     if (!settings.smtpHost || !settings.smtpFromAddress) {
-      return fail('no-smtp', ta('SMTP is not set up. Enter server and sender address in the email settings. Nothing was sent.', 'SMTP ist nicht eingerichtet. Bitte in den E-Mail-Einstellungen Server und Absenderadresse eintragen. Es wurde nichts gesendet.'), 400)
+      return fail('no-smtp', ta('SMTP is not set up. Enter server and sender address in the email settings. Nothing was sent.'), 400)
     }
 
-    if (running) return fail('running', ta('A dispatch is already running.', 'Es läuft bereits ein Versand.'), 409)
+    if (running) return fail('running', ta('A dispatch is already running.'), 409)
     running = true
     try {
       const result = await sendReportMail({ context: loaded.context, recipients, send: (options) => sendEmail(settings, options), resume })
       if (result.failed > 0) {
-        return fail('send-failed', result.errors[0] ?? ta('Unknown error', 'Unbekannter Fehler'), 502, {
+        return fail('send-failed', result.errors[0] ?? ta('Unknown error'), 502, {
           sent: result.sent,
           mails: result.mails,
           planId: result.planId,

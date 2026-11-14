@@ -127,7 +127,7 @@ export function getIncidentResolvedAt(updates: Array<{ status?: string; createdA
 
 export const Incidents: CollectionConfig = {
   slug: 'incidents',
-  labels: { singular: ta('Incident', 'Störung'), plural: ta('Incidents', 'Störungen') },
+  labels: { singular: ta('Incident'), plural: ta('Incidents') },
   admin: {
     useAsTitle: 'title',
     defaultColumns: ['title', 'status', 'shortId', 'createdAt'],
@@ -211,10 +211,10 @@ export const Incidents: CollectionConfig = {
       name: 'availabilityClass',
       type: 'select',
       defaultValue: 'auto',
-      label: ta('Classification for the availability report', 'Einordnung für den Verfügbarkeitsbericht'),
+      label: ta('Classification for the availability report'),
       options: [
-        { label: ta('Automatic', 'Automatisch'), value: 'auto' },
-        { label: ta('No impact', 'Keine Auswirkung'), value: 'none' },
+        { label: ta('Automatic'), value: 'auto' },
+        { label: ta('No impact'), value: 'none' },
         { label: ta('Degraded Performance'), value: 'degraded' },
         { label: ta('Partial Outage'), value: 'partial' },
         { label: ta('Major Outage'), value: 'major' },
@@ -223,7 +223,6 @@ export const Incidents: CollectionConfig = {
         position: 'sidebar',
         description: ta(
           'Applies to the reconstruction of the availability history before 10 Nov 2026. "Automatic" rates the title and the text of the updates.',
-          'Gilt für die Nachrechnung des Verfügbarkeitsverlaufs vor dem 10.11.2026. „Automatisch“ bewertet Titel und Text der Aktualisierungen.',
         ),
       },
     },
@@ -233,14 +232,14 @@ export const Incidents: CollectionConfig = {
       required: true,
       minRows: 1,
       label: ta('Updates'),
-      labels: { singular: ta('Update', 'Aktualisierung'), plural: ta('Updates') },
+      labels: { singular: ta('Update'), plural: ta('Updates') },
       admin: {
         description: ta('Timeline of updates for this incident. At least one update is required.'),
       },
       fields: [
         {
           name: 'status',
-          label: ta('Status', 'Status'),
+          label: ta('Status'),
           type: 'select',
           required: true,
           options: [...incidentStatusOptions],
@@ -250,7 +249,7 @@ export const Incidents: CollectionConfig = {
         },
         {
           name: 'message',
-          label: ta('Message', 'Nachricht'),
+          label: ta('Message'),
           type: 'textarea',
           required: true,
           admin: {
@@ -259,7 +258,7 @@ export const Incidents: CollectionConfig = {
         },
         {
           name: 'createdAt',
-          label: ta('Created At', 'Erstellt am'),
+          label: ta('Created At'),
           type: 'date',
           required: true,
           defaultValue: () => new Date().toISOString(),

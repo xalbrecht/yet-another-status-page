@@ -10,7 +10,7 @@ function Row(props: { row: ReportData['heat']['rows'][number]; columns: ReportDa
   const { row, columns, target, locale } = props
   return (
     <tr className={row.total ? 'availability-report__total' : undefined}>
-      <th scope="row" title={row.name}>{row.total ? ta('Total', 'Gesamt') : row.name}</th>
+      <th scope="row" title={row.name}>{row.total ? ta('Total') : row.name}</th>
       {row.values.map((value, index) => (
         <td key={columns[index].key}>
           <span className={`availability-report__cell heat-${heatClass(value, target)}`} title={`${row.name}, ${columns[index].label}: ${value === null ? '–' : formatAvailability(value, locale)}`}>
@@ -38,10 +38,10 @@ export function Heatmap(props: { heat: ReportData['heat']; target: number; local
   )
   const legend = [
     ['100 %', 0],
-    [ta('from 99.9 %', 'ab 99,9 %'), 1],
-    [ta('from 99.5 %', 'ab 99,5 %'), 2],
-    [`${ta('from target', 'ab Ziel')} (${formatAvailability(target, locale)})`, 3],
-    [ta('below target', 'unter Ziel'), 4],
+    [ta('from 99.9 %'), 1],
+    [ta('from 99.5 %'), 2],
+    [`${ta('from target')} (${formatAvailability(target, locale)})`, 3],
+    [ta('below target'), 4],
   ] as const
   return (
     <div data-testid="report-heat">
@@ -57,7 +57,7 @@ export function Heatmap(props: { heat: ReportData['heat']; target: number; local
           const from = (index + 1) * HEAT_CHUNK_SIZE + 1
           return (
             <details key={from}>
-              <summary>{ta('Rows', 'Zeilen')} {from} {ta('to', 'bis')} {from + chunk.length - 1}</summary>
+              <summary>{ta('Rows')} {from} {ta('to')} {from + chunk.length - 1}</summary>
               <table className="availability-report__heat">
                 {head}
                 <tbody>

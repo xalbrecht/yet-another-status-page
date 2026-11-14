@@ -308,8 +308,16 @@ function TileFrame({
     const outside = (event: PointerEvent) => {
       if (!frame.current?.contains(event.target as Node)) close()
     }
+    // Esc schließt auch einen Tooltip, der nur per Maus geöffnet wurde (WCAG 1.4.13)
+    const escape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') close()
+    }
     document.addEventListener('pointerdown', outside)
-    return () => document.removeEventListener('pointerdown', outside)
+    document.addEventListener('keydown', escape)
+    return () => {
+      document.removeEventListener('pointerdown', outside)
+      document.removeEventListener('keydown', escape)
+    }
   }, [open, close])
 
   const activate = () => {

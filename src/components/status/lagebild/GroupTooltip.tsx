@@ -51,7 +51,7 @@ type Props = {
 
 /**
  * Dienste einer Gruppe mit farbigem Punkt, ohne Beschreibung. Die Liste steht immer im Markup, damit `aria-describedby`
- * der Kachel sie auch geschlossen vorlesen kann; sichtbar ist sie nur bei `open`. Der Zustand steht zusätzlich als Text
+ * der Kachel sie auch geschlossen vorlesen kann; angezeigt wird sie nur bei `open`. Der Zustand steht zusätzlich als Text
  * für Screenreader da. Der Tooltip überlappt den unteren Rand der Kachel um 4 Pixel, damit die Maus keine Lücke quert,
  * und bleibt innerhalb des Rasters (`data-lagebild-grid`).
  */
@@ -84,7 +84,9 @@ export function GroupTooltip({ id, title, items, footer, open, onEnter, onLeave,
       style={{ left: place.shift, width: place.width }}
       className={cn(
         'absolute top-[calc(100%-4px)] z-30 cursor-pointer rounded-lg border border-border bg-card p-3 text-left shadow-lg',
-        open ? 'visible opacity-100' : 'invisible pointer-events-none opacity-0',
+        // Geschlossen ohne Box (display: none): Auch unsichtbare Boxen verbreitern sonst die Seite am Rand des Rasters.
+        // `aria-describedby` der Kachel löst den Inhalt trotzdem auf.
+        open ? 'block' : 'hidden',
       )}
     >
       <p className="mb-1.5 text-xs font-semibold text-foreground">{title}</p>

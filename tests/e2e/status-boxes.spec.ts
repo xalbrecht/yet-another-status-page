@@ -157,6 +157,22 @@ test.describe('Statusseite mit Boxen', () => {
     await expect(past.getByText(`Läuft ${id}`, { exact: true })).toHaveCount(0)
   })
 
+  test('offene Störung älter als 5 Tage steht in „Aktuelle Störungen“ und nicht in „Vergangene Störungen“', async ({ page }) => {
+    const title = `Alt offen ${Date.now()}`
+    const zehnTage = new Date(Date.now() - 10 * 86_400_000).toISOString()
+    await createIncident({
+      title,
+      impact: 'partial',
+      createdAt: zehnTage,
+      updates: [{ status: 'investigating', message: 'Läuft seit Tagen', createdAt: zehnTage }],
+    })
+
+    await page.goto('/')
+    await expect(page.locator('#incidents').getByText(title, { exact: true })).toBeVisible()
+    await expect(page.locator('#past-incidents').getByText(title, { exact: true })).toHaveCount(0)
+    await expect(page.getByTestId('box-incidents').getByText(title, { exact: true })).toBeVisible()
+  })
+
   test('vier offene Störungen: die Box zeigt drei, der Block alle vier', async ({ page }) => {
     const id = Date.now()
     for (const n of [1, 2, 3, 4]) await open(`Vier ${n} ${id}`)
@@ -240,6 +256,14 @@ test.describe('Tooltip an der Gruppe', () => {
     await expect(tip(page)).toBeHidden({ timeout: 700 })
   })
 
+  test('Esc schließt auch einen Tooltip, der nur per Maus geöffnet wurde', async ({ page }) => {
+    await load(page)
+    await hover(page)
+    await expect(tip(page)).toBeVisible()
+    await page.keyboard.press('Escape')
+    await expect(tip(page)).toBeHidden()
+  })
+
   test('Tab fokussiert die Kachel und zeigt den Tooltip, Esc schließt ihn', async ({ page }) => {
     await load(page)
     await button(page).focus()
@@ -264,4 +288,90 @@ test.describe('Tooltip an der Gruppe', () => {
       await expect(panel(page)).toBeVisible()
     })
   })
+})
+
+/**
+ * Kachel „Alle“: Vorauswahl je Variante, Zeile wählt die Gruppe, die Adresse bleibt für „Alle“ ohne `gruppe`.
+ */
+test.describe('Kachel „Alle“', () => {
+  test.describe.configure({ mode: 'serial' })
+
+  let groupId: number
+  let groupName: string
+
+  test.beforeAll(async () => {
+    const id = Date.now()
+    groupName = `Alle Gruppe ${id}`
+    const group = await createServiceGroup({ name: groupName, icon: 'Server' })
+    groupId = group.id
+    const service = await createService({ name: `Alle Dienst ${id}`, group: group.id })
+    await updateService(service.id, { status: 'degraded' })
+  })
+
+  test.afterAll(async () => {
+    await updateSettings({ lagebildVariant: 'off' })
+  })
+
+  const allTile = (page: import('@playwright/test').Page) => page.getByTestId('lagebild-tile-all')
+  const allButton = (page: import('@playwright/test').Page) => allTile(page).getByRole('button')
+  const load = async (page: import('@playwright/test').Page) => {
+    await page.goto('/')
+    await expect
+      .poll(() => allButton(page).evaluate((element) => Object.keys(element).some((key) => key.startsWith('__reactProps'))), {
+        timeout: 30_000,
+      })
+      .toBe(true)
+  }
+
+  test('Variante A: „Alle“ ist vorgewählt, Variante B: nichts', async ({ page }) => {
+    await updateSettings({ lagebildVariant: 'a' })
+    await load(page)
+    await expect(allButton(page)).toHaveAttribute('aria-expanded', 'true')
+    await expect(page.getByTestId('lagebild-panel-all')).toBeVisible()
+
+    await updateSettings({ lagebildVariant: 'b' })
+    await load(page)
+    await expect(allButton(page)).toHaveAttribute('aria-expanded', 'false')
+    await expect(page.getByTestId('lagebild-panel-all')).toHaveCount(0)
+  })
+
+  test('Zeile wählt die Gruppe, „Alle“ nimmt `gruppe` wieder aus der Adresse', async ({ page }) => {
+    await updateSettings({ lagebildVariant: 'a' })
+    await load(page)
+    await page.getByTestId('lagebild-panel-all').getByRole('button', { name: new RegExp(groupName) }).click()
+    await expect(page.getByTestId(`lagebild-panel-${groupId}`)).toBeVisible()
+    await expect(page).toHaveURL(new RegExp(`gruppe=${groupId}`))
+
+    await allButton(page).click()
+    await expect(page.getByTestId('lagebild-panel-all')).toBeVisible()
+    await expect(page).not.toHaveURL(/gruppe=/)
+  })
+})
+
+/**
+ * Schmale Fenster: Die geschlossenen Tooltips dürfen die Seite nicht verbreitern (Prüfliste G2, D1).
+ */
+test.describe('Seite ohne seitliches Scrollen', () => {
+  test.describe.configure({ mode: 'serial' })
+
+  test.beforeAll(async () => {
+    const id = Date.now()
+    const group = await createServiceGroup({ name: `Schmal Gruppe ${id}`, icon: 'Server' })
+    await createService({ name: `Schmal Dienst ${id}`, group: group.id })
+    await updateSettings({ lagebildVariant: 'a' })
+  })
+
+  test.afterAll(async () => {
+    await updateSettings({ lagebildVariant: 'off' })
+  })
+
+  for (const width of [375, 768]) {
+    test(`bei ${width} Pixel Breite ist die Seite nicht breiter als das Fenster`, async ({ page }) => {
+      await page.setViewportSize({ width, height: 900 })
+      await page.goto('/')
+      await expect(page.getByTestId('lagebild-tile-all')).toBeVisible()
+      const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)
+      expect(overflow).toBeLessThanOrEqual(0)
+    })
+  }
 })

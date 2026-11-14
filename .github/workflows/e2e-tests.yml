@@ -56,7 +56,7 @@ jobs:
 
       - name: Run E2E tests
         run: |
-          PLAYWRIGHT_BASE_URL=http://localhost:3001 npx playwright test --project=chromium
+          PLAYWRIGHT_BASE_URL=http://localhost:3001 npx playwright test --project=chromium --workers=1 --timeout=120000
         env:
           CI: ""  # Unset CI to allow local config options
 

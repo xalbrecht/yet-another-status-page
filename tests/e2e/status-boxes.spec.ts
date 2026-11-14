@@ -4,6 +4,7 @@ import {
   createIncident,
   createService,
   createServiceGroup,
+  updateService,
   updateSettings,
 } from '../utils/payload-helpers'
 
@@ -163,5 +164,104 @@ test.describe('Statusseite mit Boxen', () => {
     await page.goto('/')
     await expect(page.getByTestId('box-incidents').getByTestId('box-item')).toHaveCount(3)
     await expect(page.locator('#incidents').getByRole('link', { name: new RegExp(`Vier . ${id}`) })).toHaveCount(4)
+  })
+})
+
+/**
+ * Tooltip an der Kachel einer Gruppe: Hover, Tastatur und Touch.
+ * Die Gruppe hat zwei Dienste, einer davon im Zustand „partial“.
+ */
+test.describe('Tooltip an der Gruppe', () => {
+  test.describe.configure({ mode: 'serial' })
+
+  let groupId: number
+  let groupName: string
+
+  test.beforeAll(async () => {
+    const id = Date.now()
+    groupName = `Tooltip Gruppe ${id}`
+    const group = await createServiceGroup({ name: groupName, icon: 'Server' })
+    groupId = group.id
+    await createService({ name: `Tooltip Dienst A ${id}`, group: group.id })
+    const down = await createService({ name: `Tooltip Dienst B ${id}`, group: group.id })
+    await updateService(down.id, { status: 'partial' })
+    await updateSettings({ lagebildVariant: 'a' })
+  })
+
+  test.afterAll(async () => {
+    await updateSettings({ lagebildVariant: 'off' })
+  })
+
+  const tile = (page: import('@playwright/test').Page) => page.getByTestId(`lagebild-tile-${groupId}`)
+  const button = (page: import('@playwright/test').Page) => tile(page).getByRole('button')
+  const tip = (page: import('@playwright/test').Page) => tile(page).locator('[role="tooltip"]')
+  const panel = (page: import('@playwright/test').Page) => page.getByTestId(`lagebild-panel-${groupId}`)
+  // Erst nach der Hydrierung reagiert die Kachel auf Maus, Fokus und Tippen (Hinweis in der Memory zur E2E-Umgebung)
+  const load = async (page: import('@playwright/test').Page) => {
+    await page.goto('/')
+    await expect
+      .poll(() => button(page).evaluate((element) => Object.keys(element).some((key) => key.startsWith('__reactProps'))), {
+        timeout: 30_000,
+      })
+      .toBe(true)
+  }
+  // Mit vielen Gruppen liegt die Kachel weit unten. Der Tooltip steht unter ihr und muss im Fenster liegen.
+  const hover = async (page: import('@playwright/test').Page) => {
+    await tile(page).evaluate((element) => element.scrollIntoView({ block: 'center' }))
+    await button(page).hover()
+  }
+
+  test('Hover über die Kachel zeigt den Tooltip mit den Diensten', async ({ page }) => {
+    await load(page)
+    await hover(page)
+    await expect(tip(page)).toBeVisible()
+    await expect(tip(page).getByText(/Tooltip Dienst A/)).toBeVisible()
+    await expect(tip(page).getByText(/Tooltip Dienst B/)).toBeVisible()
+  })
+
+  test('Maus in den Tooltip lässt ihn offen, Klick im Tooltip zeigt das Dienstfeld', async ({ page }) => {
+    await load(page)
+    await hover(page)
+    const box = await tip(page).boundingBox()
+    expect(box).not.toBeNull()
+    await page.mouse.move(box!.x + box!.width / 2, box!.y + box!.height / 2, { steps: 15 })
+    await expect(tip(page)).toBeVisible()
+    await page.waitForTimeout(400)
+    await expect(tip(page)).toBeVisible()
+    await tip(page).click()
+    await expect(panel(page)).toBeVisible()
+  })
+
+  test('Maus weg schließt den Tooltip nach höchstens 500 ms', async ({ page }) => {
+    await load(page)
+    await hover(page)
+    await expect(tip(page)).toBeVisible()
+    await page.mouse.move(2, 2)
+    await expect(tip(page)).toBeHidden({ timeout: 700 })
+  })
+
+  test('Tab fokussiert die Kachel und zeigt den Tooltip, Esc schließt ihn', async ({ page }) => {
+    await load(page)
+    await button(page).focus()
+    await page.keyboard.press('Shift+Tab')
+    await page.keyboard.press('Tab')
+    await expect(button(page)).toBeFocused()
+    await expect(tip(page)).toBeVisible()
+    await expect(button(page)).toHaveAttribute('aria-describedby', /.+/)
+    await page.keyboard.press('Escape')
+    await expect(tip(page)).toBeHidden()
+  })
+
+  test.describe('Touch', () => {
+    test.use({ hasTouch: true })
+
+    test('erstes Tippen zeigt den Tooltip, zweites das Dienstfeld', async ({ page }) => {
+      await load(page)
+      await button(page).tap()
+      await expect(tip(page)).toBeVisible()
+      await expect(panel(page)).toHaveCount(0)
+      await button(page).tap()
+      await expect(panel(page)).toBeVisible()
+    })
   })
 })

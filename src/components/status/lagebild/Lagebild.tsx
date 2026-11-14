@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { ChevronDown } from 'lucide-react'
-import { Fragment, useLayoutEffect, useRef, useState, useTransition } from 'react'
+import { Fragment, useEffect, useId, useLayoutEffect, useRef, useState, useTransition, type ReactNode } from 'react'
 import {
   BAR_HOURS_OPTIONS,
   PERIOD_OPTIONS,
@@ -22,6 +22,7 @@ import { cn } from '@/lib/utils'
 import { AllGroupsPanel } from './AllGroupsPanel'
 import { BarLegend } from './BarLegend'
 import { GroupIcon } from './GroupIcon'
+import { GroupTooltip, useDelayedHover } from './GroupTooltip'
 import { StatusBar } from './StatusBar'
 import { statusBadgeIcon, statusBorder, statusSoftBg, statusText } from './status-styles'
 
@@ -39,6 +40,9 @@ type TileModel = {
   bars: BarRun[]
   /** Symbol der Gruppe, `null` bei der Kachel „Alle“ */
   icon: string | null
+  /** Zeilen des Tooltips: Dienste der Gruppe, bei „Alle“ die Gruppen, die nicht betriebsbereit sind */
+  tipItems: Array<{ name: string; status: LagebildStatus }>
+  tipFooter?: string
 }
 
 type Props = {
@@ -125,6 +129,7 @@ function LagebildView({
       meta: groupsMeta(data.groups),
       bars: data.allBars,
       icon: null,
+      ...allTooltip(data.groups),
     },
     ...data.groups.map((group) => ({
       id: group.id,
@@ -133,6 +138,7 @@ function LagebildView({
       meta: serviceMeta(group),
       bars: group.bars,
       icon: group.icon,
+      tipItems: group.services.map((service) => ({ name: service.name, status: service.status })),
     })),
   ]
 
@@ -186,6 +192,7 @@ function LagebildView({
 
       <div
         ref={gridRef}
+        data-lagebild-grid
         className={cn(
           'grid gap-3',
           variant === 'a' ? 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4' : 'grid-cols-1 sm:grid-cols-2',
@@ -249,6 +256,102 @@ function serviceMeta(group: LagebildGroup): string {
     .join(' · ')
 }
 
+/** Tooltip der Kachel „Alle“: Gruppen, die nicht betriebsbereit sind, und die Zahl der übrigen. */
+function allTooltip(groups: LagebildGroup[]): Pick<TileModel, 'tipItems' | 'tipFooter'> {
+  const affected = groups.filter((group) => group.status !== 'operational')
+  const rest = groups.length - affected.length
+  return {
+    tipItems: affected.map((group) => ({ name: group.name, status: group.status })),
+    tipFooter:
+      rest === 0
+        ? undefined
+        : affected.length === 0
+          ? t('lagebild.tipAllOk')
+          : rest === 1
+            ? t('lagebild.tipOthersOne')
+            : tf('lagebild.tipOthers', { count: rest }),
+  }
+}
+
+type TileButtonProps = {
+  onClick: () => void
+  onPointerDown: (event: React.PointerEvent) => void
+  onFocus: (event: React.FocusEvent<HTMLElement>) => void
+  onBlur: () => void
+  onKeyDown: (event: React.KeyboardEvent) => void
+  'aria-describedby': string
+}
+
+/**
+ * Rahmen einer Kachel mit Tooltip. Maus: Tooltip beim Darüberfahren, Klick wählt. Tastatur: Fokus zeigt ihn, Esc schließt.
+ * Touch: das erste Tippen zeigt den Tooltip, das zweite wählt. Ein Tippen daneben schließt ihn.
+ * Geöffnet wird erst bei einer echten Mausbewegung (`pointermove`), nicht beim bloßen Eintritt: Verschiebt sich das
+ * Layout unter der ruhenden Maus (Dienstfeld klappt auf, Seite scrollt), erzeugt der Browser Eintrittsereignisse ohne
+ * Bewegung, und fremde Tooltips würden aufgehen.
+ */
+function TileFrame({
+  tile,
+  onSelect,
+  children,
+}: {
+  tile: TileModel
+  onSelect: () => void
+  children: (props: TileButtonProps) => ReactNode
+}) {
+  const tipId = useId()
+  const frame = useRef<HTMLDivElement>(null)
+  const [input, setInput] = useState('mouse')
+  const { open, enter, leave, close } = useDelayedHover()
+
+  useEffect(() => {
+    if (!open) return
+    const outside = (event: PointerEvent) => {
+      if (!frame.current?.contains(event.target as Node)) close()
+    }
+    document.addEventListener('pointerdown', outside)
+    return () => document.removeEventListener('pointerdown', outside)
+  }, [open, close])
+
+  const activate = () => {
+    close()
+    onSelect()
+  }
+
+  return (
+    <div
+      ref={frame}
+      data-testid={`lagebild-tile-${tile.id === ALL_GROUPS ? 'all' : tile.id}`}
+      onPointerMove={(event) => event.pointerType !== 'touch' && enter()}
+      onPointerLeave={(event) => event.pointerType !== 'touch' && leave()}
+      className={cn('relative flex', open && 'z-20')}
+    >
+      {children({
+        onClick: () => (input === 'touch' && !open ? enter() : activate()),
+        onPointerDown: (event) => setInput(event.pointerType),
+        onFocus: (event) => {
+          if (event.currentTarget.matches(':focus-visible')) enter()
+        },
+        onBlur: leave,
+        onKeyDown: (event) => {
+          setInput('keyboard')
+          if (event.key === 'Escape') close()
+        },
+        'aria-describedby': tipId,
+      })}
+      <GroupTooltip
+        id={tipId}
+        title={tile.name}
+        items={tile.tipItems}
+        footer={tile.tipFooter}
+        open={open}
+        onEnter={enter}
+        onLeave={leave}
+        onActivate={activate}
+      />
+    </div>
+  )
+}
+
 /** „5 Gruppen · 1 betroffen“ */
 function groupsMeta(groups: LagebildGroup[]): string {
   const affected = groups.filter(
@@ -271,30 +374,33 @@ function TileIcon({ tile, className }: { tile: TileModel; className: string }) {
 function TileA({ tile, active, onSelect }: { tile: TileModel; active: boolean; onSelect: () => void }) {
   const Badge = statusBadgeIcon[tile.status]
   return (
-    <button
-      type="button"
-      onClick={onSelect}
-      aria-expanded={active}
-      data-testid={tile.icon === null ? 'lagebild-tile-all' : undefined}
-      className={cn(
-        'relative flex flex-col items-center gap-1 rounded-xl border bg-card px-3 pb-3.5 pt-5 text-center transition-colors hover:bg-secondary/60',
-        active ? cn('ring-2 ring-primary/20', statusBorder[tile.status]) : 'border-border',
+    <TileFrame tile={tile} onSelect={onSelect}>
+      {(buttonProps) => (
+        <button
+          type="button"
+          {...buttonProps}
+          aria-expanded={active}
+          className={cn(
+            'relative flex w-full flex-col items-center gap-1 rounded-xl border bg-card px-3 pb-3.5 pt-5 text-center transition-colors hover:bg-secondary/60',
+            active ? cn('ring-2 ring-primary/20', statusBorder[tile.status]) : 'border-border',
+          )}
+        >
+          <ChevronDown
+            aria-hidden="true"
+            className={cn('absolute right-2.5 top-2.5 h-4 w-4 text-muted-foreground transition-transform', active && 'rotate-180')}
+          />
+          <span className={cn('relative mb-2 flex h-14 w-14 items-center justify-center rounded-2xl', statusSoftBg[tile.status])}>
+            <TileIcon tile={tile} className={cn('h-7 w-7', statusText[tile.status])} />
+            <span className="absolute -bottom-2 -right-2 rounded-full bg-card">
+              <Badge className={cn('h-5 w-5', statusText[tile.status])} aria-hidden="true" />
+            </span>
+          </span>
+          <span className="text-sm font-semibold text-foreground">{tile.name}</span>
+          <span className={cn('text-xs font-semibold', statusText[tile.status])}>{statusLabel(tile.status)}</span>
+          <span className="text-xs text-muted-foreground">{tile.meta}</span>
+        </button>
       )}
-    >
-      <ChevronDown
-        aria-hidden="true"
-        className={cn('absolute right-2.5 top-2.5 h-4 w-4 text-muted-foreground transition-transform', active && 'rotate-180')}
-      />
-      <span className={cn('relative mb-2 flex h-14 w-14 items-center justify-center rounded-2xl', statusSoftBg[tile.status])}>
-        <TileIcon tile={tile} className={cn('h-7 w-7', statusText[tile.status])} />
-        <span className="absolute -bottom-2 -right-2 rounded-full bg-card">
-          <Badge className={cn('h-5 w-5', statusText[tile.status])} aria-hidden="true" />
-        </span>
-      </span>
-      <span className="text-sm font-semibold text-foreground">{tile.name}</span>
-      <span className={cn('text-xs font-semibold', statusText[tile.status])}>{statusLabel(tile.status)}</span>
-      <span className="text-xs text-muted-foreground">{tile.meta}</span>
-    </button>
+    </TileFrame>
   )
 }
 
@@ -418,41 +524,44 @@ function TileB({
 }) {
   const Badge = statusBadgeIcon[tile.status]
   return (
-    <button
-      type="button"
-      onClick={onSelect}
-      aria-expanded={active}
-      data-testid={tile.icon === null ? 'lagebild-tile-all' : undefined}
-      className={cn(
-        'flex flex-col gap-3 rounded-lg border border-l-4 bg-card px-4 py-3 text-left transition-colors hover:bg-secondary/60',
-        statusBorder[tile.status],
-        active && 'ring-2 ring-primary/30',
-      )}
-    >
-      <span className="flex items-center gap-3">
-        <TileIcon tile={tile} className="h-6 w-6 shrink-0 text-muted-foreground" />
-        <span className="flex-1">
-          <span className="block text-sm font-semibold text-foreground">{tile.name}</span>
-          <span className="block text-xs text-muted-foreground">
-            <span className={cn('font-semibold', statusText[tile.status])}>{statusLabel(tile.status)}</span>
-            {' · '}
-            {tile.meta}
+    <TileFrame tile={tile} onSelect={onSelect}>
+      {(buttonProps) => (
+        <button
+          type="button"
+          {...buttonProps}
+          aria-expanded={active}
+          className={cn(
+            'flex w-full flex-col gap-3 rounded-lg border border-l-4 bg-card px-4 py-3 text-left transition-colors hover:bg-secondary/60',
+            statusBorder[tile.status],
+            active && 'ring-2 ring-primary/30',
+          )}
+        >
+          <span className="flex items-center gap-3">
+            <TileIcon tile={tile} className="h-6 w-6 shrink-0 text-muted-foreground" />
+            <span className="flex-1">
+              <span className="block text-sm font-semibold text-foreground">{tile.name}</span>
+              <span className="block text-xs text-muted-foreground">
+                <span className={cn('font-semibold', statusText[tile.status])}>{statusLabel(tile.status)}</span>
+                {' · '}
+                {tile.meta}
+              </span>
+            </span>
+            <Badge className={cn('h-5 w-5 shrink-0', statusText[tile.status])} aria-hidden="true" />
+            <ChevronDown
+              aria-hidden="true"
+              className={cn('h-4 w-4 shrink-0 text-muted-foreground transition-transform', active && 'rotate-180')}
+            />
           </span>
-        </span>
-        <Badge className={cn('h-5 w-5 shrink-0', statusText[tile.status])} aria-hidden="true" />
-        <ChevronDown
-          aria-hidden="true"
-          className={cn('h-4 w-4 shrink-0 text-muted-foreground transition-transform', active && 'rotate-180')}
-        />
-      </span>
-      <span className="block">
-        <StatusBar runs={tile.bars} window={bar} heightClass="h-3" label={`${tile.name}: ${statusLabel(tile.status)}`} />
-        <span className="mt-1 flex justify-between text-[11px] text-muted-foreground">
-          <span>{from}</span>
-          <span>{to}</span>
-        </span>
-      </span>
-    </button>
+          <span className="block">
+            <StatusBar runs={tile.bars} window={bar} heightClass="h-3" label={`${tile.name}: ${statusLabel(tile.status)}`} />
+            <span className="mt-1 flex justify-between text-[11px] text-muted-foreground">
+              <span>{from}</span>
+              <span>{to}</span>
+            </span>
+          </span>
+        </button>
+      )}
+    </TileFrame>
   )
 }
 

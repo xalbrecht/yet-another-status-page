@@ -227,6 +227,9 @@ export const en = {
   'lagebild.groupsOne': '1 group',
   'lagebild.groupsMany': '{count} groups',
   'lagebild.colGroup': 'Group',
+  'lagebild.tipOthers': '{count} more groups operational',
+  'lagebild.tipOthersOne': '1 more group operational',
+  'lagebild.tipAllOk': 'All groups operational',
 } as const
 
 export type TranslationKey = keyof typeof en

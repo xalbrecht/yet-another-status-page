@@ -227,4 +227,7 @@ export const de: Record<TranslationKey, string> = {
   'lagebild.groupsOne': '1 Gruppe',
   'lagebild.groupsMany': '{count} Gruppen',
   'lagebild.colGroup': 'Gruppe',
+  'lagebild.tipOthers': '{count} weitere Gruppen betriebsbereit',
+  'lagebild.tipOthersOne': '1 weitere Gruppe betriebsbereit',
+  'lagebild.tipAllOk': 'Alle Gruppen betriebsbereit',
 }

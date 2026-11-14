@@ -217,6 +217,11 @@ export const en = {
   'lagebild.yesterday': 'yesterday',
   'lagebild.since': 'since {time}',
   'lagebild.servicesOf': 'Services of group {group}',
+  'statusBoxes.incidentsTitle': 'Current incidents',
+  'statusBoxes.maintenancesTitle': 'Maintenance',
+  'statusBoxes.noIncidents': 'No current incidents.',
+  'statusBoxes.noMaintenances': 'No maintenance scheduled or in progress.',
+  'statusBoxes.more': 'Show {count} more',
 } as const
 
 export type TranslationKey = keyof typeof en

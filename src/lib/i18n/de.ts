@@ -217,4 +217,9 @@ export const de: Record<TranslationKey, string> = {
   'lagebild.yesterday': 'gestern',
   'lagebild.since': 'seit {time}',
   'lagebild.servicesOf': 'Dienste der Gruppe {group}',
+  'statusBoxes.incidentsTitle': 'Aktuelle Störungen',
+  'statusBoxes.maintenancesTitle': 'Wartungen',
+  'statusBoxes.noIncidents': 'Keine aktuellen Störungen.',
+  'statusBoxes.noMaintenances': 'Keine Wartungen geplant oder laufend.',
+  'statusBoxes.more': '{count} weitere anzeigen',
 }

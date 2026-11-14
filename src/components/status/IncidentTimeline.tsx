@@ -65,10 +65,13 @@ export function IncidentTimelineWithLinks({ days }: IncidentTimelineWithLinksPro
   return (
     <div className="space-y-6">
       {days.map((day) => (
-        <div key={day.date} className="animate-fade-in">
-          <h3 className="mb-3 text-lg font-semibold text-foreground">
-            {day.date}
-          </h3>
+        <div key={day.dateSlug} className="animate-fade-in">
+          {/* Ohne Datum (Block „Aktuelle Störungen“) steht keine Überschrift je Gruppe */}
+          {day.date && (
+            <h3 className="mb-3 text-lg font-semibold text-foreground">
+              {day.date}
+            </h3>
+          )}
           {day.incidents.length === 0 ? (
             <div className="rounded-lg border border-border bg-muted/30 px-5 py-4">
               <p className="text-sm text-muted-foreground">{t("incident.none")}</p>

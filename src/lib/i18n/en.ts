@@ -222,6 +222,7 @@ export const en = {
   'statusBoxes.noIncidents': 'No current incidents.',
   'statusBoxes.noMaintenances': 'No maintenance scheduled or in progress.',
   'statusBoxes.more': 'Show {count} more',
+  'home.currentIncidents': 'Current incidents',
   'lagebild.allTile': 'All',
   'lagebild.groupsOne': '1 group',
   'lagebild.groupsMany': '{count} groups',

@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { getIncidentStatus } from '@/collections/Incidents'
 import { getCachedPayload, getSettings } from '@/lib/payload'
 import { computeOverallStatus, visibleMaintenanceWhere, type ServiceStatus } from '@/lib/status-data'
-import { getMediaUrl } from '@/lib/utils'
+import { cn, getMediaUrl } from '@/lib/utils'
 import { Header } from '@/components/status/Header'
 import { Footer } from '@/components/status/Footer'
 import { t, tf } from '@/lib/i18n'
@@ -16,8 +16,16 @@ import { MaintenanceCard } from '@/components/status/MaintenanceCard'
 import { IncidentTimelineWithLinks } from '@/components/status/IncidentTimeline'
 import { StatusLegend } from '@/components/status/StatusLegend'
 import { Lagebild } from '@/components/status/lagebild/Lagebild'
+import { StatusBoxes } from '@/components/status/StatusBoxes'
 import { loadLagebildCached } from '@/lib/lagebild-cache'
 import { parseBarHours, parsePeriodDays, type BarHours, type PeriodDays } from '@/lib/lagebild'
+import {
+  buildIncidentItems,
+  buildMaintenanceItems,
+  parseBoxContent,
+  parseBoxEntries,
+  parseBoxesPlacement,
+} from '@/lib/status-boxes'
 import {
   addZonedDays,
   formatDate,
@@ -182,11 +190,12 @@ async function getStatusData(requestedPeriod: unknown, requestedBar: unknown) {
     incidentsByDay.set(formatDate(date, dt), { incidents: [], dateSlug: formatDateSlug(date, dt.timezone) })
   }
 
-  const formattedIncidents = incidents.docs.map((incident) => ({
+  const formatIncident = (incident: (typeof incidents.docs)[number]) => ({
     id: String(incident.id),
     shortId: incident.shortId || '',
     title: incident.title,
     status: getIncidentStatus(incident.updates) as ServiceStatus,
+    resolved: getIncidentStatus(incident.updates) === 'resolved',
     updates: (incident.updates || []).map((update, index) => ({
       id: `${incident.id}-update-${index}`,
       status: update.status as 'investigating' | 'identified' | 'monitoring' | 'resolved',
@@ -194,7 +203,10 @@ async function getStatusData(requestedPeriod: unknown, requestedBar: unknown) {
       timestamp: formatTime(new Date(update.createdAt), dt),
     })).reverse(),
     createdAt: new Date(incident.createdAt),
-  }))
+  })
+  const formattedIncidents = incidents.docs.map(formatIncident)
+  // Felder, die nur dem Gruppieren und Filtern dienen, gehören nicht an die Anzeige
+  const forDisplay = ({ createdAt: _createdAt, resolved: _resolved, ...rest }: ReturnType<typeof formatIncident>) => rest
 
   formattedIncidents.forEach((incident) => {
     const dateKey = formatDate(incident.createdAt, dt)
@@ -207,7 +219,15 @@ async function getStatusData(requestedPeriod: unknown, requestedBar: unknown) {
     ([date, { incidents, dateSlug }]) => ({
       date,
       dateSlug,
-      incidents: incidents.map(({ createdAt: _createdAt, ...rest }) => rest),
+      incidents: incidents.map(forDisplay),
+    })
+  )
+  // Nur gelöste Störungen, für den Block „Vergangene Störungen“ neben den Boxen
+  const pastResolvedIncidents = Array.from(incidentsByDay.entries()).map(
+    ([date, { incidents, dateSlug }]) => ({
+      date,
+      dateSlug,
+      incidents: incidents.filter((incident) => incident.resolved).map(forDisplay),
     })
   )
 
@@ -223,7 +243,29 @@ async function getStatusData(requestedPeriod: unknown, requestedBar: unknown) {
   const barHours: BarHours = parseBarHours(requestedBar, defaultBarHours)
   const lagebild = lagebildVariant === 'off' ? null : await loadLagebildCached(dt, periodDays, barHours)
 
+  // Boxen neben dem Lagebild: nur in den Varianten a, b und both
+  let boxes = null
+  if (lagebildVariant !== 'off') {
+    const openIncidents = await payload.find({
+      collection: 'incidents',
+      where: { status: { not_equals: 'resolved' } },
+      sort: '-createdAt',
+      depth: 1,
+      limit: 50,
+    })
+    boxes = {
+      entries: parseBoxEntries(settings.statusBoxEntries),
+      content: parseBoxContent(settings.statusBoxContent),
+      placement: parseBoxesPlacement(settings.statusBoxesPlacement),
+      incidentItems: buildIncidentItems(openIncidents.docs, dt),
+      maintenanceItems: buildMaintenanceItems(maintenances.docs, dt),
+      currentIncidents: openIncidents.docs.map(formatIncident).map(forDisplay),
+      pastResolvedIncidents,
+    }
+  }
+
   return {
+    boxes,
     lagebildVariant,
     lagebild,
     defaultPeriodDays,
@@ -243,6 +285,7 @@ export default async function StatusPage({
 }) {
   const { gruppe, rueckschau, balken } = await searchParams
   const {
+    boxes,
     settings,
     overallStatus,
     serviceGroups,
@@ -266,53 +309,88 @@ export default async function StatusPage({
         <Subscribe />
       </Header>
 
-      <main className="mx-auto w-full max-w-4xl flex-1 px-4 py-8 sm:px-6">
+      <main className={cn('mx-auto w-full flex-1 px-4 py-8 sm:px-6', boxes ? 'max-w-6xl' : 'max-w-4xl')}>
         {/* Status Banner */}
         <section className="mb-8 animate-fade-in">
           <StatusBanner status={overallStatus} message={settings.customStatusMessage ?? undefined} />
         </section>
 
-        {/* Lagebild je Dienstgruppe (Website-Einstellungen → Lagebild) */}
-        {lagebild && lagebildVariant !== 'off' && (
-          <div className="mb-10">
-            <Lagebild
-              variant={lagebildVariant}
-              data={lagebild}
-              initialGroup={initialGroup}
-              defaultPeriodDays={defaultPeriodDays}
-              defaultBarHours={defaultBarHours}
-            />
-          </div>
-        )}
-
-        {/* Service Groups */}
-        <section className="mb-10 space-y-4">
-          {serviceGroups.map((group, index) => {
-            const allOperational = group.services.every((s) => s.status === 'operational')
-            return (
-              <div
-                key={group.name}
-                className="animate-fade-in"
-                style={{ animationDelay: `${index * 50}ms` }}
-              >
-                <ServiceGroup
-                  name={group.name}
-                  services={group.services}
-                  defaultExpanded={!allOperational}
+        {boxes ? (
+          <>
+            {/* Lagebild links, Boxen rechts; unter lg vor oder nach dem Lagebild (Website-Einstellungen → Lagebild) */}
+            <div
+              data-testid="status-layout"
+              data-variant={lagebildVariant}
+              data-placement={boxes.placement}
+              className="mb-10 grid gap-6 lg:grid-cols-[minmax(0,1.9fr)_minmax(18rem,1fr)] lg:items-start"
+            >
+              <div className="min-w-0">
+                {lagebild && (
+                  <Lagebild
+                    variant={lagebildVariant as 'a' | 'b' | 'both'}
+                    data={lagebild}
+                    initialGroup={initialGroup}
+                    defaultPeriodDays={defaultPeriodDays}
+                    defaultBarHours={defaultBarHours}
+                  />
+                )}
+              </div>
+              <div className={boxes.placement === 'before' ? 'order-first lg:order-none' : 'order-last'}>
+                <StatusBoxes
+                  incidents={boxes.incidentItems}
+                  maintenances={boxes.maintenanceItems}
+                  entries={boxes.entries}
+                  content={boxes.content}
                 />
               </div>
-            )
-          })}
-        </section>
+            </div>
 
-        {/* Status Legend */}
-        <section className="mb-10">
-          <StatusLegend />
-        </section>
+            {/* Aktuelle Störungen: alle offenen, mit Verlauf */}
+            <section id="incidents" className="mb-10 scroll-mt-20 animate-fade-in">
+              <h2 className="mb-4 text-xl font-bold text-foreground">{t('home.currentIncidents')}</h2>
+              {boxes.currentIncidents.length === 0 ? (
+                <div className="rounded-lg border border-border bg-muted/30 px-5 py-4">
+                  <p className="text-sm text-muted-foreground">{t('statusBoxes.noIncidents')}</p>
+                </div>
+              ) : (
+                <IncidentTimelineWithLinks
+                  days={[{ date: '', dateSlug: 'current', incidents: boxes.currentIncidents }]}
+                />
+              )}
+            </section>
+          </>
+        ) : (
+          <>
+            {/* Service Groups */}
+            <section className="mb-10 space-y-4">
+              {serviceGroups.map((group, index) => {
+                const allOperational = group.services.every((s) => s.status === 'operational')
+                return (
+                  <div
+                    key={group.name}
+                    className="animate-fade-in"
+                    style={{ animationDelay: `${index * 50}ms` }}
+                  >
+                    <ServiceGroup
+                      name={group.name}
+                      services={group.services}
+                      defaultExpanded={!allOperational}
+                    />
+                  </div>
+                )
+              })}
+            </section>
+
+            {/* Status Legend */}
+            <section className="mb-10">
+              <StatusLegend />
+            </section>
+          </>
+        )}
 
         {/* Scheduled Maintenance */}
         {maintenances.length > 0 && (
-          <section className="mb-10 animate-fade-in">
+          <section id={boxes ? 'maintenance' : undefined} className="mb-10 scroll-mt-20 animate-fade-in">
             <h2 className="mb-4 text-xl font-bold text-foreground">{t('home.scheduledMaintenance')}</h2>
             <div className="space-y-4">
               {maintenances.map((maintenance) => (
@@ -323,9 +401,9 @@ export default async function StatusPage({
         )}
 
         {/* Past Incidents */}
-        <section className="animate-fade-in">
+        <section id={boxes ? 'past-incidents' : undefined} className="scroll-mt-20 animate-fade-in">
           <h2 className="mb-6 text-xl font-bold text-foreground">{t('home.pastIncidents')}</h2>
-          <IncidentTimelineWithLinks days={pastIncidents} />
+          <IncidentTimelineWithLinks days={boxes ? boxes.pastResolvedIncidents : pastIncidents} />
           <div className="mt-6 text-center">
             <Link
               href="/history"

@@ -20,21 +20,21 @@ export type MailPlan = Array<{ attachments: EmailAttachment[] }>
 
 export class ReportMailTooLargeError extends Error {
   constructor(public readonly megabytes: number, public readonly limitMegabytes: number) {
-    super(`${ta('PDF and Excel are', 'PDF und Excel sind zusammen')} ${megabytes.toFixed(1)} MB ${ta('together, the limit is', 'groß, erlaubt sind')} ${limitMegabytes.toFixed(1)} MB ${ta('per email. Nothing was sent.', 'je Mail. Es wurde nichts gesendet.')}`)
+    super(`${ta('PDF and Excel are')} ${megabytes.toFixed(1)} MB ${ta('together, the limit is')} ${limitMegabytes.toFixed(1)} MB ${ta('per email. Nothing was sent.')}`)
     this.name = 'ReportMailTooLargeError'
   }
 }
 
 export class ReportMailResumeError extends Error {
   constructor(from: number, mails: number) {
-    super(`${ta('Invalid start mail', 'Ungültige Startmail')}: ${from} (1 ${ta('to', 'bis')} ${mails})`)
+    super(`${ta('Invalid start mail')}: ${from} (1 ${ta('to')} ${mails})`)
     this.name = 'ReportMailResumeError'
   }
 }
 
 export class ReportMailPlanChangedError extends Error {
   constructor() {
-    super(ta('The data of the report changed since the first attempt.', 'Die Daten des Berichts haben sich seit dem ersten Versuch geändert.'))
+    super(ta('The data of the report changed since the first attempt.'))
     this.name = 'ReportMailPlanChangedError'
   }
 }
@@ -102,7 +102,7 @@ export async function sendReportMail(input: {
   limit?: number
 }): Promise<{ mails: number; sent: number; failed: number; errors: string[]; planId: string; rejected: string[] }> {
   const { context, recipients, send, resume } = input
-  if (recipients.length === 0) throw new Error(ta('No recipients entered', 'Keine Empfänger eingetragen'))
+  if (recipients.length === 0) throw new Error(ta('No recipients entered'))
 
   const files: ExportFile[] = []
   for await (const entry of (input.filesOf ?? exportFiles)(context)) files.push(entry)
@@ -123,16 +123,16 @@ export async function sendReportMail(input: {
   const errors: string[] = []
   const rejected = new Set<string>()
   for (let number = first; number <= mails; number++) {
-    const part = mails > 1 ? ` (${ta('Part', 'Teil')} ${number} ${ta('of', 'von')} ${mails})` : ''
+    const part = mails > 1 ? ` (${ta('Part')} ${number} ${ta('of')} ${mails})` : ''
     const lines = [
-      `${ta('Availability report', 'Verfügbarkeitsbericht')} ${context.period.label}.`,
-      number === 1 && mails > 1 ? ta(`This email holds the PDF and the Excel file. The images follow in ${mails - 1} further emails.`, `Diese Mail enthält das PDF und die Excel-Datei. Die Bilder folgen in ${mails - 1} weiteren Mails.`) : '',
-      number > 1 ? ta('The images are in the attached ZIP file.', 'Die Bilder liegen in der angehängten ZIP-Datei.') : '',
-      resume && number === first && first > 1 ? ta('This email continues an interrupted dispatch.', 'Diese Mail setzt einen unterbrochenen Versand fort.') : '',
+      `${ta('Availability report')} ${context.period.label}.`,
+      number === 1 && mails > 1 ? ta('This email holds the PDF and the Excel file. The images follow in {count} further emails.').replace('{count}', String(mails - 1)) : '',
+      number > 1 ? ta('The images are in the attached ZIP file.') : '',
+      resume && number === first && first > 1 ? ta('This email continues an interrupted dispatch.') : '',
     ].filter(Boolean)
     const result = await send({
       to: recipients,
-      subject: `${ta('Availability report', 'Verfügbarkeitsbericht')} ${context.period.label}${part}`,
+      subject: `${ta('Availability report')} ${context.period.label}${part}`,
       html: lines.map((line) => `<p>${escapeHtml(line)}</p>`).join(''),
       text: lines.join('\n'),
       attachments: plan[number - 1].attachments,

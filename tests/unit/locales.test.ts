@@ -33,3 +33,15 @@ test('meta enthält Anzeigename und Datumsformat', () => {
   assert.deepEqual(de.meta, { name: 'Deutsch', dateLocale: 'de-DE' })
   assert.deepEqual(en.meta, { name: 'English', dateLocale: 'en-US' })
 })
+
+test('en.json hat einen leeren Block admin (englischer Text ist Schlüssel und Rückfall)', () => {
+  assert.deepEqual(en.admin, {})
+})
+
+test('de.json: Texte im Block admin sind nicht leer, Platzhalter {{…}} und {count} stimmen mit dem Schlüssel überein', () => {
+  for (const [key, value] of Object.entries(de.admin as Record<string, string>)) {
+    assert.ok(typeof value === 'string' && value.trim() !== '', `leer: ${key}`)
+    const base = key.split('|')[0]
+    assert.deepEqual(placeholders(value), placeholders(base), `Platzhalter: ${key}`)
+  }
+})

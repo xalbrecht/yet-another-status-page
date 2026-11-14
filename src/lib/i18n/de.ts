@@ -195,6 +195,8 @@ export const de: Record<TranslationKey, string> = {
   'lagebild.variantA': 'Variante A',
   'lagebild.variantB': 'Variante B',
   'lagebild.testNotice': 'Testmodus: Beide Varianten werden zum Vergleich angezeigt.',
+  'lagebild.testBadge': 'Testmodus',
+  'lagebild.testBadgeVariant': 'Testmodus: {variant}',
   'lagebild.periodTitle': '{status}: {group}',
   'lagebild.relatedIncident': 'Zugehörige Störung: {title}',
   'lagebild.barRange': '{from} – {to}: {status}',

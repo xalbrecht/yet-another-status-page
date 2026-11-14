@@ -195,6 +195,8 @@ export const en = {
   'lagebild.variantA': 'Variant A',
   'lagebild.variantB': 'Variant B',
   'lagebild.testNotice': 'Test mode: both variants are shown for comparison.',
+  'lagebild.testBadge': 'Test mode',
+  'lagebild.testBadgeVariant': 'Test mode: {variant}',
   'lagebild.periodTitle': '{status}: {group}',
   'lagebild.relatedIncident': 'Related incident: {title}',
   'lagebild.barRange': '{from} – {to}: {status}',

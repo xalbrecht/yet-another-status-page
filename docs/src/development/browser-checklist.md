@@ -70,6 +70,8 @@ Gilt für Variante A, Variante B und den Testmodus „Beide“. Die Einstellunge
 | G10 | Adresse | `?gruppe=<Gruppen-Id>` anhängen, danach „Alle“ wählen | Die Gruppe ist gewählt. Bei „Alle“ steht kein `gruppe` in der Adresse | ☐ | ☐ | |
 | G11 | Dunkelmodus | Dunkelmodus einschalten, Boxen, Streifen, Tooltip und Dienstfeld ansehen | Alles lesbar, Streifen und Punkte in den Zustandsfarben | ☐ | ☐ | |
 | G12 | Variante C unverändert | Anzeige auf „Variante C (einfache Liste)“ stellen | Alte Seite wie bisher: lange Liste der Gruppen und Dienste mit Legende, keine Boxen, kein Tooltip. Offene Störungen stehen im Tageslisting | ☐ | ☐ | |
+| G13 | Variante per Adresse (nur Testmodus „Beide“) | Anzeige auf „Beide“ stellen, `/?lagebild=a` und `/?lagebild=b` in zwei Browser-Tabs öffnen, danach `/` ohne Parameter | Je Tab nur die gewählte Variante, ohne Parameter beide untereinander. Bei „Variante A“ oder „Variante B“ in den Einstellungen ändert der Parameter nichts | ☐ | ☐ | |
+| G14 | Marke „Testmodus“ in der Kopfzeile | Im Testmodus „Beide“ die Kopfzeile ansehen, einmal breit, einmal schmal | Breit: Marke zwischen „System Status“ und „Abonnieren“, bei einer einzelnen Variante mit „Variante A“ bzw. „Variante B“, die Boxen rutschen nicht. Unter 640 Pixel Breite ist die Marke ausgeblendet | ☐ | ☐ | |
 
 ## 7. Nur Betrieb (Shell-Zugriff nötig)
 

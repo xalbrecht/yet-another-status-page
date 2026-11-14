@@ -375,3 +375,78 @@ test.describe('Seite ohne seitliches Scrollen', () => {
     })
   }
 })
+
+/**
+ * Testmodus „Beide“: Variante per Adresse (`?lagebild=a|b`) und Hinweis „Testmodus“ in der Kopfzeile (Issue #82).
+ */
+test.describe('Testmodus per Adresse', () => {
+  test.describe.configure({ mode: 'serial' })
+
+  let groupId: number
+
+  test.beforeAll(async () => {
+    const id = Date.now()
+    const group = await createServiceGroup({ name: `Testmodus Gruppe ${id}`, icon: 'Server' })
+    groupId = group.id
+    await createService({ name: `Testmodus Dienst ${id}`, group: group.id })
+  })
+
+  test.afterAll(async () => {
+    await updateSettings({ lagebildVariant: 'off' })
+  })
+
+  const badge = (page: import('@playwright/test').Page) => page.getByTestId('test-badge')
+
+  test('ohne Parameter stehen beide Varianten da, die Marke „Testmodus“ steht in der Kopfzeile', async ({ page }) => {
+    await updateSettings({ lagebildVariant: 'both' })
+    await page.goto('/')
+    await expect(page.getByTestId('lagebild-a')).toBeVisible()
+    await expect(page.getByTestId('lagebild-b')).toBeVisible()
+    await expect(badge(page)).toHaveText(/^(Testmodus|Test mode)$/)
+    await expect(page.locator('header').getByTestId('test-badge')).toBeVisible()
+    await expect(page.getByTestId('status-layout').getByTestId('test-badge')).toHaveCount(0)
+  })
+
+  test('?lagebild=a zeigt nur Variante A, ?lagebild=b nur Variante B', async ({ page }) => {
+    await updateSettings({ lagebildVariant: 'both' })
+    await page.goto('/?lagebild=a')
+    await expect(page.getByTestId('lagebild-a')).toBeVisible()
+    await expect(page.getByTestId('lagebild-b')).toHaveCount(0)
+    await expect(badge(page)).toHaveText(/(Variante A|Variant A)/)
+    await expect(page.getByTestId('status-layout')).toHaveAttribute('data-variant', 'a')
+
+    await page.goto('/?lagebild=B')
+    await expect(page.getByTestId('lagebild-b')).toBeVisible()
+    await expect(page.getByTestId('lagebild-a')).toHaveCount(0)
+    await expect(badge(page)).toHaveText(/(Variante B|Variant B)/)
+  })
+
+  test('ein ungültiger Wert ergibt wie ohne Parameter beide Varianten', async ({ page }) => {
+    await updateSettings({ lagebildVariant: 'both' })
+    await page.goto('/?lagebild=x')
+    await expect(page.getByTestId('lagebild-a')).toBeVisible()
+    await expect(page.getByTestId('lagebild-b')).toBeVisible()
+  })
+
+  test('bei Variante A ändert der Parameter nichts und es gibt keine Marke', async ({ page }) => {
+    await updateSettings({ lagebildVariant: 'a' })
+    await page.goto('/?lagebild=b')
+    await expect(page.getByTestId('lagebild-a')).toBeVisible()
+    await expect(page.getByTestId('lagebild-b')).toHaveCount(0)
+    await expect(badge(page)).toHaveCount(0)
+  })
+
+  test('der Parameter bleibt erhalten, wenn eine Gruppe gewählt wird', async ({ page }) => {
+    await updateSettings({ lagebildVariant: 'both' })
+    await page.goto('/?lagebild=a')
+    const tile = page.getByTestId(`lagebild-tile-${groupId}`)
+    const button = tile.getByRole('button')
+    await expect
+      .poll(() => button.evaluate((element) => Object.keys(element).some((key) => key.startsWith('__reactProps'))), { timeout: 30_000 })
+      .toBe(true)
+    await button.click()
+    await expect(page.getByTestId(`lagebild-panel-${groupId}`)).toBeVisible()
+    await expect(page).toHaveURL(new RegExp(`gruppe=${groupId}`))
+    await expect(page).toHaveURL(/lagebild=a/)
+  })
+})

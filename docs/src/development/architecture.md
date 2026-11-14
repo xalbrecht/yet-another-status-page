@@ -164,10 +164,10 @@ The status log gives each service a timeline of statuses. A group has the worst 
 
 ## Internationalization
 
-- Texts of the status page, emails and feeds: `src/lib/i18n/` (`en.ts`, `de.ts`, `index.ts`). `t(key)` and `tf(key, vars)` return the text of the build language.
-- Texts of the admin panel (labels, descriptions, components): `ta('English text')` from `src/lib/i18n/admin.ts`. The German translation is looked up by the English text. Without an entry the English text remains.
+- All texts live in language files in `locales/` (`de.json`, `en.json`). Each file has the blocks `meta`, `site` and `admin`. Texts of the status page, emails and feeds are in `site`: `t(key)` and `tf(key, vars)` from `src/lib/i18n/index.ts` return the text of the build language.
+- Texts of the admin panel (labels, descriptions, components) are in `admin`: `ta('English text')` from `src/lib/i18n/admin.ts`. The German translation is looked up by the English text. Without an entry the English text remains. If one English text needs two German wordings, the second gets the key `English text|context` and the call names the context as second argument (`ta('Admin', 'role')`). New contexts are added to the type `AdminTextContext`.
 - The language is read once at build time from `NEXT_PUBLIC_UI_LANG` (`de` default, `en`). Payload's own admin texts follow it through `i18n.supportedLanguages` in `payload.config.ts`.
-- New texts: add the English key to `en.ts` and the German text to `de.ts` (the type checker reports missing German keys), or for the admin panel an entry in `admin.ts`.
+- New texts: add the key to `site` in `locales/en.json` and the German text to `site` in `locales/de.json` (the type checker reports missing keys; `tests/unit/locales.test.ts` checks that both files have the same keys and placeholders), or for the admin panel an entry in `admin` in `locales/de.json`.
 
 ## Key Design Decisions
 

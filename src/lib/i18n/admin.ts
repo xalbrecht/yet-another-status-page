@@ -11,6 +11,10 @@ export function resolveAdminText(dict: Record<string, string>, language: Lang, e
   return (context !== undefined ? dict[`${en}|${context}`] : undefined) ?? dict[en] ?? en
 }
 
-export function ta(en: string, context?: string): string {
+// Bekannte Zusätze (Schlüssel "Text|zusatz" in locales/de.json). Ein neuer Zusatz wird hier ergänzt.
+// Der Typ verhindert, dass ein alter Aufruf mit deutschem Text als zweitem Argument still kompiliert.
+export type AdminTextContext = 'role' | 'log' | 'single'
+
+export function ta(en: string, context?: AdminTextContext): string {
   return resolveAdminText(deJson.admin, lang, en, context)
 }

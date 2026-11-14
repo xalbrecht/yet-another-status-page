@@ -7,13 +7,14 @@ import {
   formatAvailability,
   groupStatusAt,
   knownSince,
+  mergeTimelines,
   statusAt,
   worstStatus,
   type AvailabilityStatus,
   type Timeline,
 } from '@/lib/availability'
 
-export { computeAvailability, formatAvailability, groupStatusAt, knownSince, statusAt, worstStatus }
+export { computeAvailability, formatAvailability, groupStatusAt, knownSince, mergeTimelines, statusAt, worstStatus }
 export type { Timeline }
 
 /**
@@ -181,6 +182,10 @@ export type LagebildGroup = {
   /** aktueller Zustand = schlechtester Zustand der Dienste */
   status: LagebildStatus
   bars: BarRun[]
+  /** Verfügbarkeit der Gruppe in Prozent im gewählten Zeitraum, `null`: unbekannt. Ein Ausfall eines Dienstes zählt für die Gruppe. */
+  availability: number | null
+  /** Verfügbarkeit der Gruppe als Text, z. B. „99,87 %“. Leer, wenn unbekannt. */
+  availabilityLabel: string
   services: LagebildService[]
 }
 
@@ -201,6 +206,8 @@ export type LagebildPeriod = {
 
 export type LagebildData = {
   groups: LagebildGroup[]
+  /** Balken über alle Dienste aller Gruppen (Kachel „Alle“) */
+  allBars: BarRun[]
   periods: LagebildPeriod[]
   /** Gewählte Rückschau in Tagen */
   periodDays: PeriodDays
@@ -323,6 +330,7 @@ export async function loadLagebild(
 
   const groups: LagebildGroup[] = []
   const periods: LagebildPeriod[] = []
+  const allTimelines: Timeline[] = []
 
   for (const group of groupsResult.docs) {
     const groupServices = servicesResult.docs.filter((service) => idOf(service.group) === String(group.id))
@@ -330,6 +338,8 @@ export async function loadLagebild(
     const groupTimelines = groupServices.map((service) => timelines.get(String(service.id)) ?? [])
     const icon = group.icon || DEFAULT_GROUP_ICON
     const groupId = String(group.id)
+    allTimelines.push(...groupTimelines)
+    const groupAvailability = computeAvailability(mergeTimelines(groupTimelines), windowStart, now)
 
     groups.push({
       id: groupId,
@@ -337,6 +347,8 @@ export async function loadLagebild(
       icon,
       status: worstStatus(groupServices.map((service) => service.status)) ?? 'operational',
       bars: computeBarRuns(groupTimelines, barWindow),
+      availability: groupAvailability,
+      availabilityLabel: formatAvailability(groupAvailability, dt.locale),
       services: groupServices.map((service) => {
         const timeline = timelines.get(String(service.id)) ?? []
         const availability = computeAvailability(timeline, windowStart, now)
@@ -397,6 +409,7 @@ export async function loadLagebild(
 
   return {
     groups,
+    allBars: computeBarRuns(allTimelines, barWindow),
     periods,
     periodDays,
     days,

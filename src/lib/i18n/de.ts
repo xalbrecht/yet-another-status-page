@@ -222,4 +222,8 @@ export const de: Record<TranslationKey, string> = {
   'statusBoxes.noIncidents': 'Keine aktuellen Störungen.',
   'statusBoxes.noMaintenances': 'Keine Wartungen geplant oder laufend.',
   'statusBoxes.more': '{count} weitere anzeigen',
+  'lagebild.allTile': 'Alle',
+  'lagebild.groupsOne': '1 Gruppe',
+  'lagebild.groupsMany': '{count} Gruppen',
+  'lagebild.colGroup': 'Gruppe',
 }

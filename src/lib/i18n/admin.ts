@@ -1,4 +1,4 @@
-import deJson from '../../../locales/de.json'
+import deJson from '../../../locales/de.json' with { type: 'json' }
 import { lang, type Lang } from './index'
 
 // Texte der Admin-Oberfläche (Collections, Globals, Komponenten).

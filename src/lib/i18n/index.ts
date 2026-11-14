@@ -1,5 +1,5 @@
-import deJson from '../../../locales/de.json'
-import enJson from '../../../locales/en.json'
+import deJson from '../../../locales/de.json' with { type: 'json' }
+import enJson from '../../../locales/en.json' with { type: 'json' }
 
 // Quelle der Wahrheit für alle Schlüssel ist locales/en.json (Block site).
 // Platzhalter: {name} (mit tf()), {{name}} bleibt unverändert (Template-Syntax der Settings).

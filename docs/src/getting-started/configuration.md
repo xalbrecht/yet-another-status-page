@@ -149,7 +149,7 @@ The language of the status page, notification emails, feeds and the admin panel 
 
 **Missing texts.** A text missing in a file is shown in English. A text missing in the file of `de` or `en` comes from the German or English texts built into the image.
 
-**Without a directory.** The Docker image does not contain the folder `locales/`. If `LOCALES_DIR` is not set or the directory cannot be read, the server uses the built-in German and English texts and `DEFAULT_LANGUAGE` chooses between them (`de` or `en`). The log names the reason (`[i18n] …`). The same applies if a file is invalid or `DEFAULT_LANGUAGE` names a language that was not loaded: the file is skipped or German is used, and the log says why.
+**Without a directory.** If the directory does not exist, is empty or cannot be read, the server uses the built-in German and English texts and `DEFAULT_LANGUAGE` chooses between them (`de` or `en`). The built-in texts are part of the image, so a mounted directory (which hides any `locales` folder inside the image) never leaves the interface without texts. The log names the reason (`[i18n] …`). The same applies if a file is invalid or `DEFAULT_LANGUAGE` names a language that was not loaded: the file is skipped or German is used, and the log says why.
 
 Where to set it:
 

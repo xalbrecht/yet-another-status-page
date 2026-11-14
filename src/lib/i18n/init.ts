@@ -16,8 +16,8 @@ export type I18nState = {
 }
 
 // Liest einmal beim Start Verzeichnis und Variablen. `accepted` sind die Sprachcodes, die Payload kennt.
-// LOCALES_DIR fehlt oder ist leer: `locales` im Arbeitsverzeichnis (im Docker-Image nicht vorhanden,
-// dann gelten die eingebauten Fassungen).
+// LOCALES_DIR fehlt oder ist leer: `locales` im Arbeitsverzeichnis (beim Entwickeln der Ordner des
+// Repositories). Fehlt das Verzeichnis oder ist es leer, gelten die eingebauten Fassungen.
 export function initI18n(
   env: { LOCALES_DIR?: string; DEFAULT_LANGUAGE?: string },
   builtin: Record<string, LocaleFile>,

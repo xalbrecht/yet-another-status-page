@@ -1,19 +1,14 @@
-import { lookup } from './locales'
+import { resolveAdminText, type AdminTextContext } from './admin-core'
 import { i18nState } from './state'
 
-// Texte der Admin-Oberfläche (Collections, Globals, Komponenten).
-// Schlüssel ist der englische Originaltext (Block admin der Sprachdatei).
-// Fehlt ein Eintrag, bleibt der englische Text stehen.
-// Hat derselbe englische Text zwei Fassungen, trägt die zweite den Schlüssel
-// "Text|kontext", und die Aufrufstelle nennt den Zusatz: ta('Admin', 'role').
-export function resolveAdminText(dict: Record<string, string>, en: string, context?: string): string {
-  return (context !== undefined ? lookup(dict, `${en}|${context}`) : undefined) ?? lookup(dict, en) ?? en
+export { resolveAdminText, type AdminTextContext }
+
+// Wörterbuch des Admins für den Client-Kontext (AdminTextProvider).
+export function getAdminDictionary(): Record<string, string> {
+  return i18nState.admin
 }
 
-// Bekannte Zusätze (Schlüssel "Text|zusatz" in locales/de.json). Ein neuer Zusatz wird hier ergänzt.
-// Der Typ verhindert, dass ein alter Aufruf mit deutschem Text als zweitem Argument still kompiliert.
-export type AdminTextContext = 'role' | 'log' | 'single'
-
+// Admin-Texte auf dem Server. Im Browser stattdessen useAdminText() aus admin-client.tsx.
 export function ta(en: string, context?: AdminTextContext): string {
   return resolveAdminText(i18nState.admin, en, context)
 }

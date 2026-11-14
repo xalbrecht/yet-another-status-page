@@ -6,6 +6,8 @@ import type { ServerFunctionClient } from 'payload'
 import { handleServerFunctions, RootLayout } from '@payloadcms/next/layouts'
 import React from 'react'
 
+import { getAdminDictionary } from '@/lib/i18n/admin'
+import { AdminTextProvider } from '@/lib/i18n/admin-client'
 import { DemoBanner } from '@/components/admin/DemoBanner'
 import { DemoLoginNotice } from '@/components/admin/DemoLoginNotice'
 
@@ -26,13 +28,13 @@ const serverFunction: ServerFunctionClient = async function (args) {
 }
 
 const Layout = ({ children }: Args) => (
-  <>
+  <AdminTextProvider dictionary={getAdminDictionary()}>
     <DemoBanner />
     <DemoLoginNotice />
     <RootLayout config={config} importMap={importMap} serverFunction={serverFunction}>
       {children}
     </RootLayout>
-  </>
+  </AdminTextProvider>
 )
 
 export default Layout

@@ -1,5 +1,5 @@
 import enJson from '../../../locales/en.json' with { type: 'json' }
-import { lookup } from './locales'
+import { makeTranslators } from './core'
 import { i18nState } from './state'
 
 // Quelle der Wahrheit für alle Schlüssel ist locales/en.json (Block site).
@@ -16,11 +16,13 @@ export function getSiteDictionary(): Record<string, string> {
   return i18nState.site
 }
 
+const translators = makeTranslators(i18nState.site)
+
 export function t(key: TranslationKey): string {
-  return lookup(i18nState.site, key) ?? key
+  return translators.t(key)
 }
 
 // Text mit Platzhaltern der Form {name}: tf('footer.timezone', { timezone: 'UTC' })
 export function tf(key: TranslationKey, vars: Record<string, string | number>): string {
-  return t(key).replace(/\{(\w+)\}/g, (m, name) => (name in vars ? String(vars[name]) : m))
+  return translators.tf(key, vars)
 }

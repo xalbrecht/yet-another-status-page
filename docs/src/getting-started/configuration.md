@@ -142,7 +142,7 @@ The language of the status page, notification emails, feeds and the admin panel 
 
 | Variable | Meaning | Default |
 |----------|---------|---------|
-| `DEFAULT_LANGUAGE` | Language code of the interface, for example `de`, `en` or `fr`. | `de` |
+| `DEFAULT_LANGUAGE` | Language code of the interface, written exactly like the file name, for example `de`, `en` or `fr` (lower case, no `de-DE`). | `de` |
 | `LOCALES_DIR` | Directory with the language files. | `locales` in the working directory |
 
 **Language files.** Each language is one JSON file named after its language code (`de.json`, `en.json`, `fr.json`). The code must be one of the languages Payload knows (the texts of the admin panel's own buttons come from Payload). The repository folder `locales/` holds `de.json` and `en.json`. They are also the template for a new language: copy `en.json`, rename it, translate the values. A file has the blocks `meta` (`name` as shown to users), `site` (status page, emails, feeds) and `admin` (admin panel, the English text is the key).
@@ -159,6 +159,8 @@ Where to set it:
 | Docker | Environment `DEFAULT_LANGUAGE`, and a volume for your files, for example `./locales:/app/locales:ro` with `LOCALES_DIR=/app/locales` |
 | Local development | `.env` or the shell, for example `DEFAULT_LANGUAGE=en npm run dev` (the folder `locales/` of the repository is read) |
 | E2E tests | `DEFAULT_LANGUAGE=en` in the environment of the server under test |
+
+**Upgrading.** The build variable `NEXT_PUBLIC_UI_LANG` is no longer read. An installation that was built with `NEXT_PUBLIC_UI_LANG=en` shows German after the update until you set `DEFAULT_LANGUAGE=en`; the log says so (`[i18n] NEXT_PUBLIC_UI_LANG wird nicht mehr gelesen …`).
 
 Check your files with `npm run check:locales [directory]`. It reports missing or surplus keys (warnings) and placeholders such as `{timezone}` or `{{siteName}}` that differ from the English text (errors). Choosing the language in the admin panel is planned.
 

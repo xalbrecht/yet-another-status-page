@@ -34,6 +34,14 @@ export const LAGEBILD_CACHE_TAG = 'lagebild'
 /** Wie lange das berechnete Lagebild für alle Besucher gilt (Sekunden), wenn nichts anderes eingestellt ist. */
 export const LAGEBILD_CACHE_SECONDS = 60
 
+/**
+ * Schlüssel des Zwischenspeichers. Das Ergebnis enthält übersetzte Texte und Next speichert es auf der Platte;
+ * ohne die Sprache im Schlüssel lieferte ein Neustart mit anderer Sprache zuerst den alten Eintrag.
+ */
+export function lagebildCacheKey(language: string): string[] {
+  return ['lagebild', language]
+}
+
 /** Liest `LAGEBILD_CACHE_SECONDS`: ganze Zahl von 0 bis 3600, `0` schaltet das Zwischenspeichern aus. Sonst die Vorgabe. */
 export function parseCacheSeconds(value: unknown, fallback: number = LAGEBILD_CACHE_SECONDS): number {
   if (value === undefined || value === null || String(value).trim() === '') return fallback

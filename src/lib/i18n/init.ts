@@ -19,7 +19,7 @@ export type I18nState = {
 // LOCALES_DIR fehlt oder ist leer: `locales` im Arbeitsverzeichnis (beim Entwickeln der Ordner des
 // Repositories). Fehlt das Verzeichnis oder ist es leer, gelten die eingebauten Fassungen.
 export function initI18n(
-  env: { LOCALES_DIR?: string; DEFAULT_LANGUAGE?: string },
+  env: { LOCALES_DIR?: string; DEFAULT_LANGUAGE?: string; NEXT_PUBLIC_UI_LANG?: string },
   builtin: Record<string, LocaleFile>,
   accepted: readonly string[],
   cwd: string = process.cwd(),
@@ -29,6 +29,9 @@ export function initI18n(
   const available = Array.from(new Set([...Object.keys(builtin), ...Object.keys(files)])).sort()
   const selection = selectLanguage(env.DEFAULT_LANGUAGE || undefined, available)
   if (selection.problem) problems.push(selection.problem)
+  if (env.NEXT_PUBLIC_UI_LANG && !env.DEFAULT_LANGUAGE) {
+    problems.push('NEXT_PUBLIC_UI_LANG wird nicht mehr gelesen, die Sprache setzt DEFAULT_LANGUAGE (de, en oder der Code einer geladenen Sprache)')
+  }
   return {
     language: selection.language,
     site: buildSiteDictionary(selection.language, files, builtin),

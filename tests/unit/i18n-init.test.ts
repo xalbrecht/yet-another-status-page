@@ -78,3 +78,23 @@ test('Datei im Verzeichnis überschreibt die eingebaute Fassung je Schlüssel', 
     assert.equal(state.site['b.key'], 'Deutsch B')
   })
 })
+
+test('alte Variable NEXT_PUBLIC_UI_LANG ohne DEFAULT_LANGUAGE: Warnung statt stillem Wechsel', () => {
+  const state = initI18n(
+    { LOCALES_DIR: join(tmpdir(), 'gibt-es-nicht-locales'), NEXT_PUBLIC_UI_LANG: 'en' },
+    builtin,
+    accepted,
+  )
+  assert.equal(state.language, 'de')
+  assert.ok(state.problems.some((p) => p.includes('NEXT_PUBLIC_UI_LANG') && p.includes('DEFAULT_LANGUAGE')))
+})
+
+test('alte Variable bleibt ohne Wirkung, wenn DEFAULT_LANGUAGE gesetzt ist, und erzeugt keine Warnung', () => {
+  const state = initI18n(
+    { LOCALES_DIR: join(tmpdir(), 'gibt-es-nicht-locales'), NEXT_PUBLIC_UI_LANG: 'en', DEFAULT_LANGUAGE: 'de' },
+    builtin,
+    accepted,
+  )
+  assert.equal(state.language, 'de')
+  assert.ok(!state.problems.some((p) => p.includes('NEXT_PUBLIC_UI_LANG')))
+})

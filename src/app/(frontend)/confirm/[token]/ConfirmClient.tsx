@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { t, tf } from '@/lib/i18n'
+import { useTranslation } from '@/lib/i18n/client'
 import Link from 'next/link'
 import { CheckCircle, XCircle, MailCheck } from 'lucide-react'
 
@@ -13,6 +13,7 @@ interface ConfirmClientProps {
 }
 
 export function ConfirmClient({ siteName, status, token, email }: ConfirmClientProps) {
+  const { t, tf } = useTranslation()
   const [isConfirming, setIsConfirming] = useState(false)
   const [result, setResult] = useState<'success' | 'success-approved' | 'error' | null>(null)
 

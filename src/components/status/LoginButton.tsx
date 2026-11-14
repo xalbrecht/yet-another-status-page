@@ -1,10 +1,11 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { t } from '@/lib/i18n'
+import { useTranslation } from '@/lib/i18n/client'
 import Link from 'next/link'
 
 export function LoginButton() {
+  const { t } = useTranslation()
   const [isDemoMode, setIsDemoMode] = useState(false)
 
   useEffect(() => {

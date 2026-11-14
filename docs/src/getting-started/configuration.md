@@ -138,32 +138,31 @@ OIDC_DISABLE_LOCAL_LOGIN=true
 
 ## Interface Language
 
-The language of the status page, notification emails, feeds and the admin panel is set when the application is **built**, with the environment variable `NEXT_PUBLIC_UI_LANG`:
+The language of the status page, notification emails, feeds and the admin panel comes from **language files**. The server reads them once when it starts. A change needs a restart, not a new build.
 
-| Value | Result |
-|-------|--------|
-| `de` (default) | German |
-| `en` | English |
+| Variable | Meaning | Default |
+|----------|---------|---------|
+| `DEFAULT_LANGUAGE` | Language code of the interface, written exactly like the file name, for example `de`, `en` or `fr` (lower case, no `de-DE`). | `de` |
+| `LOCALES_DIR` | Directory with the language files. | `locales` in the working directory |
 
-The value is compiled into the application. Changing it requires a new build (`NEXT_PUBLIC_UI_LANG=en npm run build`). It cannot be changed at runtime.
+**Language files.** Each language is one JSON file named after its language code (`de.json`, `en.json`, `fr.json`). The code must be one of the languages Payload knows (the texts of the admin panel's own buttons come from Payload). The repository folder `locales/` holds `de.json` and `en.json`. They are also the template for a new language: copy `en.json`, rename it, translate the values. A file has the blocks `meta` (`name` as shown to users), `site` (status page, emails, feeds) and `admin` (admin panel, the English text is the key).
+
+**Missing texts.** A text missing in a file is shown in English. A text missing in the file of `de` or `en` comes from the German or English texts built into the image.
+
+**Without a directory.** If the directory does not exist, is empty or cannot be read, the server uses the built-in German and English texts and `DEFAULT_LANGUAGE` chooses between them (`de` or `en`). The built-in texts are part of the image, so a mounted directory (which hides any `locales` folder inside the image) never leaves the interface without texts. The log names the reason (`[i18n] …`). The same applies if a file is invalid or `DEFAULT_LANGUAGE` names a language that was not loaded: the file is skipped or German is used, and the log says why.
 
 Where to set it:
 
 | Situation | Where |
 |-----------|-------|
 | German (default) | Nothing to set |
-| Local development | `.env` or the shell before `npm run dev` / `npm run build`, for example `NEXT_PUBLIC_UI_LANG=en npm run dev` |
-| Docker image | Build argument, see below. A value in `docker-compose.yml`, `.env` of the container or the Helm values has **no effect** at runtime |
-| E2E tests | `NEXT_PUBLIC_UI_LANG=en` in the environment of the server under test |
+| Docker | Environment `DEFAULT_LANGUAGE`, and a volume for your files, for example `./locales:/app/locales:ro` with `LOCALES_DIR=/app/locales` |
+| Local development | `.env` or the shell, for example `DEFAULT_LANGUAGE=en npm run dev` (the folder `locales/` of the repository is read) |
+| E2E tests | `DEFAULT_LANGUAGE=en` in the environment of the server under test |
 
-The Dockerfile has no build argument for the language yet, so the published image and images built from it are always German. For an English image add to the `builder` stage, next to the other `ARG` lines and before `RUN npm run build`:
+**Upgrading.** The build variable `NEXT_PUBLIC_UI_LANG` is no longer read. An installation that was built with `NEXT_PUBLIC_UI_LANG=en` shows German after the update until you set `DEFAULT_LANGUAGE=en`; the log says so (`[i18n] NEXT_PUBLIC_UI_LANG wird nicht mehr gelesen …`).
 
-```dockerfile
-ARG NEXT_PUBLIC_UI_LANG=de
-ENV NEXT_PUBLIC_UI_LANG=${NEXT_PUBLIC_UI_LANG}
-```
-
-and build with `docker build --build-arg NEXT_PUBLIC_UI_LANG=en …`. Switching the language in the admin panel without a rebuild is planned.
+Check your files with `npm run check:locales [directory]`. It reports missing or surplus keys (warnings) and placeholders such as `{timezone}` or `{{siteName}}` that differ from the English text (errors). Choosing the language in the admin panel is planned.
 
 Menu names in this manual are given in English followed by the German name, for example **Status → Incidents** (German: **Status → Störungen**). A full list is in the [Admin Overview](../admin/overview.md#language-of-the-admin-panel).
 

@@ -13,8 +13,7 @@ import { vercelBlobStorage } from '@payloadcms/storage-vercel-blob'
 import path from 'path'
 import { buildConfig, Plugin } from 'payload'
 import { fileURLToPath } from 'url'
-import { de } from '@payloadcms/translations/languages/de'
-import { en } from '@payloadcms/translations/languages/en'
+import { translations as payloadTranslations } from '@payloadcms/translations/all'
 
 // Collections
 import {
@@ -47,6 +46,8 @@ import { isDemoMode } from '@/lib/demo'
 // Utils
 import { getServerUrl } from '@/lib/utils'
 import { lang } from '@/lib/i18n'
+
+const adminLanguage = (lang in payloadTranslations ? lang : 'en') as keyof typeof payloadTranslations
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -90,10 +91,11 @@ export default buildConfig({
   csrf: [
     getServerUrl(),
   ],
-  // Sprache der Admin-Oberfläche folgt NEXT_PUBLIC_UI_LANG (Standard: Deutsch)
+  // Sprache der Admin-Oberfläche folgt DEFAULT_LANGUAGE (Standard: Deutsch). Hat Payload für die
+  // Sprache keine eigenen Texte, gilt Englisch.
   i18n: {
-    supportedLanguages: lang === 'de' ? { de } : { en },
-    fallbackLanguage: lang,
+    supportedLanguages: { [adminLanguage]: payloadTranslations[adminLanguage]! },
+    fallbackLanguage: adminLanguage,
   },
   admin: {
     user: Users.slug,

@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { t } from '@/lib/i18n'
+import { useTranslation } from '@/lib/i18n/client'
+import type { TranslationKey } from '@/lib/i18n'
 import { Wrench, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { RichText } from "@/components/RichText";
@@ -39,14 +40,15 @@ const badgeStyles: Record<MaintenanceItemStatus, string> = {
   cancelled: "bg-muted text-muted-foreground",
 };
 
-const badgeLabels: Record<MaintenanceItemStatus, string> = {
-  upcoming: t("maintenance.badgeUpcoming"),
-  in_progress: t("maintenance.in_progress"),
-  completed: t("maintenance.completed"),
-  cancelled: t("maintenance.cancelled"),
+const badgeLabelKeys: Record<MaintenanceItemStatus, TranslationKey> = {
+  upcoming: "maintenance.badgeUpcoming",
+  in_progress: "maintenance.in_progress",
+  completed: "maintenance.completed",
+  cancelled: "maintenance.cancelled",
 };
 
 export function MaintenanceCard({ maintenance }: MaintenanceCardProps) {
+  const { t } = useTranslation()
   const isTerminal =
     maintenance.status === "completed" || maintenance.status === "cancelled";
 
@@ -72,7 +74,7 @@ export function MaintenanceCard({ maintenance }: MaintenanceCardProps) {
                 badgeStyles[maintenance.status]
               )}
             >
-              {badgeLabels[maintenance.status]}
+              {t(badgeLabelKeys[maintenance.status])}
             </span>
           </div>
 
@@ -119,7 +121,7 @@ export function MaintenanceCard({ maintenance }: MaintenanceCardProps) {
               badgeStyles[maintenance.status]
             )}
           >
-            {badgeLabels[maintenance.status]}
+            {t(badgeLabelKeys[maintenance.status])}
           </span>
         </div>
       </div>
@@ -149,7 +151,7 @@ export function MaintenanceCard({ maintenance }: MaintenanceCardProps) {
                   <div className="flex-1 pb-2">
                     <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-3">
                       <span className={cn("text-sm font-semibold", config.color)}>
-                        {config.label}
+                        {t(config.labelKey)}
                       </span>
                       <span className="text-xs text-muted-foreground">{update.timestamp}</span>
                     </div>

@@ -1,11 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { t } from '@/lib/i18n'
+import { useTranslation } from '@/lib/i18n/client'
 import { Copy, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export function CopyLinkButton() {
+  const { t } = useTranslation()
   const [copied, setCopied] = useState(false);
 
   const copyLink = () => {

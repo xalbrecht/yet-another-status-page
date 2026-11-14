@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import type { BarRun, BarWindow } from '@/lib/lagebild'
 import { statusLabel } from '@/lib/lagebild'
-import { t } from '@/lib/i18n'
+import { useTranslation } from '@/lib/i18n/client'
 import { cn } from '@/lib/utils'
 import { statusBg } from './status-styles'
 
@@ -20,6 +20,7 @@ type Props = {
  * („12:05“) und den Zustand. Er erscheint bei Maus und Antippen und verschwindet beim Scrollen.
  */
 export function StatusBar({ runs, window: bar, heightClass = 'h-6', label }: Props) {
+  const { t } = useTranslation()
   const [tip, setTip] = useState<{ index: number; x: number; y: number } | null>(null)
 
   // Ein Formatierer je Balken, nicht je Strich
@@ -79,7 +80,7 @@ export function StatusBar({ runs, window: bar, heightClass = 'h-6', label }: Pro
           {day.format(endOfSlot) === day.format(bar.nowMs) ? '' : `${bar.yesterday} `}
           {clock.format(endOfSlot)}
           <span className="block text-[11px] font-medium opacity-85">
-            {tipStatus ? statusLabel(tipStatus) : t('lagebild.noData')}
+            {tipStatus ? statusLabel(tipStatus, t) : t('lagebild.noData')}
           </span>
         </span>
       )}

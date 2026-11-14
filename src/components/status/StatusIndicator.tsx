@@ -1,7 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { t } from '@/lib/i18n'
+import { useTranslation } from '@/lib/i18n/client'
 
 export type ServiceStatus = "operational" | "degraded" | "partial" | "major" | "maintenance";
 
@@ -13,40 +13,41 @@ interface StatusIndicatorProps {
 
 const statusConfig = {
   operational: {
-    label: t("status.operational"),
+    labelKey: "status.operational" as const,
     dotClass: "bg-status-operational",
     textClass: "text-status-operational",
   },
   degraded: {
-    label: t("status.degraded"),
+    labelKey: "status.degraded" as const,
     dotClass: "bg-status-degraded",
     textClass: "text-status-degraded",
   },
   partial: {
-    label: t("status.partial"),
+    labelKey: "status.partial" as const,
     dotClass: "bg-status-partial",
     textClass: "text-status-partial",
   },
   major: {
-    label: t("status.major"),
+    labelKey: "status.major" as const,
     dotClass: "bg-status-major",
     textClass: "text-status-major",
   },
   maintenance: {
-    label: t("status.maintenance"),
+    labelKey: "status.maintenance" as const,
     dotClass: "bg-status-maintenance",
     textClass: "text-status-maintenance",
   },
 };
 
 export function StatusIndicator({ status, showLabel = true, size = "md" }: StatusIndicatorProps) {
+  const { t } = useTranslation();
   const config = statusConfig[status];
 
   return (
     <div className="flex items-center gap-2">
       {showLabel && (
         <span className={cn("font-medium", config.textClass, size === "sm" ? "text-xs" : "text-sm")}>
-          {config.label}
+          {t(config.labelKey)}
         </span>
       )}
       <span

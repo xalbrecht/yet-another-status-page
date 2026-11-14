@@ -1,9 +1,11 @@
 import { unstable_cache } from 'next/cache'
+import { lang, t, tf } from '@/lib/i18n'
 import type { DateTimeConfig } from '@/lib/datetime'
 import {
   BAR_HOURS,
   LAGEBILD_CACHE_TAG,
   PERIOD_DAYS,
+  lagebildCacheKey,
   loadLagebild,
   parseCacheSeconds,
   type BarHours,
@@ -29,8 +31,8 @@ const computeCached =
   seconds > 0
     ? unstable_cache(
         async (dt: DateTimeConfig, periodDays: PeriodDays, barHours: BarHours): Promise<LagebildData> =>
-          loadLagebild(await getCachedPayload(), dt, periodDays, barHours),
-        ['lagebild'],
+          loadLagebild(await getCachedPayload(), dt, { t, tf }, periodDays, barHours),
+        lagebildCacheKey(lang),
         { revalidate: seconds, tags: [LAGEBILD_CACHE_TAG] },
       )
     : null
@@ -40,6 +42,6 @@ export async function loadLagebildCached(
   periodDays: PeriodDays = PERIOD_DAYS,
   barHours: BarHours = BAR_HOURS,
 ): Promise<LagebildData> {
-  if (!computeCached) return loadLagebild(await getCachedPayload(), dt, periodDays, barHours)
+  if (!computeCached) return loadLagebild(await getCachedPayload(), dt, { t, tf }, periodDays, barHours)
   return computeCached(dt, periodDays, barHours)
 }

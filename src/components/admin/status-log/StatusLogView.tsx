@@ -1,6 +1,6 @@
 import type { RebuildResult } from '@/lib/status-log-rebuild'
 import type { ConversionResult } from '@/lib/maintenance-conversion'
-import { ta } from '@/lib/i18n/admin'
+import { useAdminText, type AdminText } from '@/lib/i18n/admin-client'
 
 /**
  * Darstellung der Seite „Statusprotokoll pflegen“. Reine Komponente ohne Zustand: Die Ergebnisse und die Funktionen
@@ -20,7 +20,7 @@ export type StatusLogViewProps = {
 const formatTime = (iso: string) => `${new Date(iso).toISOString().slice(0, 16).replace('T', ' ')} UTC`
 
 /** Lesbarer Name für die Schlüssel der Zählung nach Einordnung. */
-function classLabel(key: string): string {
+function classLabel(key: string, ta: AdminText): string {
   switch (key) {
     case 'major':
       return ta('Major Outage')
@@ -39,7 +39,7 @@ function classLabel(key: string): string {
   }
 }
 
-function reasonLabel(reason: string): string {
+function reasonLabel(reason: string, ta: AdminText): string {
   if (reason === 'open') return ta('open, not resolved')
   if (reason === 'manual') return ta('classified by hand')
   if (reason === 'after-start') return ta('entered after the status log started')
@@ -47,6 +47,7 @@ function reasonLabel(reason: string): string {
 }
 
 export function StatusLogView(props: StatusLogViewProps) {
+  const ta = useAdminText()
   const { rebuild, conversion, busy, error } = props
   const canRunRebuild = !busy && rebuild !== null && rebuild.dryRun
   const canRunConversion = !busy && conversion !== null && conversion.dryRun
@@ -82,7 +83,7 @@ export function StatusLogView(props: StatusLogViewProps) {
                 <tr><th>{ta('Not clearly classified (counted as partial outage)')}</th><td>{rebuild.unsure}</td></tr>
                 <tr><th>{ta('Without service (not considered)')}</th><td>{rebuild.withoutService}</td></tr>
                 {Object.entries(rebuild.counts).map(([key, value]) => (
-                  <tr key={key}><th>{classLabel(key)}</th><td>{value}</td></tr>
+                  <tr key={key}><th>{classLabel(key, ta)}</th><td>{value}</td></tr>
                 ))}
               </tbody>
             </table>
@@ -133,7 +134,7 @@ export function StatusLogView(props: StatusLogViewProps) {
             <table>
               <tbody>
                 {conversion.skipped.map((entry) => (
-                  <tr key={entry.incidentId}><td>{entry.title}</td><td>{reasonLabel(entry.reason)}</td></tr>
+                  <tr key={entry.incidentId}><td>{entry.title}</td><td>{reasonLabel(entry.reason, ta)}</td></tr>
                 ))}
               </tbody>
             </table>

@@ -3,11 +3,12 @@
 import React, { useState } from 'react'
 import type { RebuildResult } from '@/lib/status-log-rebuild'
 import type { ConversionResult } from '@/lib/maintenance-conversion'
-import { ta } from '@/lib/i18n/admin'
+import { useAdminText } from '@/lib/i18n/admin-client'
 import { StatusLogView } from './StatusLogView'
 
 /** Zustand und Aufrufe der Seite „Statusprotokoll pflegen“. Ausführen erst nach Vorschau und Bestätigung. */
 export const StatusLogActions: React.FC = () => {
+  const ta = useAdminText()
   const [rebuild, setRebuild] = useState<RebuildResult | null>(null)
   const [conversion, setConversion] = useState<ConversionResult | null>(null)
   const [busy, setBusy] = useState(false)

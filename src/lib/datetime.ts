@@ -1,4 +1,4 @@
-import { tf } from '@/lib/i18n'
+import type { TranslateFormat } from '@/lib/i18n/core'
 
 export type WeekStartsOn = 'sunday' | 'monday'
 
@@ -334,7 +334,7 @@ export function formatNotificationDateTime(date: Date, config: DateTimeConfig): 
   })
 }
 
-export function formatTimezoneNotice(timeZone: string): string {
+export function formatTimezoneNotice(timeZone: string, tf: TranslateFormat): string {
   return tf('footer.timezone', { timezone: safeTimeZone(timeZone) })
 }
 

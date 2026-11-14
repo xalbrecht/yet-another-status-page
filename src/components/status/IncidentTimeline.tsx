@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { t } from '@/lib/i18n'
+import { useTranslation } from '@/lib/i18n/client'
 import { cn } from "@/lib/utils";
 import { incidentStatusConfig, type IncidentUpdateStatus } from "@/lib/status-config";
 import type { ServiceStatus } from "./StatusIndicator";
@@ -39,6 +39,7 @@ interface IncidentTimelineWithLinksProps {
 }
 
 export function IncidentTimeline({ days }: IncidentTimelineProps) {
+  const { t } = useTranslation()
   return (
     <div className="space-y-6">
       {days.map((day) => (
@@ -62,6 +63,7 @@ export function IncidentTimeline({ days }: IncidentTimelineProps) {
 }
 
 export function IncidentTimelineWithLinks({ days }: IncidentTimelineWithLinksProps) {
+  const { t } = useTranslation()
   return (
     <div className="space-y-6">
       {days.map((day) => (
@@ -90,6 +92,7 @@ export function IncidentTimelineWithLinks({ days }: IncidentTimelineWithLinksPro
 }
 
 function IncidentCard({ incident, linkToDetail = false }: { incident: Incident; linkToDetail?: boolean }) {
+  const { t } = useTranslation()
   // Check the first update (most recent, since updates are sorted latest-first) for resolved status
   const latestUpdate = incident.updates[0];
   const isResolved = latestUpdate?.status === "resolved";

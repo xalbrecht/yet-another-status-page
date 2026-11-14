@@ -2,7 +2,7 @@
 
 import { CheckCircle2, AlertTriangle, AlertCircle, XCircle, Wrench } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { t } from "@/lib/i18n";
+import { useTranslation } from '@/lib/i18n/client'
 
 export type OverallStatus = "operational" | "degraded" | "partial" | "major" | "maintenance";
 
@@ -14,35 +14,36 @@ interface StatusBannerProps {
 const statusConfig = {
   operational: {
     icon: CheckCircle2,
-    text: t("banner.operational"),
+    textKey: "banner.operational" as const,
     className: "bg-status-banner-operational",
   },
   degraded: {
     icon: AlertTriangle,
-    text: t("banner.degraded"),
+    textKey: "banner.degraded" as const,
     className: "bg-status-banner-degraded",
   },
   partial: {
     icon: AlertCircle,
-    text: t("banner.partial"),
+    textKey: "banner.partial" as const,
     className: "bg-status-banner-partial",
   },
   major: {
     icon: XCircle,
-    text: t("banner.major"),
+    textKey: "banner.major" as const,
     className: "bg-status-banner-major",
   },
   maintenance: {
     icon: Wrench,
-    text: t("banner.maintenance"),
+    textKey: "banner.maintenance" as const,
     className: "bg-status-banner-maintenance",
   },
 };
 
 export function StatusBanner({ status, message }: StatusBannerProps) {
+  const { t } = useTranslation();
   const config = statusConfig[status];
   const Icon = config.icon;
-  const text = message?.trim() || config.text;
+  const text = message?.trim() || t(config.textKey);
 
   return (
     <div

@@ -17,7 +17,8 @@ import {
   type LagebildPeriod,
   type PeriodDays,
 } from '@/lib/lagebild'
-import { t, tf } from '@/lib/i18n'
+import { useTranslation } from '@/lib/i18n/client'
+import type { Translate, TranslateFormat } from '@/lib/i18n/core'
 import { cn } from '@/lib/utils'
 import { AllGroupsPanel } from './AllGroupsPanel'
 import { BarLegend } from './BarLegend'
@@ -58,6 +59,7 @@ type Props = {
 
 /** Lagebild je Dienstgruppe: Kacheln mit aufklappbaren Diensten, Einschränkungen der gewählten Rückschau. */
 export function Lagebild({ variant, data, initialGroup, defaultPeriodDays, defaultBarHours }: Props) {
+  const { t } = useTranslation()
   if (data.groups.length === 0) return null
 
   if (variant === 'both') {
@@ -98,6 +100,7 @@ function LagebildView({
   syncUrl: boolean
   caption?: string
 }) {
+  const { t, tf } = useTranslation()
   const router = useRouter()
   const [barPending, startBarTransition] = useTransition()
 
@@ -123,16 +126,16 @@ function LagebildView({
       id: ALL_GROUPS,
       name: t('lagebild.allTile'),
       status: worstStatus(data.groups.map((group) => group.status)) ?? 'operational',
-      meta: groupsMeta(data.groups),
+      meta: groupsMeta(data.groups, t, tf),
       bars: data.allBars,
       icon: null,
-      ...allTooltip(data.groups),
+      ...allTooltip(data.groups, t, tf),
     },
     ...data.groups.map((group) => ({
       id: group.id,
       name: group.name,
       status: group.status,
-      meta: serviceMeta(group),
+      meta: serviceMeta(group, t, tf),
       bars: group.bars,
       icon: group.icon,
       tipItems: group.services.map((service) => ({ name: service.name, status: service.status })),
@@ -240,7 +243,7 @@ function LagebildView({
 }
 
 /** „3 Dienste · 1 betroffen“ */
-function serviceMeta(group: LagebildGroup): string {
+function serviceMeta(group: LagebildGroup, t: Translate, tf: TranslateFormat): string {
   const affected = group.services.filter(
     (service) => service.status === 'degraded' || service.status === 'partial' || service.status === 'major',
   ).length
@@ -254,7 +257,7 @@ function serviceMeta(group: LagebildGroup): string {
 }
 
 /** Tooltip der Kachel „Alle“: Gruppen, die nicht betriebsbereit sind, und die Zahl der übrigen. */
-function allTooltip(groups: LagebildGroup[]): Pick<TileModel, 'tipItems' | 'tipFooter'> {
+function allTooltip(groups: LagebildGroup[], t: Translate, tf: TranslateFormat): Pick<TileModel, 'tipItems' | 'tipFooter'> {
   const affected = groups.filter((group) => group.status !== 'operational')
   const rest = groups.length - affected.length
   return {
@@ -358,7 +361,7 @@ function TileFrame({
 }
 
 /** „5 Gruppen · 1 betroffen“ */
-function groupsMeta(groups: LagebildGroup[]): string {
+function groupsMeta(groups: LagebildGroup[], t: Translate, tf: TranslateFormat): string {
   const affected = groups.filter(
     (group) => group.status === 'degraded' || group.status === 'partial' || group.status === 'major',
   ).length
@@ -377,6 +380,7 @@ function TileIcon({ tile, className }: { tile: TileModel; className: string }) {
 }
 
 function TileA({ tile, active, onSelect }: { tile: TileModel; active: boolean; onSelect: () => void }) {
+  const { t } = useTranslation()
   const Badge = statusBadgeIcon[tile.status]
   return (
     <TileFrame tile={tile} onSelect={onSelect}>
@@ -401,7 +405,7 @@ function TileA({ tile, active, onSelect }: { tile: TileModel; active: boolean; o
             </span>
           </span>
           <span className="text-sm font-semibold text-foreground">{tile.name}</span>
-          <span className={cn('text-xs font-semibold', statusText[tile.status])}>{statusLabel(tile.status)}</span>
+          <span className={cn('text-xs font-semibold', statusText[tile.status])}>{statusLabel(tile.status, t)}</span>
           <span className="text-xs text-muted-foreground">{tile.meta}</span>
         </button>
       )}
@@ -427,6 +431,7 @@ function ServicePanel({
   to: string
   onClose: () => void
 }) {
+  const { t, tf } = useTranslation()
   const periodName = t(`lagebild.period.${periodDays}` as const)
   return (
     <div
@@ -485,7 +490,7 @@ function ServicePanel({
               <span className="min-w-0">
                 <span className="block break-words text-sm font-semibold text-foreground">{service.name}</span>
                 <span className={cn('block text-xs font-semibold', statusText[service.status])}>
-                  {statusLabel(service.status)}
+                  {statusLabel(service.status, t)}
                 </span>
               </span>
               <span className="order-last col-span-2 sm:order-none sm:col-span-1">
@@ -493,7 +498,7 @@ function ServicePanel({
                   runs={service.bars}
                   window={bar}
                   heightClass="h-5"
-                  label={`${service.name}: ${statusLabel(service.status)}`}
+                  label={`${service.name}: ${statusLabel(service.status, t)}`}
                 />
               </span>
               <span className="text-right text-sm font-semibold tabular-nums text-foreground">
@@ -527,6 +532,7 @@ function TileB({
   from: string
   to: string
 }) {
+  const { t } = useTranslation()
   const Badge = statusBadgeIcon[tile.status]
   return (
     <TileFrame tile={tile} onSelect={onSelect}>
@@ -546,7 +552,7 @@ function TileB({
             <span className="flex-1">
               <span className="block text-sm font-semibold text-foreground">{tile.name}</span>
               <span className="block text-xs text-muted-foreground">
-                <span className={cn('font-semibold', statusText[tile.status])}>{statusLabel(tile.status)}</span>
+                <span className={cn('font-semibold', statusText[tile.status])}>{statusLabel(tile.status, t)}</span>
                 {' · '}
                 {tile.meta}
               </span>
@@ -558,7 +564,7 @@ function TileB({
             />
           </span>
           <span className="block">
-            <StatusBar runs={tile.bars} window={bar} heightClass="h-3" label={`${tile.name}: ${statusLabel(tile.status)}`} />
+            <StatusBar runs={tile.bars} window={bar} heightClass="h-3" label={`${tile.name}: ${statusLabel(tile.status, t)}`} />
             <span className="mt-1 flex justify-between text-[11px] text-muted-foreground">
               <span>{from}</span>
               <span>{to}</span>
@@ -581,6 +587,7 @@ function PeriodList({
   onSelect: (groupId: string | null) => void
   defaultPeriodDays: PeriodDays
 }) {
+  const { t, tf } = useTranslation()
   const router = useRouter()
   const [pending, startTransition] = useTransition()
 
@@ -696,7 +703,7 @@ function PeriodList({
                         statusText[period.status],
                       )}
                     >
-                      {statusLabel(period.status)}
+                      {statusLabel(period.status, t)}
                     </span>
                   </li>
                 ))}

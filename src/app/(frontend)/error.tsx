@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect } from 'react'
-import { t } from '@/lib/i18n'
+import { useTranslation } from '@/lib/i18n/client'
 import Link from 'next/link'
 
 export default function Error({
@@ -11,6 +11,7 @@ export default function Error({
   error: Error & { digest?: string }
   reset: () => void
 }) {
+  const { t } = useTranslation()
   useEffect(() => {
     console.error('Page error:', error)
   }, [error])

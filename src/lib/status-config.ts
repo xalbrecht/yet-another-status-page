@@ -1,9 +1,9 @@
-import { t } from "@/lib/i18n"
 import { CheckCircle2, AlertTriangle, Search, AlertCircle, Wrench, Clock } from "lucide-react"
 
 /**
  * Shared status configuration for incident and maintenance updates
- * Used across timeline components for consistent styling
+ * Used across timeline components for consistent styling.
+ * `labelKey` is the translation key; the caller translates it (this file also runs in the browser).
  */
 
 export const incidentStatusConfig = {
@@ -11,25 +11,25 @@ export const incidentStatusConfig = {
     icon: Search,
     color: "text-status-major",
     bgColor: "bg-status-major",
-    label: t("incident.investigating"),
+    labelKey: "incident.investigating" as const,
   },
   identified: {
     icon: AlertTriangle,
     color: "text-status-degraded",
     bgColor: "bg-status-degraded",
-    label: t("incident.identified"),
+    labelKey: "incident.identified" as const,
   },
   monitoring: {
     icon: AlertCircle,
     color: "text-status-maintenance",
     bgColor: "bg-status-maintenance",
-    label: t("incident.monitoring"),
+    labelKey: "incident.monitoring" as const,
   },
   resolved: {
     icon: CheckCircle2,
     color: "text-status-operational",
     bgColor: "bg-status-operational",
-    label: t("incident.resolved"),
+    labelKey: "incident.resolved" as const,
   },
 } as const
 
@@ -40,25 +40,25 @@ export const maintenanceStatusConfig = {
     icon: Clock,
     color: "text-status-maintenance",
     bgColor: "bg-status-maintenance",
-    label: t("maintenance.upcoming"),
+    labelKey: "maintenance.upcoming" as const,
   },
   in_progress: {
     icon: Wrench,
     color: "text-status-degraded",
     bgColor: "bg-status-maintenance",
-    label: t("maintenance.in_progress"),
+    labelKey: "maintenance.in_progress" as const,
   },
   completed: {
     icon: CheckCircle2,
     color: "text-status-operational",
     bgColor: "bg-status-operational",
-    label: t("maintenance.completed"),
+    labelKey: "maintenance.completed" as const,
   },
   cancelled: {
     icon: AlertTriangle,
     color: "text-muted-foreground",
     bgColor: "bg-muted",
-    label: t("maintenance.cancelled"),
+    labelKey: "maintenance.cancelled" as const,
   },
 } as const
 

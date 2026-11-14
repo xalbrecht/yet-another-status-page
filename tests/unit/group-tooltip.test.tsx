@@ -3,6 +3,8 @@ import assert from 'node:assert/strict'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { GroupTooltip } from '@/components/status/lagebild/GroupTooltip'
 import { statusLabel } from '@/lib/lagebild'
+import { t } from '@/lib/i18n'
+import { withI18n } from './i18n-helpers'
 
 const items = [
   { name: 'SMTP', status: 'partial' as const },
@@ -11,6 +13,7 @@ const items = [
 
 const render = (open: boolean, extra: { footer?: string; items?: unknown[] } = {}) =>
   renderToStaticMarkup(
+    withI18n(
     <GroupTooltip
       id="tip-1"
       title="Mail"
@@ -21,6 +24,7 @@ const render = (open: boolean, extra: { footer?: string; items?: unknown[] } = {
       onLeave={() => {}}
       onActivate={() => {}}
     />,
+    ),
   )
 
 test('geschlossen steht die Liste der Dienste weiter im Markup', () => {
@@ -39,8 +43,8 @@ test('geöffnet steht data-open auf true, die Rolle ist tooltip und die Id passt
 test('jeder Dienst hat einen Punkt für Sehende und einen Text mit dem Zustand für Screenreader', () => {
   const markup = render(true)
   assert.equal(markup.split('sr-only').length - 1, 2)
-  assert.ok(markup.includes(`<span class="sr-only">${statusLabel('partial')}</span>`))
-  assert.ok(markup.includes(`<span class="sr-only">${statusLabel('operational')}</span>`))
+  assert.ok(markup.includes(`<span class="sr-only">${statusLabel('partial', t)}</span>`))
+  assert.ok(markup.includes(`<span class="sr-only">${statusLabel('operational', t)}</span>`))
   assert.equal(markup.split('aria-hidden="true"').length - 1, 2)
 })
 

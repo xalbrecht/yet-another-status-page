@@ -1,5 +1,5 @@
 import React from 'react'
-import { ta } from '@/lib/i18n/admin'
+import { useAdminText } from '@/lib/i18n/admin-client'
 import { TOP_N_MAX, TOP_N_MIN, type ReportParams } from '@/lib/report/params'
 
 /**
@@ -26,6 +26,7 @@ export function shouldSubmitOnChange(target: { type: string; name: string; value
 const TOP_N_VALUES = Array.from({ length: TOP_N_MAX - TOP_N_MIN + 1 }, (_, index) => TOP_N_MIN + index)
 
 export function ReportControlsForm({ params, periodKey, periodOptions, onChange }: ReportControlsFormProps) {
+  const ta = useAdminText()
   return (
     <form method="get" className="availability-report__controls" onChange={onChange}>
       <input type="hidden" name="view" value={params.view} />

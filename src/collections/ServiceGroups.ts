@@ -1,7 +1,8 @@
 import type { CollectionConfig } from 'payload'
 import { standardAccess } from '@/lib/access'
 import { ta } from '@/lib/i18n/admin'
-import { DEFAULT_GROUP_ICON, groupIconOptions } from '@/lib/group-icons'
+import { DEFAULT_GROUP_ICON } from '@/lib/group-icons'
+import { groupIconOptions } from '@/lib/group-icon-options'
 import { invalidateLagebild } from '@/lib/lagebild-invalidate'
 
 export const ServiceGroups: CollectionConfig = {

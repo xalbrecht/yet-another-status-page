@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { t, tf } from '@/lib/i18n'
+import { useTranslation } from '@/lib/i18n/client'
 import Link from 'next/link'
 import { CheckCircle, XCircle, AlertTriangle } from 'lucide-react'
 
@@ -20,6 +20,7 @@ export function UnsubscribeClient({
   subscriberType,
   subscriberContact,
 }: UnsubscribeClientProps) {
+  const { t, tf } = useTranslation()
   const [isUnsubscribing, setIsUnsubscribing] = useState(false)
   const [result, setResult] = useState<'success' | 'error' | null>(null)
 

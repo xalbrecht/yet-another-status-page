@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { ta } from '@/lib/i18n/admin'
+import { useAdminText } from '@/lib/i18n/admin-client'
 import './DashboardWidgets.scss'
 
 interface WidgetData {
@@ -16,6 +16,7 @@ interface WidgetData {
 }
 
 export const DashboardWidgets: React.FC = () => {
+  const ta = useAdminText()
   const [data, setData] = useState<WidgetData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -40,7 +41,7 @@ export const DashboardWidgets: React.FC = () => {
     // Refresh every 30 seconds
     const interval = setInterval(fetchData, 30000)
     return () => clearInterval(interval)
-  }, [])
+  }, [ta])
 
   if (loading) {
     return (

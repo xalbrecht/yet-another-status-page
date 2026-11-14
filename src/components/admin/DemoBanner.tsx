@@ -1,10 +1,11 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { ta } from '@/lib/i18n/admin'
+import { useAdminText } from '@/lib/i18n/admin-client'
 import './DemoBanner.scss'
 
 export function DemoBanner() {
+  const ta = useAdminText()
   const [timeUntilReset, setTimeUntilReset] = useState<string>('')
   const [isDemoMode, setIsDemoMode] = useState<boolean>(false)
 
@@ -37,7 +38,7 @@ export function DemoBanner() {
     const interval = setInterval(updateTimer, 1000)
 
     return () => clearInterval(interval)
-  }, [isDemoMode])
+  }, [isDemoMode, ta])
 
   if (!isDemoMode) return null
 

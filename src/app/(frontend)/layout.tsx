@@ -6,7 +6,8 @@ import { ThemeProvider } from '@/components/theme-provider'
 import type { Media } from '@/payload-types'
 import type { Metadata } from 'next'
 import './globals.css'
-import { lang } from '@/lib/i18n'
+import { getSiteDictionary, lang } from '@/lib/i18n'
+import { I18nProvider } from '@/lib/i18n/client'
 
 export const dynamic = 'force-dynamic'
 
@@ -58,9 +59,11 @@ export default function FrontendLayout({
   return (
     <html lang={lang} className={inter.variable} suppressHydrationWarning>
       <body>
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-          <ViewTransition>{children}</ViewTransition>
-        </ThemeProvider>
+        <I18nProvider dictionary={getSiteDictionary()}>
+          <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+            <ViewTransition>{children}</ViewTransition>
+          </ThemeProvider>
+        </I18nProvider>
       </body>
     </html>
   )

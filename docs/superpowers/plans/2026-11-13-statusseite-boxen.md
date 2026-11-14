@@ -210,4 +210,4 @@
 
 - Neue Benachrichtigungswege, Änderungen an Inhalten von Wartungen und Störungen, Änderungen an Berechnung und Bericht (stehen so im Issue #73).
 - Entfernen von Variante B und des Testmodus „Beide“: Issue #21.
-- Handbuch und Wiki im Projekt `yasp.io`: eigene Sitzung nach dem Merge.
+- Handbuch und Wiki im Deployment-Projekt: eigene Sitzung nach dem Merge.

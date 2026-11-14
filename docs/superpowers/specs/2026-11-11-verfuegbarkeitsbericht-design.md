@@ -202,6 +202,6 @@ Je Teil entsteht ein eigenes Issue mit Verweis auf Issue #46.
 ## 10. Offene Punkte
 
 - Wer pflegt später Zielwerte auf Gruppen- und Komponentenebene, und in welchem Rhythmus?
-- Aufnahme der Browser-Prüfliste und der Berichtsprüfung in die Prüfliste des Deployment-Projekts (`frank.albrecht/yasp`, Issue #47 im GitLab).
+- Aufnahme der Browser-Prüfliste und der Berichtsprüfung in die Prüfliste des Deployment-Projekts (Issue im Deployment-Projekt).
 - Ob Kundenberater und Kunden einen eigenen, einfacheren Bericht bekommen (spätere Fassung).
 - Ob und wann das Lagebild den Zielwert (z. B. als Vermerk „unter Ziel“) zeigt. Ein späteres Issue klärt das. Dasselbe gilt für eine Verfügbarkeit je Gruppe im Lagebild.

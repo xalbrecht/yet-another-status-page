@@ -63,9 +63,6 @@ export function Lagebild({ variant, data, initialGroup, defaultPeriodDays, defau
   if (variant === 'both') {
     return (
       <div className="space-y-12">
-        <p className="rounded-md border border-dashed border-border bg-secondary/50 px-4 py-2 text-sm text-muted-foreground">
-          {t('lagebild.testNotice')}
-        </p>
         <LagebildView variant="a" data={data} initialGroup={initialGroup} defaultPeriodDays={defaultPeriodDays} defaultBarHours={defaultBarHours} syncUrl={false} caption={t('lagebild.variantA')} />
         <LagebildView variant="b" data={data} initialGroup={initialGroup} defaultPeriodDays={defaultPeriodDays} defaultBarHours={defaultBarHours} syncUrl={false} caption={t('lagebild.variantB')} />
       </div>

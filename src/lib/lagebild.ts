@@ -50,6 +50,17 @@ export function parseBarHours(value: unknown, fallback: BarHours = BAR_HOURS): B
   const hours = Number(Array.isArray(value) ? value[0] : value)
   return (BAR_HOURS_OPTIONS as readonly number[]).includes(hours) ? (hours as BarHours) : fallback
 }
+/**
+ * Wert von `?lagebild=` im Testmodus „Beide“: nur Variante `a` oder `b` zeigen. Alles andere (kein Wert, `c`, `both`,
+ * Leerzeichen) ergibt `null`, die Seite zeigt dann wie bisher beide.
+ */
+export function parseLagebildOverride(value: unknown): 'a' | 'b' | null {
+  const first = Array.isArray(value) ? value[0] : value
+  if (typeof first !== 'string') return null
+  const lower = first.toLowerCase()
+  return lower === 'a' || lower === 'b' ? lower : null
+}
+
 export const PERIOD_DAYS = 14
 
 /** Wählbare Rückschau in Tagen. Der erste Wert ist die Vorgabe. */

@@ -26,7 +26,7 @@ export function trendChart(trend: ReportData['trend'], target: number, locale: s
     body += textEl(L - 8, y(value) + 4, nf.format(value), { size: 11, anchor: 'end', fill: MUTED_COLOR })
   }
   body += `<line x1="${L}" x2="${width - R}" y1="${y(target)}" y2="${y(target)}" stroke="${TARGET_COLOR}" stroke-width="1.5" stroke-dasharray="6 4"/>`
-  body += textEl(width - R, y(target) - 6, `${ta('Target', 'Ziel')} ${formatAvailability(target, locale)}`, { size: 11, anchor: 'end', fill: TARGET_COLOR })
+  body += textEl(width - R, y(target) - 6, `${ta('Target')} ${formatAvailability(target, locale)}`, { size: 11, anchor: 'end', fill: TARGET_COLOR })
   const points = trend.flatMap((point, index) => (point.availability === null ? [] : [`${x(index)},${y(point.availability)}`])).join(' ')
   if (points) body += `<polyline points="${points}" fill="none" stroke="${LINE_COLOR}" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>`
   trend.forEach((point, index) => {
@@ -52,7 +52,7 @@ export function heatTable(heat: ReportData['heat'], rows: ReportData['heat']['ro
   })
   rows.forEach((row, rowIndex) => {
     const top = HEAT_HEAD_HEIGHT + rowIndex * HEAT_ROW_HEIGHT
-    const name = row.total ? ta('Total', 'Gesamt') : row.name
+    const name = row.total ? ta('Total') : row.name
     body += textEl(labelWidth - 10, top + 17, truncate(name, 30), { size: 12, anchor: 'end', weight: row.total ? 'bold' : 'normal' })
     row.values.forEach((value, index) => {
       body += `<rect x="${labelWidth + index * cell + 1}" y="${top + 1}" width="${cell - 2}" height="${HEAT_ROW_HEIGHT - 2}" rx="3" fill="${HEAT_COLOR[heatClass(value, target)]}"/>`
@@ -66,10 +66,10 @@ export function heatTable(heat: ReportData['heat'], rows: ReportData['heat']['ro
 export function heatLegend(target: number, locale: string, x: number, y: number): string {
   const entries: Array<[string, number]> = [
     ['100 %', 0],
-    [ta('from 99.9 %', 'ab 99,9 %'), 1],
-    [ta('from 99.5 %', 'ab 99,5 %'), 2],
-    [`${ta('from target', 'ab Ziel')} (${formatAvailability(target, locale)})`, 3],
-    [ta('below target', 'unter Ziel'), 4],
+    [ta('from 99.9 %'), 1],
+    [ta('from 99.5 %'), 2],
+    [`${ta('from target')} (${formatAvailability(target, locale)})`, 3],
+    [ta('below target'), 4],
   ]
   let cursor = x
   let body = ''

@@ -79,7 +79,7 @@ export async function GET(request: NextRequest) {
       search[key] = values.length > 1 ? values : values[0]
     }
     const format = FORMATS.find((value) => value === search.format)
-    if (!format) return fail(ta('The format must be zip, pdf or xlsx.', 'Das Format muss zip, pdf oder xlsx sein.'))
+    if (!format) return fail(ta('The format must be zip, pdf or xlsx.'))
 
     const loaded = await loadReportContext(payload, search)
     if (!loaded.ok) return fail(loaded.error)
@@ -90,7 +90,7 @@ export async function GET(request: NextRequest) {
     if (format === 'zip' && typeof search.group === 'string' && search.group.trim()) {
       groupId = Number(search.group)
       const hasServices = context.build(undefined).data.groupList.some((entry) => entry.id === groupId)
-      if (!hasServices) return fail(ta('The selected group was not found.', 'Die gewählte Gruppe wurde nicht gefunden.'))
+      if (!hasServices) return fail(ta('The selected group was not found.'))
     }
 
     if (format === 'xlsx') {
@@ -103,7 +103,7 @@ export async function GET(request: NextRequest) {
       for await (const file of exportFiles(context, { pdfOnly: true })) {
         if (file.path.endsWith('.pdf')) return new Response(new Uint8Array(file.data), { headers: { 'Content-Type': TYPES.pdf, 'Content-Disposition': attachment(`${base}.pdf`) } })
       }
-      return fail(ta('Unknown error', 'Unbekannter Fehler'), 500)
+      return fail(ta('Unknown error'), 500)
     }
 
     const suffix = groupId === undefined ? '' : `-${uniqueSlugs(context.groups).get(groupId)}`

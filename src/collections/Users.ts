@@ -27,7 +27,7 @@ const getCookieDomain = (): string | undefined => {
 
 export const Users: CollectionConfig = {
   slug: 'users',
-  labels: { singular: ta('User', 'Benutzer'), plural: ta('Users', 'Benutzer') },
+  labels: { singular: ta('User'), plural: ta('Users') },
   admin: {
     useAsTitle: 'email',
     group: ta('Admin'),
@@ -84,7 +84,7 @@ export const Users: CollectionConfig = {
       required: true,
       defaultValue: 'editor',
       options: [
-        { label: ta('Admin', 'Administrator'), value: 'admin' },
+        { label: ta('Admin', 'role'), value: 'admin' },
         { label: ta('Editor'), value: 'editor' },
       ],
       admin: {

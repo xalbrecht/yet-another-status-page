@@ -31,38 +31,38 @@ export function ReportControlsForm({ params, periodKey, periodOptions, onChange 
       <input type="hidden" name="view" value={params.view} />
       {params.view === 'groups' && params.group && <input type="hidden" name="group" value={params.group} />}
       <label>
-        {ta('Period', 'Zeitraum')}
+        {ta('Period')}
         <select name="period" defaultValue={periodKey}>
           {periodOptions.map((option) => (
-            <option key={option.value} value={option.value} selected={option.value === periodKey}>{option.value === 'custom' ? ta('Custom period', 'Freier Zeitraum') : option.label}</option>
+            <option key={option.value} value={option.value} selected={option.value === periodKey}>{option.value === 'custom' ? ta('Custom period') : option.label}</option>
           ))}
         </select>
       </label>
       <label>
-        {ta('From (custom period)', 'Von (freier Zeitraum)')}
+        {ta('From (custom period)')}
         <input type="date" name="from" defaultValue={params.from ?? ''} />
       </label>
       <label>
-        {ta('To (custom period)', 'Bis (freier Zeitraum)')}
+        {ta('To (custom period)')}
         <input type="date" name="to" defaultValue={params.to ?? ''} />
       </label>
       <label>
-        {ta('Calculation', 'Rechenart')}
+        {ta('Calculation')}
         <select name="calc" defaultValue={params.calc}>
-          <option value="whole" selected={params.calc === 'whole'}>{ta('One value for the period', 'Ein Wert für den Zeitraum')}</option>
-          <option value="monthly" selected={params.calc === 'monthly'}>{ta('Mean of the monthly values', 'Mittel der Monatswerte')}</option>
+          <option value="whole" selected={params.calc === 'whole'}>{ta('One value for the period')}</option>
+          <option value="monthly" selected={params.calc === 'monthly'}>{ta('Mean of the monthly values')}</option>
         </select>
       </label>
       <label>
-        {ta('Maintenance', 'Wartung')}
+        {ta('Maintenance')}
         <select name="maintenance" defaultValue={params.maintenance}>
-          <option value="A" selected={params.maintenance === 'A'}>{ta('A: counts as available', 'A: zählt als verfügbar')}</option>
-          <option value="B" selected={params.maintenance === 'B'}>{ta('B: counts as outage', 'B: zählt als Ausfall')}</option>
-          <option value="C" selected={params.maintenance === 'C'}>{ta('C: excluded from the total time', 'C: aus der Gesamtzeit herausgenommen')}</option>
+          <option value="A" selected={params.maintenance === 'A'}>{ta('A: counts as available')}</option>
+          <option value="B" selected={params.maintenance === 'B'}>{ta('B: counts as outage')}</option>
+          <option value="C" selected={params.maintenance === 'C'}>{ta('C: excluded from the total time')}</option>
         </select>
       </label>
       <label>
-        {ta('Weakest services', 'Schwächste Dienste')}
+        {ta('Weakest services')}
         <select name="topN" defaultValue={String(params.topN)}>
           {TOP_N_VALUES.map((value) => (
             <option key={value} value={String(value)} selected={value === params.topN}>{value}</option>
@@ -71,10 +71,10 @@ export function ReportControlsForm({ params, periodKey, periodOptions, onChange 
       </label>
       <label className="availability-report__check">
         <input type="checkbox" name="showMaintenance" value="true" defaultChecked={params.showMaintenance} />
-        {ta('Show maintenance time', 'Wartungszeit anzeigen')}
+        {ta('Show maintenance time')}
         <input type="hidden" name="showMaintenance" value="false" />
       </label>
-      <button type="submit">{ta('Apply', 'Anwenden')}</button>
+      <button type="submit">{ta('Apply')}</button>
     </form>
   )
 }

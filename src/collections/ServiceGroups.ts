@@ -6,7 +6,7 @@ import { invalidateLagebild } from '@/lib/lagebild-invalidate'
 
 export const ServiceGroups: CollectionConfig = {
   slug: 'service-groups',
-  labels: { singular: ta('Service Group', 'Dienstgruppe'), plural: ta('Service Groups', 'Dienstgruppen') },
+  labels: { singular: ta('Service Group'), plural: ta('Service Groups') },
   admin: {
     useAsTitle: 'name',
     defaultColumns: ['name', 'updatedAt'],
@@ -80,7 +80,7 @@ export const ServiceGroups: CollectionConfig = {
       // Zielwert der Gruppe (Konzept 4.4). Noch ohne Eingabe im Admin, leer = erbt vom Gesamtzielwert.
       name: 'availabilityTarget',
       type: 'number',
-      label: ta('Availability target (%)', 'Zielwert Verfügbarkeit (%)'),
+      label: ta('Availability target (%)'),
       min: 0,
       max: 100,
       admin: { hidden: true },

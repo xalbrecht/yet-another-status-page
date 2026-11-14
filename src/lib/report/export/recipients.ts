@@ -18,5 +18,5 @@ export function validateRecipients(text: string | null | undefined): true | stri
   const invalid = entries(text).find((entry) => !ADDRESS.test(entry))
   return invalid === undefined
     ? true
-    : `${ta('Not a valid email address', 'Keine gültige E-Mail-Adresse')}: ${invalid}`
+    : `${ta('Not a valid email address')}: ${invalid}`
 }

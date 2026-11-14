@@ -35,31 +35,31 @@ function kpiBlock(data: ReportData, locale: string, subtitle: string): string {
   const targetLine =
     kpis.availability === null
       ? ''
-      : `${ta('Target', 'Ziel')} ${formatAvailability(kpis.target, locale)}: ${met ? ta('met', 'erreicht') : `${ta('missed by', 'verfehlt um')} ${nf(locale).format(kpis.target - kpis.availability)} ${ta('points', 'Punkte')}`}`
+      : `${ta('Target')} ${formatAvailability(kpis.target, locale)}: ${met ? ta('met') : `${ta('missed by')} ${nf(locale).format(kpis.target - kpis.availability)} ${ta('points')}`}`
   const tiles: Array<{ label: string; value: string; lines: string[] }> = [
     {
-      label: ta('Availability', 'Verfügbarkeit'),
+      label: ta('Availability'),
       value: kpis.availability === null ? '–' : formatAvailability(kpis.availability, locale),
-      lines: [targetLine, kpis.previousAvailability === null ? '' : `${ta('Previous period', 'Zeitraum davor')}: ${formatAvailability(kpis.previousAvailability, locale)}`],
+      lines: [targetLine, kpis.previousAvailability === null ? '' : `${ta('Previous period')}: ${formatAvailability(kpis.previousAvailability, locale)}`],
     },
     {
-      label: ta('Outage time of all services', 'Ausfallzeit aller Dienste'),
+      label: ta('Outage time of all services'),
       value: formatDuration(kpis.downMs),
-      lines: [`${ta('Previous period', 'Zeitraum davor')}: ${formatDuration(kpis.previousDownMs)}`],
+      lines: [`${ta('Previous period')}: ${formatDuration(kpis.previousDownMs)}`],
     },
     {
-      label: ta('Affected services', 'Betroffene Dienste'),
-      value: `${kpis.affectedServices} ${ta('of', 'von')} ${kpis.serviceCount}`,
-      lines: [`${kpis.outageCount} ${ta('outages', 'Ausfälle')}`],
+      label: ta('Affected services'),
+      value: `${kpis.affectedServices} ${ta('of')} ${kpis.serviceCount}`,
+      lines: [`${kpis.outageCount} ${ta('outages')}`],
     },
     {
-      label: ta('Longest outage', 'Längster Ausfall'),
+      label: ta('Longest outage'),
       value: kpis.longestOutage ? formatDuration(kpis.longestOutage.ms) : '–',
-      lines: [kpis.longestOutage?.serviceName ?? ta('no outage', 'kein Ausfall')],
+      lines: [kpis.longestOutage?.serviceName ?? ta('no outage')],
     },
     {
-      label: ta('Months with target met', 'Monate mit erreichtem Ziel'),
-      value: `${kpis.monthsMet} ${ta('of', 'von')} ${kpis.monthsTotal}`,
+      label: ta('Months with target met'),
+      value: `${kpis.monthsMet} ${ta('of')} ${kpis.monthsTotal}`,
       lines: [],
     },
   ]
@@ -74,17 +74,17 @@ function kpiBlock(data: ReportData, locale: string, subtitle: string): string {
       )
     })
     .join('')
-  return frame(ta('Key figures', 'Kennzahlen'), subtitle, 112, content)
+  return frame(ta('Key figures'), subtitle, 112, content)
 }
 
 function trendBlock(data: ReportData, locale: string, subtitle: string): string {
-  return frame(ta('Development of the last 12 months', 'Entwicklung der letzten 12 Monate'), subtitle, 300, trendChart(data.trend, data.kpis.target, locale, CONTENT_WIDTH, 300))
+  return frame(ta('Development of the last 12 months'), subtitle, 300, trendChart(data.trend, data.kpis.target, locale, CONTENT_WIDTH, 300))
 }
 
 function weakestBlock(data: ReportData, locale: string, subtitle: string): string {
-  const title = ta('The weakest services', 'Die schwächsten Dienste')
+  const title = ta('The weakest services')
   if (data.weakest.length === 0) {
-    return frame(title, subtitle, 40, textEl(0, 24, ta('No outage in this period.', 'Kein Ausfall in diesem Zeitraum.'), { size: 14, fill: MUTED_COLOR }))
+    return frame(title, subtitle, 40, textEl(0, 24, ta('No outage in this period.'), { size: 14, fill: MUTED_COLOR }))
   }
   const gap = 12
   const width = (CONTENT_WIDTH - (WEAKEST_COLUMNS - 1) * gap) / WEAKEST_COLUMNS
@@ -98,7 +98,7 @@ function weakestBlock(data: ReportData, locale: string, subtitle: string): strin
         fitText(x + 12, y + 22, row.name, width - 24, { size: 13, weight: 'bold' }) +
         fitText(x + 12, y + 38, row.groupName, width - 24, { size: 11, fill: MUTED_COLOR }) +
         textEl(x + 12, y + 66, row.availability === null ? '–' : formatAvailability(row.availability, locale), { size: 22, weight: 'bold' }) +
-        fitText(x + 12, y + 86, `${formatDuration(row.downMs)} ${ta('in', 'in')} ${row.outageCount} ${ta('outage(s)', 'Ausfall/Ausfällen')}`, width - 24, { size: 11, fill: MUTED_COLOR })
+        fitText(x + 12, y + 86, `${formatDuration(row.downMs)} ${ta('in')} ${row.outageCount} ${ta('outage(s)')}`, width - 24, { size: 11, fill: MUTED_COLOR })
       )
     })
     .join('')
@@ -115,7 +115,7 @@ function heatBlocks(data: ReportData, locale: string, subtitle: string): ExportB
     const part = chunks.length > 1 ? ` (${index + 1}/${chunks.length})` : ''
     return {
       file: `04-waermekarte-gruppen-${index + 1}.png`,
-      svg: frame(`${ta('Heat map by service group', 'Wärmekarte nach Dienstgruppen')}${part}`, subtitle, tableHeight + 34, content),
+      svg: frame(`${ta('Heat map by service group')}${part}`, subtitle, tableHeight + 34, content),
     }
   })
 }
@@ -131,18 +131,18 @@ function rankingBlock(data: ReportData, locale: string, subtitle: string): strin
   const rows = data.ranking.slice(0, RANKING_ROWS)
   const rowHeight = 30
   let content =
-    textEl(0, 16, ta('Service', 'Dienst'), { size: 11, fill: MUTED_COLOR }) +
-    textEl(300, 16, ta('Group', 'Gruppe'), { size: 11, fill: MUTED_COLOR }) +
-    textEl(600, 16, ta('Value', 'Wert'), { size: 11, fill: MUTED_COLOR, anchor: 'end' }) +
-    textEl(700, 16, ta('Previous period', 'Zeitraum davor'), { size: 11, fill: MUTED_COLOR, anchor: 'end' }) +
-    textEl(720, 16, ta('Outage duration', 'Ausfalldauer'), { size: 11, fill: MUTED_COLOR })
+    textEl(0, 16, ta('Service'), { size: 11, fill: MUTED_COLOR }) +
+    textEl(300, 16, ta('Group'), { size: 11, fill: MUTED_COLOR }) +
+    textEl(600, 16, ta('Value'), { size: 11, fill: MUTED_COLOR, anchor: 'end' }) +
+    textEl(700, 16, ta('Previous period'), { size: 11, fill: MUTED_COLOR, anchor: 'end' }) +
+    textEl(720, 16, ta('Outage duration'), { size: 11, fill: MUTED_COLOR })
   rows.forEach((row, index) => {
     const y = 24 + index * rowHeight
     const change = changeText(row, locale)
     const duration =
       row.downMs > 0
-        ? `${formatDuration(row.downMs - row.maintenanceDownMs)} ${ta('in', 'in')} ${row.outageCount} ${ta('outage(s)', 'Ausfall/Ausfällen')}${row.maintenanceDownMs > 0 ? ` + ${ta('maintenance', 'Wartung')}` : ''}`
-        : ta('no outage', 'kein Ausfall')
+        ? `${formatDuration(row.downMs - row.maintenanceDownMs)} ${ta('in')} ${row.outageCount} ${ta('outage(s)')}${row.maintenanceDownMs > 0 ? ` + ${ta('maintenance')}` : ''}`
+        : ta('no outage')
     content +=
       `<line x1="0" x2="${CONTENT_WIDTH}" y1="${y}" y2="${y}" stroke="${GRID_COLOR}"/>` +
       textEl(0, y + 19, truncate(row.name, 32), { size: 13 }) +
@@ -151,12 +151,12 @@ function rankingBlock(data: ReportData, locale: string, subtitle: string): strin
       textEl(700, y + 19, change.text, { size: 12, anchor: 'end', fill: change.color }) +
       textEl(720, y + 19, truncate(duration, 38), { size: 12 })
   })
-  return frame(ta('Services, weakest first', 'Dienste, schwächste zuerst'), subtitle, 24 + Math.max(1, rows.length) * rowHeight, content)
+  return frame(ta('Services, weakest first'), subtitle, 24 + Math.max(1, rows.length) * rowHeight, content)
 }
 
 /** Alle Bilder des Gesamtberichts in der Reihenfolge der ZIP-Datei. `periodLabel` steht im Untertitel jedes Bildes. */
 export function overallBlocks(data: ReportData, locale: string, periodLabel: string = ''): ExportBlock[] {
-  const subtitle = [periodLabel, `${data.scope.serviceCount} ${ta('services', 'Dienste')}`].filter(Boolean).join(' · ')
+  const subtitle = [periodLabel, `${data.scope.serviceCount} ${ta('services')}`].filter(Boolean).join(' · ')
   return [
     { file: '01-kennzahlen.png', svg: kpiBlock(data, locale, subtitle) },
     { file: '02-entwicklung-12-monate.png', svg: trendBlock(data, locale, subtitle) },

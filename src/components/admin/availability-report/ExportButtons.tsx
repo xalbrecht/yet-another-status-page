@@ -26,11 +26,11 @@ export function ExportButtons(props: { search: Record<string, string | string[] 
   const { search, groupId } = props
   return (
     <div className="availability-report__export" data-testid="report-export">
-      <a href={exportHref(search, { format: 'zip' })} download>{ta('Download everything (ZIP)', 'Alles herunterladen (ZIP)')}</a>
+      <a href={exportHref(search, { format: 'zip' })} download>{ta('Download everything (ZIP)')}</a>
       <a href={exportHref(search, { format: 'pdf' })} download>PDF</a>
       <a href={exportHref(search, { format: 'xlsx' })} download>Excel</a>
       {groupId !== null && (
-        <a href={exportHref(search, { format: 'zip', group: String(groupId) })} download>{ta('Download this group only', 'Nur diese Gruppe herunterladen')}</a>
+        <a href={exportHref(search, { format: 'zip', group: String(groupId) })} download>{ta('Download this group only')}</a>
       )}
     </div>
   )

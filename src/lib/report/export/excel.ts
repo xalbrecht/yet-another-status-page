@@ -43,19 +43,19 @@ export async function buildWorkbook(input: { data: ReportData; params: ReportPar
   const workbook = new ExcelJS.Workbook()
 
   // Blatt 1: ein Dienst je Zeile
-  const services = workbook.addWorksheet(ta('Services', 'Dienste'))
+  const services = workbook.addWorksheet(ta('Services'))
   const monthColumns = data.heat.columns.map((column) => column.label)
   const serviceHeader = [
-    ta('Service', 'Dienst'),
-    ta('Group', 'Gruppe'),
-    ta('Target (%)', 'Zielwert (%)'),
-    ta('Availability in the period (%)', 'Verfügbarkeit im Zeitraum (%)'),
+    ta('Service'),
+    ta('Group'),
+    ta('Target (%)'),
+    ta('Availability in the period (%)'),
     ...monthColumns,
-    ta('Outage duration (min)', 'Ausfalldauer (Min.)'),
-    ta('Number of outages', 'Anzahl Ausfälle'),
-    ta('Longest outage (min)', 'Längster Ausfall (Min.)'),
-    ta('Degraded Performance (min)', 'Dauer Eingeschränkt (Min.)'),
-    ta('Maintenance (min)', 'Dauer Wartung (Min.)'),
+    ta('Outage duration (min)'),
+    ta('Number of outages'),
+    ta('Longest outage (min)'),
+    ta('Degraded Performance (min)'),
+    ta('Maintenance (min)'),
   ]
   services.addRow(serviceHeader)
   for (const row of data.ranking) {
@@ -78,8 +78,8 @@ export async function buildWorkbook(input: { data: ReportData; params: ReportPar
   widths(services, [30, 26, 12, 16, ...monthColumns.map(() => 12), 14, 12, 14, 16, 14])
 
   // Blatt 2: ein Ausfall je Zeile
-  const outages = workbook.addWorksheet(ta('Outages', 'Ausfälle'))
-  const outageHeader = [ta('Service', 'Dienst'), ta('Group', 'Gruppe'), ta('Start', 'Beginn'), ta('End', 'Ende'), ta('Duration (min)', 'Dauer (Min.)'), ta('Type', 'Art')]
+  const outages = workbook.addWorksheet(ta('Outages'))
+  const outageHeader = [ta('Service'), ta('Group'), ta('Start'), ta('End'), ta('Duration (min)'), ta('Type')]
   outages.addRow(outageHeader)
   for (const row of data.ranking) {
     for (const outage of row.outages) {
@@ -89,7 +89,7 @@ export async function buildWorkbook(input: { data: ReportData; params: ReportPar
         localStamp(outage.from, timeZone),
         localStamp(outage.to, timeZone),
         minutes(outage.to - outage.from),
-        outage.status === 'major' ? ta('Major Outage', 'Schwerer Ausfall') : ta('Partial Outage', 'Teilausfall'),
+        outage.status === 'major' ? ta('Major Outage') : ta('Partial Outage'),
       ])
     }
   }
@@ -97,20 +97,20 @@ export async function buildWorkbook(input: { data: ReportData; params: ReportPar
   widths(outages, [30, 26, 18, 18, 14, 18])
 
   // Blatt 3: Auswahl und Fußnoten
-  const notes = workbook.addWorksheet(ta('Notes', 'Hinweise'))
+  const notes = workbook.addWorksheet(ta('Notes'))
   const maintenanceText = {
-    A: ta('A: counts as available', 'A: zählt als verfügbar'),
-    B: ta('B: counts as outage', 'B: zählt als Ausfall'),
-    C: ta('C: excluded from the total time', 'C: aus der Gesamtzeit herausgenommen'),
+    A: ta('A: counts as available'),
+    B: ta('B: counts as outage'),
+    C: ta('C: excluded from the total time'),
   }[params.maintenance]
   const noteRows: Array<[string, string | number]> = [
-    [ta('Period', 'Zeitraum'), period.label],
-    [ta('Calculation', 'Rechenart'), params.calc === 'monthly' ? ta('Mean of the monthly values', 'Mittel der Monatswerte') : ta('One value for the period', 'Ein Wert für den Zeitraum')],
-    [ta('Maintenance', 'Wartung'), maintenanceText],
-    [ta('Incidents not clearly classified, counted as Partial Outage', 'Nicht eindeutig eingeordnete Vorfälle, als Teilausfall gewertet'), data.footnotes.unsure],
-    [ta('Incidents without a service, not considered', 'Vorfälle ohne Dienst, nicht berücksichtigt'), data.footnotes.withoutService],
+    [ta('Period'), period.label],
+    [ta('Calculation'), params.calc === 'monthly' ? ta('Mean of the monthly values') : ta('One value for the period')],
+    [ta('Maintenance'), maintenanceText],
+    [ta('Incidents not clearly classified, counted as Partial Outage'), data.footnotes.unsure],
+    [ta('Incidents without a service, not considered'), data.footnotes.withoutService],
   ]
-  notes.addRow([ta('Item', 'Angabe'), ta('Value', 'Wert')])
+  notes.addRow([ta('Item'), ta('Value')])
   for (const row of noteRows) notes.addRow(row)
   notes.getRow(1).font = { bold: true }
   widths(notes, [60, 40])

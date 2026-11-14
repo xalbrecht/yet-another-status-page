@@ -35,10 +35,9 @@ function ErrorBox(props: { state: Extract<SendState, { kind: 'error' }>; onResum
         <p>
           {ta(
             'The dispatch cannot be continued: the data of the report changed since the first attempt (for example a new entry in the status log). The emails already sent belong to an older state. Please restart the whole dispatch. The recipients then receive all emails again, recognizable by "Part i of n".',
-            'Der Versand lässt sich nicht fortsetzen: Seit dem ersten Versuch haben sich die Daten des Berichts geändert (z. B. ein neuer Eintrag im Statusprotokoll). Die bereits gesendeten Mails gehören zu einem älteren Stand. Bitte den ganzen Versand neu starten. Die Empfänger erhalten dann alle Mails erneut, erkennbar an „Teil i von n“.',
           )}
         </p>
-        <button type="button" onClick={onRestart}>{ta('Send again from the start', 'Neu senden')}</button>
+        <button type="button" onClick={onRestart}>{ta('Send again from the start')}</button>
       </div>
     )
   }
@@ -48,13 +47,13 @@ function ErrorBox(props: { state: Extract<SendState, { kind: 'error' }>; onResum
       <div role="alert" className="availability-report__send-error">
         <p>
           {resumable
-            ? `${sent} ${ta('of', 'von')} ${state.mails} ${ta('emails are out, email', 'Mails sind raus, Mail')} ${state.nextMail} ${ta('did not arrive', 'ist nicht angekommen')}: ${state.message}.`
-            : `${ta('No email went out', 'Es ging keine Mail raus')}: ${state.message}.`}
+            ? `${sent} ${ta('of')} ${state.mails} ${ta('emails are out, email')} ${state.nextMail} ${ta('did not arrive')}: ${state.message}.`
+            : `${ta('No email went out')}: ${state.message}.`}
         </p>
         {resumable ? (
-          <button type="button" onClick={onResume}>{`${ta('Send the rest (from email', 'Rest senden (ab Mail')} ${state.nextMail} ${ta('of', 'von')} ${state.mails})`}</button>
+          <button type="button" onClick={onResume}>{`${ta('Send the rest (from email')} ${state.nextMail} ${ta('of')} ${state.mails})`}</button>
         ) : (
-          <button type="button" onClick={onRestart}>{ta('Send again', 'Erneut senden')}</button>
+          <button type="button" onClick={onRestart}>{ta('Send again')}</button>
         )}
       </div>
     )
@@ -65,7 +64,6 @@ function ErrorBox(props: { state: Extract<SendState, { kind: 'error' }>; onResum
         <p>
           {ta(
             'Status unknown: the answer of the server is missing. The dispatch may still be running or may be partly done. Please check with the recipients before you start a new dispatch.',
-            'Stand unbekannt: Die Antwort des Servers fehlt. Der Versand läuft möglicherweise noch oder ist teilweise erfolgt. Bitte bei den Empfängern nachsehen, bevor ein neuer Versand gestartet wird.',
           )}
         </p>
       </div>
@@ -73,7 +71,7 @@ function ErrorBox(props: { state: Extract<SendState, { kind: 'error' }>; onResum
   }
   const text =
     state.code === 'running'
-      ? ta('A dispatch is already running. Please wait until it is finished (about a minute) and reload the page.', 'Es läuft bereits ein Versand. Bitte warten, bis er fertig ist (rund eine Minute), und die Seite dann neu laden.')
+      ? ta('A dispatch is already running. Please wait until it is finished (about a minute) and reload the page.')
       : state.message
   return (
     <div role="alert" className="availability-report__send-error">
@@ -88,39 +86,38 @@ export function SendReportForm(props: SendReportFormProps) {
     return (
       <div className="availability-report__send" data-testid="report-send">
         <p className="availability-report__muted">
-          {ta('No recipients entered.', 'Keine Empfänger eingetragen.')} <a href={SETTINGS_HREF}>{ta('Open the email settings', 'E-Mail-Einstellungen öffnen')}</a>
+          {ta('No recipients entered.')} <a href={SETTINGS_HREF}>{ta('Open the email settings')}</a>
         </p>
       </div>
     )
   }
   return (
     <div className="availability-report__send" data-testid="report-send">
-      {state.kind === 'idle' && <button type="button" onClick={onAsk}>{ta('Send by email', 'Per Mail senden')}</button>}
+      {state.kind === 'idle' && <button type="button" onClick={onAsk}>{ta('Send by email')}</button>}
       {state.kind === 'confirm' && (
         <p>
-          {ta('Send to', 'Senden an')}: <strong>{recipients.join(', ')}</strong>{' '}
-          <button type="button" onClick={onConfirm}>{ta('Send now', 'Jetzt senden')}</button>{' '}
-          <button type="button" onClick={onCancel}>{ta('Cancel', 'Abbrechen')}</button>
+          {ta('Send to')}: <strong>{recipients.join(', ')}</strong>{' '}
+          <button type="button" onClick={onConfirm}>{ta('Send now')}</button>{' '}
+          <button type="button" onClick={onCancel}>{ta('Cancel')}</button>
         </p>
       )}
       {state.kind === 'sending' && (
         <p>
-          <button type="button" disabled>{ta('Send now', 'Jetzt senden')}</button>{' '}
-          <button type="button" disabled>{ta('Cancel', 'Abbrechen')}</button>{' '}
-          <span role="status">{ta('The dispatch is running, this can take a minute.', 'Der Versand läuft, das kann eine Minute dauern.')}</span>
+          <button type="button" disabled>{ta('Send now')}</button>{' '}
+          <button type="button" disabled>{ta('Cancel')}</button>{' '}
+          <span role="status">{ta('The dispatch is running, this can take a minute.')}</span>
         </p>
       )}
       {state.kind === 'done' && <p role="status">{state.message}</p>}
       {state.kind === 'done' && state.rejected && state.rejected.length > 0 && (
         <p role="alert" className="availability-report__send-error">
-          {ta('The mail server rejected these recipients, they received nothing', 'Der Mailserver hat diese Empfänger abgelehnt, sie haben nichts erhalten')}: {state.rejected.join(', ')}
+          {ta('The mail server rejected these recipients, they received nothing')}: {state.rejected.join(', ')}
         </p>
       )}
       {state.kind === 'error' && <ErrorBox state={state} onResume={onResume} onRestart={onRestart} />}
       <p className="availability-report__muted">
         {ta(
           'If the dispatch breaks off, it can only be continued directly afterwards with "Send the rest", not after reloading the page.',
-          'Bricht der Versand ab, lässt er sich nur direkt danach mit „Rest senden“ fortsetzen, nicht nach dem Neuladen der Seite.',
         )}
       </p>
     </div>

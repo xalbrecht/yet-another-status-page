@@ -21,7 +21,7 @@ export type NotificationStatus = (typeof notificationStatusOptions)[number]['val
 
 export const Notifications: CollectionConfig = {
   slug: 'notifications',
-  labels: { singular: ta('Notification', 'Benachrichtigung'), plural: ta('Notifications', 'Benachrichtigungen') },
+  labels: { singular: ta('Notification'), plural: ta('Notifications') },
   admin: {
     useAsTitle: 'title',
     defaultColumns: ['title', 'channel', 'status', 'recipientCount', 'createdAt'],
@@ -121,7 +121,7 @@ export const Notifications: CollectionConfig = {
       fields: [
         {
           name: 'channel',
-          label: ta('Channel', 'Kanal'),
+          label: ta('Channel'),
           type: 'select',
           required: true,
           defaultValue: 'both',
@@ -132,7 +132,7 @@ export const Notifications: CollectionConfig = {
         },
         {
           name: 'status',
-          label: ta('Status', 'Status'),
+          label: ta('Status'),
           type: 'select',
           required: true,
           defaultValue: 'draft',
@@ -198,7 +198,7 @@ export const Notifications: CollectionConfig = {
     },
     {
       name: 'errorMessage',
-      label: ta('Error Message', 'Fehlermeldung'),
+      label: ta('Error Message'),
       type: 'textarea',
       admin: {
         hidden: true,

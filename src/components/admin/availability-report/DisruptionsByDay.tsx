@@ -23,11 +23,11 @@ export function DisruptionsByDay({ sheet }: { sheet: GroupSheetData }) {
   const perHour = (BASE - TOP) / maxHours
   const slot = (W - LEFT - RIGHT) / sheet.perDay.length
   const ticks = Array.from(new Set([0, Math.round(maxHours / 2), maxHours]))
-  const hoursLabel = ta('h', 'Std.')
+  const hoursLabel = ta('h')
   return (
     <section className="availability-report__card" data-testid="sheet-by-day">
-      <h3>{ta('Disruptions in', 'Störungen im')} {sheet.month.label}, {ta('by day', 'je Tag')}</h3>
-      <svg viewBox={`0 0 ${W} 270`} className="availability-report__trend" role="img" aria-label={ta('Disruptions by day', 'Störungen je Tag')}>
+      <h3>{ta('Disruptions in')} {sheet.month.label}, {ta('by day')}</h3>
+      <svg viewBox={`0 0 ${W} 270`} className="availability-report__trend" role="img" aria-label={ta('Disruptions by day')}>
         {ticks.map((hours) => (
           <g key={hours}>
             <line x1={LEFT} x2={W - RIGHT} y1={BASE - hours * perHour} y2={BASE - hours * perHour} className="availability-report__grid" />
@@ -56,7 +56,7 @@ export function DisruptionsByDay({ sheet }: { sheet: GroupSheetData }) {
                   </g>
                 )
               })}
-              {!showNames && <text transform={`translate(${center - 4},${BASE + 22}) rotate(90)`}>{count} {ta('services', 'Dienste')}</text>}
+              {!showNames && <text transform={`translate(${center - 4},${BASE + 22}) rotate(90)`}>{count} {ta('services')}</text>}
               {labelled && <text x={center} y={BASE + 14} textAnchor="middle">{day.dayOfMonth}</text>}
             </g>
           )
@@ -64,8 +64,8 @@ export function DisruptionsByDay({ sheet }: { sheet: GroupSheetData }) {
         <line x1={LEFT} x2={W - RIGHT} y1={BASE} y2={BASE} className="availability-report__grid" />
       </svg>
       <div className="availability-report__legend">
-        <span><i className="availability-report__sev-major" />{ta('Major Outage', 'Schwerer Ausfall')}</span>
-        <span><i className="availability-report__sev-partial" />{ta('Partial Outage', 'Teilausfall')}</span>
+        <span><i className="availability-report__sev-major" />{ta('Major Outage')}</span>
+        <span><i className="availability-report__sev-partial" />{ta('Partial Outage')}</span>
       </div>
     </section>
   )

@@ -169,57 +169,54 @@ export const Settings: GlobalConfig = {
           label: ta('Display'),
           defaultValue: 'off',
           options: [
-            { label: ta('Variant C (simple list)', 'Variante C (einfache Liste)'), value: 'off' },
-            { label: ta('Variant A (tiles, services with bars on click)', 'Variante A (Kacheln, Dienste mit Balken beim Anklicken)'), value: 'a' },
-            { label: ta('Variant B (tiles with own bar)', 'Variante B (Kacheln mit eigenem Balken)'), value: 'b' },
+            { label: ta('Variant C (simple list)'), value: 'off' },
+            { label: ta('Variant A (tiles, services with bars on click)'), value: 'a' },
+            { label: ta('Variant B (tiles with own bar)'), value: 'b' },
             { label: ta('Both (for testing)'), value: 'both' },
           ],
           admin: {
             description: ta(
               'Layout of the start page. Variants A and B show the situation overview on the left and boxes for disruptions and maintenance on the right. Variant A shows tiles, a click shows the services with bars. Variant B shows a small bar in every tile. "Both" displays both variants one after the other to compare them. Variant C is the simple list without situation overview. The three settings below apply to A, B and "Both" only.',
-              'Aufbau der Startseite. Die Varianten A und B zeigen links das Lagebild und rechts Boxen für Störungen und Wartungen. Variante A zeigt Kacheln, ein Klick zeigt die Dienste mit Balken. Variante B zeigt einen kleinen Balken in jeder Kachel. „Beide“ zeigt beide Varianten nacheinander zum Vergleichen. Variante C ist die einfache Liste ohne Lagebild. Die drei Einstellungen darunter gelten nur für A, B und „Beide“.',
             ),
           },
         },
         {
           name: 'lagebildPeriodDays',
           type: 'select',
-          label: ta('Look-back period', 'Rückschau'),
+          label: ta('Look-back period'),
           defaultValue: '14',
           options: [
-            { label: ta('14 days', '14 Tage'), value: '14' },
-            { label: ta('Month (30 days)', 'Monat (30 Tage)'), value: '30' },
-            { label: ta('Quarter (90 days)', 'Quartal (90 Tage)'), value: '90' },
-            { label: ta('Half year (180 days)', 'Halbjahr (180 Tage)'), value: '180' },
-            { label: ta('Year (365 days)', 'Jahr (365 Tage)'), value: '365' },
+            { label: ta('14 days'), value: '14' },
+            { label: ta('Month (30 days)'), value: '30' },
+            { label: ta('Quarter (90 days)'), value: '90' },
+            { label: ta('Half year (180 days)'), value: '180' },
+            { label: ta('Year (365 days)'), value: '365' },
           ],
           admin: {
             description: ta(
               'Default look-back of the situation overview: restrictions list and availability per service. Visitors can change it on the status page.',
-              'Vorgabe für die Rückschau im Lagebild: Liste der Einschränkungen und Verfügbarkeit je Dienst. Besucher können sie auf der Statusseite ändern.',
             ),
           },
         },
         {
           name: 'lagebildBarHours',
           type: 'select',
-          label: ta('Bar period', 'Zeitraum der Balken'),
+          label: ta('Bar period'),
           defaultValue: '12',
           options: [
-            { label: ta('12 hours (5 minutes per stroke)', '12 Stunden (5 Minuten je Strich)'), value: '12' },
-            { label: ta('24 hours (10 minutes per stroke)', '24 Stunden (10 Minuten je Strich)'), value: '24' },
+            { label: ta('12 hours (5 minutes per stroke)'), value: '12' },
+            { label: ta('24 hours (10 minutes per stroke)'), value: '24' },
           ],
           admin: {
             description: ta(
               'Default period of the bars in the situation overview. Visitors can change it on the status page.',
-              'Vorgabe für den Zeitraum der Balken im Lagebild. Besucher können ihn auf der Statusseite ändern.',
             ),
           },
         },
         {
           name: 'statusBoxEntries',
           type: 'number',
-          label: ta('Entries per box', 'Einträge je Box'),
+          label: ta('Entries per box'),
           defaultValue: 3,
           min: 1,
           max: 10,
@@ -227,18 +224,17 @@ export const Settings: GlobalConfig = {
             condition: (data) => data?.lagebildVariant !== 'off',
             description: ta(
               'How many disruptions and maintenances each box on the start page shows. The rest is behind "show more".',
-              'Wie viele Störungen und Wartungen jede Box auf der Startseite zeigt. Der Rest steht hinter „weitere anzeigen“.',
             ),
           },
         },
         {
           name: 'statusBoxContent',
           type: 'select',
-          label: ta('Content of the boxes', 'Inhalt der Boxen'),
+          label: ta('Content of the boxes'),
           defaultValue: 'full',
           options: [
-            { label: ta('With services and latest update', 'Mit Diensten und letztem Stand'), value: 'full' },
-            { label: ta('Title and time only', 'Nur Titel und Zeit'), value: 'compact' },
+            { label: ta('With services and latest update'), value: 'full' },
+            { label: ta('Title and time only'), value: 'compact' },
           ],
           admin: {
             condition: (data) => data?.lagebildVariant !== 'off',
@@ -247,11 +243,11 @@ export const Settings: GlobalConfig = {
         {
           name: 'statusBoxesPlacement',
           type: 'select',
-          label: ta('Boxes on narrow screens', 'Boxen auf schmalen Bildschirmen'),
+          label: ta('Boxes on narrow screens'),
           defaultValue: 'before',
           options: [
-            { label: ta('Before the situation overview', 'Vor dem Lagebild'), value: 'before' },
-            { label: ta('After the situation overview', 'Nach dem Lagebild'), value: 'after' },
+            { label: ta('Before the situation overview'), value: 'before' },
+            { label: ta('After the situation overview'), value: 'after' },
           ],
           admin: {
             condition: (data) => data?.lagebildVariant !== 'off',
@@ -260,14 +256,13 @@ export const Settings: GlobalConfig = {
         {
           name: 'availabilityTarget',
           type: 'number',
-          label: ta('Availability target (%)', 'Zielwert Verfügbarkeit (%)'),
+          label: ta('Availability target (%)'),
           defaultValue: 99,
           min: 0,
           max: 100,
           admin: {
             description: ta(
               'Applies to all services until a group or a service has its own value. Used by the availability report.',
-              'Gilt für alle Dienste, bis eine Gruppe oder ein Dienst einen eigenen Wert hat. Grundlage des Verfügbarkeitsberichts.',
             ),
           },
         },

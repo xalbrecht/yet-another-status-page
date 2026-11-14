@@ -137,10 +137,10 @@ export const EmailSettings: GlobalConfig = {
           name: 'reportRecipients',
           type: 'textarea',
           access: { read: authenticatedRead },
-          label: ta('Recipients of the availability report', 'Empfänger des Verfügbarkeitsberichts'),
+          label: ta('Recipients of the availability report'),
           validate: (value: string | null | undefined) => validateRecipients(value),
           admin: {
-            description: ta('One address per line or separated by commas. Leave empty to send none', 'Eine Adresse je Zeile oder durch Komma getrennt. Leer: kein Versand'),
+            description: ta('One address per line or separated by commas. Leave empty to send none'),
           },
         },
       ],

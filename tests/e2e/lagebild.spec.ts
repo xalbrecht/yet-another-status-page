@@ -266,7 +266,8 @@ test.describe('Lagebild', () => {
 
     // Adresse mit Filter direkt öffnen
     await page.goto(`/?gruppe=${groupB.id}`)
-    await expect(page.getByTestId('lagebild-a').getByText(new RegExp(`Filter Beta ${id}`)).first()).toBeVisible()
+    // Der Tooltip der Kachel „Alle“ nennt die Gruppe ebenfalls, bleibt aber unsichtbar
+    await expect(page.getByTestId('lagebild-a').getByText(new RegExp(`Filter Beta ${id}`)).filter({ visible: true }).first()).toBeVisible()
     await expect(page.getByTestId('lagebild-a').getByText(new RegExp(`(Major Outage|Schwerer Ausfall): Filter Alpha ${id}`))).toHaveCount(0)
   })
 

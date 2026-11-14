@@ -1043,7 +1043,7 @@ export interface Setting {
    */
   customStatusMessage?: string | null;
   /**
-   * Lagebild je Dienstgruppe auf der Startseite. Variante A zeigt Kacheln und darunter die Balken der letzten 12 Stunden. Variante B zeigt in jeder Kachel einen kleinen Balken. „Beide“ zeigt beide Varianten nacheinander, um sie zu vergleichen.
+   * Aufbau der Startseite. Die Varianten A und B zeigen links das Lagebild und rechts Boxen für Störungen und Wartungen. Variante A zeigt Kacheln, ein Klick zeigt die Dienste mit Balken. Variante B zeigt einen kleinen Balken in jeder Kachel. „Beide“ zeigt beide Varianten nacheinander zum Vergleichen. Variante C ist die einfache Liste ohne Lagebild. Die drei Einstellungen darunter gelten nur für A, B und „Beide“.
    */
   lagebildVariant?: ('off' | 'a' | 'b' | 'both') | null;
   /**
@@ -1054,6 +1054,12 @@ export interface Setting {
    * Vorgabe für den Zeitraum der Balken im Lagebild. Besucher können ihn auf der Statusseite ändern.
    */
   lagebildBarHours?: ('12' | '24') | null;
+  /**
+   * Wie viele Störungen und Wartungen jede Box auf der Startseite zeigt. Der Rest steht hinter „weitere anzeigen“.
+   */
+  statusBoxEntries?: number | null;
+  statusBoxContent?: ('full' | 'compact') | null;
+  statusBoxesPlacement?: ('before' | 'after') | null;
   /**
    * Gilt für alle Dienste, bis eine Gruppe oder ein Dienst einen eigenen Wert hat. Grundlage des Verfügbarkeitsberichts.
    */
@@ -1254,6 +1260,9 @@ export interface SettingsSelect<T extends boolean = true> {
   lagebildVariant?: T;
   lagebildPeriodDays?: T;
   lagebildBarHours?: T;
+  statusBoxEntries?: T;
+  statusBoxContent?: T;
+  statusBoxesPlacement?: T;
   availabilityTarget?: T;
   maintenanceTerminalRetentionHours?: T;
   timezone?: T;

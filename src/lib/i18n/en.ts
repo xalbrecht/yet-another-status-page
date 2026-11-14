@@ -217,6 +217,19 @@ export const en = {
   'lagebild.yesterday': 'yesterday',
   'lagebild.since': 'since {time}',
   'lagebild.servicesOf': 'Services of group {group}',
+  'statusBoxes.incidentsTitle': 'Current incidents',
+  'statusBoxes.maintenancesTitle': 'Maintenance',
+  'statusBoxes.noIncidents': 'No current incidents.',
+  'statusBoxes.noMaintenances': 'No maintenance scheduled or in progress.',
+  'statusBoxes.more': 'Show {count} more',
+  'home.currentIncidents': 'Current incidents',
+  'lagebild.allTile': 'All',
+  'lagebild.groupsOne': '1 group',
+  'lagebild.groupsMany': '{count} groups',
+  'lagebild.colGroup': 'Group',
+  'lagebild.tipOthers': '{count} more groups operational',
+  'lagebild.tipOthersOne': '1 more group operational',
+  'lagebild.tipAllOk': 'All groups operational',
 } as const
 
 export type TranslationKey = keyof typeof en

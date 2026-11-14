@@ -44,6 +44,26 @@ export function groupStatusAt(timelines: Timeline[], time: number): Availability
 }
 
 /**
+ * Zusammengefasste Zeitfolge mehrerer Dienste: an jedem Wechselzeitpunkt der schlechteste Zustand aller Zeitfolgen.
+ * Die Zeitpunkte sind aufsteigend, aufeinanderfolgende gleiche Zustände entfallen. Vor dem ersten Eintrag aller
+ * Zeitfolgen ist nichts bekannt, die Folge beginnt erst mit dem ersten bekannten Zustand.
+ */
+export function mergeTimelines(timelines: Timeline[]): Timeline {
+  const times = Array.from(new Set(timelines.flatMap((timeline) => timeline.map((entry) => entry.at)))).sort((a, b) => a - b)
+  const next = timelines.map(() => 0)
+  const current: Array<AvailabilityStatus | null> = timelines.map(() => null)
+  const merged: Timeline = []
+  for (const time of times) {
+    timelines.forEach((timeline, i) => {
+      while (next[i] < timeline.length && timeline[next[i]].at <= time) current[i] = timeline[next[i]++].status
+    })
+    const status = worstStatus(current)
+    if (status !== null && merged[merged.length - 1]?.status !== status) merged.push({ at: time, status })
+  }
+  return merged
+}
+
+/**
  * Verfügbarkeit eines Dienstes in Prozent: Anteil der bekannten Zeit seit `windowStart`, in der der Dienst
  * weder „Teilausfall“ noch „Schwerer Ausfall“ hatte. „Eingeschränkt“ und „Wartung“ zählen als verfügbar.
  * `null`: im Zeitraum ist kein Zustand bekannt.

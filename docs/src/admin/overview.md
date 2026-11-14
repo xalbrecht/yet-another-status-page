@@ -43,7 +43,7 @@ The admin panel is organized into sections:
 
 ## Language of the admin panel
 
-The admin panel uses the interface language of the build (`NEXT_PUBLIC_UI_LANG`, default German, see [Configuration](../getting-started/configuration.md#interface-language)). The menu names are:
+The admin panel uses the interface language of the server (`DEFAULT_LANGUAGE`, default German, see [Configuration](../getting-started/configuration.md#interface-language)). The menu names are:
 
 | English | German |
 |---------|--------|

@@ -26,7 +26,7 @@ export const DashboardWidgets: React.FC = () => {
       try {
         const response = await fetch('/api/dashboard-stats')
         if (!response.ok) {
-          throw new Error('Failed to fetch dashboard stats')
+          throw new Error(ta('Failed to fetch dashboard stats'))
         }
         const stats = await response.json()
         setData(stats)

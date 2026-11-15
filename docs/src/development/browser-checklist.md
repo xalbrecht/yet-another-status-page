@@ -2,6 +2,8 @@
 
 Diese Liste prüft das Lagebild im Browser, nachdem ein neues Image auf Dev oder Test läuft. Die automatischen Tests (siehe [Testing](./testing.md)) decken Mobilansicht, deutsche Oberfläche und deutsche Zeitformate nicht ab. Diese Punkte prüft ein Mensch.
 
+Englische Fassung mit denselben Nummern: [Browser Checklist (English)](./browser-checklist.en.md).
+
 Pro Punkt zuerst auf Dev, dann auf Test prüfen. Häkchen (✓) setzen, Auffälligkeiten in die Spalte „Notiz“ schreiben.
 
 | Feld | Eintrag |

@@ -7,6 +7,7 @@
 - [Installation](./getting-started/installation.md)
 - [Helm (Recommended)](./getting-started/helm.md)
 - [Configuration](./getting-started/configuration.md)
+- [Adding a Language](./getting-started/adding-a-language.md)
 - [Demo Mode](./getting-started/demo-mode.md)
 
 # Admin Guide

@@ -1,5 +1,6 @@
 import type { GlobalConfig } from 'payload'
 import { ta } from '@/lib/i18n/admin'
+import { translatorsFor } from '@/lib/i18n/translators'
 
 export const SmsSettings: GlobalConfig = {
   slug: 'sms-settings',
@@ -115,8 +116,8 @@ export const SmsSettings: GlobalConfig = {
           name: 'templateIncidentNew',
           type: 'textarea',
           label: ta('New Incident Template'),
-          defaultValue: '[{{siteName}}] 🚨 INCIDENT: {{title}} | {{status}} | {{message}} | {{url}}',
           admin: {
+            placeholder: translatorsFor().t('notif.smsIncidentNew'),
             description: ta('Template for new incident notifications'),
           },
         },
@@ -124,8 +125,8 @@ export const SmsSettings: GlobalConfig = {
           name: 'templateIncidentUpdate',
           type: 'textarea',
           label: ta('Incident Update Template'),
-          defaultValue: '[{{siteName}}] 📢 {{title}} | {{status}} | {{message}} | {{url}}',
           admin: {
+            placeholder: translatorsFor().t('notif.smsIncidentUpdate'),
             description: ta('Template for incident update notifications'),
           },
         },
@@ -133,8 +134,8 @@ export const SmsSettings: GlobalConfig = {
           name: 'templateMaintenanceNew',
           type: 'textarea',
           label: ta('New Maintenance Template'),
-          defaultValue: '[{{siteName}}] 🔧 MAINTENANCE: {{title}} | {{schedule}} | {{url}}',
           admin: {
+            placeholder: translatorsFor().t('notif.smsMaintNew'),
             description: ta('Template for new scheduled maintenance notifications. {{schedule}} includes start/end times.'),
           },
         },
@@ -142,8 +143,8 @@ export const SmsSettings: GlobalConfig = {
           name: 'templateMaintenanceUpdate',
           type: 'textarea',
           label: ta('Maintenance Update Template'),
-          defaultValue: '[{{siteName}}] 🔧 {{title}} | {{status}} | {{schedule}} | {{message}} | {{url}}',
           admin: {
+            placeholder: translatorsFor().t('notif.smsMaintUpdate'),
             description: ta('Template for maintenance update notifications'),
           },
         },

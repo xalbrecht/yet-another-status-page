@@ -162,7 +162,7 @@ async function createMaintenanceNotificationDeferred(data: DeferredNotification)
     
     let smsBody: string
     if (data.isUpdate) {
-      const template = smsSettings.templateMaintenanceUpdate || '[{{siteName}}] 🔧 {{title}} | {{status}} | {{schedule}} | {{message}} | {{url}}'
+      const template = smsSettings.templateMaintenanceUpdate || t('notif.smsMaintUpdate')
       smsBody = interpolateTemplate(template, templateVars)
     } else {
       const template = smsSettings.templateMaintenanceNew || t('notif.smsMaintNew')

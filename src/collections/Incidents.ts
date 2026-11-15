@@ -81,7 +81,7 @@ async function createIncidentNotificationDeferred(data: DeferredNotification) {
       emailBody = `${t('notif.incidentNew')}\n\n${t('notif.status')}: ${data.statusLabel}\n\n${data.message}\n\n${t('notif.viewDetails')}: ${url}`
     } else {
       // Subsequent update notification
-      const template = smsSettings.templateIncidentUpdate || '[{{siteName}}] 📢 {{title}} | {{status}} | {{message}} | {{url}}'
+      const template = smsSettings.templateIncidentUpdate || t('notif.smsIncidentUpdate')
       smsBody = interpolateTemplate(template, templateVars)
       emailBody = `${t('notif.status')}: ${data.statusLabel}\n\n${data.message}\n\n${t('notif.viewDetails')}: ${url}`
     }

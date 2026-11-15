@@ -6,6 +6,10 @@
 #   ./scripts/run-e2e-tests.sh              # Run all tests
 #   ./scripts/run-e2e-tests.sh --headed     # Run with browser visible
 #   ./scripts/run-e2e-tests.sh <test-file>  # Run specific test file
+#   ./scripts/run-e2e-tests.sh --clean      # Also delete the node_modules volume (cold start)
+#
+# The node_modules volume is kept between runs, so `npm install` in the container only has
+# to update it. The database is in memory and always starts empty.
 #
 # Behind a proxy that replaces TLS certificates, point E2E_CA_FILE to the CA file.
 # The file is mounted into the app container (docker-compose.test-ca.yml):
@@ -41,8 +45,13 @@ fi
 
 # Parse arguments
 PLAYWRIGHT_ARGS="--project=chromium"
+DOWN_ARGS=(--remove-orphans)
 while [[ $# -gt 0 ]]; do
   case $1 in
+    --clean)
+      DOWN_ARGS+=(-v)
+      shift
+      ;;
     --headed)
       PLAYWRIGHT_ARGS="$PLAYWRIGHT_ARGS --headed"
       shift
@@ -66,7 +75,7 @@ done
 cleanup() {
   echo ""
   echo -e "${YELLOW}🧹 Cleaning up test environment...${NC}"
-  docker compose -p "$PROJECT" "${COMPOSE_ARGS[@]}" down -v --remove-orphans 2>/dev/null || true
+  docker compose -p "$PROJECT" "${COMPOSE_ARGS[@]}" down "${DOWN_ARGS[@]}" 2>/dev/null || true
 }
 
 # Set trap for cleanup on exit
@@ -74,7 +83,7 @@ trap cleanup EXIT
 
 # Step 1: Clean up any existing test containers
 echo -e "${YELLOW}📦 Setting up test environment...${NC}"
-docker compose -p "$PROJECT" "${COMPOSE_ARGS[@]}" down -v --remove-orphans 2>/dev/null || true
+docker compose -p "$PROJECT" "${COMPOSE_ARGS[@]}" down "${DOWN_ARGS[@]}" 2>/dev/null || true
 
 # Step 2: Build and start test containers
 echo -e "${YELLOW}🐳 Starting test containers...${NC}"

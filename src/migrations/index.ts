@@ -16,6 +16,7 @@ import * as migration_20261112_200000_add_incident_availability_class from './20
 import * as migration_20261113_100000_add_report_recipients from './20261113_100000_add_report_recipients';
 import * as migration_20261113_200000_add_status_box_settings from './20261113_200000_add_status_box_settings';
 import * as migration_20261115_100000_add_settings_language from './20261115_100000_add_settings_language';
+import * as migration_20261116_100000_drop_settings_language from './20261116_100000_drop_settings_language';
 
 export const migrations = [
   {
@@ -107,5 +108,10 @@ export const migrations = [
     up: migration_20261115_100000_add_settings_language.up,
     down: migration_20261115_100000_add_settings_language.down,
     name: '20261115_100000_add_settings_language',
+  },
+  {
+    up: migration_20261116_100000_drop_settings_language.up,
+    down: migration_20261116_100000_drop_settings_language.down,
+    name: '20261116_100000_drop_settings_language',
   },
 ];

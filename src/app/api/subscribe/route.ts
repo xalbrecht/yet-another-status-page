@@ -72,7 +72,7 @@ async function checkDatabaseRateLimit(
 }
 
 export async function POST(request: NextRequest) {
-  const { t, lang } = await getTranslators()
+  const { t, lang } = getTranslators()
   try {
     const payload = await getPayload({ config })
     const clientIp = getClientIp(request)
@@ -219,7 +219,7 @@ export async function POST(request: NextRequest) {
 
 // GET endpoint to check subscription availability
 export async function GET() {
-  const { t } = await getTranslators()
+  const { t } = getTranslators()
   try {
     const payload = await getPayload({ config })
     const emailSettings = await payload.findGlobal({

@@ -2,8 +2,7 @@ import type { GlobalConfig } from 'payload'
 import { authenticatedOrTestWrite } from '@/lib/access'
 import { TIMEZONE_OPTIONS } from '@/lib/datetime'
 import { ta } from '@/lib/i18n/admin'
-import { languageOptions, translatorsForSettings } from '@/lib/i18n/translators'
-import { i18nState } from '@/lib/i18n/state'
+import { translatorsFor } from '@/lib/i18n/translators'
 
 export const Settings: GlobalConfig = {
   slug: 'settings',
@@ -309,46 +308,23 @@ export const Settings: GlobalConfig = {
           },
         },
         {
-          name: 'language',
-          type: 'text',
-          label: ta('Language'),
-          validate: (value: string | null | undefined) => {
-            if (!value) return true
-            const codes = languageOptions().map((option) => option.code)
-            return codes.includes(value) || `Language "${value}" is not loaded. Available: ${codes.join(', ')}`
-          },
-          admin: {
-            description: ta(
-              'Language of the status page, emails, SMS texts and feeds. Empty uses the server default (DEFAULT_LANGUAGE). The admin interface does not follow this setting yet.',
-            ),
-            components: {
-              Field: {
-                path: '@/components/admin/LanguageField#LanguageField',
-                clientProps: { options: languageOptions(), defaultCode: i18nState.language, defaultLabel: ta('Default language') },
-              },
-            },
-          },
-        },
-        {
-          // Datumssprache der gewählten Sprache. Wird nicht gespeichert, sondern beim Lesen berechnet,
-          // damit alle Stellen mit resolveDateTimeConfig(settings) (auch im Admin) sie bekommen.
+          // Datumssprache: das Feld locale, sonst die Datumssprache von DEFAULT_LANGUAGE. Wird nicht gespeichert,
+          // sondern beim Lesen berechnet, damit alle Stellen mit resolveDateTimeConfig(settings) (auch im Admin) sie bekommen.
           name: 'dateLocale',
           type: 'text',
           virtual: true,
           admin: { hidden: true, disableBulkEdit: true },
           hooks: {
-            afterRead: [({ siblingData }) => translatorsForSettings(siblingData as { language?: string | null }).dateLocale],
+            afterRead: [({ siblingData }) => (siblingData as { locale?: string | null }).locale || translatorsFor().dateLocale],
           },
         },
         {
           name: 'locale',
           type: 'text',
           label: ta('Locale'),
-          defaultValue: 'en-US',
           admin: {
-            hidden: true,
             description:
-              'BCP 47 locale for date and time formatting (e.g. en-US, de-DE, fr-FR). Controls 12-hour vs 24-hour clocks.',
+              'BCP 47 locale for date and time formatting (e.g. en-US, de-DE, fr-FR). Controls 12-hour vs 24-hour clocks. Empty follows the language of the server (DEFAULT_LANGUAGE).',
           },
         },
         {

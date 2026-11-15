@@ -1,15 +1,8 @@
-import { getSettings } from '@/lib/payload'
-import { translatorsFor, translatorsForSettings, type Translators } from './translators'
-import { i18nState } from './state'
+import { translatorsFor, type Translators } from './translators'
 
-export { translatorsFor, translatorsForSettings, languageOptions, type Translators } from './translators'
+export { translatorsFor, languageOptions, type Translators } from './translators'
 
-// Sprache der laufenden Anfrage aus den Einstellungen (getSettings() liest einmal je Anfrage).
-// Ist die Datenbank nicht erreichbar, gilt DEFAULT_LANGUAGE, damit Fehlerseiten erscheinen.
-export async function getTranslators(): Promise<Translators> {
-  try {
-    return translatorsForSettings(await getSettings())
-  } catch {
-    return translatorsFor(i18nState.language)
-  }
+// Sprache der Anfrage: DEFAULT_LANGUAGE (Umgebungsvariable, Wechsel mit Neustart).
+export function getTranslators(): Translators {
+  return translatorsFor()
 }

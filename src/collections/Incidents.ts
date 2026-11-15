@@ -1,5 +1,5 @@
 import type { CollectionConfig } from 'payload'
-import { translatorsForSettings } from '@/lib/i18n/translators'
+import { translatorsFor } from '@/lib/i18n/translators'
 import { generateShortId } from '@/lib/shortId'
 import { standardAccess } from '@/lib/access'
 import { getServerUrl } from '@/lib/utils'
@@ -44,7 +44,7 @@ async function createIncidentNotificationDeferred(data: DeferredNotification) {
     // Fetch settings
     const settings = await payload.findGlobal({ slug: 'settings' })
     const smsSettings = await payload.findGlobal({ slug: 'sms-settings' })
-    const { t } = translatorsForSettings(settings)
+    const { t } = translatorsFor()
     const siteName = settings.siteName || 'Status'
     const siteUrl = getServerUrl()
     
@@ -333,7 +333,7 @@ export const Incidents: CollectionConfig = {
         }
 
         // Sprache der Einstellung (translators.ts, nicht server.ts: Letzteres importiert die Payload-Konfiguration)
-        const { t } = translatorsForSettings(await req.payload.findGlobal({ slug: 'settings', depth: 0 }))
+        const { t } = translatorsFor()
         const statusLabels: Record<string, string> = {
           investigating: t('incident.investigating'),
           identified: t('incident.identified'),

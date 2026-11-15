@@ -1123,13 +1123,9 @@ export interface Setting {
         | 'Pacific/Fiji'
       )
     | null;
-  /**
-   * Sprache der Statusseite, der E-Mails, der SMS-Texte und der Feeds. Leer verwendet die Vorgabe des Servers (DEFAULT_LANGUAGE). Die Admin-Oberfläche folgt dieser Einstellung noch nicht.
-   */
-  language?: string | null;
   dateLocale?: string | null;
   /**
-   * BCP 47 locale for date and time formatting (e.g. en-US, de-DE, fr-FR). Controls 12-hour vs 24-hour clocks.
+   * BCP 47 locale for date and time formatting (e.g. en-US, de-DE, fr-FR). Controls 12-hour vs 24-hour clocks. Empty follows the language of the server (DEFAULT_LANGUAGE).
    */
   locale?: string | null;
   /**
@@ -1271,7 +1267,6 @@ export interface SettingsSelect<T extends boolean = true> {
   availabilityTarget?: T;
   maintenanceTerminalRetentionHours?: T;
   timezone?: T;
-  language?: T;
   dateLocale?: T;
   locale?: T;
   weekStartsOn?: T;

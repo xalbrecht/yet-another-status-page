@@ -23,6 +23,6 @@ export const GET = handle(async (request) => {
     }),
   ])
 
-  const { t } = await getTranslators()
+  const { t } = getTranslators()
   return text(request, renderIcs(settings.siteName, maintenances.docs, t), 'text/calendar; charset=utf-8', 'public, max-age=300')
 })

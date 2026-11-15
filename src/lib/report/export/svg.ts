@@ -21,6 +21,15 @@ export function svgDocument(width: number, height: number, body: string): string
   )
 }
 
+/**
+ * Entfernt Emoji, die die Schrift der Bilder nicht kennt (sie erschienen als Kästchen oder „?“). Excel behält den Namen.
+ * Beschriftungen wie © ™ ▲ ▼ ✓ bleiben, sie hat die Schrift.
+ */
+const EMOJI = /\p{Emoji_Presentation}|\p{Extended_Pictographic}(?=\uFE0F)|\uFE0F|\u200D|\u20E3|\p{Regional_Indicator}/gu
+export function stripEmoji(text: string): string {
+  return text.replace(EMOJI, '').replace(/ {2,}/g, ' ').trim()
+}
+
 export type TextOptions = { size?: number; weight?: 'bold' | 'normal'; anchor?: 'start' | 'middle' | 'end'; fill?: string; rotate?: number }
 
 /** Ein `<text>`-Element mit maskiertem Inhalt. `rotate` dreht um den Punkt (x, y), 90 lässt den Text nach unten laufen. */
@@ -28,7 +37,7 @@ export function textEl(x: number, y: number, content: string, options: TextOptio
   const { size = 12, weight = 'normal', anchor = 'start', fill, rotate } = options
   const transform = rotate ? ` transform="rotate(${rotate} ${x} ${y})"` : ''
   const color = fill ? ` fill="${fill}"` : ''
-  return `<text x="${x}" y="${y}" font-size="${size}" font-weight="${weight}" text-anchor="${anchor}"${color}${transform}>${escapeXml(content)}</text>`
+  return `<text x="${x}" y="${y}" font-size="${size}" font-weight="${weight}" text-anchor="${anchor}"${color}${transform}>${escapeXml(stripEmoji(content))}</text>`
 }
 
 /**

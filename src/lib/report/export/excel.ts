@@ -14,7 +14,8 @@ const HEADER_FILL = 'FFEEF1F5'
 /** Prozentwert wie im Bericht auf zwei Stellen abgerundet, unbekannt als leere Zelle. */
 const percent = (value: number | null): number | null => (value === null ? null : Math.floor(value * 100 + 1e-9) / 100)
 
-const minutes = (ms: number) => Math.round(ms / MINUTE)
+/** Minuten mit einer Nachkommastelle: ein Ausfall von 20 Sekunden zeigt 0,3 statt 0, die Summe stimmt. */
+const minutes = (ms: number) => Math.round((ms / MINUTE) * 10) / 10
 
 /** `JJJJ-MM-TT HH:mm` in der Zeitzone der Einstellungen. */
 function localStamp(ms: number, timeZone: string): string {
@@ -74,6 +75,8 @@ export async function buildWorkbook(input: { data: ReportData; params: ReportPar
   }
   const percentColumns = [3, 4, ...monthColumns.map((_, index) => 5 + index)]
   for (const column of percentColumns) services.getColumn(column).numFmt = '0.00'
+  const firstMinuteColumn = 5 + monthColumns.length
+  for (const column of [firstMinuteColumn, firstMinuteColumn + 2, firstMinuteColumn + 3, firstMinuteColumn + 4]) services.getColumn(column).numFmt = '0.0'
   styleHeader(services, serviceHeader.length)
   widths(services, [30, 26, 12, 16, ...monthColumns.map(() => 12), 14, 12, 14, 16, 14])
 
@@ -93,6 +96,7 @@ export async function buildWorkbook(input: { data: ReportData; params: ReportPar
       ])
     }
   }
+  outages.getColumn(5).numFmt = '0.0'
   styleHeader(outages, outageHeader.length)
   widths(outages, [30, 26, 18, 18, 14, 18])
 
@@ -110,6 +114,12 @@ export async function buildWorkbook(input: { data: ReportData; params: ReportPar
     [ta('Incidents not clearly classified, counted as Partial Outage'), data.footnotes.unsure],
     [ta('Incidents without a service, not considered'), data.footnotes.withoutService],
   ]
+  if (params.maintenance === 'B') {
+    noteRows.push([
+      ta('Maintenance type B'),
+      ta('The outage duration on the sheet Services includes the maintenance time. The sheet Outages lists only the outages, so its durations add up to less.'),
+    ])
+  }
   notes.addRow([ta('Item'), ta('Value')])
   for (const row of noteRows) notes.addRow(row)
   notes.getRow(1).font = { bold: true }

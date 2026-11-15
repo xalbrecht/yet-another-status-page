@@ -335,6 +335,12 @@ test.describe('Kachel „Alle“', () => {
     await expect(page.getByTestId('lagebild-panel-all')).toHaveCount(0)
   })
 
+  test('Kachel „Alle“ trägt ein Symbol statt des Wortes (Issue #112)', async ({ page }) => {
+    await updateSettings({ lagebildVariant: 'a' })
+    await load(page)
+    await expect(page.getByTestId('lagebild-tile-all').locator('svg').first()).toBeVisible()
+  })
+
   test('Zeile wählt die Gruppe, „Alle“ nimmt `gruppe` wieder aus der Adresse', async ({ page }) => {
     await updateSettings({ lagebildVariant: 'a' })
     await load(page)

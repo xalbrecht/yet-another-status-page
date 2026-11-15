@@ -26,6 +26,8 @@ export default defineConfig({
   reporter: [
     ['html', { outputFolder: 'playwright-report' }],
     ['list'],
+    // Dauer jedes Tests für scripts/e2e-timing.mjs (Auswertung der Laufzeit)
+    ['json', { outputFile: 'test-results/results.json' }],
   ],
   
   // Shared settings for all projects

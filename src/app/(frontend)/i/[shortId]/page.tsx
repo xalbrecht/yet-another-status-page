@@ -71,7 +71,7 @@ async function getIncidentData(shortId: string) {
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const { t, tf } = await getTranslators()
+  const { t, tf } = getTranslators()
   const { shortId } = await params
   const data = await getIncidentData(shortId)
 
@@ -91,7 +91,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 }
 
 export default async function IncidentPage({ params }: PageProps) {
-  const { t } = await getTranslators()
+  const { t } = getTranslators()
   const { shortId } = await params
   const data = await getIncidentData(shortId)
 

@@ -33,7 +33,7 @@ interface PageProps {
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const { t } = await getTranslators()
+  const { t } = getTranslators()
   const { date: dateSlug } = await params
   const settings = await getSettings()
   const dt = resolveDateTimeConfig(settings)
@@ -155,7 +155,7 @@ async function getWeekData(dateSlug: string) {
 }
 
 export default async function WeekPage({ params }: PageProps) {
-  const { t, tf } = await getTranslators()
+  const { t, tf } = getTranslators()
   const { date: dateSlug } = await params
   const data = await getWeekData(dateSlug)
 

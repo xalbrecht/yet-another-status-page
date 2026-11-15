@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { translatorsForSettings } from '@/lib/i18n/server'
+import { translatorsFor } from '@/lib/i18n/server'
 import { redirect } from 'next/navigation'
 import { addZonedDays, formatDateSlug, getWeekStart, resolveDateTimeConfig } from '@/lib/datetime'
 import { getSettings } from '@/lib/payload'
@@ -9,7 +9,7 @@ export const revalidate = 0
 
 export async function generateMetadata(): Promise<Metadata> {
   const settings = await getSettings()
-  const { t } = translatorsForSettings(settings)
+  const { t } = translatorsFor()
 
   const titleTemplate = settings.historyMetaTitle || t('history.metaTitle')
   const descriptionTemplate = settings.historyMetaDescription || t('history.metaDescription')

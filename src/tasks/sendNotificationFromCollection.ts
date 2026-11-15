@@ -1,5 +1,5 @@
 import type { BasePayload } from 'payload'
-import { translatorsForSettings } from '@/lib/i18n/server'
+import { translatorsFor } from '@/lib/i18n/server'
 import { deliverableSubscribersWhere } from '@/lib/subscriber-filter'
 import { sendBulkEmails, generateEmailHtml } from '@/lib/email'
 import { sendBulkSms, formatSmsMessage } from '@/lib/sms'
@@ -49,7 +49,7 @@ export async function sendNotificationFromCollectionHandler({ input, req }: Task
     slug: 'sms-settings',
   }) as SmsSetting
 
-  const { t, tf, lang } = translatorsForSettings(settings)
+  const { t, tf, lang } = translatorsFor()
   const siteUrl = getServerUrl()
   const siteName = settings.siteName || 'Status Page'
   

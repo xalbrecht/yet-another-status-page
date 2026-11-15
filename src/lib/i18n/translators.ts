@@ -22,7 +22,7 @@ const cache = new Map<string, Translators>()
 
 // t, tf und Wörterbuch einer Sprache. Die Dateien ändern sich bis zum Neustart nicht,
 // deshalb baut jede Sprache ihr Wörterbuch einmal. Eine unbekannte Sprache ergibt DEFAULT_LANGUAGE.
-export function translatorsFor(language: string): Translators {
+export function translatorsFor(language: string = ''): Translators {
   const lang = resolveLanguage(language, i18nState.available, i18nState.language)
   let entry = cache.get(lang)
   if (!entry) {
@@ -32,10 +32,6 @@ export function translatorsFor(language: string): Translators {
     cache.set(lang, entry)
   }
   return entry
-}
-
-export function translatorsForSettings(settings: { language?: string | null } | null | undefined): Translators {
-  return translatorsFor(settings?.language ?? '')
 }
 
 // Auswahl im Admin: Code und Anzeigename aller wählbaren Sprachen.

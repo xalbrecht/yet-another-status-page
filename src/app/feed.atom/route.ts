@@ -13,7 +13,7 @@ export const GET = handle(async (request) => {
     payload.find({ collection: 'maintenances', sort: '-updatedAt', limit: 30, depth: 0 }),
   ])
 
-  const { t, tf, lang } = await getTranslators()
+  const { t, tf, lang } = getTranslators()
   const entries = [...incidents.docs.map((doc) => incidentEntry(doc, t)), ...maintenances.docs.map((doc) => maintenanceEntry(doc, t))]
     .sort((a, b) => b.updated.localeCompare(a.updated))
     .slice(0, 50)

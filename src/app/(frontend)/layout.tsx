@@ -56,7 +56,7 @@ export default async function FrontendLayout({
 }: {
   children: React.ReactNode
 }) {
-  const { lang, dictionary } = await getTranslators()
+  const { lang, dictionary } = getTranslators()
   return (
     <html lang={lang} className={inter.variable} suppressHydrationWarning>
       <body>

@@ -30,12 +30,12 @@ test('der Name "constructor" ergibt keine abgeleitete Datumssprache der Prototyp
   assert.equal(deriveDateLocale('constructor'), 'constructor')
 })
 
-test('translatorsForSettings fällt bei unbekannter oder fehlender Sprache auf die Prozesssprache zurück', async () => {
-  const { translatorsForSettings } = await import('../../src/lib/i18n/translators')
+test('translatorsFor fällt bei unbekannter oder fehlender Sprache auf DEFAULT_LANGUAGE zurück', async () => {
+  const { translatorsFor } = await import('../../src/lib/i18n/translators')
   const { i18nState } = await import('../../src/lib/i18n/state')
-  assert.equal(translatorsForSettings({ language: 'zz' }).lang, i18nState.language)
-  assert.equal(translatorsForSettings(null).lang, i18nState.language)
-  assert.equal(translatorsForSettings({ language: 'en' }).t('status.operational'), translatorsForSettings({ language: 'en' }).dictionary['status.operational'])
-  assert.notEqual(translatorsForSettings({ language: 'en' }).t('status.operational'), translatorsForSettings({ language: 'de' }).t('status.operational'))
-  assert.equal(translatorsForSettings({ language: 'de' }).dateLocale, 'de-DE')
+  assert.equal(translatorsFor('zz').lang, i18nState.language)
+  assert.equal(translatorsFor().lang, i18nState.language)
+  assert.equal(translatorsFor('en').t('status.operational'), translatorsFor('en').dictionary['status.operational'])
+  assert.notEqual(translatorsFor('en').t('status.operational'), translatorsFor('de').t('status.operational'))
+  assert.equal(translatorsFor('de').dateLocale, 'de-DE')
 })

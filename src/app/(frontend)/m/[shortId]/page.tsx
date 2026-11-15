@@ -89,7 +89,7 @@ async function getMaintenanceData(shortId: string) {
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const { t, tf } = await getTranslators()
+  const { t, tf } = getTranslators()
   const { shortId } = await params
   const data = await getMaintenanceData(shortId)
 
@@ -109,7 +109,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 }
 
 export default async function MaintenancePage({ params }: PageProps) {
-  const { t } = await getTranslators()
+  const { t } = getTranslators()
   const statusConfig = getStatusConfig(t)
   const { shortId } = await params
   const data = await getMaintenanceData(shortId)

@@ -12,7 +12,7 @@ interface SendRequest {
 }
 
 export async function POST(request: NextRequest) {
-  const { t } = await getTranslators()
+  const { t } = getTranslators()
   try {
     const payload = await getPayload({ config })
     

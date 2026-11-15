@@ -13,7 +13,7 @@ import { I18nProvider } from '@/lib/i18n/client'
 export const dynamic = 'force-dynamic'
 
 export default async function NotFound() {
-  const { t, lang, dictionary } = await getTranslators()
+  const { t, lang, dictionary } = getTranslators()
   let siteName = 'Status'
   let footerText: unknown = null
   let timezone: string | undefined

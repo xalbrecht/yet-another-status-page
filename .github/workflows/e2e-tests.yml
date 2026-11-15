@@ -1,12 +1,20 @@
 name: E2E Tests
 
 on:
+  # Reine Änderungen an Dokumenten starten die Suite nicht. Nichts davon liest die Anwendung oder ein Test;
+  # docs/** baut docs.yml, das PDF der Browser-Prüfliste liegt in docs/pdf/.
   push:
     branches:
       - main
+    paths-ignore:
+      - 'docs/**'
+      - '**/*.md'
   pull_request:
     branches:
       - main
+    paths-ignore:
+      - 'docs/**'
+      - '**/*.md'
 
 jobs:
   e2e-tests:

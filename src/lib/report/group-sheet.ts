@@ -1,5 +1,6 @@
 import type { Timeline } from '@/lib/availability'
 import { addZonedDays, formatDateSlug, startOfZonedDay } from '@/lib/datetime'
+import { ta } from '@/lib/i18n/admin'
 import { computeServiceMetrics, type MaintenanceMode } from '@/lib/report/metrics'
 import type { ReportPeriod } from '@/lib/report/period'
 
@@ -43,6 +44,19 @@ export function splitOutageByDay(outage: { from: number; to: number }, timeZone:
     cursor = end
   }
   return parts
+}
+
+/**
+ * Überschrift des Monats. Zeigt die Achse nur einen Teil des Monats (freier Zeitraum, laufender Monat), nennt sie die Tage,
+ * sonst stünde dort „November 2026“ über einer Achse, die am 20. endet.
+ */
+function monthLabel(label: string, days: GroupSheetData['perDay']): string {
+  const first = days[0]
+  const last = days[days.length - 1]
+  if (!first || !last) return label
+  const [year, month] = first.day.split('-').map(Number)
+  const daysInMonth = new Date(Date.UTC(year, month, 0)).getUTCDate()
+  return days.length < daysInMonth ? `${label} (${ta('days')} ${first.dayOfMonth}–${last.dayOfMonth})` : label
 }
 
 export function buildGroupSheet(input: {
@@ -93,5 +107,5 @@ export function buildGroupSheet(input: {
 
   perService.sort((a, b) => b.majorMs + b.partialMs - (a.majorMs + a.partialMs) || a.name.localeCompare(b.name, 'de'))
   for (const day of days) day.bars.sort((a, b) => b.ms - a.ms || a.name.localeCompare(b.name, 'de'))
-  return { month: { key: month.key, label: month.label }, perService, perDay: days }
+  return { month: { key: month.key, label: monthLabel(month.label, days) }, perService, perDay: days }
 }

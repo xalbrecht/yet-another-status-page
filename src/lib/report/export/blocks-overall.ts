@@ -1,7 +1,7 @@
 import { ta } from '@/lib/i18n/admin'
 import { formatAvailability } from '@/lib/availability'
 import type { RankingRow, ReportData } from '@/lib/report/aggregate'
-import { formatDuration } from '@/lib/report/format'
+import { formatDuration, serviceWord } from '@/lib/report/format'
 import { chunkRows } from '@/lib/report/heat'
 import { heatLegend, heatTable, heatTableHeight, trendChart } from './charts'
 import { GRID_COLOR, MUTED_COLOR, SEVERITY_COLOR, TARGET_COLOR } from './palette'
@@ -156,7 +156,7 @@ function rankingBlock(data: ReportData, locale: string, subtitle: string): strin
 
 /** Alle Bilder des Gesamtberichts in der Reihenfolge der ZIP-Datei. `periodLabel` steht im Untertitel jedes Bildes. */
 export function overallBlocks(data: ReportData, locale: string, periodLabel: string = ''): ExportBlock[] {
-  const subtitle = [periodLabel, `${data.scope.serviceCount} ${ta('services')}`].filter(Boolean).join(' · ')
+  const subtitle = [periodLabel, `${data.scope.serviceCount} ${serviceWord(data.scope.serviceCount)}`].filter(Boolean).join(' · ')
   return [
     { file: '01-kennzahlen.png', svg: kpiBlock(data, locale, subtitle) },
     { file: '02-entwicklung-12-monate.png', svg: trendBlock(data, locale, subtitle) },

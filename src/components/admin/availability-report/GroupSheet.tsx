@@ -1,5 +1,6 @@
 import React from 'react'
 import { ta } from '@/lib/i18n/admin'
+import { serviceWord } from '@/lib/report/format'
 import { formatAvailability } from '@/lib/availability'
 import type { ReportData } from '@/lib/report/aggregate'
 import { DisruptionsByDay } from './DisruptionsByDay'
@@ -15,7 +16,7 @@ export function GroupSheet({ data, locale }: { data: ReportData; locale: string 
     <article className="availability-report__sheet" data-testid="group-sheet">
       <h2>{ta('Group sheet')}: {scope.groupName}</h2>
       <p className="availability-report__muted">
-        {ta('Availability')} {kpis.availability === null ? '–' : formatAvailability(kpis.availability, locale)}, {ta('Target')} {formatAvailability(kpis.target, locale)}, {scope.serviceCount} {ta('services')}
+        {ta('Availability')} {kpis.availability === null ? '–' : formatAvailability(kpis.availability, locale)}, {ta('Target')} {formatAvailability(kpis.target, locale)}, {scope.serviceCount} {serviceWord(scope.serviceCount)}
       </p>
       <section className="availability-report__card">
         <h3>{ta('Development of the last 12 months')}</h3>
@@ -26,7 +27,7 @@ export function GroupSheet({ data, locale }: { data: ReportData; locale: string 
         <GroupBars rows={data.ranking} locale={locale} />
       </section>
       {sheet && <DisruptionsByService sheet={sheet} />}
-      {sheet && <DisruptionsByDay sheet={sheet} />}
+      {sheet && <DisruptionsByDay sheet={sheet} locale={locale} />}
       <section className="availability-report__card">
         <h3>{ta('Heat map of the services')}</h3>
         <Heatmap heat={data.heat} target={kpis.target} locale={locale} />

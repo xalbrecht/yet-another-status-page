@@ -41,7 +41,9 @@ export async function AvailabilityReportView({ initPageResult, params, searchPar
   const options = periodOptions(now, dt.timezone, dt.locale)
   const periodKey = result.ok ? result.period.key : requested.period ?? options[1]?.value ?? 'custom'
 
-  const controls = <ReportControls params={reportParams} periodKey={periodKey} periodOptions={options} />
+  // Das Formular trägt die gewählte Gruppe auch im Gesamtbericht weiter (dort lädt der Bericht sie nicht, `reportParams.group` ist leer)
+  const controlParams = { ...reportParams, group: groupInvalid ? undefined : requested.group }
+  const controls = <ReportControls params={controlParams} periodKey={periodKey} periodOptions={options} />
   const exportable = result.ok && !result.data.error
   const tabs = (
     <>

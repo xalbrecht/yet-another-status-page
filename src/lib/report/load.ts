@@ -13,7 +13,7 @@ import { reportDataEnd, resolvePeriod, type ReportPeriod } from '@/lib/report/pe
  * der JSON-Route und der Admin-Ansicht.
  */
 export type LoadedReport =
-  | { ok: true; data: ReportData; params: ReportParams; period: ReportPeriod; groups: Array<{ id: number; name: string }> }
+  | { ok: true; data: ReportData; params: ReportParams; period: ReportPeriod }
   | { ok: false; error: string }
 
 const idOf = (value: unknown): number => Number(typeof value === 'object' && value !== null ? (value as { id: unknown }).id : value)
@@ -140,6 +140,11 @@ export async function loadReportContext(
   }
 }
 
+/** Gruppenberichte ohne Gruppenwahl: die schwächste Gruppe (erster Eintrag der Liste) ist vorgewählt. Sonst `null`. */
+export function defaultGroupId(params: Pick<ReportParams, 'view' | 'group'>, groupList: Array<{ id: number }>): number | null {
+  return params.view === 'groups' && !params.group && groupList.length > 0 ? groupList[0].id : null
+}
+
 export async function loadReport(
   payload: Payload,
   search: Record<string, string | string[] | undefined>,
@@ -149,9 +154,7 @@ export async function loadReport(
   if (!loaded.ok) return loaded
   const { context } = loaded
   let built = context.build(context.params.group)
-  // Gruppenberichte ohne Gruppenwahl: die schwächste Gruppe ist vorgewählt
-  if (context.params.view === 'groups' && !context.params.group && built.data.groupList.length > 0) {
-    built = context.build(String(built.data.groupList[0].id))
-  }
-  return { ok: true, data: built.data, params: built.params, period: context.period, groups: context.groups }
+  const fallback = defaultGroupId(context.params, built.data.groupList)
+  if (fallback !== null) built = context.build(String(fallback))
+  return { ok: true, data: built.data, params: built.params, period: context.period }
 }

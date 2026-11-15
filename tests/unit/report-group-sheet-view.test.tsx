@@ -167,3 +167,25 @@ test('Block 2 zeigt ohne Wartungsanteil nur die Dauer', () => {
   const services = render(dataWith()).slice(render(dataWith()).indexOf('data-testid="sheet-services"'))
   assert.doesNotMatch(services.slice(0, services.indexOf('</section>')), /Wartung|maintenance/)
 })
+
+test('Block 4: Tooltip nutzt das Dezimalzeichen der Sprache, nicht den Punkt', () => {
+  const block = dayBlock(render(dataWith()))
+  assert.match(block, /<title>MACH, 12\.: 2,0 (Std\.|h)<\/title>/)
+  assert.doesNotMatch(block, /<title>[^<]*\d\.\d (Std\.|h)/)
+})
+
+test('Block 4: ein Ausfall von wenigen Minuten bekommt eine sichtbare Höhe, die Zeichnung reicht für die Namen', () => {
+  const kurz = { ...sheetWithOutages, perDay: days({ 12: [{ serviceId: 1, name: 'MACH', status: 'partial' as const, ms: 3 * 60_000 }, { serviceId: 2, name: 'Ein sehr langer Name', status: 'major' as const, ms: 2 * HOUR }] }) }
+  const block = dayBlock(render(dataWith({ sheet: kurz })))
+  const heights = [...block.matchAll(/<rect[^>]*height="([\d.]+)"/g)].map((match) => Number(match[1]))
+  assert.ok(heights.every((height) => height >= 2), heights.join(' '))
+  const viewBox = /viewBox="0 0 1000 (\d+)"/.exec(block)
+  assert.ok(viewBox && Number(viewBox[1]) >= 170 + 22 + 16 * 7, 'der längste Name (16 Zeichen senkrecht) passt in die Zeichnung')
+})
+
+test('Dienstzahl im Kopf des Blatts: „1 Dienst“, nicht „1 Dienste“', () => {
+  const einer = render(dataWith({ scope: { groupId: 1, groupName: 'Haushalt', serviceCount: 1 } }))
+  assert.match(einer, /1 (Dienst|service)(?!e|s)/)
+  assert.doesNotMatch(einer, /1 Dienste/)
+  assert.match(render(dataWith()), /2 (Dienste|services)/)
+})

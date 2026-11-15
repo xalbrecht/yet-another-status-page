@@ -32,21 +32,11 @@ jobs:
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
 
-      # node_modules of the Alpine container (native packages differ from the runner), kept between runs
-      - name: Cache container node_modules
-        uses: actions/cache@v6
-        with:
-          path: ${{ runner.temp }}/e2e-node-modules
-          key: e2e-node-modules-${{ hashFiles('package-lock.json') }}
-
       - name: Build Docker image
         run: docker compose -f docker-compose.test.yml build
 
       - name: Start test environment
-        env:
-          E2E_NODE_MODULES: ${{ runner.temp }}/e2e-node-modules
         run: |
-          mkdir -p "$E2E_NODE_MODULES"
           docker compose -f docker-compose.test.yml up -d
           
           # Wait for app to be healthy

@@ -16,6 +16,9 @@ spec:
     metadata:
       annotations:
         checksum/secret: {{ include (print $.Template.BasePath "/secret.yaml") . | sha256sum }}
+        {{- if and .Values.locales.files (not .Values.locales.existingConfigMap) }}
+        checksum/locales: {{ include (print $.Template.BasePath "/locales-configmap.yaml") . | sha256sum }}
+        {{- end }}
         {{- with .Values.podAnnotations }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
@@ -81,6 +84,14 @@ spec:
                   name: {{ include "yasp.secretName" . }}
                   key: DATABASE_URI
             {{- end }}
+            {{- with .Values.language }}
+            - name: DEFAULT_LANGUAGE
+              value: {{ . | quote }}
+            {{- end }}
+            {{- if or .Values.locales.files .Values.locales.existingConfigMap }}
+            - name: LOCALES_DIR
+              value: /app/locales
+            {{- end }}
             {{- if .Values.demo.enabled }}
             - name: DEMO_MODE
               value: "true"
@@ -133,6 +144,11 @@ spec:
               mountPath: /tmp
             - name: nextjs-cache
               mountPath: /app/.next/cache
+            {{- if or .Values.locales.files .Values.locales.existingConfigMap }}
+            - name: locales
+              mountPath: /app/locales
+              readOnly: true
+            {{- end }}
             {{- with .Values.extraVolumeMounts }}
             {{- toYaml . | nindent 12 }}
             {{- end }}
@@ -149,6 +165,11 @@ spec:
           emptyDir: {}
         - name: nextjs-cache
           emptyDir: {}
+        {{- if or .Values.locales.files .Values.locales.existingConfigMap }}
+        - name: locales
+          configMap:
+            name: {{ .Values.locales.existingConfigMap | default (printf "%s-locales" (include "yasp.fullname" .)) }}
+        {{- end }}
         {{- with .Values.extraVolumes }}
         {{- toYaml . | nindent 8 }}
         {{- end }}

@@ -8,7 +8,7 @@ type Translators = { t: Translate; tf: TranslateFormat }
 const I18nContext = createContext<Translators | null>(null)
 
 // Stellt das Wörterbuch der Statusseite für Client-Komponenten bereit. Das Wurzel-Layout füllt es
-// auf dem Server (getSiteDictionary), damit Server und Browser denselben Text zeigen.
+// auf dem Server (getTranslators().dictionary), damit Server und Browser denselben Text zeigen.
 export function I18nProvider({ dictionary, children }: { dictionary: Record<string, string>; children: ReactNode }) {
   const translators = useMemo(() => makeTranslators(dictionary), [dictionary])
   return <I18nContext.Provider value={translators}>{children}</I18nContext.Provider>

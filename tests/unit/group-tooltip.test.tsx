@@ -3,8 +3,10 @@ import assert from 'node:assert/strict'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { GroupTooltip } from '@/components/status/lagebild/GroupTooltip'
 import { statusLabel } from '@/lib/lagebild'
-import { t } from '@/lib/i18n'
+import { translatorsFor } from '@/lib/i18n/translators'
 import { withI18n } from './i18n-helpers'
+
+const { t } = translatorsFor('')
 
 const items = [
   { name: 'SMTP', status: 'partial' as const },

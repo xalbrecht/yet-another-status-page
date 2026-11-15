@@ -29,3 +29,13 @@ test('die Datumssprache kommt aus der Datei, sonst aus dem Code', () => {
 test('der Name "constructor" ergibt keine abgeleitete Datumssprache der Prototypkette', () => {
   assert.equal(deriveDateLocale('constructor'), 'constructor')
 })
+
+test('translatorsForSettings fällt bei unbekannter oder fehlender Sprache auf die Prozesssprache zurück', async () => {
+  const { translatorsForSettings } = await import('../../src/lib/i18n/translators')
+  const { i18nState } = await import('../../src/lib/i18n/state')
+  assert.equal(translatorsForSettings({ language: 'zz' }).lang, i18nState.language)
+  assert.equal(translatorsForSettings(null).lang, i18nState.language)
+  assert.equal(translatorsForSettings({ language: 'en' }).t('status.operational'), translatorsForSettings({ language: 'en' }).dictionary['status.operational'])
+  assert.notEqual(translatorsForSettings({ language: 'en' }).t('status.operational'), translatorsForSettings({ language: 'de' }).t('status.operational'))
+  assert.equal(translatorsForSettings({ language: 'de' }).dateLocale, 'de-DE')
+})

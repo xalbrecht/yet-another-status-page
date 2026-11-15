@@ -92,11 +92,13 @@ type ZonedParts = {
 export function resolveDateTimeConfig(settings?: {
   timezone?: string | null
   locale?: string | null
+  dateLocale?: string | null
   weekStartsOn?: string | null
 } | null): DateTimeConfig {
   return {
     timezone: safeTimeZone(settings?.timezone || DEFAULT_TIMEZONE),
-    locale: safeLocale(settings?.locale || DEFAULT_LOCALE),
+    // dateLocale (aus der gewählten Sprache) geht vor; locale bleibt als Rückfall für ältere Aufrufer.
+    locale: safeLocale(settings?.dateLocale || settings?.locale || DEFAULT_LOCALE),
     weekStartsOn: settings?.weekStartsOn === 'sunday' ? 'sunday' : 'monday',
   }
 }

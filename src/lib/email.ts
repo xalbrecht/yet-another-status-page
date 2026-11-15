@@ -227,8 +227,8 @@ export function generateEmailHtml(options: {
     </div>
     ` : ''}
     <div class="footer">
-      <p>${t('mail.sentFrom')} <a href="${siteUrl}">${siteName}</a></p>
-      ${unsubscribeUrl ? `<p><a href="${unsubscribeUrl}">${t('mail.unsubscribe')}</a></p>` : ''}
+      <p>${escapeHtml(t('mail.sentFrom'))} <a href="${siteUrl}">${siteName}</a></p>
+      ${unsubscribeUrl ? `<p><a href="${unsubscribeUrl}">${escapeHtml(t('mail.unsubscribe'))}</a></p>` : ''}
     </div>
   </div>
 </body>

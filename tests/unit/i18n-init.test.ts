@@ -98,3 +98,11 @@ test('alte Variable bleibt ohne Wirkung, wenn DEFAULT_LANGUAGE gesetzt ist, und 
   assert.equal(state.language, 'de')
   assert.ok(!state.problems.some((p) => p.includes('NEXT_PUBLIC_UI_LANG')))
 })
+
+test('ohne LOCALES_DIR nennt die Meldung den Standardordner', () => {
+  const cwd = join(tmpdir(), 'gibt-es-nicht-cwd')
+  const state = initI18n({}, builtin, accepted, cwd)
+  assert.equal(state.problems.length, 1)
+  assert.ok(state.problems[0].includes('Standardordner'))
+  assert.ok(state.problems[0].includes('LOCALES_DIR ist nicht gesetzt'))
+})

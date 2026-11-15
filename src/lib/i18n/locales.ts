@@ -9,9 +9,12 @@ export type LocaleFile = {
 
 const FALLBACK_LANGUAGE = 'de'
 
-function isTextRecord(value: unknown): value is Record<string, string> {
-  if (typeof value !== 'object' || value === null || Array.isArray(value)) return false
-  return Object.values(value).every((entry) => typeof entry === 'string')
+// Grund, warum ein Block nicht aus Texten besteht, oder null. Fehlt der Block ganz, gilt er als leer.
+function textRecordProblem(name: string, value: unknown): string | null {
+  if (value === undefined) return null
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) return `${name} ist kein Objekt aus Texten`
+  const bad = Object.entries(value).find(([, entry]) => typeof entry !== 'string')
+  return bad ? `${name}: der Wert zu "${bad[0]}" ist kein Text` : null
 }
 
 // Prüft eine eingelesene Datei. `accepted` sind die Sprachcodes, die das Payload-Paket kennt.
@@ -25,11 +28,15 @@ export function parseLocaleFile(
   const { meta, site, admin } = raw as Record<string, unknown>
   const name = (meta as { name?: unknown } | undefined)?.name
   if (typeof name !== 'string' || name.trim() === '') return { problem: `${code}.json: meta.name fehlt oder ist leer` }
-  if (!isTextRecord(site)) return { problem: `${code}.json: site ist kein Objekt aus Texten` }
-  if (!isTextRecord(admin)) return { problem: `${code}.json: admin ist kein Objekt aus Texten` }
+  const blockProblem = textRecordProblem('site', site) ?? textRecordProblem('admin', admin)
+  if (blockProblem) return { problem: `${code}.json: ${blockProblem}` }
   const dateLocale = (meta as { dateLocale?: unknown }).dateLocale
   return {
-    file: { meta: typeof dateLocale === 'string' ? { name, dateLocale } : { name }, site, admin },
+    file: {
+      meta: typeof dateLocale === 'string' ? { name, dateLocale } : { name },
+      site: (site ?? {}) as Record<string, string>,
+      admin: (admin ?? {}) as Record<string, string>,
+    },
   }
 }
 

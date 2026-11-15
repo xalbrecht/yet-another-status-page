@@ -41,9 +41,25 @@ test('parseLocaleFile: falsche Form liefert ein Problem', () => {
     { meta: { name: 'X' }, site: { a: 1 }, admin: {} },
     { meta: { name: '' }, site: {}, admin: {} },
     { site: {}, admin: {} },
-    { meta: { name: 'X' }, site: {} },
+    { meta: { name: 'X' }, site: {}, admin: 'text' },
   ]
   for (const raw of cases) assert.ok('problem' in parseLocaleFile('fr', raw, accepted), JSON.stringify(raw))
+})
+
+test('parseLocaleFile: fehlender Block site oder admin gilt als leer', () => {
+  const noAdmin = parseLocaleFile('fr', { meta: { name: 'X' }, site: { a: 'A' } }, accepted)
+  assert.ok('file' in noAdmin)
+  if ('file' in noAdmin) assert.deepEqual(noAdmin.file.admin, {})
+  const noSite = parseLocaleFile('fr', { meta: { name: 'X' }, admin: { a: 'A' } }, accepted)
+  assert.ok('file' in noSite)
+  if ('file' in noSite) assert.deepEqual(noSite.file.site, {})
+})
+
+test('parseLocaleFile: die Meldung nennt den fehlerhaften Block und Schlüssel', () => {
+  const wrongType = parseLocaleFile('fr', { meta: { name: 'X' }, site: [], admin: {} }, accepted)
+  assert.ok('problem' in wrongType && wrongType.problem.includes('site ist kein Objekt'))
+  const wrongValue = parseLocaleFile('fr', { meta: { name: 'X' }, site: { 'a.key': 1 }, admin: {} }, accepted)
+  assert.ok('problem' in wrongValue && wrongValue.problem.includes('"a.key"'))
 })
 
 test('selectLanguage: ohne Angabe Deutsch', () => {
@@ -121,4 +137,22 @@ test('readLocaleDir: fehlendes Verzeichnis und Datei statt Verzeichnis', () => {
   } finally {
     rmSync(dir, { recursive: true, force: true })
   }
+})
+
+test('readLocaleDir: UTF-8-Markierung am Dateianfang stört nicht', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'locales-'))
+  try {
+    writeFileSync(join(dir, 'fr.json'), '\uFEFF' + JSON.stringify({ meta: { name: 'Français' }, site: { 'a.key': 'A' }, admin: {} }))
+    const result = readLocaleDir(dir, accepted)
+    assert.deepEqual(result.problems, [])
+    assert.deepEqual(Object.keys(result.files), ['fr'])
+  } finally {
+    rmSync(dir, { recursive: true, force: true })
+  }
+})
+
+test('readLocaleDir: die Meldung nennt LOCALES_DIR, mit Bezeichnung den Standardordner', () => {
+  const dir = join(tmpdir(), 'gibt-es-nicht-locales')
+  assert.ok(readLocaleDir(dir, accepted).problems[0].startsWith('LOCALES_DIR "'))
+  assert.ok(readLocaleDir(dir, accepted, 'Standardordner').problems[0].startsWith('Standardordner nicht lesbar'))
 })

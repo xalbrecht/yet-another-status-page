@@ -2,7 +2,7 @@ import type { Payload } from 'payload'
 import type { Timeline } from '@/lib/availability'
 import { DEFAULT_AVAILABILITY_TARGET } from '@/lib/availability'
 import { resolveDateTimeConfig } from '@/lib/datetime'
-import { buildReport, type ReportData } from '@/lib/report/aggregate'
+import { buildGroupList, buildReport, type ReportData } from '@/lib/report/aggregate'
 import { countFootnotes } from '@/lib/report/footnotes'
 import { maintenanceWindow } from '@/lib/report/maintenance-time'
 import { parseReportParams, type ReportParams } from '@/lib/report/params'
@@ -29,6 +29,8 @@ export type ReportContext = {
   timeZone: string
   groups: Array<{ id: number; name: string }>
   build(group?: string): { data: ReportData; params: ReportParams }
+  /** Kennung der schwächsten Gruppe mit Diensten, `null` ohne Gruppen. Berechnet nur die Gruppenliste, nicht den ganzen Bericht. */
+  weakestGroupId(): number | null
 }
 
 export async function loadReportContext(
@@ -124,6 +126,9 @@ export async function loadReportContext(
     return { data, scoped }
   }
 
+  const weakestGroupId = (): number | null =>
+    buildGroupList({ period, previous, months, params, globalTarget, groups, services, now, timeZone: dt.timezone, locale: dt.locale })[0]?.id ?? null
+
   return {
     ok: true,
     context: {
@@ -136,13 +141,17 @@ export async function loadReportContext(
         const built = buildFor(group)
         return { data: built.data, params: built.scoped }
       },
+      weakestGroupId,
     },
   }
 }
 
-/** Gruppenberichte ohne Gruppenwahl: die schwächste Gruppe (erster Eintrag der Liste) ist vorgewählt. Sonst `null`. */
-export function defaultGroupId(params: Pick<ReportParams, 'view' | 'group'>, groupList: Array<{ id: number }>): number | null {
-  return params.view === 'groups' && !params.group && groupList.length > 0 ? groupList[0].id : null
+/**
+ * Gruppenberichte ohne Gruppenwahl: die schwächste Gruppe ist vorgewählt. `weakest` wird nur gerufen, wenn die Vorgabe
+ * gebraucht wird, und berechnet nur die Gruppenliste. Sonst `null`.
+ */
+export function defaultGroupId(params: Pick<ReportParams, 'view' | 'group'>, weakest: () => number | null): number | null {
+  return params.view === 'groups' && !params.group ? weakest() : null
 }
 
 export async function loadReport(
@@ -153,8 +162,7 @@ export async function loadReport(
   const loaded = await loadReportContext(payload, search, now)
   if (!loaded.ok) return loaded
   const { context } = loaded
-  let built = context.build(context.params.group)
-  const fallback = defaultGroupId(context.params, built.data.groupList)
-  if (fallback !== null) built = context.build(String(fallback))
+  const fallback = defaultGroupId(context.params, context.weakestGroupId)
+  const built = context.build(fallback !== null ? String(fallback) : context.params.group)
   return { ok: true, data: built.data, params: built.params, period: context.period }
 }

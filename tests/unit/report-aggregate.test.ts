@@ -1,7 +1,7 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import type { Timeline } from '@/lib/availability'
-import { buildReport, type ReportInput } from '@/lib/report/aggregate'
+import { buildGroupList, buildReport, type ReportInput } from '@/lib/report/aggregate'
 import { parseReportParams } from '@/lib/report/params'
 import { periodMonths, resolvePeriod } from '@/lib/report/period'
 
@@ -259,4 +259,11 @@ test('die Rangliste nennt je Dienst die einzelnen Ausfälle sowie die Dauer Eing
   assert.equal(entry.outages[0].to - entry.outages[0].from, 2 * HOUR)
   assert.equal(entry.degradedMs, 0.5 * HOUR)
   assert.equal(entry.maintenanceMs, 0)
+})
+
+test('buildGroupList liefert dieselbe Liste wie der ganze Bericht, bei beiden Rechenarten', () => {
+  for (const calc of ['whole', 'monthly']) {
+    const config = input('2026-Q3', fourGroupServices(), { groups: fourGroups, params: { calc } })
+    assert.deepEqual(buildGroupList(config), buildReport(config).groupList, calc)
+  }
 })

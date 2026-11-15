@@ -4,16 +4,20 @@ import { defaultGroupId } from '@/lib/report/load'
 import { outageWord, serviceWord } from '@/lib/report/format'
 
 // Standardgruppe der Gruppenberichte: bisher nur per E2E abgedeckt (Issue #116)
-const list = [{ id: 7 }, { id: 3 }]
-
-test('Gruppenberichte ohne Gruppenwahl: die erste Gruppe der Liste (die schwächste) ist vorgewählt', () => {
-  assert.equal(defaultGroupId({ view: 'groups', group: undefined }, list), 7)
+test('Gruppenberichte ohne Gruppenwahl: die schwächste Gruppe ist vorgewählt', () => {
+  assert.equal(defaultGroupId({ view: 'groups', group: undefined }, () => 7), 7)
 })
 
-test('mit gewählter Gruppe, im Gesamtbericht oder ohne Gruppen gilt keine Vorgabe', () => {
-  assert.equal(defaultGroupId({ view: 'groups', group: '3' }, list), null)
-  assert.equal(defaultGroupId({ view: 'overall', group: undefined }, list), null)
-  assert.equal(defaultGroupId({ view: 'groups', group: undefined }, []), null)
+test('mit gewählter Gruppe oder im Gesamtbericht gilt keine Vorgabe, und die Berechnung läuft nicht', () => {
+  let calls = 0
+  const weakest = () => { calls++; return 7 }
+  assert.equal(defaultGroupId({ view: 'groups', group: '3' }, weakest), null)
+  assert.equal(defaultGroupId({ view: 'overall', group: undefined }, weakest), null)
+  assert.equal(calls, 0, 'die Gruppenliste wird nur berechnet, wenn die Vorgabe gebraucht wird')
+})
+
+test('ohne Gruppen mit Diensten bleibt es bei keiner Vorgabe', () => {
+  assert.equal(defaultGroupId({ view: 'groups', group: undefined }, () => null), null)
 })
 
 test('Zählwörter: eins im Singular, sonst im Plural', () => {

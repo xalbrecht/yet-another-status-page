@@ -7,6 +7,7 @@ import { sendEmail, verifySmtp } from '@/lib/email'
 import { ta } from '@/lib/i18n/admin'
 import { parseRecipients } from '@/lib/report/export/recipients'
 import { ReportMailImageTooLargeError, ReportMailPlanChangedError, ReportMailResumeError, ReportMailTooLargeError, sendReportMail } from '@/lib/report/export/mail'
+import { acquireSendLock } from '@/lib/report/export/send-lock'
 import { loadReportContext } from '@/lib/report/load'
 import type { EmailSetting } from '@/payload-types'
 
@@ -16,13 +17,6 @@ import type { EmailSetting } from '@/payload-types'
  * nach dem die Berichtsseite ihre Erklärung wählt. Mit `resume=<k>&plan=<Kennung>` setzt der Versand ab Mail k fort.
  */
 export const runtime = 'nodejs'
-
-/**
- * Höchstens ein Versand gleichzeitig im Prozess: Rendern und Anhänge brauchen Speicher (Test hat 768 MiB).
- * Die Sperre gilt je Prozess. Die Anwendung läuft als ein Container mit einem Prozess; bei mehreren Replikaten
- * bräuchte es eine Sperre in der Datenbank (bewusst nicht gebaut).
- */
-let running = false
 
 type Code = 'unauthorized' | 'bad-request' | 'invalid-period' | 'no-recipients' | 'no-smtp' | 'smtp-failed' | 'running' | 'too-large' | 'plan-changed' | 'send-failed' | 'unknown'
 const fail = (code: Code, error: string, status: number, extra: Record<string, unknown> = {}) => NextResponse.json({ error, code, ...extra }, { status })
@@ -65,8 +59,9 @@ export async function POST(request: NextRequest) {
       return fail('no-smtp', ta('SMTP is not set up. Enter server and sender address in the email settings. Nothing was sent.'), 400)
     }
 
-    if (running) return fail('running', ta('A dispatch is already running.'), 409)
-    running = true
+    // Höchstens ein Versand gleichzeitig, auch über Prozesse und Replikate hinweg (Sperre in PostgreSQL)
+    const lock = await acquireSendLock(payload)
+    if (!lock) return fail('running', ta('A dispatch is already running.'), 409)
     try {
       // Erst den Mailserver prüfen, dann rendern: Rendern kostet Speicher und Zeit, die ein unerreichbarer Server verschwendet
       const smtp = await verifySmtp(settings)
@@ -88,7 +83,7 @@ export async function POST(request: NextRequest) {
       if (error instanceof ReportMailPlanChangedError) return fail('plan-changed', error.message, 412, { openPeriod: error.openPeriod })
       throw error
     } finally {
-      running = false
+      await lock.release()
     }
   } catch (error) {
     console.error('[availability-report-send] failed:', error)

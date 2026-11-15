@@ -65,7 +65,7 @@ export const Users: CollectionConfig = {
         if (isDemoMode() && operation === 'update' && req.user) {
           const email = data?.email || originalDoc?.email
           if (email === getDemoUserEmail() && data?.password) {
-            throw new Error('Password changes are disabled in demo mode.')
+            throw new Error(ta('Password changes are disabled in demo mode.'))
           }
         }
         return data

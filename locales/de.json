@@ -755,6 +755,13 @@
     "outage": "Ausfall",
     "Maintenance type B": "Wartungsart B",
     "The outage duration on the sheet Services includes the maintenance time. The sheet Outages lists only the outages, so its durations add up to less.": "Die Ausfalldauer im Blatt Dienste enthält die Wartungszeit. Das Blatt Ausfälle listet nur die Ausfälle, seine Dauern ergeben daher weniger.",
-    "days": "Tage"
+    "days": "Tage",
+    "Email is required for email subscriptions": "Für E-Mail-Abonnements ist eine E-Mail-Adresse erforderlich",
+    "This email address is already subscribed": "Diese E-Mail-Adresse ist bereits abonniert",
+    "Phone number is required for SMS subscriptions": "Für SMS-Abonnements ist eine Rufnummer erforderlich",
+    "Please enter a valid phone number (e.g., +1234567890)": "Bitte eine gültige Rufnummer eingeben (z. B. +491701234567)",
+    "This phone number is already subscribed": "Diese Rufnummer ist bereits abonniert",
+    "Password changes are disabled in demo mode.": "Passwortänderungen sind im Demomodus gesperrt.",
+    "Failed to fetch dashboard stats": "Die Kennzahlen konnten nicht abgerufen werden"
   }
 }

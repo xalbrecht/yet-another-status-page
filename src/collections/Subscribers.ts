@@ -58,7 +58,7 @@ export const Subscribers: CollectionConfig = {
         { data, req, id }: { data: Partial<SubscriberData>; req: { payload?: unknown }; id?: string | number },
       ) => {
         if (data?.type === 'email' && !value) {
-          return 'Email is required for email subscriptions'
+          return ta('Email is required for email subscriptions')
         }
 
         // Check uniqueness for email subscriptions
@@ -80,7 +80,7 @@ export const Subscribers: CollectionConfig = {
             limit: 1,
           })
           if (existing.docs.length > 0) {
-            return 'This email address is already subscribed'
+            return ta('This email address is already subscribed')
           }
         }
 
@@ -100,10 +100,10 @@ export const Subscribers: CollectionConfig = {
         { data, req, id }: { data: Partial<SubscriberData>; req: { payload?: unknown }; id?: string | number },
       ) => {
         if (data?.type === 'sms' && !value) {
-          return 'Phone number is required for SMS subscriptions'
+          return ta('Phone number is required for SMS subscriptions')
         }
         if (value && !/^\+?[1-9]\d{6,14}$/.test(value)) {
-          return 'Please enter a valid phone number (e.g., +1234567890)'
+          return ta('Please enter a valid phone number (e.g., +1234567890)')
         }
 
         // Check uniqueness for SMS subscriptions
@@ -125,7 +125,7 @@ export const Subscribers: CollectionConfig = {
             limit: 1,
           })
           if (existing.docs.length > 0) {
-            return 'This phone number is already subscribed'
+            return ta('This phone number is already subscribed')
           }
         }
 

@@ -27,7 +27,7 @@ export interface EmailResult {
   error?: string
 }
 
-export async function createTransporter(emailSettings: EmailSetting) {
+export async function createTransporter(emailSettings: EmailSetting, extra: { connectionTimeout?: number; greetingTimeout?: number; socketTimeout?: number } = {}) {
   if (!emailSettings.smtpHost || !emailSettings.smtpFromAddress) {
     throw new Error('SMTP not configured: missing host or from address')
   }
@@ -39,6 +39,7 @@ export async function createTransporter(emailSettings: EmailSetting) {
     host: emailSettings.smtpHost,
     port,
     secure,
+    ...extra,
     auth: emailSettings.smtpUsername ? {
       user: emailSettings.smtpUsername,
       pass: emailSettings.smtpPassword || '',
@@ -96,6 +97,24 @@ export async function sendEmail(
       success: false,
       error: error instanceof Error ? error.message : 'Unknown error sending email',
     }
+  }
+}
+
+/**
+ * Prüft vor einem teuren Versand, ob der Mailserver erreichbar ist und die Anmeldung gelingt (SMTP-Handshake, keine Mail).
+ * Zeitgrenze 10 Sekunden statt der 2 Minuten von nodemailer. `create` ist im Test ersetzbar.
+ */
+export async function verifySmtp(
+  emailSettings: EmailSetting,
+  create: (settings: EmailSetting) => Promise<{ verify(): Promise<unknown> }> = (settings) => createTransporter(settings, { connectionTimeout: 10_000, greetingTimeout: 10_000, socketTimeout: 10_000 }),
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  try {
+    const transporter = await create(emailSettings)
+    await transporter.verify()
+    return { ok: true }
+  } catch (error) {
+    console.error('SMTP verify error:', error)
+    return { ok: false, error: error instanceof Error ? error.message : 'Unknown error' }
   }
 }
 

@@ -79,6 +79,7 @@
   "Status unknown: the answer of the server is missing. The dispatch may still be running or may be partly done. Please check with the recipients before you start a new dispatch.",
   "The conversion is done, but the reconstruction failed: ",
   "The dispatch cannot be continued: the data of the report changed since the first attempt (for example a new entry in the status log). The emails already sent belong to an older state. Please restart the whole dispatch. The recipients then receive all emails again, recognizable by \"Part i of n\".",
+  "The dispatch cannot be continued: the period is still running, so the images differ with every attempt. The emails already sent belong to an earlier minute. Please restart the whole dispatch, or choose a finished period. The recipients then receive all emails again, recognizable by \"Part i of n\".",
   "The dispatch is running, this can take a minute.",
   "The mail server rejected these recipients, they received nothing",
   "To",

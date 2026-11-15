@@ -5,10 +5,11 @@ export type Translate = (key: TranslationKey) => string
 export type TranslateFormat = (key: TranslationKey, vars: Record<string, string | number>) => string
 
 // t() und tf() für ein Wörterbuch. Läuft im Server und im Browser (kein Dateizugriff).
-// Platzhalter: {name} wird ersetzt, {{name}} (Template-Syntax der Settings) bleibt unverändert.
+// Platzhalter: {name} wird ersetzt, {{name}} (Template-Syntax der Settings) bleibt unverändert, auch wenn
+// die Variablen ein Feld name enthalten (die Einfassung mit weiteren Klammern schließt den Treffer aus).
 export function makeTranslators(dict: Record<string, string>): { t: Translate; tf: TranslateFormat } {
   const t: Translate = (key) => lookup(dict, key) ?? key
   const tf: TranslateFormat = (key, vars) =>
-    t(key).replace(/\{(\w+)\}/g, (match, name) => (Object.hasOwn(vars, name) ? String(vars[name]) : match))
+    t(key).replace(/(?<!\{)\{(\w+)\}(?!\})/g, (match, name) => (Object.hasOwn(vars, name) ? String(vars[name]) : match))
   return { t, tf }
 }

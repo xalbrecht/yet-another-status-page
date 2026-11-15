@@ -28,6 +28,10 @@ test('tf ersetzt {name}, lässt unbekannte Platzhalter und {{name}} unverändert
   assert.equal(tf('tpl.key' as never, { name: 'X' }), 'Hallo {{siteName}} und X')
 })
 
+test('tf lässt {{name}} auch unverändert, wenn die Variablen name enthalten', () => {
+  assert.equal(tf('tpl.key' as never, { siteName: 'S', name: 'X' }), 'Hallo {{siteName}} und X')
+})
+
 test('tf setzt Zahlen ein', () => {
   const { tf: numbers } = makeTranslators({ 'n.key': '{count} Einträge' })
   assert.equal(numbers('n.key' as never, { count: 3 }), '3 Einträge')

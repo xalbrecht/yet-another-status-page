@@ -26,7 +26,7 @@ function updatesHtml(
     .reverse()
     .map(
       (u) =>
-        `<p><strong>${esc(labels[u.status] ? t(labels[u.status].labelKey) : u.status)}</strong> <small>${esc(u.createdAt)}</small><br>${esc(u.message).replace(/\n/g, '<br>')}</p>`,
+        `<p><strong>${esc(Object.hasOwn(labels, u.status) ? t(labels[u.status].labelKey) : u.status)}</strong> <small>${esc(u.createdAt)}</small><br>${esc(u.message).replace(/\n/g, '<br>')}</p>`,
     )
     .join('')
 }
@@ -39,7 +39,7 @@ function latestUpdateAt(doc: { updates?: Array<{ createdAt: string }> | null; up
 
 export function incidentEntry(doc: Incident, t: Translate): Entry {
   const url = `${getServerUrl()}/i/${doc.shortId}`
-  const label = incidentStatusConfig[doc.status] ? t(incidentStatusConfig[doc.status].labelKey) : doc.status
+  const label = Object.hasOwn(incidentStatusConfig, doc.status) ? t(incidentStatusConfig[doc.status].labelKey) : doc.status
   return {
     id: url,
     title: `[${label}] ${doc.title}`,
@@ -52,8 +52,8 @@ export function incidentEntry(doc: Incident, t: Translate): Entry {
 
 export function maintenanceEntry(doc: Maintenance, t: Translate): Entry {
   const url = `${getServerUrl()}/m/${doc.shortId}`
-  const label = maintenanceStatusConfig[doc.status] ? t(maintenanceStatusConfig[doc.status].labelKey) : doc.status
-  const schedule = `<p>${t('feed.scheduled')} ${esc(doc.scheduledStartAt)}${doc.scheduledEndAt ? ` – ${esc(doc.scheduledEndAt)}` : ''}${doc.duration ? ` (${esc(doc.duration)})` : ''}</p>`
+  const label = Object.hasOwn(maintenanceStatusConfig, doc.status) ? t(maintenanceStatusConfig[doc.status].labelKey) : doc.status
+  const schedule = `<p>${esc(t('feed.scheduled'))} ${esc(doc.scheduledStartAt)}${doc.scheduledEndAt ? ` – ${esc(doc.scheduledEndAt)}` : ''}${doc.duration ? ` (${esc(doc.duration)})` : ''}</p>`
   return {
     id: url,
     title: `[${t('feed.maintenanceTag')} ${label}] ${doc.title}`,

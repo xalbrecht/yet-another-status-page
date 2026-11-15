@@ -50,6 +50,12 @@ test('admin: Platzhalter müssen zum englischen Schlüssel passen, ein Zusatz hi
   assert.equal(errors.length, 2)
 })
 
+test('leere Werte sind eine Warnung (site und admin)', () => {
+  const result = checkLocales({ fr: file({ 'a.key': '', 'footer.timezone': 'Heures en {timezone}', 'tpl.key': 'Bienvenue {{siteName}}' }, { Save: ' ' }) }, reference)
+  assert.deepEqual(result.errors, [])
+  assert.deepEqual(result.warnings, ['fr: Wert ist leer in site: a.key', 'fr: Wert ist leer in admin: Save'])
+})
+
 test('mehrere Dateien werden einzeln gemeldet', () => {
   const fr = file({ 'a.key': 'A', 'footer.timezone': 'F', 'tpl.key': 'T {{siteName}}' })
   const es = file({ 'a.key': 'A', 'footer.timezone': 'F {timezone}', 'tpl.key': 'T' })

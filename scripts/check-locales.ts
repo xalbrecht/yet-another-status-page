@@ -3,7 +3,7 @@
  * Zweck:       Prüft Sprachdateien (Format: docs/superpowers/specs/2026-11-14-sprachdateien-design.md, Abschnitt 4.2)
  *              gegen die englische Referenz locales/en.json.
  * Aufruf:      npm run check:locales [Verzeichnis]   (Standard: locales)
- * Ergebnis:    Warnungen (fehlende oder überzählige Schlüssel in "site") und Fehler (ungültige Datei,
+ * Ergebnis:    Warnungen (fehlende, überzählige oder leere Werte in "site", leere Werte in "admin") und Fehler (ungültige Datei,
  *              abweichende Platzhalter). Exit-Code 1 bei Fehlern.
  */
 import { pathToFileURL } from 'node:url'
@@ -29,6 +29,7 @@ export function checkLocales(
   for (const [code, file] of Object.entries(files)) {
     for (const key of Object.keys(reference.site)) {
       if (!Object.hasOwn(file.site, key)) warnings.push(`${code}: Schlüssel fehlt in site: ${key}`)
+      else if (file.site[key].trim() === '') warnings.push(`${code}: Wert ist leer in site: ${key}`)
       else if (!sameSet(placeholders(file.site[key]), placeholders(reference.site[key]))) {
         errors.push(`${code}: Platzhalter in site weichen ab: ${key}`)
       }
@@ -37,6 +38,7 @@ export function checkLocales(
       if (!Object.hasOwn(reference.site, key)) warnings.push(`${code}: Schlüssel ist überzählig in site: ${key}`)
     }
     for (const [key, value] of Object.entries(file.admin)) {
+      if (value.trim() === '') warnings.push(`${code}: Wert ist leer in admin: ${key}`)
       if (!sameSet(placeholders(value), placeholders(adminBaseText(key)))) {
         errors.push(`${code}: Platzhalter in admin weichen vom Schlüssel ab: ${key}`)
       }

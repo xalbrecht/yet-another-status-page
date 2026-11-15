@@ -25,7 +25,9 @@ export function initI18n(
   cwd: string = process.cwd(),
 ): I18nState {
   const dir = env.LOCALES_DIR || join(cwd, 'locales')
-  const { files, problems } = readLocaleDir(dir, accepted)
+  // Ist LOCALES_DIR nicht gesetzt, nennen die Meldungen den Standardordner statt der Variable.
+  const label = env.LOCALES_DIR ? undefined : `Standardordner "${dir}" (LOCALES_DIR ist nicht gesetzt)`
+  const { files, problems } = readLocaleDir(dir, accepted, label)
   const available = Array.from(new Set([...Object.keys(builtin), ...Object.keys(files)])).sort()
   const selection = selectLanguage(env.DEFAULT_LANGUAGE || undefined, available)
   if (selection.problem) problems.push(selection.problem)

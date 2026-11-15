@@ -40,10 +40,12 @@ test.describe('Sprache der Einstellung', () => {
   test('Umstellung gilt bei der nächsten Anfrage, auch mit Lagebild', async ({ page }) => {
     await updateSettings({ language: 'de', lagebildVariant: 'a' })
     await page.goto('/')
-    await expect(page.getByRole('heading', { name: 'Aktuelle Störungen' })).toBeVisible()
+    // Die Überschrift steht zweimal auf der Seite (Box und Abschnitt), die Box genügt.
+    const box = page.getByTestId('box-incidents')
+    await expect(box.getByRole('heading', { name: 'Aktuelle Störungen' })).toBeVisible()
     await updateSettings({ language: 'en' })
     await page.reload()
-    await expect(page.getByRole('heading', { name: 'Current incidents' })).toBeVisible()
+    await expect(box.getByRole('heading', { name: 'Current incidents' })).toBeVisible()
     await expect(page.getByRole('heading', { name: 'Aktuelle Störungen' })).toHaveCount(0)
   })
 

@@ -192,7 +192,7 @@ export default async function MaintenancePage({ params }: PageProps) {
         </div>
 
         {/* Updates Timeline */}
-        <MaintenanceUpdatesTimeline updates={maintenance.updates} />
+        <MaintenanceUpdatesTimeline updates={maintenance.updates} t={t} />
       </main>
 
       <Footer footerText={settings.footerText} timezone={settings.timezone} />

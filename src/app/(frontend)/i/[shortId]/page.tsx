@@ -164,7 +164,7 @@ export default async function IncidentPage({ params }: PageProps) {
         {/* Updates Timeline */}
         <section className="animate-fade-in">
           <h2 className="mb-6 text-xl font-bold text-foreground">{t('common.updates')}</h2>
-          <IncidentUpdatesTimeline updates={incident.updates} />
+          <IncidentUpdatesTimeline updates={incident.updates} t={t} />
         </section>
       </main>
 

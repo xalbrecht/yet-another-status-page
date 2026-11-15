@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { statusBorder, statusSoftBg, statusText } from '@/components/status/lagebild/status-styles'
-import { t, tf } from '@/lib/i18n'
+import type { Translate, TranslateFormat } from '@/lib/i18n/core'
 import { limitBoxItems, type BoxContent, type BoxItem } from '@/lib/status-boxes'
 
 type BoxProps = {
@@ -11,9 +11,10 @@ type BoxProps = {
   items: BoxItem[]
   entries: number
   content: BoxContent
+  tf: TranslateFormat
 }
 
-function Box({ testId, title, empty, moreHref, items, entries, content }: BoxProps) {
+function Box({ testId, title, empty, moreHref, items, entries, content, tf }: BoxProps) {
   const { shown, more } = limitBoxItems(items, entries)
   return (
     <section data-testid={testId} className="overflow-hidden rounded-lg border border-border bg-card">
@@ -83,11 +84,15 @@ export function StatusBoxes({
   maintenances,
   entries,
   content,
+  t,
+  tf,
 }: {
   incidents: BoxItem[]
   maintenances: BoxItem[]
   entries: number
   content: BoxContent
+  t: Translate
+  tf: TranslateFormat
 }) {
   const incidentsTitle = t('statusBoxes.incidentsTitle')
   const maintenancesTitle = t('statusBoxes.maintenancesTitle')
@@ -101,6 +106,7 @@ export function StatusBoxes({
         items={incidents}
         entries={entries}
         content={content}
+        tf={tf}
       />
       <Box
         testId="box-maintenances"
@@ -110,6 +116,7 @@ export function StatusBoxes({
         items={maintenances}
         entries={entries}
         content={content}
+        tf={tf}
       />
     </aside>
   )

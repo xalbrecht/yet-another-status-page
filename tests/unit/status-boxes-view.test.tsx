@@ -2,8 +2,10 @@ import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { StatusBoxes } from '@/components/status/StatusBoxes'
-import { t, tf } from '@/lib/i18n'
+import { translatorsFor } from '@/lib/i18n/translators'
 import type { BoxContent, BoxItem } from '@/lib/status-boxes'
+
+const { t, tf } = translatorsFor('')
 
 const item = (n: number, over: Partial<BoxItem> = {}): BoxItem => ({
   id: String(n),
@@ -23,7 +25,7 @@ const render = (
   maintenances: BoxItem[] = [],
   entries = 3,
   content: BoxContent = 'full',
-) => renderToStaticMarkup(<StatusBoxes incidents={incidents} maintenances={maintenances} entries={entries} content={content} />)
+) => renderToStaticMarkup(<StatusBoxes incidents={incidents} maintenances={maintenances} entries={entries} content={content} t={t} tf={tf} />)
 
 const section = (markup: string, id: 'box-incidents' | 'box-maintenances') => {
   const start = markup.indexOf(`data-testid="${id}"`)

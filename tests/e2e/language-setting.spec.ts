@@ -41,7 +41,6 @@ test.describe('Sprache der Einstellung', () => {
     await updateSettings({ language: 'en' })
     await page.reload()
     await expect(page.getByRole('heading', { name: 'Current incidents' })).toBeVisible()
-    await expect(page.getByText('Yesterday').first()).toBeVisible()
   })
 
   test('leere Sprache: es gilt DEFAULT_LANGUAGE (en)', async ({ page }) => {

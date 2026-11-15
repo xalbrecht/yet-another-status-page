@@ -64,7 +64,7 @@ export async function generateMetadata(): Promise<Metadata> {
 async function getStatusData(requestedPeriod: unknown, requestedBar: unknown) {
   const payload = await getCachedPayload()
   const settings = await getSettings()
-  const { t, tf } = translatorsForSettings(settings)
+  const { t, tf, lang } = translatorsForSettings(settings)
   const dt = resolveDateTimeConfig(settings)
 
   const serviceGroups = await payload.find({
@@ -243,7 +243,7 @@ async function getStatusData(requestedPeriod: unknown, requestedBar: unknown) {
   // Zeitraum des Balkens: Vorgabe aus den Einstellungen, der Besucher überschreibt sie mit ?balken=<Stunden>
   const defaultBarHours = parseBarHours(settings.lagebildBarHours)
   const barHours: BarHours = parseBarHours(requestedBar, defaultBarHours)
-  const lagebild = lagebildVariant === 'off' ? null : await loadLagebildCached(dt, periodDays, barHours)
+  const lagebild = lagebildVariant === 'off' ? null : await loadLagebildCached(lang, dt, periodDays, barHours)
 
   // Boxen neben dem Lagebild: nur in den Varianten a, b und both
   let boxes = null
@@ -259,8 +259,8 @@ async function getStatusData(requestedPeriod: unknown, requestedBar: unknown) {
       entries: parseBoxEntries(settings.statusBoxEntries),
       content: parseBoxContent(settings.statusBoxContent),
       placement: parseBoxesPlacement(settings.statusBoxesPlacement),
-      incidentItems: buildIncidentItems(openIncidents.docs, dt),
-      maintenanceItems: buildMaintenanceItems(maintenances.docs, dt),
+      incidentItems: buildIncidentItems(openIncidents.docs, dt, t),
+      maintenanceItems: buildMaintenanceItems(maintenances.docs, dt, { t, tf }),
       currentIncidents: openIncidents.docs.map(formatIncident).map(forDisplay),
       pastResolvedIncidents,
     }
@@ -361,6 +361,8 @@ export default async function StatusPage({
                   maintenances={boxes.maintenanceItems}
                   entries={boxes.entries}
                   content={boxes.content}
+                  t={t}
+                  tf={tf}
                 />
               </div>
             </div>

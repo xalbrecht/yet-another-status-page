@@ -3,7 +3,8 @@
  * Dieses Modul bereitet die Daten auf, die Darstellung steht in `components/status/StatusBoxes.tsx`.
  */
 import { formatDateTime, type DateTimeConfig } from '@/lib/datetime'
-import { t, tf, type TranslationKey } from '@/lib/i18n'
+import type { TranslationKey } from '@/lib/i18n'
+import type { Translate, TranslateFormat } from '@/lib/i18n/core'
 import type { LagebildStatus } from '@/lib/lagebild'
 
 export type BoxContent = 'full' | 'compact'
@@ -88,7 +89,7 @@ function lastMessage(updates: BoxUpdate[] | null | undefined): string | null {
   return message ? message : null
 }
 
-export function buildIncidentItems(incidents: BoxIncident[], dt: DateTimeConfig): BoxItem[] {
+export function buildIncidentItems(incidents: BoxIncident[], dt: DateTimeConfig, t: Translate): BoxItem[] {
   const items: BoxItem[] = []
   for (const incident of incidents) {
     const status = latestUpdate(incident.updates)?.status || 'investigating'
@@ -108,7 +109,11 @@ export function buildIncidentItems(incidents: BoxIncident[], dt: DateTimeConfig)
   return items
 }
 
-export function buildMaintenanceItems(maintenances: BoxMaintenance[], dt: DateTimeConfig): BoxItem[] {
+export function buildMaintenanceItems(
+  maintenances: BoxMaintenance[],
+  dt: DateTimeConfig,
+  { t, tf }: { t: Translate; tf: TranslateFormat },
+): BoxItem[] {
   return maintenances
     .filter((m) => m.status === 'upcoming' || m.status === 'in_progress')
     .sort((a, b) => new Date(a.scheduledStartAt).getTime() - new Date(b.scheduledStartAt).getTime())

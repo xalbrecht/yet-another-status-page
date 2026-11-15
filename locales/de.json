@@ -740,6 +740,11 @@
     "Year (365 days)": "Jahr (365 Tage)",
     "Your Twilio Account SID (starts with AC...)": "Ihre Twilio-Account-SID (beginnt mit AC…)",
     "Your Twilio Auth Token. Leave empty to keep existing value.": "Ihr Twilio-Auth-Token. Leer lassen, um den vorhandenen Wert zu behalten.",
-    "Your Twilio phone number (e.g., +1234567890). Required if not using a Messaging Service.": "Ihre Twilio-Rufnummer (z. B. +491701234567). Erforderlich, wenn kein Messaging Service verwendet wird."
+    "Your Twilio phone number (e.g., +1234567890). Required if not using a Messaging Service.": "Ihre Twilio-Rufnummer (z. B. +491701234567). Erforderlich, wenn kein Messaging Service verwendet wird.",
+    "How long completed and cancelled maintenances stay visible on the status page after they enter a terminal state.": "Wie lange abgeschlossene und abgebrochene Wartungen nach Erreichen dieses Zustands auf der Statusseite sichtbar bleiben.",
+    "Timezone used for public timestamps, history weeks, and admin date pickers. Visitors see this timezone, not their own.": "Zeitzone für öffentliche Zeitangaben, Verlaufswochen und die Datumsauswahl im Admin. Besucher sehen diese Zeitzone, nicht ihre eigene.",
+    "BCP 47 locale for date and time formatting (e.g. en-US, de-DE, fr-FR). Controls 12-hour vs 24-hour clocks. Empty follows the language of the server (DEFAULT_LANGUAGE).": "BCP-47-Kennung für Datum und Uhrzeit (z. B. en-US, de-DE, fr-FR). Steuert 12- oder 24-Stunden-Anzeige. Leer folgt der Sprache des Servers (DEFAULT_LANGUAGE).",
+    "First day of the week for incident history and admin date pickers.": "Erster Tag der Woche für den Störungsverlauf und die Datumsauswahl im Admin.",
+    "Derived from the latest entry in Updates, or auto-transitioned by schedule. Post an update to change status.": "Ergibt sich aus dem letzten Eintrag unter Aktualisierungen oder wechselt automatisch nach Zeitplan. Zum Ändern eine Aktualisierung eintragen."
   }
 }

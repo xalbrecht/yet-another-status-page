@@ -284,7 +284,7 @@ export const Settings: GlobalConfig = {
           label: ta('Maintenance retention (hours)'),
           admin: {
             description:
-              'How long completed and cancelled maintenances stay visible on the status page after they enter a terminal state.',
+              ta('How long completed and cancelled maintenances stay visible on the status page after they enter a terminal state.'),
           },
         },
       ],
@@ -304,7 +304,7 @@ export const Settings: GlobalConfig = {
           options: TIMEZONE_OPTIONS.map((value) => ({ label: value, value })),
           admin: {
             description:
-              'Timezone used for public timestamps, history weeks, and admin date pickers. Visitors see this timezone, not their own.',
+              ta('Timezone used for public timestamps, history weeks, and admin date pickers. Visitors see this timezone, not their own.'),
           },
         },
         {
@@ -324,7 +324,7 @@ export const Settings: GlobalConfig = {
           label: ta('Locale'),
           admin: {
             description:
-              'BCP 47 locale for date and time formatting (e.g. en-US, de-DE, fr-FR). Controls 12-hour vs 24-hour clocks. Empty follows the language of the server (DEFAULT_LANGUAGE).',
+              ta('BCP 47 locale for date and time formatting (e.g. en-US, de-DE, fr-FR). Controls 12-hour vs 24-hour clocks. Empty follows the language of the server (DEFAULT_LANGUAGE).'),
           },
         },
         {
@@ -338,7 +338,7 @@ export const Settings: GlobalConfig = {
           ],
           admin: {
             description:
-              'First day of the week for incident history and admin date pickers.',
+              ta('First day of the week for incident history and admin date pickers.'),
           },
         },
       ],

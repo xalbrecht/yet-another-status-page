@@ -299,7 +299,7 @@ export const Maintenances: CollectionConfig = {
       index: true,
       admin: {
         description:
-          'Derived from the latest entry in Updates, or auto-transitioned by schedule. Post an update to change status.',
+          ta('Derived from the latest entry in Updates, or auto-transitioned by schedule. Post an update to change status.'),
         readOnly: true,
       },
     },

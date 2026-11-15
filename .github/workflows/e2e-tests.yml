@@ -60,6 +60,10 @@ jobs:
         env:
           CI: ""  # Unset CI to allow local config options
 
+      - name: Summarize test durations
+        if: always()
+        run: node scripts/e2e-timing.mjs test-results/results.json | tee -a "$GITHUB_STEP_SUMMARY"
+
       - name: Stop test environment
         if: always()
         run: docker compose -f docker-compose.test.yml down -v

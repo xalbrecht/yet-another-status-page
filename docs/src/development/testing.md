@@ -6,6 +6,15 @@ This page describes how the tests of this fork are run, what they cover and whic
 
 - **End-to-end tests** (Playwright, project `chromium`, folder `tests/e2e/`).
 - **Unit tests for pure calculation code** (`npm run test:unit`, folder `tests/unit/`, `tsx --test`). They need neither a browser nor a running server. They cover the availability rules in `src/lib/availability.ts`.
+- **Unit test against a real PostgreSQL** (`tests/unit/report-send-lock-postgres.test.ts`). It checks the lock that allows only one report dispatch at a time (two connection pools exclude each other, a dropped connection frees the lock). It is skipped unless `TEST_DATABASE_URL` is set. Run it against a throwaway database:
+
+  ```bash
+  docker run -d --rm --name lock-test -e POSTGRES_PASSWORD=x -p 55432:5432 postgres:16-alpine
+  TEST_DATABASE_URL=postgres://postgres:x@localhost:55432/postgres npx tsx --test tests/unit/report-send-lock-postgres.test.ts
+  docker rm -f lock-test
+  ```
+
+  Wait until `docker exec lock-test pg_isready -U postgres` succeeds before the second command. The test is not part of the CI run (the workflow does not run the unit tests).
 - The tests run against **`next dev`** in a Docker container, not against the production image. Behavior that differs in the production build (compile times, memory) is not covered.
 - Most tests create their own data through the Payload REST API (`tests/utils/payload-helpers.ts`) and use unique names (`Date.now()`), so they do not depend on the seed data.
 

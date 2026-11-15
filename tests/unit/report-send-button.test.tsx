@@ -112,3 +112,19 @@ test('die Abschlussmeldung nennt vom Mailserver abgelehnte Empfänger', () => {
   assert.match(markup, /b@x\.de/)
   assert.match(markup, /role="alert"/)
 })
+
+test('Live-Bereich ist in jedem Zustand vorhanden und fokussierbar (Fokus folgt dem Zustand)', () => {
+  for (const state of [{ kind: 'idle' }, { kind: 'confirm' }, { kind: 'sending' }, { kind: 'done', message: 'fertig' }] as SendState[]) {
+    const markup = render(state)
+    assert.match(markup, /<div[^>]*aria-live="polite"[^>]*data-testid="report-send-status"|<div[^>]*data-testid="report-send-status"[^>]*aria-live="polite"/, state.kind)
+    assert.match(markup, /report-send-status[^>]*tabindex="-1"|tabindex="-1"[^>]*report-send-status/, state.kind)
+  }
+})
+
+test('plan-changed bei laufendem Zeitraum erklärt den Grund und nennt keinen „neuen Eintrag“', () => {
+  const offen = render({ kind: 'error', code: 'plan-changed', message: '', openPeriod: true })
+  assert.match(offen, /Zeitraum läuft noch|period is still running/)
+  assert.doesNotMatch(offen, /Eintrag im Statusprotokoll|new entry in the status log/)
+  const abgeschlossen = render({ kind: 'error', code: 'plan-changed', message: '' })
+  assert.match(abgeschlossen, /Eintrag im Statusprotokoll|new entry in the status log/)
+})

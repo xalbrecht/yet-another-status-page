@@ -32,3 +32,14 @@ test('validateRecipients nennt den ersten ungültigen Eintrag', () => {
   assert.equal(typeof noAt, 'string')
   assert.ok((noAt as string).includes('kein-at'))
 })
+
+test('validateRecipients lehnt Anzeigenamen, Klammern und Sonderzeichen ab', () => {
+  for (const entry of ['<a@x.de>', 'Max <a@x.de>', '"a"@x.de', 'a@x', 'a@@x.de', 'a(b)@x.de', 'a@x..de', 'a@-.de']) {
+    const result = validateRecipients(entry)
+    assert.equal(typeof result, 'string', entry)
+  }
+})
+
+test('validateRecipients akzeptiert Plus-Zusätze, Punkte und Umlaut-Domänen', () => {
+  assert.equal(validateRecipients('max.mustermann+bericht@x.de, a@münchen.de'), true)
+})

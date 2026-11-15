@@ -4,7 +4,8 @@ import { ta } from '@/lib/i18n/admin'
  * Empfänger des Verfügbarkeitsberichts (Issue #65): ein Textfeld in den E-Mail-Einstellungen, Adressen durch Komma,
  * Semikolon oder Zeilenumbruch getrennt. Die Empfänger kommen nur von dort, nie aus einer Anfrage.
  */
-const ADDRESS = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+// Ohne Anzeigenamen und Klammern: „<a@x.de>“ oder „Name <a@x.de>“ gehören nicht in das Feld. Umlaute in Domänen sind erlaubt.
+const ADDRESS = /^[^\s@<>()[\]\\,;:"]+@(?:[\p{L}\p{N}](?:[\p{L}\p{N}-]*[\p{L}\p{N}])?\.)+[\p{L}\p{N}](?:[\p{L}\p{N}-]*[\p{L}\p{N}])?$/u
 
 const entries = (text: string | null | undefined): string[] => (text ?? '').split(/[,;\n\r]+/).map((entry) => entry.trim()).filter(Boolean)
 

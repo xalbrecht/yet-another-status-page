@@ -29,6 +29,7 @@
 - [Architecture](./development/architecture.md)
 - [Testing](./development/testing.md)
 - [Browser-Prüfliste Lagebild](./development/browser-checklist.md)
+- [Browser Checklist (English)](./development/browser-checklist.en.md)
 
 # API Reference
 

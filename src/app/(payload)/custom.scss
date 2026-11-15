@@ -36,3 +36,9 @@
     }
   }
 }
+
+/* Die Sprache des Admins kommt aus DEFAULT_LANGUAGE (Neustart nötig). Die Sprachwahl in den
+   Kontoeinstellungen wäre wirkungslos und wird deshalb nicht angezeigt. */
+.payload-settings__language {
+  display: none;
+}

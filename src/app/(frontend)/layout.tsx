@@ -6,7 +6,7 @@ import { ThemeProvider } from '@/components/theme-provider'
 import type { Media } from '@/payload-types'
 import type { Metadata } from 'next'
 import './globals.css'
-import { getSiteDictionary, lang } from '@/lib/i18n'
+import { getTranslators } from '@/lib/i18n/server'
 import { I18nProvider } from '@/lib/i18n/client'
 
 export const dynamic = 'force-dynamic'
@@ -51,15 +51,16 @@ export async function generateMetadata(): Promise<Metadata> {
   }
 }
 
-export default function FrontendLayout({
+export default async function FrontendLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
+  const { lang, dictionary } = await getTranslators()
   return (
     <html lang={lang} className={inter.variable} suppressHydrationWarning>
       <body>
-        <I18nProvider dictionary={getSiteDictionary()}>
+        <I18nProvider dictionary={dictionary}>
           <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
             <ViewTransition>{children}</ViewTransition>
           </ThemeProvider>

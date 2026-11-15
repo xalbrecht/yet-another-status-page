@@ -7,12 +7,13 @@ import { Footer } from '@/components/status/Footer'
 import { ThemeProvider } from '@/components/theme-provider'
 import { inter } from '@/lib/fonts'
 import { getMediaUrl } from '@/lib/utils'
-import { getSiteDictionary, lang, t } from '@/lib/i18n'
+import { getTranslators } from '@/lib/i18n/server'
 import { I18nProvider } from '@/lib/i18n/client'
 
 export const dynamic = 'force-dynamic'
 
 export default async function NotFound() {
+  const { t, lang, dictionary } = await getTranslators()
   let siteName = 'Status'
   let footerText: unknown = null
   let timezone: string | undefined
@@ -34,7 +35,7 @@ export default async function NotFound() {
   return (
     <html lang={lang} className={inter.variable} suppressHydrationWarning>
       <body className="bg-background text-foreground antialiased">
-        <I18nProvider dictionary={getSiteDictionary()}>
+        <I18nProvider dictionary={dictionary}>
           <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
             <div className="flex min-h-screen flex-col">
               <Header

@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { t, tf } from '@/lib/i18n'
+import { getTranslators } from '@/lib/i18n/server'
 import { notFound, redirect } from 'next/navigation'
 import Link from 'next/link'
 import { ChevronLeft, ChevronRight, Calendar } from 'lucide-react'
@@ -33,6 +33,7 @@ interface PageProps {
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { t } = await getTranslators()
   const { date: dateSlug } = await params
   const settings = await getSettings()
   const dt = resolveDateTimeConfig(settings)
@@ -154,6 +155,7 @@ async function getWeekData(dateSlug: string) {
 }
 
 export default async function WeekPage({ params }: PageProps) {
+  const { t, tf } = await getTranslators()
   const { date: dateSlug } = await params
   const data = await getWeekData(dateSlug)
 

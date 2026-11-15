@@ -238,7 +238,6 @@
   },
   "admin": {
     "(not clearly classified)": "(nicht eindeutig)",
-    "Language of the status page, emails, SMS texts and feeds. Empty uses the server default (DEFAULT_LANGUAGE). The admin interface does not follow this setting yet.": "Sprache der Statusseite, der E-Mails, der SMS-Texte und der Feeds. Leer verwendet die Vorgabe des Servers (DEFAULT_LANGUAGE). Die Admin-Oberfläche folgt dieser Einstellung noch nicht.",
     "{count} subscription(s) waiting for approval or confirmation": "{count} Abonnement(s) warten auf Freigabe oder Bestätigung",
     "= unchanged": "= unverändert",
     "12 hours (5 minutes per stroke)": "12 Stunden (5 Minuten je Strich)",

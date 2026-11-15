@@ -157,16 +157,19 @@ Where to set it:
 |-----------|-------|
 | German (default) | Nothing to set |
 | Docker | Environment `DEFAULT_LANGUAGE`, and a volume for your files, for example `./locales:/app/locales:ro` with `LOCALES_DIR=/app/locales` |
+| Helm | Values `language` and `locales.files` (see [Helm](./helm.md#interface-language)) |
 | Local development | `.env` or the shell, for example `DEFAULT_LANGUAGE=en npm run dev` (the folder `locales/` of the repository is read) |
 | E2E tests | `DEFAULT_LANGUAGE=en` in the environment of the server under test |
 
-**Upgrading.** The build variable `NEXT_PUBLIC_UI_LANG` is no longer read. An installation that was built with `NEXT_PUBLIC_UI_LANG=en` shows German after the update until you set `DEFAULT_LANGUAGE=en`; the log says so (`[i18n] NEXT_PUBLIC_UI_LANG wird nicht mehr gelesen …`).
+**Upgrading.** The build variable `NEXT_PUBLIC_UI_LANG` is no longer read. An installation that was built with `NEXT_PUBLIC_UI_LANG=en` shows German after the update until you set `DEFAULT_LANGUAGE=en`; the log says so (`[i18n] NEXT_PUBLIC_UI_LANG wird nicht mehr gelesen …`). The language is not a setting in the admin panel: it comes from `DEFAULT_LANGUAGE` and changes with a restart. The setting **Locale** (date and time format) is empty after the update and then follows the language (`de` gives `de-DE`, a 24-hour clock). A value you saved earlier is kept, except the old default `en-US`, which the update resets to empty.
 
-Check your files with `npm run check:locales [directory]`. It reports missing or surplus keys (warnings) and placeholders such as `{timezone}` or `{{siteName}}` that differ from the English text (errors). Choosing the language in the admin panel is planned.
+Check your files with `npm run check:locales [directory]`. It reports missing or surplus keys (warnings) and placeholders such as `{timezone}` or `{{siteName}}` that differ from the English text (errors).
+
+To add a language of your own, see [Adding a Language](./adding-a-language.md).
 
 Menu names in this manual are given in English followed by the German name, for example **Status → Incidents** (German: **Status → Störungen**). A full list is in the [Admin Overview](../admin/overview.md#language-of-the-admin-panel).
 
-The setting **Locale** (below) is independent of this. It only controls the date and time format.
+The setting **Locale** (below) only controls the date and time format. Empty, it follows the language.
 
 ## Admin Panel Settings
 
@@ -192,7 +195,7 @@ These settings control the **admin calendar** and the **site clock** visitors se
 | Setting | Description | Default |
 |---------|-------------|---------|
 | Timezone | IANA timezone for timestamps, history week boundaries, and admin date pickers | `UTC` |
-| Locale | BCP 47 locale for date/time formatting (e.g. `en-US`, `de-DE`, `fr-FR`). For German dates and a 24-hour clock use `de-DE` | `en-US` |
+| Locale | BCP 47 locale for date/time formatting (e.g. `en-US`, `de-DE`, `fr-FR`). Empty follows the language (`DEFAULT_LANGUAGE`). To force German dates and a 24-hour clock use `de-DE` | empty |
 | Week starts on | First day of the week for incident history and admin date pickers | Monday |
 
 Public pages always show the **site timezone**, not the visitor’s local time, so “maintenance at 15:00” means the same instant for everyone. A footer notice explains this (for example: “All times in Europe/Berlin. This is the status page timezone.”). Individual timestamps also include a short zone abbreviation.

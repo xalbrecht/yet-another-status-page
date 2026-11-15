@@ -23,6 +23,20 @@ fullnameOverride: ""
 # -- Public URL the status page is reachable on (used by the app for absolute links and the Payload admin)
 serverUrl: ""
 
+# -- Interface language code (sets DEFAULT_LANGUAGE), written like the file name, for example "de", "en" or "fr".
+# Empty uses the image default (de). A change restarts the pods.
+language: ""
+
+# Additional language files (see docs: Configuration, Interface Language). German and English are built in.
+locales:
+  # -- Language files as a map: file name -> JSON text, for example "fr.json". The chart stores them in a
+  # ConfigMap, mounts it at /app/locales and sets LOCALES_DIR. Pods restart when the content changes.
+  files: {}
+  #  fr.json: |
+  #    { "meta": { "name": "Français" }, "site": { }, "admin": { } }
+  # -- Use an existing ConfigMap instead (keys are file names). Takes precedence over files.
+  existingConfigMap: ""
+
 serviceAccount:
   # -- Create a ServiceAccount
   create: true

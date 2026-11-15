@@ -119,6 +119,20 @@ The referenced secret must contain a key with a full `postgresql://user:password
 
 Files uploaded through the Payload admin land in `/app/public/media`. By default the chart provisions a `5Gi` `ReadWriteOnce` PVC. Increase or disable it via `persistence.size` / `persistence.enabled`. For multi-replica deployments, switch to object storage (e.g. configure `@payloadcms/storage-vercel-blob` via `extraEnv`) or use a `ReadWriteMany` storage class.
 
+### Interface language
+
+The chart sets `DEFAULT_LANGUAGE` from the value `language`. German and English are built in. Further languages go into `locales.files` (file name → JSON text). The chart stores them in a ConfigMap, mounts it at `/app/locales` and sets `LOCALES_DIR`. The pods restart when the content changes.
+
+```yaml
+language: fr
+locales:
+  files:
+    fr.json: |
+      { "meta": { "name": "Français" }, "site": { }, "admin": { } }
+```
+
+For larger files use an existing ConfigMap: `locales.existingConfigMap: status-locales` (the keys are the file names). How to write a language file is described in [Adding a Language](./adding-a-language.md).
+
 ### Hardening
 
 ```yaml

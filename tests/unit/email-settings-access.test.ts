@@ -3,7 +3,7 @@ import assert from 'node:assert/strict'
 import type { Field } from 'payload'
 import { EmailSettings } from '@/globals/EmailSettings'
 
-/** Das Global ist öffentlich lesbar. Adressen von Mitarbeitern dürfen anonym nicht erscheinen. */
+/** Das Global ist öffentlich lesbar. Adressen von Mitarbeitern und SMTP-Angaben dürfen anonym nicht erscheinen. */
 function find(fields: Field[], name: string): (Field & { access?: { read?: (args: unknown) => boolean } }) | undefined {
   for (const field of fields) {
     if ('name' in field && field.name === name) return field as never
@@ -15,7 +15,7 @@ function find(fields: Field[], name: string): (Field & { access?: { read?: (args
   return undefined
 }
 
-for (const name of ['reportRecipients', 'subscriberRequestTo']) {
+for (const name of ['reportRecipients', 'subscriberRequestTo', 'smtpHost', 'smtpPort', 'smtpSecure', 'smtpUsername', 'smtpFromAddress', 'smtpFromName', 'smtpReplyTo']) {
   test(`${name} ist anonym nicht lesbar, für angemeldete Nutzer schon`, () => {
     const read = find(EmailSettings.fields, name)?.access?.read
     assert.equal(typeof read, 'function', 'Feldzugriff fehlt')

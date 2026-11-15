@@ -3,10 +3,10 @@ import { getPayload } from 'payload'
 import { headers } from 'next/headers'
 import config from '@payload-config'
 import { isTestMode } from '@/lib/access'
-import { sendEmail } from '@/lib/email'
+import { sendEmail, verifySmtp } from '@/lib/email'
 import { ta } from '@/lib/i18n/admin'
 import { parseRecipients } from '@/lib/report/export/recipients'
-import { ReportMailPlanChangedError, ReportMailResumeError, ReportMailTooLargeError, sendReportMail } from '@/lib/report/export/mail'
+import { ReportMailImageTooLargeError, ReportMailPlanChangedError, ReportMailResumeError, ReportMailTooLargeError, sendReportMail } from '@/lib/report/export/mail'
 import { loadReportContext } from '@/lib/report/load'
 import type { EmailSetting } from '@/payload-types'
 
@@ -17,10 +17,14 @@ import type { EmailSetting } from '@/payload-types'
  */
 export const runtime = 'nodejs'
 
-/** Höchstens ein Versand gleichzeitig im Prozess: Rendern und Anhänge brauchen Speicher (Test hat 768 MiB). */
+/**
+ * Höchstens ein Versand gleichzeitig im Prozess: Rendern und Anhänge brauchen Speicher (Test hat 768 MiB).
+ * Die Sperre gilt je Prozess. Die Anwendung läuft als ein Container mit einem Prozess; bei mehreren Replikaten
+ * bräuchte es eine Sperre in der Datenbank (bewusst nicht gebaut).
+ */
 let running = false
 
-type Code = 'unauthorized' | 'bad-request' | 'invalid-period' | 'no-recipients' | 'no-smtp' | 'running' | 'too-large' | 'plan-changed' | 'send-failed' | 'unknown'
+type Code = 'unauthorized' | 'bad-request' | 'invalid-period' | 'no-recipients' | 'no-smtp' | 'smtp-failed' | 'running' | 'too-large' | 'plan-changed' | 'send-failed' | 'unknown'
 const fail = (code: Code, error: string, status: number, extra: Record<string, unknown> = {}) => NextResponse.json({ error, code, ...extra }, { status })
 
 export async function POST(request: NextRequest) {
@@ -64,7 +68,11 @@ export async function POST(request: NextRequest) {
     if (running) return fail('running', ta('A dispatch is already running.'), 409)
     running = true
     try {
-      const result = await sendReportMail({ context: loaded.context, recipients, send: (options) => sendEmail(settings, options), resume })
+      // Erst den Mailserver prüfen, dann rendern: Rendern kostet Speicher und Zeit, die ein unerreichbarer Server verschwendet
+      const smtp = await verifySmtp(settings)
+      if (!smtp.ok) return fail('smtp-failed', `${ta('The mail server does not respond')}: ${smtp.error}. ${ta('Nothing was sent.')}`, 502)
+      const serviceCount = loaded.context.build(undefined).data.scope.serviceCount
+      const result = await sendReportMail({ context: loaded.context, recipients, send: (options) => sendEmail(settings, options), resume, serviceCount })
       if (result.failed > 0) {
         return fail('send-failed', result.errors[0] ?? ta('Unknown error'), 502, {
           sent: result.sent,
@@ -75,9 +83,9 @@ export async function POST(request: NextRequest) {
       }
       return NextResponse.json({ mails: result.mails, sent: result.sent, planId: result.planId, recipients, rejected: result.rejected })
     } catch (error) {
-      if (error instanceof ReportMailTooLargeError) return fail('too-large', error.message, 413)
+      if (error instanceof ReportMailTooLargeError || error instanceof ReportMailImageTooLargeError) return fail('too-large', error.message, 413)
       if (error instanceof ReportMailResumeError) return fail('bad-request', error.message, 400)
-      if (error instanceof ReportMailPlanChangedError) return fail('plan-changed', error.message, 412)
+      if (error instanceof ReportMailPlanChangedError) return fail('plan-changed', error.message, 412, { openPeriod: error.openPeriod })
       throw error
     } finally {
       running = false

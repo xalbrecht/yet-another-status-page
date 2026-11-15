@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { ChevronDown } from 'lucide-react'
+import { ChevronDown, LayoutGrid } from 'lucide-react'
 import { Fragment, useEffect, useId, useLayoutEffect, useRef, useState, useTransition, type ReactNode } from 'react'
 import {
   BAR_HOURS_OPTIONS,
@@ -373,10 +373,10 @@ function groupsMeta(groups: LagebildGroup[], t: Translate, tf: TranslateFormat):
     .join(' · ')
 }
 
-/** Symbol der Gruppe, bei der Kachel „Alle“ der Text „ALLE“. */
+/** Symbol der Gruppe, bei der Kachel „Alle“ ein Raster aus vier Quadraten. */
 function TileIcon({ tile, className }: { tile: TileModel; className: string }) {
   if (tile.icon !== null) return <GroupIcon name={tile.icon} className={className} />
-  return <span className={cn('text-xs font-bold uppercase leading-none', className)}>{tile.name}</span>
+  return <LayoutGrid aria-hidden="true" className={className} />
 }
 
 function TileA({ tile, active, onSelect }: { tile: TileModel; active: boolean; onSelect: () => void }) {

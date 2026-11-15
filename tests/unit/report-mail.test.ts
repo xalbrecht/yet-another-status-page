@@ -3,7 +3,7 @@ import assert from 'node:assert/strict'
 import { unzipSync } from 'fflate'
 import type { EmailOptions, EmailResult } from '@/lib/email'
 import type { ExportFile } from '@/lib/report/export/files'
-import { planReportMails, reportPlanId, ReportMailPlanChangedError, ReportMailResumeError, ReportMailTooLargeError, sendReportMail } from '@/lib/report/export/mail'
+import { planReportMails, reportPlanId, ReportMailImageTooLargeError, ReportMailPlanChangedError, ReportMailResumeError, ReportMailTooLargeError, sendReportMail } from '@/lib/report/export/mail'
 import type { ReportContext } from '@/lib/report/load'
 import { parseReportParams } from '@/lib/report/params'
 
@@ -28,11 +28,19 @@ test('planReportMails: zehn Bilder zu 2000 Byte bei Grenze 5000 ergeben fünf Te
   for (const part of parts) assert.equal(filesIn(part).length, 2)
 })
 
-test('planReportMails: ein einzelnes Bild über der Grenze steht allein in einem Teil', () => {
-  const plan = planReportMails([file('b.pdf', 10), file('b.xlsx', 10), png(1, 500), png(2, 9000), png(3, 500)], 5000)
-  const parts = plan.slice(1)
-  assert.equal(parts.length, 3)
-  assert.deepEqual(parts.map((part) => filesIn(part).length), [1, 1, 1])
+test('planReportMails: ein einzelnes Bild über der Grenze wirft, bevor etwas gesendet wird', () => {
+  assert.throws(
+    () => planReportMails([file('b.pdf', 10), file('b.xlsx', 10), png(1, 500), png(2, 9000), png(3, 500)], 5000),
+    (error: unknown) => error instanceof ReportMailImageTooLargeError && error.fileName === '02.png' && /02\.png/.test(error.message),
+  )
+})
+
+test('planReportMails: ZIP-Teile entstehen erst beim Lesen und ergeben jedes Mal dasselbe', () => {
+  const plan = planReportMails([file('b.pdf', 10), file('b.xlsx', 10), png(1), png(2)], 10_000)
+  const first = plan[1].attachments[0].content
+  const second = plan[1].attachments[0].content
+  assert.notEqual(first, second, 'bei jedem Lesen ein neues Array: der Plan hält kein ZIP fest')
+  assert.deepEqual(Buffer.from(first), Buffer.from(second))
 })
 
 test('planReportMails: sind PDF und Excel zusammen über der Grenze, wirft die Funktion mit der Größe', () => {
@@ -163,4 +171,29 @@ test('die Reihenfolge der Bilder und die Kennung hängen nicht von der Locale ab
   assert.equal(reportPlanId([upper, lower]), reportPlanId([lower, upper]))
   const parts = planReportMails([file('b.pdf', 5), file('b.xlsx', 5), lower, upper], 100)
   assert.deepEqual(Object.keys(unzipSync(parts[1].attachments[0].content)).map((name) => name.split('/')[2]), ['Zeta', 'alpha'])
+})
+
+test('Mail 1 nennt die Zahl der Dienste, wenn sie bekannt ist, die übrigen Mails nicht', async () => {
+  const r = recorder()
+  await sendReportMail({ context, recipients: ['a@x.de'], send: r.send, filesOf: filesOf(fourMails()), limit: 6000, serviceCount: 166 })
+  assert.match(r.calls[0].text ?? '', /(Dienste im Bericht|Services in the report): 166/)
+  assert.doesNotMatch(r.calls[1].text ?? '', /166/)
+  const without = recorder()
+  await sendReportMail({ context, recipients: ['a@x.de'], send: without.send, filesOf: filesOf(fourMails()), limit: 6000 })
+  assert.doesNotMatch(without.calls[0].text ?? '', /Dienste im Bericht|Services in the report/)
+})
+
+test('Fortsetzen mit geändertem Plan: laufender Zeitraum wird als solcher gemeldet', async () => {
+  const first = recorder([2])
+  const failed = await sendReportMail({ context, recipients: ['a@x.de'], send: first.send, filesOf: filesOf(fourMails()), limit: 6000 })
+  const changed = fourMails().map((entry) => (entry.path.endsWith('01.png') ? { ...entry, data: new Uint8Array(3000).fill(99) } : entry))
+  const open = { ...context, period: { ...context.period, partial: true } } as unknown as ReportContext
+  await assert.rejects(
+    () => sendReportMail({ context: open, recipients: ['a@x.de'], send: recorder().send, filesOf: filesOf(changed), limit: 6000, resume: { from: 2, planId: failed.planId } }),
+    (error: unknown) => error instanceof ReportMailPlanChangedError && error.openPeriod === true,
+  )
+  await assert.rejects(
+    () => sendReportMail({ context, recipients: ['a@x.de'], send: recorder().send, filesOf: filesOf(changed), limit: 6000, resume: { from: 2, planId: failed.planId } }),
+    (error: unknown) => error instanceof ReportMailPlanChangedError && error.openPeriod === false,
+  )
 })

@@ -16,12 +16,25 @@ export const MAIL_PART_LIMIT_BYTES = 6_000_000
 
 const FIXED_MTIME = new Date('2000-01-01T00:00:00Z')
 
-export type MailPlan = Array<{ attachments: EmailAttachment[] }>
+/** `attachments` entsteht erst beim Lesen: ZIP-Teile liegen so nur während ihrer Mail im Speicher, nicht alle gleichzeitig. */
+export type MailPlan = Array<{ readonly attachments: EmailAttachment[] }>
 
 export class ReportMailTooLargeError extends Error {
   constructor(public readonly megabytes: number, public readonly limitMegabytes: number) {
     super(`${ta('PDF and Excel are')} ${megabytes.toFixed(1)} MB ${ta('together, the limit is')} ${limitMegabytes.toFixed(1)} MB ${ta('per email. Nothing was sent.')}`)
     this.name = 'ReportMailTooLargeError'
+  }
+}
+
+export class ReportMailImageTooLargeError extends Error {
+  constructor(public readonly fileName: string, public readonly megabytes: number, public readonly limitMegabytes: number) {
+    super(
+      ta('The image {name} is {size} MB, the limit is {limit} MB per email. Nothing was sent.')
+        .replace('{name}', fileName)
+        .replace('{size}', megabytes.toFixed(1))
+        .replace('{limit}', limitMegabytes.toFixed(1)),
+    )
+    this.name = 'ReportMailImageTooLargeError'
   }
 }
 
@@ -33,8 +46,13 @@ export class ReportMailResumeError extends Error {
 }
 
 export class ReportMailPlanChangedError extends Error {
-  constructor() {
-    super(ta('The data of the report changed since the first attempt.'))
+  /** `openPeriod`: der Zeitraum reicht bis jetzt, die Bilder ändern sich dann mit jeder Minute */
+  constructor(public readonly openPeriod: boolean = false) {
+    super(
+      openPeriod
+        ? ta('The period is still running, so the images differ with every attempt.')
+        : ta('The data of the report changed since the first attempt.'),
+    )
     this.name = 'ReportMailPlanChangedError'
   }
 }
@@ -69,6 +87,10 @@ export function planReportMails(files: ExportFile[], limit: number = MAIL_PART_L
     })
   }
 
+  for (const entry of files.filter((item) => item.path.endsWith('.png'))) {
+    if (entry.data.length > limit) throw new ReportMailImageTooLargeError(baseName(entry.path), entry.data.length / 1_000_000, limit / 1_000_000)
+  }
+
   const parts: ExportFile[][] = []
   let current: ExportFile[] = []
   let currentBytes = 0
@@ -84,8 +106,12 @@ export function planReportMails(files: ExportFile[], limit: number = MAIL_PART_L
   if (current.length > 0) parts.push(current)
 
   parts.forEach((part, index) => {
-    const zipped = zipSync(Object.fromEntries(part.map((entry) => [entry.path, [entry.data, { level: 0, mtime: FIXED_MTIME }]])))
-    plan.push({ attachments: [{ filename: `bilder-teil-${index + 1}-von-${parts.length}.zip`, content: zipped, contentType: 'application/zip' }] })
+    plan.push({
+      get attachments() {
+        const zipped = zipSync(Object.fromEntries(part.map((entry) => [entry.path, [entry.data, { level: 0, mtime: FIXED_MTIME }]])))
+        return [{ filename: `bilder-teil-${index + 1}-von-${parts.length}.zip`, content: zipped, contentType: 'application/zip' }]
+      },
+    })
   })
   return plan
 }
@@ -100,6 +126,8 @@ export async function sendReportMail(input: {
   /** Quelle der Dateien, im Test ersetzbar */
   filesOf?: (context: ReportContext) => AsyncIterable<ExportFile>
   limit?: number
+  /** Zahl der Dienste im Bericht, steht im Mailtext */
+  serviceCount?: number
 }): Promise<{ mails: number; sent: number; failed: number; errors: string[]; planId: string; rejected: string[] }> {
   const { context, recipients, send, resume } = input
   if (recipients.length === 0) throw new Error(ta('No recipients entered'))
@@ -115,7 +143,7 @@ export async function sendReportMail(input: {
     if (!Number.isInteger(resume.from) || resume.from < 1 || resume.from > mails) {
       throw new ReportMailResumeError(resume.from, mails)
     }
-    if (resume.from > 1 && resume.planId !== planId) throw new ReportMailPlanChangedError()
+    if (resume.from > 1 && resume.planId !== planId) throw new ReportMailPlanChangedError(context.period.partial)
     first = resume.from
   }
 
@@ -126,6 +154,7 @@ export async function sendReportMail(input: {
     const part = mails > 1 ? ` (${ta('Part')} ${number} ${ta('of')} ${mails})` : ''
     const lines = [
       `${ta('Availability report')} ${context.period.label}.`,
+      number === 1 && input.serviceCount !== undefined ? `${ta('Services in the report')}: ${input.serviceCount}.` : '',
       number === 1 && mails > 1 ? ta('This email holds the PDF and the Excel file. The images follow in {count} further emails.').replace('{count}', String(mails - 1)) : '',
       number > 1 ? ta('The images are in the attached ZIP file.') : '',
       resume && number === first && first > 1 ? ta('This email continues an interrupted dispatch.') : '',

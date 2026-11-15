@@ -746,6 +746,12 @@
     "BCP 47 locale for date and time formatting (e.g. en-US, de-DE, fr-FR). Controls 12-hour vs 24-hour clocks. Empty follows the language of the server (DEFAULT_LANGUAGE).": "BCP-47-Kennung für Datum und Uhrzeit (z. B. en-US, de-DE, fr-FR). Steuert 12- oder 24-Stunden-Anzeige. Leer folgt der Sprache des Servers (DEFAULT_LANGUAGE).",
     "First day of the week for incident history and admin date pickers.": "Erster Tag der Woche für den Störungsverlauf und die Datumsauswahl im Admin.",
     "Derived from the latest entry in Updates, or auto-transitioned by schedule. Post an update to change status.": "Ergibt sich aus dem letzten Eintrag unter Aktualisierungen oder wechselt automatisch nach Zeitplan. Zum Ändern eine Aktualisierung eintragen.",
+    "The image {name} is {size} MB, the limit is {limit} MB per email. Nothing was sent.": "Das Bild {name} ist {size} MB groß, erlaubt sind {limit} MB je Mail. Es wurde nichts gesendet.",
+    "The period is still running, so the images differ with every attempt.": "Der Zeitraum läuft noch, die Bilder unterscheiden sich daher bei jedem Versuch.",
+    "Services in the report": "Dienste im Bericht",
+    "The mail server does not respond": "Der Mailserver antwortet nicht",
+    "Nothing was sent.": "Es wurde nichts gesendet.",
+    "The dispatch cannot be continued: the period is still running, so the images differ with every attempt. The emails already sent belong to an earlier minute. Please restart the whole dispatch, or choose a finished period. The recipients then receive all emails again, recognizable by \"Part i of n\".": "Der Versand lässt sich nicht fortsetzen: Der Zeitraum läuft noch, die Bilder unterscheiden sich daher bei jedem Versuch. Die bereits gesendeten Mails gehören zu einer früheren Minute. Bitte den ganzen Versand neu starten oder einen abgeschlossenen Zeitraum wählen. Die Empfänger erhalten dann alle Mails erneut, erkennbar an „Teil i von n“.",
     "days": "Tage",
     "outage": "Ausfall"
   }

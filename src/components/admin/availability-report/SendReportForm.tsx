@@ -10,7 +10,7 @@ export type SendState =
   | { kind: 'confirm' }
   | { kind: 'sending' }
   | { kind: 'done'; message: string; rejected?: string[] }
-  | { kind: 'error'; code: string; message: string; sent?: number; mails?: number; nextMail?: number }
+  | { kind: 'error'; code: string; message: string; sent?: number; mails?: number; nextMail?: number; openPeriod?: boolean }
 
 export type SendReportFormProps = {
   recipients: string[]
@@ -34,9 +34,13 @@ function ErrorBox(props: { state: Extract<SendState, { kind: 'error' }>; onResum
     return (
       <div role="alert" className="availability-report__send-error">
         <p>
-          {ta(
-            'The dispatch cannot be continued: the data of the report changed since the first attempt (for example a new entry in the status log). The emails already sent belong to an older state. Please restart the whole dispatch. The recipients then receive all emails again, recognizable by "Part i of n".',
-          )}
+          {state.openPeriod
+            ? ta(
+                'The dispatch cannot be continued: the period is still running, so the images differ with every attempt. The emails already sent belong to an earlier minute. Please restart the whole dispatch, or choose a finished period. The recipients then receive all emails again, recognizable by "Part i of n".',
+              )
+            : ta(
+                'The dispatch cannot be continued: the data of the report changed since the first attempt (for example a new entry in the status log). The emails already sent belong to an older state. Please restart the whole dispatch. The recipients then receive all emails again, recognizable by "Part i of n".',
+              )}
         </p>
         <button type="button" onClick={onRestart}>{ta('Send again from the start')}</button>
       </div>
@@ -84,6 +88,18 @@ function ErrorBox(props: { state: Extract<SendState, { kind: 'error' }>; onResum
 export function SendReportForm(props: SendReportFormProps) {
   const ta = useAdminText()
   const { recipients, state, onAsk, onCancel, onConfirm, onResume, onRestart } = props
+  const askRef = React.useRef<HTMLButtonElement>(null)
+  const confirmRef = React.useRef<HTMLButtonElement>(null)
+  const statusRef = React.useRef<HTMLDivElement>(null)
+  const previousKind = React.useRef(state.kind)
+  // Der Zustand tauscht die Knöpfe aus, der Fokus würde auf <body> fallen. Er folgt deshalb dem Zustand.
+  React.useEffect(() => {
+    if (previousKind.current === state.kind) return
+    previousKind.current = state.kind
+    if (state.kind === 'confirm') confirmRef.current?.focus()
+    else if (state.kind === 'idle') askRef.current?.focus()
+    else statusRef.current?.focus()
+  }, [state.kind])
   if (recipients.length === 0) {
     return (
       <div className="availability-report__send" data-testid="report-send">
@@ -95,28 +111,31 @@ export function SendReportForm(props: SendReportFormProps) {
   }
   return (
     <div className="availability-report__send" data-testid="report-send">
-      {state.kind === 'idle' && <button type="button" onClick={onAsk}>{ta('Send by email')}</button>}
+      {state.kind === 'idle' && <button ref={askRef} type="button" onClick={onAsk}>{ta('Send by email')}</button>}
       {state.kind === 'confirm' && (
         <p>
           {ta('Send to')}: <strong>{recipients.join(', ')}</strong>{' '}
-          <button type="button" onClick={onConfirm}>{ta('Send now')}</button>{' '}
+          <button ref={confirmRef} type="button" onClick={onConfirm}>{ta('Send now')}</button>{' '}
           <button type="button" onClick={onCancel}>{ta('Cancel')}</button>
         </p>
       )}
-      {state.kind === 'sending' && (
-        <p>
-          <button type="button" disabled>{ta('Send now')}</button>{' '}
-          <button type="button" disabled>{ta('Cancel')}</button>{' '}
-          <span role="status">{ta('The dispatch is running, this can take a minute.')}</span>
-        </p>
-      )}
-      {state.kind === 'done' && <p role="status">{state.message}</p>}
-      {state.kind === 'done' && state.rejected && state.rejected.length > 0 && (
-        <p role="alert" className="availability-report__send-error">
-          {ta('The mail server rejected these recipients, they received nothing')}: {state.rejected.join(', ')}
-        </p>
-      )}
-      {state.kind === 'error' && <ErrorBox state={state} onResume={onResume} onRestart={onRestart} />}
+      {/* Dauerhafter Live-Bereich: Meldungen, die erst später im DOM erscheinen, lesen Screenreader sonst nicht vor */}
+      <div ref={statusRef} tabIndex={-1} aria-live="polite" data-testid="report-send-status">
+        {state.kind === 'sending' && (
+          <p>
+            <button type="button" disabled>{ta('Send now')}</button>{' '}
+            <button type="button" disabled>{ta('Cancel')}</button>{' '}
+            <span role="status">{ta('The dispatch is running, this can take a minute.')}</span>
+          </p>
+        )}
+        {state.kind === 'done' && <p role="status">{state.message}</p>}
+        {state.kind === 'done' && state.rejected && state.rejected.length > 0 && (
+          <p role="alert" className="availability-report__send-error">
+            {ta('The mail server rejected these recipients, they received nothing')}: {state.rejected.join(', ')}
+          </p>
+        )}
+        {state.kind === 'error' && <ErrorBox state={state} onResume={onResume} onRestart={onRestart} />}
+      </div>
       <p className="availability-report__muted">
         {ta(
           'If the dispatch breaks off, it can only be continued directly afterwards with "Send the rest", not after reloading the page.',

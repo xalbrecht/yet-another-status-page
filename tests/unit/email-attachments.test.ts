@@ -32,3 +32,14 @@ test('der Anhang steht mit seinem Dateinamen in der fertigen Nachricht', async (
   const info = await transport.sendMail(buildMailMessage(settings, { ...base, to: 'a@x.de', attachments: [{ filename: 'bericht.xlsx', content: new Uint8Array([9, 9]) }] }))
   assert.equal(JSON.parse(info.message as string).attachments[0].filename, 'bericht.xlsx')
 })
+
+test('verifySmtp meldet Erfolg, wenn der Handshake gelingt', async () => {
+  const { verifySmtp } = await import('@/lib/email')
+  assert.deepEqual(await verifySmtp(settings, async () => ({ verify: async () => true })), { ok: true })
+})
+
+test('verifySmtp meldet den Fehler des Servers, statt zu werfen', async () => {
+  const { verifySmtp } = await import('@/lib/email')
+  const result = await verifySmtp(settings, async () => ({ verify: async () => { throw new Error('connect ECONNREFUSED') } }))
+  assert.deepEqual(result, { ok: false, error: 'connect ECONNREFUSED' })
+})

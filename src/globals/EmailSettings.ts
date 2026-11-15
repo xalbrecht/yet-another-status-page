@@ -2,7 +2,7 @@ import { validateRecipients } from '@/lib/report/export/recipients'
 import type { FieldAccess, GlobalConfig } from 'payload'
 import { ta } from '@/lib/i18n/admin'
 
-/** Das Global ist öffentlich lesbar (die Statusseite braucht einzelne Felder). Adressen von Mitarbeitern lesen nur angemeldete Nutzer. */
+/** Das Global ist öffentlich lesbar (die Statusseite braucht einzelne Felder). Adressen von Mitarbeitern und die SMTP-Angaben (Server, Benutzer, Absender) lesen nur angemeldete Nutzer. Server-Code liest über die lokale API ohne Feldprüfung. */
 const authenticatedRead: FieldAccess = ({ req }) => Boolean(req.user)
 
 export const EmailSettings: GlobalConfig = {
@@ -33,6 +33,7 @@ export const EmailSettings: GlobalConfig = {
       fields: [
         {
           name: 'smtpHost',
+          access: { read: authenticatedRead },
           type: 'text',
           label: ta('SMTP Host'),
           admin: {
@@ -41,6 +42,7 @@ export const EmailSettings: GlobalConfig = {
         },
         {
           name: 'smtpPort',
+          access: { read: authenticatedRead },
           type: 'number',
           label: ta('SMTP Port'),
           defaultValue: 587,
@@ -50,6 +52,7 @@ export const EmailSettings: GlobalConfig = {
         },
         {
           name: 'smtpSecure',
+          access: { read: authenticatedRead },
           type: 'select',
           label: ta('Encryption'),
           defaultValue: 'tls',
@@ -64,6 +67,7 @@ export const EmailSettings: GlobalConfig = {
         },
         {
           name: 'smtpUsername',
+          access: { read: authenticatedRead },
           type: 'text',
           label: ta('SMTP Username'),
           admin: {
@@ -102,6 +106,7 @@ export const EmailSettings: GlobalConfig = {
         },
         {
           name: 'smtpFromAddress',
+          access: { read: authenticatedRead },
           type: 'email',
           label: ta('From Email Address'),
           admin: {
@@ -110,6 +115,7 @@ export const EmailSettings: GlobalConfig = {
         },
         {
           name: 'smtpFromName',
+          access: { read: authenticatedRead },
           type: 'text',
           label: ta('From Name'),
           admin: {
@@ -118,6 +124,7 @@ export const EmailSettings: GlobalConfig = {
         },
         {
           name: 'smtpReplyTo',
+          access: { read: authenticatedRead },
           type: 'email',
           label: ta('Reply-To Address'),
           admin: {

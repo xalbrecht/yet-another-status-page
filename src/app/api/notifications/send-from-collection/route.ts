@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { t } from '@/lib/i18n'
+import { getTranslators } from '@/lib/i18n/server'
 import { getPayload } from 'payload'
 import { headers } from 'next/headers'
 import config from '@payload-config'
@@ -12,6 +12,7 @@ interface SendRequest {
 }
 
 export async function POST(request: NextRequest) {
+  const { t } = await getTranslators()
   try {
     const payload = await getPayload({ config })
     

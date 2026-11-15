@@ -1,5 +1,6 @@
 import type { Incident, Maintenance } from '@/payload-types'
-import { t, tf, type TranslationKey } from '@/lib/i18n'
+import type { TranslationKey } from '@/lib/i18n'
+import type { Translate, TranslateFormat } from '@/lib/i18n/core'
 import { incidentStatusConfig, maintenanceStatusConfig } from '@/lib/status-config'
 import { lexicalToHtml } from '@/lib/lexical'
 import { getServerUrl } from '@/lib/utils'
@@ -19,6 +20,7 @@ interface Entry {
 function updatesHtml(
   updates: Array<{ status: string; message: string; createdAt: string }>,
   labels: Record<string, { labelKey: TranslationKey }>,
+  t: Translate,
 ): string {
   return [...updates]
     .reverse()
@@ -35,7 +37,7 @@ function latestUpdateAt(doc: { updates?: Array<{ createdAt: string }> | null; up
   return last && last.createdAt > doc.updatedAt ? last.createdAt : doc.updatedAt
 }
 
-export function incidentEntry(doc: Incident): Entry {
+export function incidentEntry(doc: Incident, t: Translate): Entry {
   const url = `${getServerUrl()}/i/${doc.shortId}`
   const label = incidentStatusConfig[doc.status] ? t(incidentStatusConfig[doc.status].labelKey) : doc.status
   return {
@@ -44,11 +46,11 @@ export function incidentEntry(doc: Incident): Entry {
     url,
     published: doc.createdAt,
     updated: latestUpdateAt(doc),
-    html: updatesHtml(doc.updates ?? [], incidentStatusConfig),
+    html: updatesHtml(doc.updates ?? [], incidentStatusConfig, t),
   }
 }
 
-export function maintenanceEntry(doc: Maintenance): Entry {
+export function maintenanceEntry(doc: Maintenance, t: Translate): Entry {
   const url = `${getServerUrl()}/m/${doc.shortId}`
   const label = maintenanceStatusConfig[doc.status] ? t(maintenanceStatusConfig[doc.status].labelKey) : doc.status
   const schedule = `<p>${t('feed.scheduled')} ${esc(doc.scheduledStartAt)}${doc.scheduledEndAt ? ` – ${esc(doc.scheduledEndAt)}` : ''}${doc.duration ? ` (${esc(doc.duration)})` : ''}</p>`
@@ -58,12 +60,17 @@ export function maintenanceEntry(doc: Maintenance): Entry {
     url,
     published: doc.createdAt,
     updated: latestUpdateAt(doc),
-    html: schedule + (lexicalToHtml(doc.description) ?? '') + updatesHtml(doc.updates ?? [], maintenanceStatusConfig),
+    html: schedule + (lexicalToHtml(doc.description) ?? '') + updatesHtml(doc.updates ?? [], maintenanceStatusConfig, t),
   }
 }
 
 /** Entries are expected sorted newest first. */
-export function renderAtom(siteName: string, selfPath: string, entries: Entry[]): string {
+export function renderAtom(
+  siteName: string,
+  selfPath: string,
+  entries: Entry[],
+  { tf, lang }: { tf: TranslateFormat; lang: string },
+): string {
   const base = getServerUrl()
   const updated = entries[0]?.updated ?? new Date().toISOString()
 
@@ -81,7 +88,7 @@ export function renderAtom(siteName: string, selfPath: string, entries: Entry[])
     .join('\n')
 
   return `<?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom">
+<feed xmlns="http://www.w3.org/2005/Atom" xml:lang="${esc(lang)}">
   <id>${esc(base)}/</id>
   <title>${esc(tf('feed.title', { siteName }))}</title>
   <link rel="alternate" type="text/html" href="${esc(base)}/"/>

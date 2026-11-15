@@ -192,7 +192,7 @@ test.describe('Feeds', () => {
     expect(response.status()).toBe(200)
     expect(response.headers()['content-type']).toContain('application/atom+xml')
     const xml = await response.text()
-    expect(xml).toContain('<feed xmlns="http://www.w3.org/2005/Atom">')
+    expect(xml).toContain('<feed xmlns="http://www.w3.org/2005/Atom"')
     expect(xml).toContain(`/i/${incident.shortId}`)
     expect(xml).toContain(`/m/${maintenance.shortId}`)
   })

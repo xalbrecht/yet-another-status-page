@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { t } from '@/lib/i18n'
+import { getTranslators } from '@/lib/i18n/server'
 import { getPayload } from 'payload'
 import config from '@payload-config'
 import type { EmailSetting, Media, Setting } from '@/payload-types'
@@ -72,6 +72,7 @@ async function checkDatabaseRateLimit(
 }
 
 export async function POST(request: NextRequest) {
+  const { t, lang } = await getTranslators()
   try {
     const payload = await getPayload({ config })
     const clientIp = getClientIp(request)
@@ -181,6 +182,7 @@ export async function POST(request: NextRequest) {
             siteName,
             siteUrl,
             logoUrl,
+            language: lang,
           })
           if (!result.success) console.error('Confirmation email failed:', result.error)
         }
@@ -193,6 +195,7 @@ export async function POST(request: NextRequest) {
             siteName,
             siteUrl,
             logoUrl,
+            language: lang,
           })
           if (!result.success) console.error('Subscription request email failed:', result.error)
         }
@@ -216,6 +219,7 @@ export async function POST(request: NextRequest) {
 
 // GET endpoint to check subscription availability
 export async function GET() {
+  const { t } = await getTranslators()
   try {
     const payload = await getPayload({ config })
     const emailSettings = await payload.findGlobal({

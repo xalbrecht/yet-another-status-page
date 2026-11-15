@@ -1,5 +1,5 @@
 import nodemailer, { type SendMailOptions } from 'nodemailer'
-import { lang, t, tf } from '@/lib/i18n'
+import { translatorsFor } from '@/lib/i18n/translators'
 import type { EmailSetting } from '@/payload-types'
 
 export interface EmailAttachment {
@@ -15,6 +15,8 @@ export interface EmailOptions {
   text?: string
   unsubscribeUrl?: string
   attachments?: EmailAttachment[]
+  /** Sprache für den Absendernamen, wenn die Einstellungen keinen nennen. Ohne Angabe gilt DEFAULT_LANGUAGE. */
+  language?: string
 }
 
 export interface EmailResult {
@@ -50,7 +52,7 @@ export async function createTransporter(emailSettings: EmailSetting) {
 
 /** Baut die Nachricht für nodemailer. Reine Funktion, damit Absender, Empfänger und Anhänge ohne Server prüfbar sind. */
 export function buildMailMessage(emailSettings: EmailSetting, options: EmailOptions): SendMailOptions {
-  const fromName = emailSettings.smtpFromName || t('mail.fromName')
+  const fromName = emailSettings.smtpFromName || translatorsFor(options.language ?? '').t('mail.fromName')
   const headers: Record<string, string> = {}
 
   // Add unsubscribe headers for better deliverability
@@ -123,8 +125,11 @@ export function generateEmailHtml(options: {
   unsubscribeUrl?: string
   siteUrl: string
   logoUrl?: string
+  /** Sprache der festen Texte der Mail (Fußzeile, Abmeldelink) und des lang-Attributs. */
+  language: string
 }): string {
   const { siteName, title, body, ctaText, ctaUrl, unsubscribeUrl, siteUrl, logoUrl } = options
+  const { t, lang } = translatorsFor(options.language)
 
   // Build absolute logo URL if it's a relative path
   const absoluteLogoUrl = logoUrl 
@@ -244,9 +249,10 @@ function escapeHtml(value: string): string {
  */
 export async function sendSubscriptionConfirmationEmail(
   emailSettings: EmailSetting,
-  options: { to: string; token: string; siteName: string; siteUrl: string; logoUrl?: string }
+  options: { to: string; token: string; siteName: string; siteUrl: string; logoUrl?: string; language: string }
 ): Promise<EmailResult> {
-  const { to, token, siteName, siteUrl, logoUrl } = options
+  const { to, token, siteName, siteUrl, logoUrl, language } = options
+  const { t, tf } = translatorsFor(language)
   const confirmUrl = `${siteUrl}/confirm/${token}`
   const html = generateEmailHtml({
     siteName,
@@ -256,11 +262,13 @@ export async function sendSubscriptionConfirmationEmail(
     ctaUrl: confirmUrl,
     siteUrl,
     logoUrl,
+    language,
   })
   return sendEmail(emailSettings, {
     to,
     subject: tf('mail.confirmSubject', { siteName }),
     html,
+    language,
   })
 }
 
@@ -269,9 +277,10 @@ export async function sendSubscriptionConfirmationEmail(
  */
 export async function sendSubscriptionRequestEmail(
   emailSettings: EmailSetting,
-  options: { to: string; subscriberEmail: string; subscriberId: number | string; siteName: string; siteUrl: string; logoUrl?: string }
+  options: { to: string; subscriberEmail: string; subscriberId: number | string; siteName: string; siteUrl: string; logoUrl?: string; language: string }
 ): Promise<EmailResult> {
-  const { to, subscriberEmail, subscriberId, siteName, siteUrl, logoUrl } = options
+  const { to, subscriberEmail, subscriberId, siteName, siteUrl, logoUrl, language } = options
+  const { t, tf } = translatorsFor(language)
   let host = siteUrl
   try {
     host = new URL(siteUrl).host
@@ -286,10 +295,12 @@ export async function sendSubscriptionRequestEmail(
     ctaUrl: `${siteUrl}/admin/collections/subscribers/${subscriberId}`,
     siteUrl,
     logoUrl,
+    language,
   })
   return sendEmail(emailSettings, {
     to,
     subject: tf('mail.requestSubject', { host }),
     html,
+    language,
   })
 }

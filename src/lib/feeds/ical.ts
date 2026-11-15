@@ -1,5 +1,5 @@
 import type { Maintenance } from '@/payload-types'
-import { t } from '@/lib/i18n'
+import type { Translate } from '@/lib/i18n/core'
 import { lexicalToText } from '@/lib/lexical'
 import { getServerUrl } from '@/lib/utils'
 
@@ -31,7 +31,7 @@ const icsStatus: Record<Maintenance['status'], string> = {
   cancelled: 'CANCELLED',
 }
 
-function event(doc: Maintenance, host: string): string[] {
+function event(doc: Maintenance, host: string, t: Translate): string[] {
   const url = `${getServerUrl()}/m/${doc.shortId}`
   const services = (doc.affectedServices ?? [])
     .filter((s): s is Exclude<typeof s, number> => typeof s === 'object' && s !== null)
@@ -62,7 +62,7 @@ function event(doc: Maintenance, host: string): string[] {
   return lines.filter((l): l is string => l !== null)
 }
 
-export function renderIcs(siteName: string, maintenances: Maintenance[]): string {
+export function renderIcs(siteName: string, maintenances: Maintenance[], t: Translate): string {
   const host = new URL(getServerUrl()).host
   const lines = [
     'BEGIN:VCALENDAR',
@@ -72,7 +72,7 @@ export function renderIcs(siteName: string, maintenances: Maintenance[]): string
     'METHOD:PUBLISH',
     `X-WR-CALNAME:${escapeText(siteName)} ${t('ical.calendar')}`,
     'X-PUBLISHED-TTL:PT1H',
-    ...maintenances.flatMap((m) => event(m, host)),
+    ...maintenances.flatMap((m) => event(m, host, t)),
     'END:VCALENDAR',
   ]
   return lines.map(fold).join('\r\n') + '\r\n'

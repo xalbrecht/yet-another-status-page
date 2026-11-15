@@ -1,7 +1,7 @@
 import { ta } from '@/lib/i18n/admin'
 import { formatAvailability } from '@/lib/availability'
 import type { ReportData } from '@/lib/report/aggregate'
-import { formatDuration } from '@/lib/report/format'
+import { formatDuration, serviceWord } from '@/lib/report/format'
 import type { GroupSheetData } from '@/lib/report/group-sheet'
 import { chunkRows, heatClass } from '@/lib/report/heat'
 import { BLOCK_WIDTH, frame, type ExportBlock } from './blocks-overall'
@@ -129,7 +129,7 @@ function byDaySection(sheet: GroupSheetData, mode: 'all-days' | 'disruption-days
       }
     })
     if (!showNames) {
-      const label = `${count} ${ta('services')}`
+      const label = `${count} ${serviceWord(count)}`
       longestLabel = Math.max(longestLabel, label.length)
       body += textEl(center + 4, DAY_BASE + 22, label, { size: 12, rotate: 90 })
     }
@@ -175,7 +175,7 @@ export function groupBlocks(data: ReportData, locale: string, periodLabel: strin
     periodLabel,
     `${ta('Availability')} ${data.kpis.availability === null ? '–' : formatAvailability(data.kpis.availability, locale)}`,
     `${ta('Target')} ${formatAvailability(data.kpis.target, locale)}`,
-    `${data.scope.serviceCount} ${data.scope.serviceCount === 1 ? ta('service') : ta('services')}`,
+    `${data.scope.serviceCount} ${serviceWord(data.scope.serviceCount)}`,
   ]
     .filter(Boolean)
     .join(' · ')

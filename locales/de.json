@@ -754,6 +754,7 @@
     "The dispatch cannot be continued: the period is still running, so the images differ with every attempt. The emails already sent belong to an earlier minute. Please restart the whole dispatch, or choose a finished period. The recipients then receive all emails again, recognizable by \"Part i of n\".": "Der Versand lässt sich nicht fortsetzen: Der Zeitraum läuft noch, die Bilder unterscheiden sich daher bei jedem Versuch. Die bereits gesendeten Mails gehören zu einer früheren Minute. Bitte den ganzen Versand neu starten oder einen abgeschlossenen Zeitraum wählen. Die Empfänger erhalten dann alle Mails erneut, erkennbar an „Teil i von n“.",
     "outage": "Ausfall",
     "Maintenance type B": "Wartungsart B",
-    "The outage duration on the sheet Services includes the maintenance time. The sheet Outages lists only the outages, so its durations add up to less.": "Die Ausfalldauer im Blatt Dienste enthält die Wartungszeit. Das Blatt Ausfälle listet nur die Ausfälle, seine Dauern ergeben daher weniger."
+    "The outage duration on the sheet Services includes the maintenance time. The sheet Outages lists only the outages, so its durations add up to less.": "Die Ausfalldauer im Blatt Dienste enthält die Wartungszeit. Das Blatt Ausfälle listet nur die Ausfälle, seine Dauern ergeben daher weniger.",
+    "days": "Tage"
   }
 }

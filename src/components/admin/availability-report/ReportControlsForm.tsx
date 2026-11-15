@@ -30,7 +30,8 @@ export function ReportControlsForm({ params, periodKey, periodOptions, onChange 
   return (
     <form method="get" className="availability-report__controls" onChange={onChange}>
       <input type="hidden" name="view" value={params.view} />
-      {params.view === 'groups' && params.group && <input type="hidden" name="group" value={params.group} />}
+      {/* Die gewählte Gruppe bleibt auch im Gesamtbericht erhalten, sonst fehlt sie nach dem Wechsel zu den Gruppenberichten */}
+      {params.group && <input type="hidden" name="group" value={params.group} />}
       <label>
         {ta('Period')}
         <select name="period" defaultValue={periodKey}>
@@ -62,19 +63,29 @@ export function ReportControlsForm({ params, periodKey, periodOptions, onChange 
           <option value="C" selected={params.maintenance === 'C'}>{ta('C: excluded from the total time')}</option>
         </select>
       </label>
-      <label>
-        {ta('Weakest services')}
-        <select name="topN" defaultValue={String(params.topN)}>
-          {TOP_N_VALUES.map((value) => (
-            <option key={value} value={String(value)} selected={value === params.topN}>{value}</option>
-          ))}
-        </select>
-      </label>
-      <label className="availability-report__check">
-        <input type="checkbox" name="showMaintenance" value="true" defaultChecked={params.showMaintenance} />
-        {ta('Show maintenance time')}
-        <input type="hidden" name="showMaintenance" value="false" />
-      </label>
+      {/* „Schwächste Dienste“ und „Wartungszeit“ gehören zum Gesamtbericht: in den Gruppenberichten ausgeblendet, Wert bleibt erhalten */}
+      {params.view === 'groups' ? (
+        <>
+          <input type="hidden" name="topN" value={String(params.topN)} />
+          <input type="hidden" name="showMaintenance" value={String(params.showMaintenance)} />
+        </>
+      ) : (
+        <>
+          <label>
+            {ta('Weakest services')}
+            <select name="topN" defaultValue={String(params.topN)}>
+              {TOP_N_VALUES.map((value) => (
+                <option key={value} value={String(value)} selected={value === params.topN}>{value}</option>
+              ))}
+            </select>
+          </label>
+          <label className="availability-report__check">
+            <input type="checkbox" name="showMaintenance" value="true" defaultChecked={params.showMaintenance} />
+            {ta('Show maintenance time')}
+            <input type="hidden" name="showMaintenance" value="false" />
+          </label>
+        </>
+      )}
       <button type="submit">{ta('Apply')}</button>
     </form>
   )

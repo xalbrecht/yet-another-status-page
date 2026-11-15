@@ -179,10 +179,21 @@ test('im Gruppentab trägt das Formular Ansicht und Gruppe weiter, ein Auswahlfe
   assert.doesNotMatch(markup, /<select name="group"/)
 })
 
-test('im Gesamtbericht trägt das Formular keine Gruppe weiter', () => {
+test('im Gesamtbericht trägt das Formular die gewählte Gruppe weiter, ohne Gruppe keine', () => {
   const markup = formWith({ group: '7' })
   assert.match(markup, /name="view" value="overall"/)
-  assert.doesNotMatch(markup, /name="group"/)
+  assert.match(markup, /name="group" value="7"/)
+  assert.doesNotMatch(formWith({}), /name="group"/)
+})
+
+test('in den Gruppenberichten fehlen „Schwächste Dienste“ und „Wartungszeit“, ihre Werte bleiben als versteckte Felder', () => {
+  const markup = formWith({ view: 'groups', group: '7', topN: '7', showMaintenance: 'false' })
+  assert.doesNotMatch(markup, /<select[^>]*name="topN"/)
+  assert.doesNotMatch(markup, /type="checkbox"[^>]*name="showMaintenance"|name="showMaintenance"[^>]*type="checkbox"/)
+  assert.match(markup, /name="topN" value="7"/)
+  assert.match(markup, /name="showMaintenance" value="false"/)
+  const overall = formWith({ topN: '7' })
+  assert.match(overall, /<select[^>]*name="topN"/)
 })
 
 test('die Tabs markieren nur die aktive Ansicht', () => {
@@ -202,7 +213,7 @@ test('die Gruppenliste behält die Reihenfolge, markiert die gewählte Gruppe un
   assert.match(markup, /data-testid="group-list"/)
   assert.ok(markup.indexOf('Eins') < markup.indexOf('Zwei') && markup.indexOf('Zwei') < markup.indexOf('Drei'))
   assert.equal((markup.match(/aria-current="true"/g) ?? []).length, 1)
-  assert.match(markup, /href="\/g\/2"[^>]*aria-current="true"/)
+  assert.match(markup, /<a[^>]*(?:href="\/g\/2"[^>]*aria-current="true"|aria-current="true"[^>]*href="\/g\/2")/)
   assert.match(markup, /98,10 %/)
   assert.match(markup, /Drei[\s\S]*–/)
   assert.match(markup, /heat-4/)

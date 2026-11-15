@@ -9,3 +9,9 @@ export function formatDuration(ms: number): string {
   if (hours === 0) return `${minutes} ${ta('min')}`
   return `${hours} ${ta('h')}${minutes ? ` ${minutes} ${ta('min')}` : ''}`
 }
+
+/** „Dienst“ bei einem, sonst „Dienste“. */
+export const serviceWord = (count: number): string => (count === 1 ? ta('service') : ta('services'))
+
+/** „Ausfall“ bei einem, sonst „Ausfälle“. */
+export const outageWord = (count: number): string => (count === 1 ? ta('outage') : ta('outages'))

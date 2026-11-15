@@ -4,7 +4,7 @@ import { formatAvailability } from '@/lib/availability'
 import type { RankingRow, ReportData } from '@/lib/report/aggregate'
 import type { ReportParams } from '@/lib/report/params'
 import type { ReportPeriod } from '@/lib/report/period'
-import { formatDuration } from '@/lib/report/format'
+import { formatDuration, outageWord, serviceWord } from '@/lib/report/format'
 import { Heatmap } from './Heatmap'
 import { TrendChart } from './TrendChart'
 
@@ -86,7 +86,7 @@ function RankingTable(props: { rows: RankingRow[]; maxDown: number; showGroup: b
                 {row.belowTarget && <div className="availability-report__under report-below-target">{ta('below target')}</div>}
               </td>
               <td className={diff === null || Math.abs(diff) < 0.005 ? 'availability-report__flat' : diff > 0 ? 'availability-report__up' : 'availability-report__down'}>
-                {diff === null ? '–' : Math.abs(diff) < 0.005 ? '= 0,00' : `${diff > 0 ? '▲ +' : '▼ −'}${nf.format(Math.abs(diff))}`}
+                {diff === null ? '–' : Math.abs(diff) < 0.005 ? `= ${nf.format(0)}` : `${diff > 0 ? '▲ +' : '▼ −'}${nf.format(Math.abs(diff))}`}
               </td>
               <td>
                 {row.downMs > 0 ? (
@@ -94,7 +94,7 @@ function RankingTable(props: { rows: RankingRow[]; maxDown: number; showGroup: b
                     <div className="availability-report__bar" style={{ width: `${Math.max(2, Math.round((row.downMs / maxDown) * 100))}%` }} />
                     <small>
                       {row.outageCount > 0
-                        ? `${formatDuration(row.downMs - row.maintenanceDownMs)} ${ta('in')} ${row.outageCount} ${ta('outage(s)')}`
+                        ? `${formatDuration(row.downMs - row.maintenanceDownMs)} ${ta('in')} ${row.outageCount} ${outageWord(row.outageCount)}`
                         : null}
                       {row.outageCount > 1 ? `, ${ta('longest')} ${formatDuration(row.longestOutageMs)}` : ''}
                       {row.maintenanceDownMs > 0
@@ -125,7 +125,7 @@ export function ReportView({ data, params, period, locale, controls, tabs, child
     <div className="availability-report">
       <h1>{ta('Availability report')} {period.label}</h1>
       <p className="availability-report__muted">
-        {scopeText}, {data.scope.serviceCount} {ta('services')}
+        {scopeText}, {data.scope.serviceCount} {serviceWord(data.scope.serviceCount)}
         {period.partial ? `. ${ta('The period is not complete yet.')}` : ''}
       </p>
       {controls}
@@ -190,7 +190,7 @@ export function ReportView({ data, params, period, locale, controls, tabs, child
                     <div className="availability-report__muted">{row.groupName}</div>
                     <div className="availability-report__weak-value">{row.availability === null ? '–' : formatAvailability(row.availability, locale)}</div>
                     <div className="availability-report__muted">
-                      {formatDuration(row.downMs)} {ta('in')} {row.outageCount} {ta('outage(s)')}, {ta('previous period')} {row.previousAvailability === null ? '–' : formatAvailability(row.previousAvailability, locale)}
+                      {formatDuration(row.downMs)} {ta('in')} {row.outageCount} {outageWord(row.outageCount)}, {ta('previous period')} {row.previousAvailability === null ? '–' : formatAvailability(row.previousAvailability, locale)}
                     </div>
                   </div>
                 ))}

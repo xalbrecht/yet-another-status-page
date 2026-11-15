@@ -67,12 +67,18 @@
   }
 
   &__layout { display: flex; gap: 1.25rem; align-items: flex-start; }
+  /* Schmale Fenster: Liste über dem Blatt statt daneben */
+  @media (max-width: 800px) {
+    &__layout { flex-direction: column; align-items: stretch; }
+    &__groups { width: auto; max-height: 40vh; }
+  }
   &__layout-main { flex: 1; min-width: 0; }
   &__groups {
     list-style: none;
     margin: 0;
     padding: 0;
     width: 260px;
+    max-width: 100%;
     flex: none;
     max-height: 80vh;
     overflow-y: auto;
@@ -141,6 +147,8 @@
   .heat-2 { background: var(--heat-2); }
   .heat-3 { background: var(--heat-3); }
   .heat-4 { background: var(--heat-4); }
+  /* 100 %: sonst hat der Balken die Farbe der Spur und sieht leer aus */
+  &__bar-fill.heat-0 { background: var(--heat-1); }
 }
 
 html[data-theme='dark'] .availability-report {

@@ -112,3 +112,11 @@ test('buildGroupSheet endet in dieser Zeitzone und führt jeden Tag genau einmal
   assert.equal(sheet.perDay.length, 30)
   assert.equal(new Set(sheet.perDay.map((day) => day.day)).size, 30)
 })
+
+test('buildGroupSheet: Überschrift nennt die Tage, wenn die Achse nur einen Teil des Monats zeigt', () => {
+  const running = { ...month, end: ms('2026-10-14T10:00:00Z'), partial: true }
+  const partial = buildGroupSheet({ month: running, services: [serviceOf(1, 'MACH', mach)], mode: 'A', timeZone: Z })
+  assert.match(partial.month.label, /^Oktober 2026 \((Tage|days) 1–14\)$/)
+  const full = buildGroupSheet({ month, services: [serviceOf(1, 'MACH', mach)], mode: 'A', timeZone: Z })
+  assert.equal(full.month.label, 'Oktober 2026')
+})

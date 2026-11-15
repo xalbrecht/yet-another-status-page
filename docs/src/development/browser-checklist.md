@@ -83,6 +83,33 @@ Diese Punkte führt der Betrieb aus, nicht der Prüfer im Browser.
 | F2 | Kein Speicher-Kill | Test: `ssh <test-host> "docker events --since 24h --until 0s --filter event=oom"` | Keine Ausgabe | ☐ | ☐ | |
 | F3 | Prüfskript für den Stack | `scripts/check_stack.sh` im Deployment-Projekt ausführen | Läuft ohne Fehler durch | ☐ | ☐ | |
 
+## 8. Verfügbarkeitsbericht (Admin)
+
+Gilt für die Seite `/admin/verfuegbarkeitsbericht` (Bericht, Export und Mailversand). Voraussetzung: Anmeldung im Admin, Dienste mit Ausfällen im gewählten Zeitraum, ein Dienst mit langem Namen, ein Dienst mit Emoji im Namen und mindestens ein Empfänger in den E-Mail-Einstellungen. Die Punkte H1 bis H11 gehören zur Berichtsansicht, H12 bis H14 zum Export, H15 bis H20 zum Mailversand. Geänderte Einstellungen danach zurücksetzen.
+
+| Nr. | Prüfpunkt | So prüfen | Erwartung | Dev | Test | Notiz |
+|---|---|---|---|---|---|---|
+| H1 | Gruppenliste bleibt beim Klick stehen | Gruppenberichte öffnen, die Liste nach unten scrollen, eine Gruppe weiter unten anklicken | Das Gruppenblatt wechselt, die Liste springt nicht an den Anfang, die Seite scrollt nicht nach oben, die gewählte Gruppe ist markiert | ☐ | ☐ | |
+| H2 | Gruppenliste bei schmalem Fenster | Fenster unter 800 Pixel Breite ziehen, Gruppenberichte ansehen | Die Liste steht über dem Gruppenblatt in voller Breite (höchstens 40 % der Fensterhöhe, dann scrollbar), kein seitliches Scrollen | ☐ | ☐ | |
+| H3 | Balken bei 100 % | Gruppenblatt einer Gruppe mit einem Dienst bei 100 % ansehen (Block „Dienste der Gruppe, schwächste zuerst“), hell und dunkel | Der Balken füllt die ganze Spur in Hellblau, er sieht nicht leer aus | ☐ | ☐ | |
+| H4 | Dienstnamen in Block 4 | Monat mit Ausfällen eines Dienstes mit langem Namen (ab 16 Zeichen) wählen, den Block „Störungen im <Monat>, je Tag“ ansehen | Der Name steht senkrecht unter der Achse und ist nicht am unteren Rand abgeschnitten (bei Kürzung endet er mit „…“) | ☐ | ☐ | |
+| H5 | Dezimalzeichen im Tooltip | Mit der Maus über einen Balken in Block 4 fahren | Die Dauer steht mit Komma (z. B. „2,0 Std.“), nicht mit Punkt | ☐ | ☐ | |
+| H6 | Kurzer Ausfall sichtbar | Einen Tag mit Ausfall unter fünf Minuten in Block 4 suchen | Der Ausfall erscheint als dünner, aber sichtbarer Strich | ☐ | ☐ | |
+| H7 | Überschrift bei Teilmonat | Laufenden Monat oder einen freien Zeitraum (z. B. 5. bis 20.) wählen, Gruppenblatt ansehen | Die Überschriften von Block 3 und 4 nennen die Tage („… (Tage 1–20)“), die Achse endet am letzten Tag. Ein ganzer Monat trägt keinen Zusatz | ☐ | ☐ | |
+| H8 | Einzahl | Gruppe mit genau einem Dienst und einem Ausfall wählen, daneben eine mit mehreren | „1 Dienst“ und „1 Ausfall“, bei mehreren „Dienste“ und „Ausfälle“ | ☐ | ☐ | |
+| H9 | Felder in den Gruppenberichten | Zwischen Gesamtbericht und Gruppenberichten wechseln, die Auswahlfelder ansehen | Im Gesamtbericht stehen „Schwächste Dienste“ und „Wartungszeit anzeigen“, in den Gruppenberichten fehlen sie. Zurück im Gesamtbericht haben sie ihre alten Werte | ☐ | ☐ | |
+| H10 | Gruppe bleibt beim Wechsel | Gruppenberichte: Gruppe wählen, zum Gesamtbericht wechseln, dort den Zeitraum ändern, zurück zu den Gruppenberichten | Dieselbe Gruppe ist gewählt (die Adresse trägt `group=`) | ☐ | ☐ | |
+| H11 | Vorgewählte Gruppe | Gruppenberichte ohne `group` in der Adresse öffnen, danach den Zeitraum ändern | Die schwächste Gruppe (erster Eintrag der Liste) ist gewählt, die Seite lädt ohne auffällige Wartezeit | ☐ | ☐ | |
+| H12 | Dateiname bei freiem Zeitraum | Freien Zeitraum wählen, ZIP, PDF und Excel herunterladen | Die Namen lauten `verfuegbarkeitsbericht-JJJJ-MM-TT_JJJJ-MM-TT…`, nicht `…-custom` | ☐ | ☐ | |
+| H13 | Excel: Minuten und Wartungsart B | Excel-Datei öffnen, einmal mit Wartungsart A, einmal mit B | Dauern haben eine Nachkommastelle (ein Ausfall von 20 Sekunden zeigt 0,3). Bei B steht auf dem Blatt „Hinweise“ eine Zeile „Wartungsart B“, bei A fehlt sie | ☐ | ☐ | |
+| H14 | Bilder: Emoji und lange Namen | Einen Dienst mit Emoji im Namen und eine Gruppe mit mehr als 40 Zeichen anlegen, ZIP herunterladen | In den Bildern erscheint kein Kästchen oder „?“ für das Emoji. Der Gruppenordner im ZIP hat höchstens 40 Zeichen | ☐ | ☐ | |
+| H15 | Versand mit Tastatur | Nur mit der Tastatur: zu „Per Mail senden“ tabben, Enter. Danach „Abbrechen“ mit Enter | Der Fokus springt auf „Jetzt senden“, nach „Abbrechen“ zurück auf „Per Mail senden“, nach dem Senden auf die Meldung | ☐ | ☐ | |
+| H16 | Mailserver nicht erreichbar | Unter E-Mail-Einstellungen einen nicht erreichbaren Server eintragen, Versand starten, Wert danach zurücksetzen | Nach höchstens etwa 10 Sekunden steht „Der Mailserver antwortet nicht … Es wurde nichts gesendet.“ | ☐ | ☐ | |
+| H17 | Mailtext | Versand an den Auffangserver auf `<test-host>` (Oberfläche über einen SSH-Tunnel), Mail 1 öffnen | Der Text nennt „Dienste im Bericht: n“, PDF und Excel hängen an | ☐ | ☐ | |
+| H18 | Ungültige Empfängeradresse | Im Feld „Empfänger des Verfügbarkeitsberichts“ `<a@x.de>` eintragen und speichern | Speichern wird abgelehnt, die Meldung nennt den Eintrag | ☐ | ☐ | |
+| H19 | SMTP-Angaben abgemeldet | In einem privaten Fenster ohne Anmeldung `/api/globals/email-settings` aufrufen | Server, Benutzer und Absender fehlen in der Antwort | ☐ | ☐ | |
+| H20 | Zwei Versände zugleich | In zwei Tabs gleichzeitig „Jetzt senden“ auslösen | Ein Tab meldet „Es läuft bereits ein Versand.“, der andere versendet normal | ☐ | ☐ | |
+
 ## PDF erzeugen
 
 Aus dem Verzeichnis des Repos. Die Ausgabe liegt im Querformat vor, damit die Tabellen lesbar bleiben:

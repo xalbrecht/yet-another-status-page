@@ -9,6 +9,7 @@ import { resolveDateTimeConfig } from '@/lib/datetime'
 import { ta } from '@/lib/i18n/admin'
 import { parseRecipients } from '@/lib/report/export/recipients'
 import { parseReportParams, reportHref, reportTabHrefs, selectionQuery } from '@/lib/report/params'
+import { reportViewState, searchForLoad } from '@/lib/report/view-state'
 import { ExportButtons } from './ExportButtons'
 import { GroupList } from './GroupList'
 import { GroupSheet } from './GroupSheet'
@@ -33,22 +34,16 @@ export async function AvailabilityReportView({ initPageResult, params, searchPar
   const emailSettings = await req.payload.findGlobal({ slug: 'email-settings' })
   const recipients = parseRecipients(emailSettings.reportRecipients)
   const requested = parseReportParams(search)
-  // Der Gesamtbericht zeigt immer alle Gruppen: eine Gruppe in der Adresse gilt nur für die Gruppenberichte
-  const result = await loadReport(req.payload, requested.view === 'overall' ? { ...search, group: undefined } : search, now)
-  // Bei ungültiger Gruppe (z. B. gelöscht, altes Lesezeichen) gilt keine Gruppe mehr: Formular und Tabs tragen sie nicht weiter
-  const groupInvalid = result.ok && Boolean(result.data.error) && Boolean(requested.group)
-  const reportParams = { ...(result.ok ? result.params : requested), ...(groupInvalid ? { group: undefined } : {}) }
+  const result = await loadReport(req.payload, searchForLoad(requested, search), now)
+  const { groupInvalid, controlParams, exportable } = reportViewState(requested, result)
   const options = periodOptions(now, dt.timezone, dt.locale)
   const periodKey = result.ok ? result.period.key : requested.period ?? options[1]?.value ?? 'custom'
 
-  // Das Formular trägt die gewählte Gruppe auch im Gesamtbericht weiter (dort lädt der Bericht sie nicht, `reportParams.group` ist leer)
-  const controlParams = { ...reportParams, group: groupInvalid ? undefined : requested.group }
   const controls = <ReportControls params={controlParams} periodKey={periodKey} periodOptions={options} />
-  const exportable = result.ok && !result.data.error
   const tabs = (
     <>
       {exportable && <SendReportButton key={selectionQuery(search)} recipients={recipients} query={selectionQuery(search)} />}
-      {exportable && <ExportButtons search={search} groupId={requested.view === 'groups' ? result.data.scope.groupId : null} />}
+      {exportable && <ExportButtons search={search} groupId={requested.view === 'groups' && result.ok ? result.data.scope.groupId : null} />}
       <ViewTabs active={requested.view} hrefs={reportTabHrefs(search, groupInvalid)} />
     </>
   )

@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils";
-import { t } from '@/lib/i18n'
+import type { Translate } from '@/lib/i18n/core'
 import { incidentStatusConfig, type IncidentUpdateStatus } from "@/lib/status-config";
 
 interface IncidentUpdate {
@@ -11,10 +11,11 @@ interface IncidentUpdate {
 }
 
 interface IncidentUpdatesTimelineProps {
+  t: Translate;
   updates: IncidentUpdate[];
 }
 
-export function IncidentUpdatesTimeline({ updates }: IncidentUpdatesTimelineProps) {
+export function IncidentUpdatesTimeline({ updates, t }: IncidentUpdatesTimelineProps) {
   return (
     <div className="rounded-lg border border-border bg-card p-6">
       <div className="relative space-y-6">

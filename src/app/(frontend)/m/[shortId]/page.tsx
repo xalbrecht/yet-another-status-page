@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
-import { t, tf } from '@/lib/i18n'
+import { getTranslators } from '@/lib/i18n/server'
+import type { Translate } from '@/lib/i18n/core'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { ChevronLeft, Wrench, Clock, CheckCircle2, AlertTriangle } from 'lucide-react'
@@ -20,11 +21,13 @@ interface PageProps {
   params: Promise<{ shortId: string }>
 }
 
-const statusConfig: Record<string, { label: string; className: string; icon: typeof Wrench }> = {
-  upcoming: { label: t("maintenance.badgeUpcoming"), className: "bg-status-maintenance/10 text-status-maintenance", icon: Clock },
-  in_progress: { label: t("maintenance.in_progress"), className: "bg-status-degraded/10 text-status-degraded", icon: Wrench },
-  completed: { label: t("maintenance.completed"), className: "bg-status-operational/10 text-status-operational", icon: CheckCircle2 },
-  cancelled: { label: t("maintenance.cancelled"), className: "bg-muted text-muted-foreground", icon: AlertTriangle },
+function getStatusConfig(t: Translate): Record<string, { label: string; className: string; icon: typeof Wrench }> {
+  return {
+    upcoming: { label: t("maintenance.badgeUpcoming"), className: "bg-status-maintenance/10 text-status-maintenance", icon: Clock },
+    in_progress: { label: t("maintenance.in_progress"), className: "bg-status-degraded/10 text-status-degraded", icon: Wrench },
+    completed: { label: t("maintenance.completed"), className: "bg-status-operational/10 text-status-operational", icon: CheckCircle2 },
+    cancelled: { label: t("maintenance.cancelled"), className: "bg-muted text-muted-foreground", icon: AlertTriangle },
+  }
 }
 
 async function getMaintenanceData(shortId: string) {
@@ -86,6 +89,7 @@ async function getMaintenanceData(shortId: string) {
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { t, tf } = await getTranslators()
   const { shortId } = await params
   const data = await getMaintenanceData(shortId)
 
@@ -105,6 +109,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 }
 
 export default async function MaintenancePage({ params }: PageProps) {
+  const { t } = await getTranslators()
+  const statusConfig = getStatusConfig(t)
   const { shortId } = await params
   const data = await getMaintenanceData(shortId)
 
@@ -186,7 +192,7 @@ export default async function MaintenancePage({ params }: PageProps) {
         </div>
 
         {/* Updates Timeline */}
-        <MaintenanceUpdatesTimeline updates={maintenance.updates} />
+        <MaintenanceUpdatesTimeline updates={maintenance.updates} t={t} />
       </main>
 
       <Footer footerText={settings.footerText} timezone={settings.timezone} />

@@ -1,7 +1,7 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { DEFAULT_DATETIME_CONFIG, formatDateTime } from '@/lib/datetime'
-import { t, tf } from '@/lib/i18n'
+import { translatorsFor } from '@/lib/i18n/translators'
 import {
   buildIncidentItems,
   buildMaintenanceItems,
@@ -10,6 +10,8 @@ import {
   parseBoxEntries,
   parseBoxesPlacement,
 } from '@/lib/status-boxes'
+
+const { t, tf } = translatorsFor('')
 
 const dt = DEFAULT_DATETIME_CONFIG
 const at = (iso: string) => formatDateTime(new Date(iso), dt)
@@ -54,6 +56,7 @@ test('buildIncidentItems lässt gelöste Störungen weg', () => {
       },
     ],
     dt,
+    t,
   )
   assert.deepEqual(items, [])
 })
@@ -75,6 +78,7 @@ test('buildIncidentItems bildet eine offene Störung auf einen Boxeintrag ab', (
       },
     ],
     dt,
+    t,
   )
   assert.equal(item.id, '7')
   assert.equal(item.href, '/i/abc123')
@@ -90,6 +94,7 @@ test('buildIncidentItems behandelt Störungen ohne Updates und ohne Dienste', ()
   const [item] = buildIncidentItems(
     [{ id: 8, shortId: 'xyz', title: 'Neu', impact: 'degraded', createdAt: '2026-11-13T10:00:00.000Z' }],
     dt,
+    t,
   )
   assert.equal(item.last, null)
   assert.deepEqual(item.services, [])
@@ -107,7 +112,7 @@ test('buildIncidentItems behält die Reihenfolge der Eingabe', () => {
     updates: [],
   })
   assert.deepEqual(
-    buildIncidentItems([make(3), make(1), make(2)], dt).map((i) => i.id),
+    buildIncidentItems([make(3), make(1), make(2)], dt, t).map((i) => i.id),
     ['3', '1', '2'],
   )
 })
@@ -133,12 +138,13 @@ test('buildMaintenanceItems zeigt nur geplante und laufende Wartungen', () => {
       maintenance({ id: 4, status: 'in_progress' }),
     ],
     dt,
+    { t, tf },
   )
   assert.deepEqual(items.map((i) => i.id), ['3', '4'])
 })
 
 test('buildMaintenanceItems setzt Link, Status und Zeitraum', () => {
-  const [item] = buildMaintenanceItems([maintenance({ affectedServices: [{ id: 5, name: 'Portal' }] })], dt)
+  const [item] = buildMaintenanceItems([maintenance({ affectedServices: [{ id: 5, name: 'Portal' }] })], dt, { t, tf })
   assert.equal(item.href, '/m/m1')
   assert.equal(item.status, 'maintenance')
   assert.equal(item.stateLabel, t('maintenance.upcoming'))
@@ -153,7 +159,7 @@ test('buildMaintenanceItems setzt Link, Status und Zeitraum', () => {
 })
 
 test('buildMaintenanceItems nennt ohne Ende nur den Beginn', () => {
-  const [item] = buildMaintenanceItems([maintenance({ scheduledEndAt: null })], dt)
+  const [item] = buildMaintenanceItems([maintenance({ scheduledEndAt: null })], dt, { t, tf })
   assert.equal(item.when, tf('maintenance.noticeSoonOpen', { start: at('2026-11-20T20:00:00.000Z') }))
 })
 
@@ -165,6 +171,26 @@ test('buildMaintenanceItems sortiert nach Beginn aufsteigend', () => {
       maintenance({ id: 3, scheduledStartAt: '2026-11-21T20:00:00.000Z' }),
     ],
     dt,
+    { t, tf },
   )
   assert.deepEqual(items.map((i) => i.id), ['2', '3', '1'])
+})
+
+test('buildIncidentItems übersetzt den Zustand in die übergebene Sprache', () => {
+  const incident = {
+    id: 9,
+    shortId: 'lng',
+    title: 'Sprache',
+    impact: 'partial' as const,
+    createdAt: '2026-11-13T08:00:00.000Z',
+    updates: [{ status: 'investigating' as const, message: 'x', createdAt: '2026-11-13T08:00:00.000Z' }],
+    affectedServices: [],
+  }
+  const de = translatorsFor('de')
+  const en = translatorsFor('en')
+  const [inDe] = buildIncidentItems([incident], dt, de.t)
+  const [inEn] = buildIncidentItems([incident], dt, en.t)
+  assert.equal(inDe.stateLabel, de.t('incident.investigating'))
+  assert.equal(inEn.stateLabel, en.t('incident.investigating'))
+  assert.notEqual(inDe.stateLabel, inEn.stateLabel)
 })

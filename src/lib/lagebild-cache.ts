@@ -1,5 +1,5 @@
 import { unstable_cache } from 'next/cache'
-import { lang, t, tf } from '@/lib/i18n'
+import { translatorsFor } from '@/lib/i18n/translators'
 import type { DateTimeConfig } from '@/lib/datetime'
 import {
   BAR_HOURS,
@@ -25,23 +25,32 @@ import { getCachedPayload } from '@/lib/payload'
 const seconds = parseCacheSeconds(process.env.LAGEBILD_CACHE_SECONDS)
 
 // Die Funktion holt die Payload-Instanz selbst: Argumente der Funktion bilden den Schlüssel und müssen
-// einfache Werte sein (Zeitzone, Sprache, Rückschau, Balken).
+// einfache Werte sein (Zeitzone, Rückschau, Balken). Die Sprache steht im Schlüsselteil `lagebildCacheKey(sprache)`,
+// deshalb gibt es je Sprache eine zwischengespeicherte Funktion (einmal angelegt, begrenzt durch die Zahl der Sprachdateien).
 // `unstable_cache` verlangt `revalidate` > 0 und wirft sonst beim Laden des Moduls. Bei 0 gibt es keine.
-const computeCached =
-  seconds > 0
-    ? unstable_cache(
-        async (dt: DateTimeConfig, periodDays: PeriodDays, barHours: BarHours): Promise<LagebildData> =>
-          loadLagebild(await getCachedPayload(), dt, { t, tf }, periodDays, barHours),
-        lagebildCacheKey(lang),
-        { revalidate: seconds, tags: [LAGEBILD_CACHE_TAG] },
-      )
-    : null
+type Compute = (dt: DateTimeConfig, periodDays: PeriodDays, barHours: BarHours) => Promise<LagebildData>
+const computeByLanguage = new Map<string, Compute>()
+
+function computeCachedFor(language: string): Compute {
+  let compute = computeByLanguage.get(language)
+  if (!compute) {
+    compute = unstable_cache(
+      async (dt: DateTimeConfig, periodDays: PeriodDays, barHours: BarHours): Promise<LagebildData> =>
+        loadLagebild(await getCachedPayload(), dt, translatorsFor(language), periodDays, barHours),
+      lagebildCacheKey(language),
+      { revalidate: seconds, tags: [LAGEBILD_CACHE_TAG] },
+    )
+    computeByLanguage.set(language, compute)
+  }
+  return compute
+}
 
 export async function loadLagebildCached(
+  language: string,
   dt: DateTimeConfig,
   periodDays: PeriodDays = PERIOD_DAYS,
   barHours: BarHours = BAR_HOURS,
 ): Promise<LagebildData> {
-  if (!computeCached) return loadLagebild(await getCachedPayload(), dt, { t, tf }, periodDays, barHours)
-  return computeCached(dt, periodDays, barHours)
+  if (seconds <= 0) return loadLagebild(await getCachedPayload(), dt, translatorsFor(language), periodDays, barHours)
+  return computeCachedFor(language)(dt, periodDays, barHours)
 }

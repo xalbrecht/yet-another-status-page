@@ -2,6 +2,7 @@ import { getCachedPayload, getSettings } from '@/lib/payload'
 import { ACTIVE_MAINTENANCE_WHERE } from '@/lib/api/v1/queries'
 import { renderIcs } from '@/lib/feeds/ical'
 import { handle, text } from '@/lib/api/v1/respond'
+import { getTranslators } from '@/lib/i18n/server'
 
 export const dynamic = 'force-dynamic'
 
@@ -22,5 +23,6 @@ export const GET = handle(async (request) => {
     }),
   ])
 
-  return text(request, renderIcs(settings.siteName, maintenances.docs), 'text/calendar; charset=utf-8', 'public, max-age=300')
+  const { t } = await getTranslators()
+  return text(request, renderIcs(settings.siteName, maintenances.docs, t), 'text/calendar; charset=utf-8', 'public, max-age=300')
 })

@@ -1,5 +1,5 @@
 import type { CollectionConfig } from 'payload'
-import { t } from '@/lib/i18n'
+import { translatorsForSettings } from '@/lib/i18n/translators'
 import { generateShortId } from '@/lib/shortId'
 import { standardAccess } from '@/lib/access'
 import { getServerUrl } from '@/lib/utils'
@@ -121,6 +121,7 @@ async function createMaintenanceNotificationDeferred(data: DeferredNotification)
     // Fetch settings
     const settings = await payload.findGlobal({ slug: 'settings' })
     const smsSettings = await payload.findGlobal({ slug: 'sms-settings' })
+    const { t } = translatorsForSettings(settings)
     const siteName = settings.siteName || 'Status'
     const siteUrl = getServerUrl()
     
@@ -441,6 +442,8 @@ export const Maintenances: CollectionConfig = {
           return doc
         }
 
+        const settings = await req.payload.findGlobal({ slug: 'settings' })
+        const { t } = translatorsForSettings(settings)
         const statusLabels: Record<string, string> = {
           upcoming: t('maintenance.upcoming'),
           in_progress: t('maintenance.in_progress'),
@@ -450,7 +453,6 @@ export const Maintenances: CollectionConfig = {
         const title = doc.title || 'Maintenance'
         const shortId = doc.shortId || ''
         const statusLabel = statusLabels[doc.status] || doc.status || 'Update'
-        const settings = await req.payload.findGlobal({ slug: 'settings' })
         const startTimeStr = formatScheduleTime(doc.scheduledStartAt, settings)
         const endTimeStr = formatScheduleTime(doc.scheduledEndAt, settings)
 

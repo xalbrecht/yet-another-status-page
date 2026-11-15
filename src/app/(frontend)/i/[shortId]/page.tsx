@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { t, tf } from '@/lib/i18n'
+import { getTranslators } from '@/lib/i18n/server'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { ChevronLeft } from 'lucide-react'
@@ -71,6 +71,7 @@ async function getIncidentData(shortId: string) {
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { t, tf } = await getTranslators()
   const { shortId } = await params
   const data = await getIncidentData(shortId)
 
@@ -90,6 +91,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 }
 
 export default async function IncidentPage({ params }: PageProps) {
+  const { t } = await getTranslators()
   const { shortId } = await params
   const data = await getIncidentData(shortId)
 
@@ -162,7 +164,7 @@ export default async function IncidentPage({ params }: PageProps) {
         {/* Updates Timeline */}
         <section className="animate-fade-in">
           <h2 className="mb-6 text-xl font-bold text-foreground">{t('common.updates')}</h2>
-          <IncidentUpdatesTimeline updates={incident.updates} />
+          <IncidentUpdatesTimeline updates={incident.updates} t={t} />
         </section>
       </main>
 

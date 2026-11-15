@@ -1,5 +1,5 @@
 import { getPayload } from 'payload'
-import { tf } from '@/lib/i18n'
+import { translatorsForSettings } from '@/lib/i18n/server'
 import config from '@payload-config'
 import type { Metadata } from 'next'
 import { UnsubscribeClient } from './UnsubscribeClient'
@@ -17,6 +17,7 @@ async function getSettings() {
 
 export async function generateMetadata(): Promise<Metadata> {
   const settings = await getSettings()
+  const { tf } = translatorsForSettings(settings)
   const siteName = settings.siteName || 'Status Page'
 
   return {

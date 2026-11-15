@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils";
-import { t } from '@/lib/i18n'
+import type { Translate } from '@/lib/i18n/core'
 import { maintenanceStatusConfig, type MaintenanceUpdateStatus } from "@/lib/status-config";
 
 interface MaintenanceUpdate {
@@ -10,10 +10,11 @@ interface MaintenanceUpdate {
 }
 
 interface MaintenanceUpdatesTimelineProps {
+  t: Translate;
   updates: MaintenanceUpdate[];
 }
 
-export function MaintenanceUpdatesTimeline({ updates }: MaintenanceUpdatesTimelineProps) {
+export function MaintenanceUpdatesTimeline({ updates, t }: MaintenanceUpdatesTimelineProps) {
   if (updates.length === 0) return null;
 
   return (

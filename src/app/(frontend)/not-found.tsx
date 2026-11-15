@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { t } from '@/lib/i18n'
+import { getTranslators } from '@/lib/i18n/server'
 import { AlertCircle } from 'lucide-react'
 import { getSettings } from '@/lib/payload'
 import { Header } from '@/components/status/Header'
@@ -9,6 +9,7 @@ import { getMediaUrl } from '@/lib/utils'
 export const dynamic = 'force-dynamic'
 
 export default async function NotFound() {
+  const { t } = await getTranslators()
   let siteName = 'Status'
   let footerText: unknown = null
   let timezone: string | undefined

@@ -77,3 +77,28 @@ export function buildAdminDictionary(
     ...(files[language]?.admin ?? {}),
   }
 }
+
+// Sprache einer Anfrage: der Wert der Einstellung, wenn die Sprache geladen ist, sonst der Rückfall.
+// `includes` statt Objektzugriff, damit Namen wie "constructor" keine Sprache sind.
+export function resolveLanguage(
+  value: string | null | undefined,
+  available: readonly string[],
+  fallback: string,
+): string {
+  return value && available.includes(value) ? value : fallback
+}
+
+const DATE_LOCALES: Record<string, string> = {
+  de: 'de-DE',
+  en: 'en-US',
+  fr: 'fr-FR',
+  es: 'es-ES',
+  it: 'it-IT',
+  pl: 'pl-PL',
+  tr: 'tr-TR',
+}
+
+// Datumssprache (BCP 47): Angabe der Datei, sonst Ableitung aus dem Sprachcode, sonst der Code selbst.
+export function deriveDateLocale(code: string, meta?: { dateLocale?: string }): string {
+  return meta?.dateLocale || (Object.hasOwn(DATE_LOCALES, code) ? DATE_LOCALES[code] : code)
+}

@@ -45,9 +45,9 @@ import { isDemoMode } from '@/lib/demo'
 
 // Utils
 import { getServerUrl } from '@/lib/utils'
-import { lang } from '@/lib/i18n'
+import { i18nState } from '@/lib/i18n/state'
 
-const adminLanguage = (lang in payloadTranslations ? lang : 'en') as keyof typeof payloadTranslations
+const adminLanguage = (i18nState.language in payloadTranslations ? i18nState.language : 'en') as keyof typeof payloadTranslations
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)

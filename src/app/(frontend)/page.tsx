@@ -6,7 +6,7 @@ import { computeOverallStatus, visibleMaintenanceWhere, type ServiceStatus } fro
 import { cn, getMediaUrl } from '@/lib/utils'
 import { Header } from '@/components/status/Header'
 import { Footer } from '@/components/status/Footer'
-import { t, tf } from '@/lib/i18n'
+import { translatorsForSettings } from '@/lib/i18n/server'
 import { MAINTENANCE_NOTICE_LEAD_MS, maintenanceNoticeFor } from '@/lib/maintenance-notice'
 import { Subscribe } from '@/components/status/SubscribeDialog'
 import { LoginButton } from '@/components/status/LoginButton'
@@ -40,7 +40,8 @@ export const revalidate = 0
 
 export async function generateMetadata(): Promise<Metadata> {
   const settings = await getSettings()
-  
+  const { tf } = translatorsForSettings(settings)
+
   const title = settings.metaTitle || tf('meta.homeTitle', { siteName: settings.siteName })
   const description = settings.metaDescription || `Real-time status and incident updates for ${settings.siteName} services`
 
@@ -63,6 +64,7 @@ export async function generateMetadata(): Promise<Metadata> {
 async function getStatusData(requestedPeriod: unknown, requestedBar: unknown) {
   const payload = await getCachedPayload()
   const settings = await getSettings()
+  const { t, tf, lang } = translatorsForSettings(settings)
   const dt = resolveDateTimeConfig(settings)
 
   const serviceGroups = await payload.find({
@@ -241,7 +243,7 @@ async function getStatusData(requestedPeriod: unknown, requestedBar: unknown) {
   // Zeitraum des Balkens: Vorgabe aus den Einstellungen, der Besucher überschreibt sie mit ?balken=<Stunden>
   const defaultBarHours = parseBarHours(settings.lagebildBarHours)
   const barHours: BarHours = parseBarHours(requestedBar, defaultBarHours)
-  const lagebild = lagebildVariant === 'off' ? null : await loadLagebildCached(dt, periodDays, barHours)
+  const lagebild = lagebildVariant === 'off' ? null : await loadLagebildCached(lang, dt, periodDays, barHours)
 
   // Boxen neben dem Lagebild: nur in den Varianten a, b und both
   let boxes = null
@@ -257,8 +259,8 @@ async function getStatusData(requestedPeriod: unknown, requestedBar: unknown) {
       entries: parseBoxEntries(settings.statusBoxEntries),
       content: parseBoxContent(settings.statusBoxContent),
       placement: parseBoxesPlacement(settings.statusBoxesPlacement),
-      incidentItems: buildIncidentItems(openIncidents.docs, dt),
-      maintenanceItems: buildMaintenanceItems(maintenances.docs, dt),
+      incidentItems: buildIncidentItems(openIncidents.docs, dt, t),
+      maintenanceItems: buildMaintenanceItems(maintenances.docs, dt, { t, tf }),
       currentIncidents: openIncidents.docs.map(formatIncident).map(forDisplay),
       pastResolvedIncidents,
     }
@@ -301,6 +303,7 @@ export default async function StatusPage({
     defaultPeriodDays,
     defaultBarHours,
   } = await getStatusData(rueckschau, balken)
+  const { t, tf } = translatorsForSettings(settings)
   const initialGroup = typeof gruppe === 'string' ? gruppe : null
   // Testmodus „Beide“: ?lagebild=a oder ?lagebild=b zeigt nur eine Variante, damit beide in zwei Browser-Tabs verglichen
   // werden können. Bei allen anderen Einstellungen hat der Parameter keine Wirkung.
@@ -358,6 +361,8 @@ export default async function StatusPage({
                   maintenances={boxes.maintenanceItems}
                   entries={boxes.entries}
                   content={boxes.content}
+                  t={t}
+                  tf={tf}
                 />
               </div>
             </div>

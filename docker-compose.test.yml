@@ -38,7 +38,9 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: hostzero_status_test
-    # No volumes - fresh database each time
+    # The data lives in memory: a fresh database each time, also after `down` without `-v`
+    tmpfs:
+      - /var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres -d hostzero_status_test"]
       interval: 5s

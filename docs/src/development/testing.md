@@ -97,6 +97,8 @@ PLAYWRIGHT_BASE_URL=http://localhost:3001 CI= PAYLOAD_PUBLIC_ALLOW_WRITES=true \
 docker compose -p yasp-test -f docker-compose.test.yml -f docker-compose.test-ca.yml down -v --remove-orphans
 ```
 
+`scripts/run-e2e-tests.sh` keeps the volume `test_node_modules` between runs, so `npm install` in the container only updates it. The database lives in memory (`tmpfs`) and is empty at every start. Use `--clean` for a cold start (`down -v` also deletes the volume). With `down` (without `-v`) the volume stays when you work by hand.
+
 The seed script reads `API_BASE`, Playwright reads `PLAYWRIGHT_BASE_URL`. Both default to different ports (`3001` and `3000`), so set them when you run steps by hand.
 
 ## Rules when running

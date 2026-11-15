@@ -745,6 +745,9 @@
     "Timezone used for public timestamps, history weeks, and admin date pickers. Visitors see this timezone, not their own.": "Zeitzone für öffentliche Zeitangaben, Verlaufswochen und die Datumsauswahl im Admin. Besucher sehen diese Zeitzone, nicht ihre eigene.",
     "BCP 47 locale for date and time formatting (e.g. en-US, de-DE, fr-FR). Controls 12-hour vs 24-hour clocks. Empty follows the language of the server (DEFAULT_LANGUAGE).": "BCP-47-Kennung für Datum und Uhrzeit (z. B. en-US, de-DE, fr-FR). Steuert 12- oder 24-Stunden-Anzeige. Leer folgt der Sprache des Servers (DEFAULT_LANGUAGE).",
     "First day of the week for incident history and admin date pickers.": "Erster Tag der Woche für den Störungsverlauf und die Datumsauswahl im Admin.",
-    "Derived from the latest entry in Updates, or auto-transitioned by schedule. Post an update to change status.": "Ergibt sich aus dem letzten Eintrag unter Aktualisierungen oder wechselt automatisch nach Zeitplan. Zum Ändern eine Aktualisierung eintragen."
+    "Derived from the latest entry in Updates, or auto-transitioned by schedule. Post an update to change status.": "Ergibt sich aus dem letzten Eintrag unter Aktualisierungen oder wechselt automatisch nach Zeitplan. Zum Ändern eine Aktualisierung eintragen.",
+    "outage": "Ausfall",
+    "Maintenance type B": "Wartungsart B",
+    "The outage duration on the sheet Services includes the maintenance time. The sheet Outages lists only the outages, so its durations add up to less.": "Die Ausfalldauer im Blatt Dienste enthält die Wartungszeit. Das Blatt Ausfälle listet nur die Ausfälle, seine Dauern ergeben daher weniger."
   }
 }

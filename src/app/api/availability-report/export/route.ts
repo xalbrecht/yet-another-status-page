@@ -6,7 +6,7 @@ import { Zip, ZipPassThrough } from 'fflate'
 import { isTestMode } from '@/lib/access'
 import { ta } from '@/lib/i18n/admin'
 import { buildWorkbook } from '@/lib/report/export/excel'
-import { exportFiles, uniqueSlugs } from '@/lib/report/export/files'
+import { exportFiles, reportBaseName, uniqueSlugs } from '@/lib/report/export/files'
 import { loadReportContext } from '@/lib/report/load'
 
 /**
@@ -84,7 +84,7 @@ export async function GET(request: NextRequest) {
     const loaded = await loadReportContext(payload, search)
     if (!loaded.ok) return fail(loaded.error)
     const { context } = loaded
-    const base = `verfuegbarkeitsbericht-${context.period.key}`
+    const base = reportBaseName(context.period, context.timeZone)
 
     let groupId: number | undefined
     if (format === 'zip' && typeof search.group === 'string' && search.group.trim()) {

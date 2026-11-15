@@ -98,7 +98,7 @@ function weakestBlock(data: ReportData, locale: string, subtitle: string): strin
         fitText(x + 12, y + 22, row.name, width - 24, { size: 13, weight: 'bold' }) +
         fitText(x + 12, y + 38, row.groupName, width - 24, { size: 11, fill: MUTED_COLOR }) +
         textEl(x + 12, y + 66, row.availability === null ? '–' : formatAvailability(row.availability, locale), { size: 22, weight: 'bold' }) +
-        fitText(x + 12, y + 86, `${formatDuration(row.downMs)} ${ta('in')} ${row.outageCount} ${ta('outage(s)')}`, width - 24, { size: 11, fill: MUTED_COLOR })
+        fitText(x + 12, y + 86, `${formatDuration(row.downMs)} ${ta('in')} ${row.outageCount} ${outageWord(row.outageCount)}`, width - 24, { size: 11, fill: MUTED_COLOR })
       )
     })
     .join('')
@@ -120,10 +120,13 @@ function heatBlocks(data: ReportData, locale: string, subtitle: string): ExportB
   })
 }
 
+/** „Ausfall“ bei einem, sonst „Ausfälle“ (Mehrzahlregel der Sprache des Servers). */
+const outageWord = (count: number): string => (count === 1 ? ta('outage') : ta('outages'))
+
 function changeText(row: RankingRow, locale: string): { text: string; color: string } {
   if (row.availability === null || row.previousAvailability === null) return { text: '–', color: MUTED_COLOR }
   const diff = row.availability - row.previousAvailability
-  if (Math.abs(diff) < 0.005) return { text: '= 0,00', color: MUTED_COLOR }
+  if (Math.abs(diff) < 0.005) return { text: `= ${nf(locale).format(0)}`, color: MUTED_COLOR }
   return { text: `${diff > 0 ? '▲ +' : '▼ −'}${nf(locale).format(Math.abs(diff))}`, color: diff > 0 ? '#1f5fae' : TARGET_COLOR }
 }
 
@@ -141,7 +144,7 @@ function rankingBlock(data: ReportData, locale: string, subtitle: string): strin
     const change = changeText(row, locale)
     const duration =
       row.downMs > 0
-        ? `${formatDuration(row.downMs - row.maintenanceDownMs)} ${ta('in')} ${row.outageCount} ${ta('outage(s)')}${row.maintenanceDownMs > 0 ? ` + ${ta('maintenance')}` : ''}`
+        ? `${formatDuration(row.downMs - row.maintenanceDownMs)} ${ta('in')} ${row.outageCount} ${outageWord(row.outageCount)}${row.maintenanceDownMs > 0 ? ` + ${ta('maintenance')}` : ''}`
         : ta('no outage')
     content +=
       `<line x1="0" x2="${CONTENT_WIDTH}" y1="${y}" y2="${y}" stroke="${GRID_COLOR}"/>` +

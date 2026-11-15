@@ -1,7 +1,7 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import type { ReportData } from '@/lib/report/aggregate'
-import { exportFiles, pdfBlockFiles, slugify, uniqueSlugs, type ExportFile } from '@/lib/report/export/files'
+import { exportFiles, pdfBlockFiles, reportBaseName, slugify, uniqueSlugs, type ExportFile } from '@/lib/report/export/files'
 import type { ReportContext } from '@/lib/report/load'
 import { parseReportParams } from '@/lib/report/params'
 import { emptyDays, HOUR, makeReportData, rankingRow } from './export-fixtures'
@@ -128,4 +128,24 @@ test('pdfBlockFiles nimmt ein kurzes Gruppenblatt ganz, ein langes in Einzelblö
   const parts = ['01-entwicklung-12-monate.png', '02-dienste-schwaechste-zuerst.png', '05-waermekarte-dienste.png']
   assert.deepEqual(pdfBlockFiles([block('00-gruppenblatt.png', 1200), ...parts.map((file) => block(file, 300))]), ['00-gruppenblatt.png'])
   assert.deepEqual(pdfBlockFiles([block('00-gruppenblatt.png', 3200), ...parts.map((file) => block(file, 300))]), parts)
+})
+
+test('slugify begrenzt Ordnernamen auf 40 Zeichen ohne endenden Trenner', () => {
+  const slug = slugify('Eine sehr lange Gruppenbezeichnung für den Bereich Infrastruktur und Betrieb der Verwaltung')
+  assert.ok(slug.length <= 40, slug)
+  assert.doesNotMatch(slug, /-$/)
+  assert.ok(slug.startsWith('eine-sehr-lange-gruppenbezeichnung'), slug)
+})
+
+test('uniqueSlugs: lange Namen mit gleichem Anfang bekommen die Kennung angehängt', () => {
+  const long = 'Gruppe mit einem sehr langen gemeinsamen Anfang im Namen A'
+  const slugs = uniqueSlugs([{ id: 1, name: long }, { id: 2, name: `${long.slice(0, -1)}B` }])
+  assert.notEqual(slugs.get(1), slugs.get(2))
+})
+
+test('reportBaseName: Monat bleibt, freier Zeitraum trägt Beginn und letzten Tag statt „custom“', () => {
+  const start = Date.parse('2026-10-05T00:00:00+02:00')
+  const end = Date.parse('2026-10-21T00:00:00+02:00')
+  assert.equal(reportBaseName({ key: '2026-10', start, end }, 'Europe/Berlin'), 'verfuegbarkeitsbericht-2026-10')
+  assert.equal(reportBaseName({ key: 'custom', start, end }, 'Europe/Berlin'), 'verfuegbarkeitsbericht-2026-10-05_2026-10-20')
 })

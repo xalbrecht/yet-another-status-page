@@ -14,11 +14,13 @@ export function trendChart(trend: ReportData['trend'], target: number, locale: s
   const T = 14
   const B = 30
   const known = trend.map((point) => point.availability).filter((value): value is number => value !== null)
-  const min = Math.floor((Math.min(...known, target) - 0.5) * 2) / 2
   const max = 100
+  // Schrittweite so wählen, dass höchstens etwa sieben Gitterlinien entstehen, auch bei sehr niedrigen Werten
+  const low = Math.min(...known, target) - 0.5
+  const step = [0.25, 0.5, 1, 2, 5, 10, 20, 25, 50].find((candidate) => (max - low) / candidate <= 7) ?? 50
+  const min = Math.floor(low / step) * step
   const x = (index: number) => L + (index * (width - L - R)) / Math.max(1, trend.length - 1)
   const y = (value: number) => T + ((max - value) / (max - min)) * (height - T - B)
-  const step = max - min > 1.6 ? 0.5 : 0.25
   const nf = new Intl.NumberFormat(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
   let body = ''
   for (let value = max; value >= min - 1e-9; value -= step) {

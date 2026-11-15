@@ -128,6 +128,40 @@ const emptyData = (input: ReportInput, error: string): ReportData => ({
   footnotes: input.footnotes,
 })
 
+/**
+ * Alle Gruppen mit Diensten, schwächste zuerst, unabhängig von der Gruppenwahl. Braucht je Dienst nur den Wert des
+ * Zeitraums, nicht Verlauf, Wärmekarte und Rangliste: die Auswahl der Standardgruppe muss dafür nicht den ganzen
+ * Gesamtbericht berechnen (`buildGroupList`).
+ */
+function groupListOf(input: Omit<ReportInput, 'footnotes'>, periodValue: (service: ReportInput['services'][number]) => number | null): GroupListEntry[] {
+  return input.groups
+    .flatMap((group) => {
+      const members = input.services.filter((service) => service.groupId === group.id)
+      if (members.length === 0) return []
+      const availability = mean(members.map(periodValue))
+      const groupTarget = resolveAvailabilityTarget({ group: group.target, global: input.globalTarget })
+      return [{ id: group.id, name: group.name, serviceCount: members.length, availability, target: groupTarget, level: heatClass(availability, groupTarget) }]
+    })
+    .sort((a, b) => {
+      if (a.availability === null || b.availability === null) {
+        return Number(a.availability === null) - Number(b.availability === null) || a.name.localeCompare(b.name, 'de')
+      }
+      return a.availability - b.availability || a.name.localeCompare(b.name, 'de')
+    })
+}
+
+/** Nur die Gruppenliste, ohne den übrigen Bericht. Ergibt dasselbe wie `buildReport(input).groupList`. */
+export function buildGroupList(input: Omit<ReportInput, 'footnotes'>): GroupListEntry[] {
+  const { params, period, now, locale, timeZone } = input
+  const parts = periodMonths(period, now, locale, timeZone)
+  const value = (service: ReportInput['services'][number]): number | null => {
+    const metricsIn = (range: ReportPeriod) => computeServiceMetrics({ timeline: service.timeline, windows: service.windows, start: range.start, end: range.end, mode: params.maintenance })
+    if (params.calc === 'monthly' && parts.length > 0) return mean(parts.map((part) => metricsIn(part).availability))
+    return metricsIn(period).availability
+  }
+  return groupListOf(input, value)
+}
+
 export function buildReport(input: ReportInput): ReportData {
   const { params, period, previous, months, now, locale, timeZone } = input
   const groupById = new Map(input.groups.map((group) => [group.id, group]))
@@ -222,20 +256,7 @@ export function buildReport(input: ReportInput): ReportData {
   heatRows.sort((a, b) => worstOf(a.values) - worstOf(b.values) || a.name.localeCompare(b.name, 'de'))
   const trendValues = historyOf(services)
 
-  const groupList: GroupListEntry[] = input.groups
-    .flatMap((group) => {
-      const members = input.services.filter((service) => service.groupId === group.id)
-      if (members.length === 0) return []
-      const availability = mean(members.map(periodValue))
-      const groupTarget = resolveAvailabilityTarget({ group: group.target, global: input.globalTarget })
-      return [{ id: group.id, name: group.name, serviceCount: members.length, availability, target: groupTarget, level: heatClass(availability, groupTarget) }]
-    })
-    .sort((a, b) => {
-      if (a.availability === null || b.availability === null) {
-        return Number(a.availability === null) - Number(b.availability === null) || a.name.localeCompare(b.name, 'de')
-      }
-      return a.availability - b.availability || a.name.localeCompare(b.name, 'de')
-    })
+  const groupList = groupListOf(input, periodValue)
 
   const lastMonth = periodParts[periodParts.length - 1]
   const sheet =

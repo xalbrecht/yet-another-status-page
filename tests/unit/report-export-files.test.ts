@@ -29,6 +29,7 @@ function context(groups: Array<{ id: number; name: string }>, events: string[] =
       })
       return { data, params: { ...params, group } }
     },
+    weakestGroupId: () => groups[0]?.id ?? null,
   }
 }
 

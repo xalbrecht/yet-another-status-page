@@ -1,3 +1,4 @@
+import { formatDateSlug } from '@/lib/datetime'
 import { ta } from '@/lib/i18n/admin'
 import type { ReportContext } from '@/lib/report/load'
 import { groupBlocks } from './blocks-group'
@@ -13,7 +14,16 @@ import { svgToPng } from './render'
  */
 export type ExportFile = { path: string; data: Uint8Array }
 
-/** Dateiname aus einem Gruppennamen: ASCII, Kleinbuchstaben, `-` als Trenner. Leer ergibt `gruppe`. */
+/** Längster Ordnername einer Gruppe, damit Pfade im ZIP und auf Windows (260 Zeichen) handhabbar bleiben. */
+const MAX_SLUG_LENGTH = 40
+
+/** Grundname der Dateien: `verfuegbarkeitsbericht-<Zeitraum>`. Ein freier Zeitraum trägt Beginn und letzten Tag statt `custom`. */
+export function reportBaseName(period: { key: string; start: number; end: number }, timeZone: string): string {
+  const key = period.key === 'custom' ? `${formatDateSlug(new Date(period.start), timeZone)}_${formatDateSlug(new Date(period.end - 1), timeZone)}` : period.key
+  return `verfuegbarkeitsbericht-${key}`
+}
+
+/** Dateiname aus einem Gruppennamen: ASCII, Kleinbuchstaben, `-` als Trenner, höchstens 40 Zeichen. Leer ergibt `gruppe`. */
 export function slugify(name: string): string {
   const slug = name
     .toLowerCase()
@@ -25,6 +35,8 @@ export function slugify(name: string): string {
     .replace(/[̀-ͯ]/g, '')
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '')
+    .slice(0, MAX_SLUG_LENGTH)
+    .replace(/-+$/g, '')
   return slug || 'gruppe'
 }
 
@@ -56,7 +68,7 @@ export function pdfBlockFiles(blocks: ExportBlock[]): string[] {
 }
 
 export async function* exportFiles(context: ReportContext, options: { groupId?: number; pdfOnly?: boolean } = {}): AsyncGenerator<ExportFile> {
-  const base = `verfuegbarkeitsbericht-${context.period.key}`
+  const base = reportBaseName(context.period, context.timeZone)
   const slugs = uniqueSlugs(context.groups)
 
   if (options.groupId !== undefined) {

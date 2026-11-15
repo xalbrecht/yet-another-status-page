@@ -88,3 +88,19 @@ test('ein Bericht ohne Dienste ergibt Blätter nur mit Kopfzeile', async () => {
   assert.equal(workbook.worksheets[0].rowCount, 1)
   assert.equal(workbook.worksheets[1].rowCount, 1)
 })
+
+test('Ein Ausfall von 20 Sekunden zeigt 0,3 Minuten statt 0, die Spalten haben ein Format mit einer Stelle', async () => {
+  const short = [rankingRow(1, 'Dienst', 99.99, 20_000)]
+  const workbook = await load(makeReportData({ ranking: short }))
+  assert.equal(workbook.worksheets[1].getRow(2).getCell(5).value, 0.3)
+  assert.equal(workbook.worksheets[1].getColumn(5).numFmt, '0.0')
+})
+
+test('Wartungsart B: Blatt Hinweise erklärt, dass die Ausfalldauer die Wartung enthält', async () => {
+  const text = (sheet: ExcelJS.Worksheet) => sheet.getSheetValues().flat().join('\n')
+  const b = await buildWorkbook({ data: makeReportData({ ranking }), params: parseReportParams({ maintenance: 'B' }), period, timeZone: 'Europe/Berlin' })
+  const withB = new ExcelJS.Workbook()
+  await withB.xlsx.load(b as unknown as ArrayBuffer)
+  assert.match(text(withB.worksheets[2]), /Wartungsart B|Maintenance type B/)
+  assert.doesNotMatch(text((await load(makeReportData({ ranking }))).worksheets[2]), /Wartungsart B|Maintenance type B/)
+})

@@ -100,9 +100,49 @@ test.describe('Subscriber approval and confirmation', () => {
     expect(missing.status()).toBe(400)
   })
 
-  test('SMS subscription is rejected', async ({ request }) => {
+  test('SMS subscription is rejected while SMS is not set up', async ({ request }) => {
     const response = await request.post('/api/subscribe', { data: { type: 'sms', phone: '+4915112345678' } })
     expect(response.status()).toBe(503)
+    const availability = await (await request.get('/api/subscribe')).json()
+    expect(availability.sms).toBe(false)
+  })
+
+  test('with SMS set up, an SMS subscription is accepted but not counted before approval', async ({ request }) => {
+    // Placeholder credentials: nothing is sent in this test, the dispatch is not triggered
+    const enable = await request.post('/api/globals/sms-settings', {
+      data: { enabled: true, twilioAccountSid: 'ACtest', twilioAuthToken: 'test-token', twilioFromNumber: '+15550100' },
+    })
+    expect(enable.ok(), await enable.text()).toBeTruthy()
+    try {
+      const availability = await (await request.get('/api/subscribe')).json()
+      expect(availability.sms).toBe(true)
+
+      const smsCount = async () => (await (await request.get('/api/subscribers/count?channel=sms')).json()).count as number
+      const before = await smsCount()
+      // 49 + 9 digits from the timestamp: a new number in every run
+      const phone = `+49${String(stamp).slice(-9)}`
+
+      const invalid = await request.post('/api/subscribe', { data: { type: 'sms', phone: '0151-123' } })
+      expect(invalid.status()).toBe(400)
+
+      const created = await request.post('/api/subscribe', { data: { type: 'sms', phone } })
+      expect(created.ok(), await created.text()).toBeTruthy()
+      expect(await smsCount()).toBe(before)
+
+      const twice = await request.post('/api/subscribe', { data: { type: 'sms', phone } })
+      expect(twice.status()).toBe(409)
+
+      const found = await (await request.get(`/api/subscribers?where[phone][equals]=${encodeURIComponent(phone)}`)).json()
+      expect(found.docs).toHaveLength(1)
+      expect(found.docs[0].verified).toBe(false)
+
+      const approve = await request.patch(`/api/subscribers/${found.docs[0].id}`, { data: { verified: true } })
+      expect(approve.ok(), await approve.text()).toBeTruthy()
+      expect(await smsCount()).toBe(before + 1)
+    } finally {
+      const disable = await request.post('/api/globals/sms-settings', { data: { enabled: false } })
+      expect(disable.ok(), await disable.text()).toBeTruthy()
+    }
   })
 
   test('confirmation page asks for a click before it confirms', async ({ page, request }) => {

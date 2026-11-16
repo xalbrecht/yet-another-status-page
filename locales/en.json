@@ -88,7 +88,7 @@
     "sub.failed": "Failed to subscribe",
     "sub.failedRetry": "Failed to subscribe. Please try again.",
     "sub.successEmail": "You'll receive status updates at {email}",
-    "sub.successSms": "You'll receive SMS updates at {phone}",
+    "sub.successSms": "Your request for SMS updates at {phone} was received. They start after approval by the operator.",
     "sub.title": "Get status updates",
     "sub.closeDialog": "Close dialog",
     "sub.unavailableTitle": "Subscriptions not available",

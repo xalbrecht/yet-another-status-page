@@ -295,7 +295,7 @@ export interface Incident {
    */
   impact: 'degraded' | 'partial' | 'major';
   /**
-   * Applies to the reconstruction of the availability history before the status log began. "Automatic" rates the title and the text of the updates.
+   * Applies to the reconstruction of the availability history before the status log began. "Automatic" uses the rules in the site settings.
    */
   availabilityClass?: ('auto' | 'none' | 'degraded' | 'partial' | 'major') | null;
   /**
@@ -1065,6 +1065,21 @@ export interface Setting {
    */
   availabilityTarget?: number | null;
   /**
+   * For the time before the status log, these rules read the title and the text of an old incident and decide how it counts in the availability report. They apply from top to bottom, the first matching rule decides. Upper and lower case do not matter. A classification set by hand on an incident always applies. New incidents are not affected. Changed rules take effect when the reconstruction is started under "Maintain the status log". Without rules every old incident counts as a partial outage that is not clearly classified.
+   */
+  classificationRules?:
+    | {
+        field: 'title' | 'updates';
+        match: 'contains' | 'starts';
+        classification: 'maintenance' | 'none' | 'degraded' | 'partial' | 'major';
+        /**
+         * Words or phrases, separated by commas. One of them is enough.
+         */
+        words: string;
+        id?: string | null;
+      }[]
+    | null;
+  /**
    * How long completed and cancelled maintenances stay visible on the status page after they enter a terminal state.
    */
   maintenanceTerminalRetentionHours?: number | null;
@@ -1269,6 +1284,15 @@ export interface SettingsSelect<T extends boolean = true> {
   statusBoxContent?: T;
   statusBoxesPlacement?: T;
   availabilityTarget?: T;
+  classificationRules?:
+    | T
+    | {
+        field?: T;
+        match?: T;
+        classification?: T;
+        words?: T;
+        id?: T;
+      };
   maintenanceTerminalRetentionHours?: T;
   timezone?: T;
   dateLocale?: T;

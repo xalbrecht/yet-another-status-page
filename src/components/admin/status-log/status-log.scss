@@ -15,6 +15,37 @@
     color: var(--theme-error-500);
   }
 
+  &__hint {
+    color: var(--theme-elevation-600);
+  }
+
+  &__alert {
+    padding: 0.6rem 0.8rem;
+    border-left: 4px solid var(--theme-error-500);
+    background: var(--theme-elevation-50);
+    margin-block: 1rem;
+  }
+
+  &__check {
+    display: flex;
+    gap: 0.5rem;
+    align-items: flex-start;
+    margin-block: 0.75rem;
+
+    input {
+      margin-top: 0.3rem;
+    }
+  }
+
+  h3 {
+    margin-block: 1rem 0.25rem;
+  }
+
+  ul {
+    margin-block: 0.25rem 0.75rem;
+    padding-left: 1.25rem;
+  }
+
   table {
     border-collapse: collapse;
     width: 100%;

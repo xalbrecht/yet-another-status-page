@@ -14,10 +14,11 @@ const base = {
     { status: 'resolved', message: 'Die Wartung ist abgeschlossen', createdAt: '2026-10-12T20:10:00.000Z' },
   ],
 }
-const title = 'Nichtverfügbarkeit des Services TeVIS aufgrund von Wartungsarbeiten'
+const title = 'Nichtverfügbarkeit von Dienst A aufgrund von Wartungsarbeiten'
+const rules = [{ field: 'title', match: 'contains', words: 'wartung', classification: 'maintenance' }] as const
 
 test('ein gelöster Wartungsvorfall wird zu einer abgeschlossenen Wartung mit übernommenen Aktualisierungen', () => {
-  const plan = planMaintenanceFromIncident({ ...base, title })
+  const plan = planMaintenanceFromIncident({ ...base, title }, { rules })
   assert.ok('maintenance' in plan)
   assert.deepEqual(plan.maintenance, {
     title,
@@ -35,28 +36,38 @@ test('ein gelöster Wartungsvorfall wird zu einer abgeschlossenen Wartung mit ü
 })
 
 test('ein offener Vorfall wird übersprungen', () => {
-  assert.deepEqual(planMaintenanceFromIncident({ ...base, title, resolvedAt: null }), { skip: 'open' })
+  assert.deepEqual(planMaintenanceFromIncident({ ...base, title, resolvedAt: null }, { rules }), { skip: 'open' })
 })
 
 test('eine Einordnung von Hand verhindert die Umwandlung', () => {
-  assert.deepEqual(planMaintenanceFromIncident({ ...base, title, availabilityClass: 'partial' }), { skip: 'manual' })
+  assert.deepEqual(planMaintenanceFromIncident({ ...base, title, availabilityClass: 'partial' }, { rules }), { skip: 'manual' })
 })
 
 test('ein Vorfall ohne Wartung im Titel wird übersprungen', () => {
-  assert.deepEqual(planMaintenanceFromIncident({ ...base, title: 'Störung Autista - Analysephase' }), { skip: 'not-maintenance' })
+  assert.deepEqual(planMaintenanceFromIncident({ ...base, title: 'Störung Dienst D - Analysephase' }, { rules }), { skip: 'not-maintenance' })
 })
 
 test('ein Vorfall ohne Kurz-ID bekommt eine Beschreibung ohne Kennung', () => {
-  const plan = planMaintenanceFromIncident({ ...base, title, shortId: null })
+  const plan = planMaintenanceFromIncident({ ...base, title, shortId: null }, { rules })
   assert.ok('maintenance' in plan)
   assert.equal(plan.maintenance.description, 'Übernommen aus einer Störung des Vorgängerverfahrens')
 })
 
 test('ein Vorfall nach dem Start des Statusprotokolls wird nicht umgewandelt', () => {
   const cutoffAt = '2026-11-10T15:56:00.000Z'
-  assert.deepEqual(planMaintenanceFromIncident({ ...base, title, createdAt: '2026-11-11T08:00:00.000Z' }, { cutoffAt }), { skip: 'after-start' })
-  const before = planMaintenanceFromIncident({ ...base, title }, { cutoffAt })
+  assert.deepEqual(planMaintenanceFromIncident({ ...base, title, createdAt: '2026-11-11T08:00:00.000Z' }, { cutoffAt, rules }), { skip: 'after-start' })
+  const before = planMaintenanceFromIncident({ ...base, title }, { cutoffAt, rules })
   assert.ok('maintenance' in before)
-  const withoutCutoff = planMaintenanceFromIncident({ ...base, title, createdAt: '2026-11-11T08:00:00.000Z' })
+  const withoutCutoff = planMaintenanceFromIncident({ ...base, title, createdAt: '2026-11-11T08:00:00.000Z' }, { rules })
   assert.ok('maintenance' in withoutCutoff)
+})
+
+test('ohne Regeln wird kein Vorfall umgewandelt, auch nicht mit „Wartung“ im Titel', () => {
+  assert.deepEqual(planMaintenanceFromIncident({ ...base, title }), { skip: 'not-maintenance' })
+  assert.deepEqual(planMaintenanceFromIncident({ ...base, title }, { rules: [] }), { skip: 'not-maintenance' })
+})
+
+test('eine Regel auf den Text der Aktualisierungen kann einen Vorfall als Wartung einordnen', () => {
+  const byText = [{ field: 'updates', match: 'contains', words: 'wartungsarbeiten', classification: 'maintenance' }] as const
+  assert.ok('maintenance' in planMaintenanceFromIncident({ ...base, title: 'Dienst A nicht verfügbar' }, { rules: byText }))
 })

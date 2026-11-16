@@ -6,6 +6,7 @@ import { isTestMode } from '@/lib/access'
 import { invalidateLagebild } from '@/lib/lagebild-invalidate'
 import { rebuildStatusLog, type SqlRunner } from '@/lib/status-log-rebuild'
 import { ta } from '@/lib/i18n/admin'
+import { normalizeRules } from '@/lib/incident-classification'
 
 /**
  * Nachrechnung des Statusprotokolls aus den Vorfällen. Standard ist die Vorschau (`dryRun: true`), geschrieben wird
@@ -23,7 +24,8 @@ export async function POST(request: NextRequest) {
     const dryRun = body.dryRun !== false
 
     const db = (payload.db as unknown as { drizzle: SqlRunner }).drizzle
-    const result = await rebuildStatusLog(db, { dryRun })
+    const rules = normalizeRules((await payload.findGlobal({ slug: 'settings' })).classificationRules)
+    const result = await rebuildStatusLog(db, { dryRun, rules })
     if (!dryRun) invalidateLagebild()
     return NextResponse.json(result)
   } catch (error) {

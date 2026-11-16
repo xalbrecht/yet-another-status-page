@@ -20,6 +20,8 @@ import * as migration_20261116_100000_drop_settings_language from './20261116_10
 import * as migration_20261116_200000_sms_templates_follow_language from './20261116_200000_sms_templates_follow_language';
 import * as migration_20261116_300000_add_report_mail_limit from './20261116_300000_add_report_mail_limit';
 import * as migration_20261116_400000_approve_existing_sms_subscribers from './20261116_400000_approve_existing_sms_subscribers';
+import * as migration_20261116_500000_add_classification_rules from './20261116_500000_add_classification_rules';
+import * as migration_20261116_500100_seed_classification_rules from './20261116_500100_seed_classification_rules';
 
 export const migrations = [
   {
@@ -40,7 +42,7 @@ export const migrations = [
   {
     up: migration_20260731_171745_add_api_key_strategy.up,
     down: migration_20260731_171745_add_api_key_strategy.down,
-    name: '20260731_171745_add_api_key_strategy'
+    name: '20260731_171745_add_api_key_strategy',
   },
   {
     up: migration_20260821_192600_add_localization_settings.up,
@@ -131,5 +133,15 @@ export const migrations = [
     up: migration_20261116_400000_approve_existing_sms_subscribers.up,
     down: migration_20261116_400000_approve_existing_sms_subscribers.down,
     name: '20261116_400000_approve_existing_sms_subscribers',
+  },
+  {
+    up: migration_20261116_500000_add_classification_rules.up,
+    down: migration_20261116_500000_add_classification_rules.down,
+    name: '20261116_500000_add_classification_rules',
+  },
+  {
+    up: migration_20261116_500100_seed_classification_rules.up,
+    down: migration_20261116_500100_seed_classification_rules.down,
+    name: '20261116_500100_seed_classification_rules',
   },
 ];

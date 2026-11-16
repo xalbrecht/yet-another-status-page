@@ -1,16 +1,23 @@
+import Link from 'next/link'
 import type { RebuildResult } from '@/lib/status-log-rebuild'
 import type { ConversionResult } from '@/lib/maintenance-conversion'
 import { useAdminText, type AdminText } from '@/lib/i18n/admin-client'
 
 /**
  * Darstellung der Seite „Statusprotokoll pflegen“. Reine Komponente ohne Zustand: Die Ergebnisse und die Funktionen
- * für die Schaltflächen kommen von außen. „Ausführen“ ist erst nach einer Vorschau bedienbar.
+ * für die Schaltflächen kommen von außen. „Ausführen“ ist erst nach einer Vorschau bedienbar, die Umwandlung
+ * zusätzlich erst, wenn die Sicherung der Datenbank bestätigt ist.
  */
 export type StatusLogViewProps = {
   rebuild: RebuildResult | null
   conversion: ConversionResult | null
   busy: boolean
   error?: string | null
+  /** Zahl der gespeicherten Regeln für die automatische Einordnung (Einstellungen) */
+  ruleCount?: number
+  /** Haken „Die Datenbank wurde gesichert“ */
+  backupConfirmed?: boolean
+  onBackupConfirmed?: (confirmed: boolean) => void
   onPreviewRebuild?: () => void
   onRunRebuild?: () => void
   onPreviewConversion?: () => void
@@ -50,7 +57,7 @@ export function StatusLogView(props: StatusLogViewProps) {
   const ta = useAdminText()
   const { rebuild, conversion, busy, error } = props
   const canRunRebuild = !busy && rebuild !== null && rebuild.dryRun
-  const canRunConversion = !busy && conversion !== null && conversion.dryRun
+  const canRunConversion = !busy && conversion !== null && conversion.dryRun && props.backupConfirmed === true
 
   return (
     <div className="status-log">
@@ -58,12 +65,33 @@ export function StatusLogView(props: StatusLogViewProps) {
       {error && <p className="status-log__error" role="alert">{error}</p>}
 
       <section className="status-log__section">
-        <h2>{ta('Reconstruction')}</h2>
+        <h2>{ta('Reconstruct the history before the status log')}</h2>
         <p>
           {ta(
-            'Recalculates the availability history before the first operation entry of each service from the incidents. Entries from operation stay unchanged. A classification set by hand on an incident always applies.',
+            'The status log records when a service was disrupted. It only starts on the day it was introduced. For the time before it is empty, and the availability report would have no values there.',
           )}
         </p>
+        <p>
+          {ta(
+            'The reconstruction fills this gap. It reads the old incidents and enters for every affected service from when to when it was disrupted and how severely.',
+          )}
+        </p>
+        <h3>{ta('When is it needed?')}</h3>
+        <ul>
+          <li>{ta('After old incidents were changed, deleted or classified by hand.')}</li>
+          <li>
+            {ta('After the rules in the settings were changed.')}{' '}
+            <span data-testid="rule-count">({ta('{count} rules saved').replace('{count}', String(props.ruleCount ?? 0))})</span>{' '}
+            <Link href="/admin/globals/settings">{ta('Open the settings')}</Link>
+          </li>
+        </ul>
+        <h3>{ta('What is changed?')}</h3>
+        <ul>
+          <li>{ta('Only the reconstructed entries. They are deleted and created again.')}</li>
+          <li>{ta('Entries from operation and the incidents themselves stay unchanged.')}</li>
+          <li>{ta('The reconstruction can be repeated as often as needed.')}</li>
+        </ul>
+        <p className="status-log__hint">{ta('"Preview" changes nothing and shows what "Run" would produce.')}</p>
         <div className="status-log__actions">
           <button type="button" data-testid="rebuild-preview" disabled={busy} onClick={props.onPreviewRebuild}>
             {ta('Preview')}
@@ -92,12 +120,41 @@ export function StatusLogView(props: StatusLogViewProps) {
       </section>
 
       <section className="status-log__section">
-        <h2>{ta('Maintenances entered as incidents')}</h2>
+        <h2>{ta('Maintenances that were entered as incidents')}</h2>
         <p>
           {ta(
-            'Turns resolved incidents with "Wartung" in the title into completed maintenances without notification drafts, deletes the incident and reconstructs the log. Create a backup first.',
+            'In the past some maintenances were entered as incidents. In the availability report they count as an outage although they were planned.',
           )}
         </p>
+        <p>
+          {ta(
+            'This function turns such incidents into real maintenances. It affects resolved incidents that count as "Maintenance" by the rules in the settings. For each incident:',
+          )}
+        </p>
+        <ul>
+          <li>{ta('A completed maintenance with the same times and services is created.')}</li>
+          <li>{ta('The incident is deleted.')}</li>
+          <li>{ta('Afterwards the reconstruction above runs.')}</li>
+          <li>{ta('No notifications are sent to subscribers.')}</li>
+        </ul>
+        <div className="status-log__alert" role="note">
+          <strong>{ta('This cannot be undone.')}</strong>{' '}
+          {ta(
+            'The deleted incidents are gone. The application does not create a backup itself. Before "Run", the person who operates the server must back up the database.',
+          )}
+        </div>
+        <label className="status-log__check" htmlFor="status-log-backup">
+          <input
+            id="status-log-backup"
+            type="checkbox"
+            data-testid="convert-backup"
+            checked={props.backupConfirmed === true}
+            disabled={busy}
+            onChange={(event) => props.onBackupConfirmed?.(event.target.checked)}
+          />
+          <span>{ta('The database was backed up. I know that the conversion deletes the incidents.')}</span>
+        </label>
+        <p className="status-log__hint">{ta('"Run" works only after a preview and with the checkbox ticked.')}</p>
         <div className="status-log__actions">
           <button type="button" data-testid="convert-preview" disabled={busy} onClick={props.onPreviewConversion}>
             {ta('Preview')}

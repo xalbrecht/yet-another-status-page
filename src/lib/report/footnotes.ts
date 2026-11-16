@@ -1,7 +1,7 @@
-import { classifyIncident } from '@/lib/incident-classification'
+import { classifyIncident, type ClassificationRule } from '@/lib/incident-classification'
 
 /**
- * Zahlen für die Fußnoten des Berichts (Konzept 5.2): Vorfälle vor dem ersten Betriebseintrag im angezeigten Bereich,
+ * Zahlen für die Fußnoten des Berichts: Vorfälle vor dem ersten Betriebseintrag im angezeigten Bereich,
  * die nicht eindeutig eingeordnet sind, und Vorfälle ohne Dienst. Der Bereich ist der ganze angezeigte Verlauf.
  * Bei gewählter Gruppe zählen nur Vorfälle mit einem Dienst der Gruppe, Vorfälle ohne Dienst nicht.
  */
@@ -17,7 +17,7 @@ export type FootnoteIncident = {
 
 export function countFootnotes(
   incidents: FootnoteIncident[],
-  options: { rangeStart: number; rangeEnd: number; firstOperationAt: number | null; groupServiceIds: number[] | null },
+  options: { rangeStart: number; rangeEnd: number; firstOperationAt: number | null; groupServiceIds: number[] | null; rules?: readonly ClassificationRule[] },
 ): { unsure: number; withoutService: number } {
   let unsure = 0
   let withoutService = 0
@@ -30,7 +30,7 @@ export function countFootnotes(
       continue
     }
     if (options.groupServiceIds && !incident.serviceIds.some((id) => options.groupServiceIds?.includes(id))) continue
-    if (!classifyIncident({ title: incident.title, messages: incident.messages, availabilityClass: incident.availabilityClass }).sure) unsure++
+    if (!classifyIncident({ title: incident.title, messages: incident.messages, availabilityClass: incident.availabilityClass }, options.rules).sure) unsure++
   }
   return { unsure, withoutService }
 }

@@ -1,9 +1,11 @@
 import type { Payload } from 'payload'
+import { classifyIncident, type ClassificationRule } from '@/lib/incident-classification'
 import { rebuildStatusLog, type RebuildResult, type SqlRunner } from '@/lib/status-log-rebuild'
 
 /**
- * Wandelt Störungen aus dem Vorgängerverfahren, die in Wahrheit Wartungen waren (Titel enthält „Wartung“), in
- * Wartungen um (Konzept 4.8, Issue #57). Offene Vorfälle und Vorfälle mit Einordnung von Hand bleiben unberührt.
+ * Wandelt Störungen aus der Zeit vor dem Statusprotokoll, die in Wahrheit Wartungen waren, in Wartungen um. Welche
+ * das sind, entscheiden die Regeln der Einstellungen (Einordnung „Wartung“). Offene Vorfälle und Vorfälle mit
+ * Einordnung von Hand bleiben unberührt.
  */
 export type MaintenanceDraft = {
   title: string
@@ -35,9 +37,11 @@ export type ConversionPlan = { skip: 'open' | 'manual' | 'not-maintenance' | 'af
  */
 export function planMaintenanceFromIncident(
   incident: IncidentForConversion,
-  options: { cutoffAt?: string | null } = {},
+  options: { cutoffAt?: string | null; rules?: readonly ClassificationRule[] } = {},
 ): ConversionPlan {
-  if (!incident.title.toLowerCase().includes('wartung')) return { skip: 'not-maintenance' }
+  // Die Regeln ohne Einordnung von Hand auswerten: eine Einordnung von Hand wird unten eigens gemeldet
+  const byRules = classifyIncident({ title: incident.title, messages: incident.updates.map((update) => update.message) }, options.rules)
+  if (byRules.status !== 'maintenance') return { skip: 'not-maintenance' }
   if (incident.availabilityClass && incident.availabilityClass !== 'auto') return { skip: 'manual' }
   if (options.cutoffAt && new Date(incident.createdAt).getTime() >= new Date(options.cutoffAt).getTime()) return { skip: 'after-start' }
   if (!incident.resolvedAt) return { skip: 'open' }
@@ -97,7 +101,7 @@ const idOf = (value: unknown): number | string =>
   typeof value === 'object' && value !== null ? (value as { id: number | string }).id : (value as number | string)
 
 /** Vorschau oder Umwandlung. Bei `dryRun: false`: Wartung anlegen, Vorfall löschen, danach das Protokoll neu nachrechnen. */
-export async function convertMaintenanceIncidents(payload: Payload, options: { dryRun: boolean }): Promise<ConversionResult> {
+export async function convertMaintenanceIncidents(payload: Payload, options: { dryRun: boolean; rules?: readonly ClassificationRule[] }): Promise<ConversionResult> {
   const incidents = await payload.find({ collection: 'incidents', depth: 0, pagination: false, sort: 'createdAt' })
   const result: ConversionResult = { dryRun: options.dryRun, converted: [], skipped: [] }
   const context = { skipNotificationCreation: true, skipAutoStatusUpdate: true, skipServiceSync: true }
@@ -120,7 +124,7 @@ export async function convertMaintenanceIncidents(payload: Payload, options: { d
       availabilityClass: doc.availabilityClass,
       serviceIds: (doc.affectedServices || []).map(idOf),
       updates: (doc.updates || []).map((update) => ({ status: update.status, message: update.message, createdAt: update.createdAt })),
-    }, { cutoffAt })
+    }, { cutoffAt, rules: options.rules })
     const incidentId = String(doc.id)
     if ('skip' in plan) {
       if (plan.skip !== 'not-maintenance') result.skipped.push({ incidentId, title: doc.title, reason: plan.skip })
@@ -158,7 +162,7 @@ export async function convertMaintenanceIncidents(payload: Payload, options: { d
   if (!options.dryRun) {
     const db = (payload.db as unknown as { drizzle: SqlRunner }).drizzle
     try {
-      result.rebuild = await rebuildStatusLog(db, { dryRun: false })
+      result.rebuild = await rebuildStatusLog(db, { dryRun: false, rules: options.rules })
     } catch (error) {
       result.rebuildError = error instanceof Error ? error.message : String(error)
     }

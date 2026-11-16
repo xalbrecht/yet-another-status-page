@@ -223,7 +223,7 @@ export const Incidents: CollectionConfig = {
       admin: {
         position: 'sidebar',
         description: ta(
-          'Applies to the reconstruction of the availability history before the status log began. "Automatic" rates the title and the text of the updates.',
+          'Applies to the reconstruction of the availability history before the status log began. "Automatic" uses the rules in the site settings.',
         ),
       },
     },

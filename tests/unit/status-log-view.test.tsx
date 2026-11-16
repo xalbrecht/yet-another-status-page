@@ -45,19 +45,35 @@ test('Ausführen ist erst nach einer Vorschau bedienbar', () => {
   assert.match(buttonTag(without, 'rebuild-run'), /disabled/)
   assert.match(buttonTag(without, 'convert-run'), /disabled/)
   assert.doesNotMatch(buttonTag(without, 'rebuild-preview'), /disabled/)
-  const withPreview = renderToStaticMarkup(<StatusLogView rebuild={rebuild} conversion={conversion} busy={false} />)
+  const withPreview = renderToStaticMarkup(<StatusLogView rebuild={rebuild} conversion={conversion} busy={false} backupConfirmed={true} />)
   assert.doesNotMatch(buttonTag(withPreview, 'rebuild-run'), /disabled/)
   assert.doesNotMatch(buttonTag(withPreview, 'convert-run'), /disabled/)
 })
 
+test('die Umwandlung bleibt nach der Vorschau gesperrt, bis die Sicherung bestätigt ist', () => {
+  const unconfirmed = renderToStaticMarkup(<StatusLogView rebuild={rebuild} conversion={conversion} busy={false} />)
+  assert.match(buttonTag(unconfirmed, 'convert-run'), /disabled/)
+  // Die Nachrechnung löscht keine Störungen und braucht den Haken nicht
+  assert.doesNotMatch(buttonTag(unconfirmed, 'rebuild-run'), /disabled/)
+  assert.match(unconfirmed, /data-testid="convert-backup"/)
+  const confirmedWithoutPreview = renderToStaticMarkup(<StatusLogView rebuild={null} conversion={null} busy={false} backupConfirmed={true} />)
+  assert.match(buttonTag(confirmedWithoutPreview, 'convert-run'), /disabled/)
+})
+
+test('die Seite nennt die Zahl der gespeicherten Regeln und verlinkt die Einstellungen', () => {
+  const markup = renderToStaticMarkup(<StatusLogView rebuild={null} conversion={null} busy={false} ruleCount={5} />)
+  assert.match(markup, /data-testid="rule-count">\(5 /)
+  assert.match(markup, /href="\/admin\/globals\/settings"/)
+})
+
 test('nach dem Ausführen ist Ausführen wieder gesperrt, bis eine neue Vorschau da ist', () => {
-  const done = renderToStaticMarkup(<StatusLogView rebuild={{ ...rebuild, dryRun: false }} conversion={{ ...conversion, dryRun: false }} busy={false} />)
+  const done = renderToStaticMarkup(<StatusLogView rebuild={{ ...rebuild, dryRun: false }} conversion={{ ...conversion, dryRun: false }} busy={false} backupConfirmed={true} />)
   assert.match(buttonTag(done, 'rebuild-run'), /disabled/)
   assert.match(buttonTag(done, 'convert-run'), /disabled/)
 })
 
 test('während einer Aktion sind alle Schaltflächen gesperrt', () => {
-  const markup = renderToStaticMarkup(<StatusLogView rebuild={rebuild} conversion={conversion} busy={true} />)
+  const markup = renderToStaticMarkup(<StatusLogView rebuild={rebuild} conversion={conversion} busy={true} backupConfirmed={true} />)
   for (const id of ['rebuild-preview', 'rebuild-run', 'convert-preview', 'convert-run']) assert.match(buttonTag(markup, id), /disabled/)
 })
 

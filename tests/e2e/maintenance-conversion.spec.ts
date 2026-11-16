@@ -4,6 +4,7 @@ import { createIncident, createMaintenance, createService, createServiceGroup, u
 /**
  * Umwandlung von Wartungsvorfällen in Wartungen: Die Vorschau ändert nichts, das Ausführen legt eine abgeschlossene
  * Wartung an und löscht den Vorfall, ohne Benachrichtigungsentwurf. Ein zweiter Lauf findet nichts mehr.
+ * Welche Vorfälle als Wartung gelten, entscheiden die Regeln in den Einstellungen (`classificationRules`).
  */
 const DAY = 24 * 3600_000
 
@@ -35,8 +36,34 @@ async function createMaintenanceIncident(title: string, serviceId: number, extra
   return { incident, start, end }
 }
 
+/** Regeln der automatischen Einordnung in den Einstellungen setzen (leere Liste: keine Regeln). */
+async function setRules(request: APIRequestContext, rules: Array<Record<string, string>>) {
+  const response = await request.post('/api/globals/settings', { data: { classificationRules: rules } })
+  expect(response.ok(), await response.text()).toBe(true)
+}
+
+const MAINTENANCE_RULE = { field: 'title', match: 'contains', words: 'wartung', classification: 'maintenance' }
+
 test.describe('Umwandlung der Wartungsvorfälle', () => {
   test.describe.configure({ mode: 'serial' })
+
+  test('ohne Regel wird nichts umgewandelt, mit der Regel „Titel enthält wartung“ schon', async ({ request }) => {
+    const id = Date.now()
+    const group = await createServiceGroup({ name: `Regel ${id}`, icon: 'Server' })
+    const service = await createService({ name: `Regel Dienst ${id}`, group: group.id })
+    const title = `Nichtverfügbarkeit des Services Regel ${id} aufgrund von Wartungsarbeiten`
+    await createMaintenanceIncident(title, service.id)
+
+    await setRules(request, [])
+    const without = await convert(request)
+    expect(without.converted.some((entry: { title: string }) => entry.title === title)).toBe(false)
+
+    // Die Regel bleibt für die folgenden Tests dieser Datei gesetzt
+    await setRules(request, [MAINTENANCE_RULE])
+    const withRule = await convert(request)
+    expect(withRule.dryRun).toBe(true)
+    expect(withRule.converted.some((entry: { title: string }) => entry.title === title)).toBe(true)
+  })
 
   test('Vorschau ändert nichts, Ausführen wandelt um, ein zweiter Lauf findet nichts mehr', async ({ request }) => {
     const id = Date.now()

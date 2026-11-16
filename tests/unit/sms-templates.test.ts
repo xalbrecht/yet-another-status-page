@@ -2,7 +2,7 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import { translatorsFor } from '../../src/lib/i18n/translators'
 
-// Die Standardtexte der SMS-Vorlagen stehen in der Sprachdatei (Issue #98).
+// Die Standardtexte der SMS-Vorlagen stehen in der Sprachdatei.
 const keys = ['notif.smsIncidentNew', 'notif.smsIncidentUpdate', 'notif.smsMaintNew', 'notif.smsMaintUpdate']
 
 for (const lang of ['de', 'en']) {

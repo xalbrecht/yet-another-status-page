@@ -5,7 +5,7 @@ import type { ReportParams } from '@/lib/report/params'
 import type { ReportPeriod } from '@/lib/report/period'
 
 /**
- * Excel-Datei des Berichts (Konzept 5): ein Blatt mit den Diensten und ihren Monatswerten zum Filtern nach Gruppen, ein
+ * Excel-Datei des Berichts: ein Blatt mit den Diensten und ihren Monatswerten zum Filtern nach Gruppen, ein
  * Blatt mit jedem einzelnen Ausfall und ein Blatt mit den Angaben zur Auswahl und den Fußnoten.
  */
 const MINUTE = 60_000

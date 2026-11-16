@@ -1,5 +1,5 @@
 /**
- * Hilfen der Wärmekarte (Konzept 4): Farbstufe eines Werts und die Teilung in Blöcke zu höchstens 12 Zeilen.
+ * Hilfen der Wärmekarte: Farbstufe eines Werts und die Teilung in Blöcke zu höchstens 12 Zeilen.
  * Gemeinsam genutzt von der Wärmekarte, der Gruppenliste und später vom Export.
  */
 export type HeatLevel = 0 | 1 | 2 | 3 | 4

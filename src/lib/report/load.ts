@@ -10,7 +10,7 @@ import { parseReportParams, type ReportParams } from '@/lib/report/params'
 import { reportDataEnd, resolvePeriod, type ReportPeriod } from '@/lib/report/period'
 
 /**
- * Lädt die Daten für den Verfügbarkeitsbericht und baut daraus die Berichtsdaten (Konzept 6). Gemeinsam genutzt von
+ * Lädt die Daten für den Verfügbarkeitsbericht und baut daraus die Berichtsdaten. Gemeinsam genutzt von
  * der JSON-Route und der Admin-Ansicht.
  */
 export type LoadedReport =

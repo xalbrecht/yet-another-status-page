@@ -1,7 +1,7 @@
 import type { MaintenanceMode } from '@/lib/report/metrics'
 
 /**
- * Auswahl der Berichtsseite aus der Adresse (Konzept 4 und 6). Ungültige Werte fallen auf den Standard zurück.
+ * Auswahl der Berichtsseite aus der Adresse. Ungültige Werte fallen auf den Standard zurück.
  */
 export type ReportParams = {
   period?: string

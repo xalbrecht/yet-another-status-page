@@ -1,5 +1,5 @@
 /**
- * Farben und Schrift der exportierten Bilder (Konzept 3 und 6). Blau über Gelb zu Rot, kein Grün (Rot-Grün-Sehschwäche).
+ * Farben und Schrift der exportierten Bilder. Blau über Gelb zu Rot, kein Grün (Rot-Grün-Sehschwäche).
  * Die Stufen der Wärmekarte entsprechen `report.scss`, damit Bild und Bildschirm gleich aussehen.
  */
 export const FONT_FAMILY = 'DejaVu Sans, sans-serif'

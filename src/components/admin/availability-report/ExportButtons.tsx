@@ -2,7 +2,7 @@ import React from 'react'
 import { ta } from '@/lib/i18n/admin'
 
 /**
- * Schaltflächen für den Export (Konzept 6): ZIP mit allen Dateien, PDF und Excel einzeln, im Gruppentab zusätzlich
+ * Schaltflächen für den Export: ZIP mit allen Dateien, PDF und Excel einzeln, im Gruppentab zusätzlich
  * nur diese Gruppe. Die Adressen tragen die Auswahl der Seite (Zeitraum, Rechenart, Wartungsart), nicht Ansicht und Gruppe.
  */
 const EXPORT_PATH = '/api/availability-report/export'

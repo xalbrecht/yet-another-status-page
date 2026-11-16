@@ -8,7 +8,7 @@ import { GRID_COLOR, MUTED_COLOR, SEVERITY_COLOR, TARGET_COLOR } from './palette
 import { fitText, svgDocument, textEl, truncate } from './svg'
 
 /**
- * Bilder des Gesamtberichts (Konzept 3): Kennzahlen, Entwicklung, schwächste Dienste, Wärmekarte nach Gruppen und
+ * Bilder des Gesamtberichts: Kennzahlen, Entwicklung, schwächste Dienste, Wärmekarte nach Gruppen und
  * Rangliste. Jedes Bild ist ein eigenständiges SVG, das ohne YASP in eine Folie passt.
  */
 export type ExportBlock = { file: string; svg: string }

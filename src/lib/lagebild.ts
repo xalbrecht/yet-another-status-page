@@ -132,7 +132,7 @@ function worstInSlot(timelines: Timeline[], from: number, to: number): LagebildS
 /**
  * Balken als Folge von Abschnitten gleichen Zustands. Jeder Strich zeigt den schlechtesten Zustand seines Abschnitts,
  * damit ein kurzer Ausfall nicht zwischen zwei Abschnittsgrenzen verschwindet. Es wird keine Uhrzeit formatiert:
- * Das kostet je Aufruf 0,6 ms, und die Seite rechnet je Dienst einen Balken (Fork-Issue #23).
+ * Das kostet je Aufruf 0,6 ms, und die Seite rechnet je Dienst einen Balken.
  */
 export function computeBarRuns(timelines: Timeline[], window: BarWindow): BarRun[] {
   const slotMs = window.slotMinutes * MINUTE

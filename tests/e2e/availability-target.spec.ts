@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test'
 import { updateSettings } from '../utils/payload-helpers'
 
 /**
- * Gesamtzielwert der Verfügbarkeit (Konzept 4.4): Standard 99, im Admin änderbar.
+ * Gesamtzielwert der Verfügbarkeit: Standard 99, im Admin änderbar.
  * Die Tests ändern die globalen Einstellungen und setzen den Wert danach zurück.
  */
 test.describe('Zielwert der Verfügbarkeit', () => {

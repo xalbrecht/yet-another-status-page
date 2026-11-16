@@ -1,7 +1,7 @@
 import { addZonedDays, formatDateSlug, parseDateSlug, zonedDateToUtc } from '@/lib/datetime'
 
 /**
- * Berichtszeiträume (Konzept 4 und 6): Monat, Quartal, Halbjahr, Jahr oder ein freier Zeitraum, mit Grenzen in der
+ * Berichtszeiträume: Monat, Quartal, Halbjahr, Jahr oder ein freier Zeitraum, mit Grenzen in der
  * Zeitzone aus den Einstellungen. `end` ist ausschließlich. Liegt „jetzt“ im Zeitraum, endet er jetzt (`partial`).
  */
 export type ReportPeriod = { key: string; label: string; start: number; end: number; partial: boolean }

@@ -10,7 +10,7 @@ import { exportFiles, reportBaseName, uniqueSlugs } from '@/lib/report/export/fi
 import { loadReportContext } from '@/lib/report/load'
 
 /**
- * Export des Berichts als ZIP (alle Dateien), PDF oder Excel (Konzept 6). Nur für angemeldete Nutzer, im Testmodus
+ * Export des Berichts als ZIP (alle Dateien), PDF oder Excel. Nur für angemeldete Nutzer, im Testmodus
  * offen wie die übrigen Routen. Ungültige Eingaben ergeben Status 400, bevor das erste Byte gesendet wird. Die
  * ZIP-Datei wird als Datenstrom geschrieben: Gruppe für Gruppe, jede Datei erst, wenn der Leser die vorige abgeholt hat.
  */

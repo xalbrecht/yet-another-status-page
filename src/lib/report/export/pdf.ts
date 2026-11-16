@@ -1,7 +1,7 @@
 import { PDFDocument, StandardFonts, rgb, type PDFFont, type PDFPage } from 'pdf-lib'
 
 /**
- * PDF des Berichts (Konzept 3): A4 hoch, Kopfzeile mit Titel, Fußzeile mit Seitenzahl. Bilder werden auf die Satzbreite
+ * PDF des Berichts: A4 hoch, Kopfzeile mit Titel, Fußzeile mit Seitenzahl. Bilder werden auf die Satzbreite
  * skaliert und nie durch einen Seitenumbruch geteilt. Standardschrift Helvetica (Umlaute ja, Emoji und Pfeile nein,
  * solche Zeichen werden durch „?“ ersetzt, sonst scheitert das Zeichnen).
  */

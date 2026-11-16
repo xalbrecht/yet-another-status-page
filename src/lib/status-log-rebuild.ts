@@ -3,7 +3,7 @@ import { classifyIncident, summarizeClassification, type ClassificationRule } fr
 import { buildReconstructedEvents } from '@/lib/status-reconstruction'
 
 /**
- * Nachrechnung des Statusprotokolls vor dem ersten Betriebseintrag aus den Vorfällen (Konzept 5), wiederholbar.
+ * Nachrechnung des Statusprotokolls vor dem ersten Betriebseintrag aus den Vorfällen, wiederholbar.
  * Löscht nur Zeilen mit source = 'reconstructed' und schreibt sie neu. Die Zeilen mit source = 'operation' bleiben.
  * Das Feld `impact` der Vorfälle wird nicht gelesen. Eine Einordnung von Hand (`availability_class`) hat Vorrang.
  * Bei `dryRun: true` wird nichts geschrieben.

@@ -8,9 +8,9 @@ import { createPdfBuilder } from './pdf'
 import { svgToPng } from './render'
 
 /**
- * Dateien des Exports (Konzept 3 und 6): Bilder des Gesamtberichts, je Gruppe ein Ordner mit Gruppenblatt und
+ * Dateien des Exports: Bilder des Gesamtberichts, je Gruppe ein Ordner mit Gruppenblatt und
  * Einzelbildern, Excel und PDF. Die Funktion erzeugt die Dateien nacheinander, Gruppe für Gruppe, damit nie alle Bilder
- * gleichzeitig im Speicher liegen. Route und Mailversand (Issue #65) nutzen dieselbe Funktion.
+ * gleichzeitig im Speicher liegen. Route und Mailversand nutzen dieselbe Funktion.
  */
 export type ExportFile = { path: string; data: Uint8Array }
 

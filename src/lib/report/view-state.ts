@@ -2,7 +2,7 @@ import type { LoadedReport } from '@/lib/report/load'
 import type { ReportParams } from '@/lib/report/params'
 
 /**
- * Zustand der Berichtsseite aus Adresse und geladenem Bericht (Issue #116). Aus `index.tsx` herausgezogen, damit die
+ * Zustand der Berichtsseite aus Adresse und geladenem Bericht. Aus `index.tsx` herausgezogen, damit die
  * Regeln zur Gruppe ohne Payload und Anmeldung testbar sind.
  */
 type Search = Record<string, string | string[] | undefined>

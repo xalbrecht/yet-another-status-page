@@ -464,7 +464,7 @@ export interface Subscriber {
    */
   phone?: string | null;
   /**
-   * Operator approval. Email subscribers receive notifications only when approved and the address is confirmed
+   * Operator approval. Email subscribers receive notifications only when approved and the address is confirmed, SMS subscribers when approved
    */
   verified?: boolean | null;
   /**

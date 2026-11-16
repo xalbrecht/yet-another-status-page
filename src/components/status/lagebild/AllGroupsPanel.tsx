@@ -94,7 +94,7 @@ export function AllGroupsPanel({
                 </span>
                 <span className="text-right text-sm font-semibold tabular-nums text-foreground">
                   {group.availabilityLabel || '–'}
-                  <span className="block text-[11px] font-normal text-muted-foreground">{periodName}</span>
+                  <span className="block text-[11px] font-normal text-muted-foreground">{group.availabilitySince || periodName}</span>
                 </span>
               </button>
             </li>

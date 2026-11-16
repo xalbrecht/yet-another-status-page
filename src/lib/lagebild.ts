@@ -181,6 +181,15 @@ export function computePeriods(timelines: Timeline[], now: number, periodDays: n
   return periods
 }
 
+/**
+ * „seit …“, wenn das Statusprotokoll kürzer zurückreicht als der Zeitraum, sonst leer. Gilt für einen Dienst und, mit der
+ * zusammengefassten Zeitfolge (`mergeTimelines`), für eine Gruppe: Die Verfügbarkeit stützt sich dann nur auf die bekannte Zeit.
+ */
+export function availabilitySinceLabel(timeline: Timeline, windowStart: number, now: number, dt: DateTimeConfig, tf: TranslateFormat): string {
+  const since = knownSince(timeline, windowStart, now)
+  return since !== null && since > windowStart ? tf('lagebild.since', { time: formatDateTime(new Date(since), dt) }) : ''
+}
+
 export type LagebildService = {
   id: string
   name: string
@@ -205,6 +214,8 @@ export type LagebildGroup = {
   availability: number | null
   /** Verfügbarkeit der Gruppe als Text, z. B. „99,87 %“. Leer, wenn unbekannt. */
   availabilityLabel: string
+  /** Beginn der bekannten Zeit als Text („seit …“), wenn das Statusprotokoll kürzer zurückreicht als die Rückschau. Sonst leer. */
+  availabilitySince: string
   services: LagebildService[]
 }
 
@@ -359,7 +370,8 @@ export async function loadLagebild(
     const icon = group.icon || DEFAULT_GROUP_ICON
     const groupId = String(group.id)
     allTimelines.push(...groupTimelines)
-    const groupAvailability = computeAvailability(mergeTimelines(groupTimelines), windowStart, now)
+    const groupTimeline = mergeTimelines(groupTimelines)
+    const groupAvailability = computeAvailability(groupTimeline, windowStart, now)
 
     groups.push({
       id: groupId,
@@ -369,12 +381,10 @@ export async function loadLagebild(
       bars: computeBarRuns(groupTimelines, barWindow),
       availability: groupAvailability,
       availabilityLabel: formatAvailability(groupAvailability, dt.locale),
+      availabilitySince: availabilitySinceLabel(groupTimeline, windowStart, now, dt, tf),
       services: groupServices.map((service) => {
         const timeline = timelines.get(String(service.id)) ?? []
         const availability = computeAvailability(timeline, windowStart, now)
-        const since = knownSince(timeline, windowStart, now)
-        const availabilitySince =
-          since !== null && since > windowStart ? tf('lagebild.since', { time: formatDateTime(new Date(since), dt) }) : ''
         return {
           id: String(service.id),
           name: service.name,
@@ -382,7 +392,7 @@ export async function loadLagebild(
           bars: computeBarRuns([timeline], barWindow),
           availability,
           availabilityLabel: formatAvailability(availability, dt.locale),
-          availabilitySince,
+          availabilitySince: availabilitySinceLabel(timeline, windowStart, now, dt, tf),
         }
       }),
     })

@@ -1,7 +1,8 @@
-import { test, expect } from '@playwright/test'
+import { test, expect, type Locator } from '@playwright/test'
 import {
   clearCollection,
   createIncident,
+  createMaintenance,
   createService,
   createServiceGroup,
   updateService,
@@ -12,7 +13,22 @@ import {
  * Statusseite mit Boxen „Aktuelle Störungen“ und „Wartungen“.
  * Die Tests räumen Störungen und Wartungen vor jedem Test weg und setzen die Anzeige nach dem Lauf auf „off“ zurück.
  * Die Oberfläche läuft in den E2E-Tests auf Englisch, die Erwartungen erlauben beide Sprachen.
+ *
+ * Aufruf (nur mit einem Worker, sonst legen parallele Läufe die Zeile der globalen Einstellungen doppelt an):
+ *   ./scripts/run-e2e-tests.sh tests/e2e/status-boxes.spec.ts --workers=1 --timeout=120000
  */
+
+/**
+ * Wartet, bis React ein Element hydriert hat. Vorher reagiert es nicht auf Maus, Fokus und Tippen, ein früher Test
+ * scheitert dann zufällig. React hängt an hydrierte Elemente einen Schlüssel `__reactProps$…`; eine öffentliche
+ * Markierung dafür gibt es nicht.
+ */
+async function waitForHydration(element: Locator): Promise<void> {
+  await expect
+    .poll(() => element.evaluate((node) => Object.keys(node).some((key) => key.startsWith('__reactProps'))), { timeout: 30_000 })
+    .toBe(true)
+}
+
 const NO_INCIDENTS = /No current incidents|Keine aktuellen Störungen/
 const MORE_ONE = /Show 1 more|1 weitere anzeigen/
 
@@ -78,6 +94,29 @@ test.describe('Statusseite mit Boxen', () => {
     await expect(page.getByTestId('service-row')).toHaveCount(0)
     await expect(page.getByTestId('box-incidents')).toBeVisible()
     await expect(page.getByTestId('box-maintenances')).toBeVisible()
+  })
+
+  test('die Wartungsbox zählt alle geplanten Wartungen, nicht nur die ersten zehn der Liste darunter', async ({ page }) => {
+    await updateSettings({ statusBoxEntries: 3 })
+    const id = Date.now()
+    // zwölf geplante Wartungen: Die Liste „Geplante Wartungen“ ist auf zehn begrenzt, die Box darf es nicht sein
+    for (let i = 1; i <= 12; i++) {
+      await createMaintenance({
+        title: `Zähler ${id} Nr. ${i}`,
+        scheduledStartAt: new Date(Date.now() + i * 3_600_000).toISOString(),
+        scheduledEndAt: new Date(Date.now() + i * 3_600_000 + 1_800_000).toISOString(),
+        autoStartOnSchedule: false,
+        autoCompleteOnSchedule: false,
+      })
+    }
+
+    await page.goto('/')
+    const box = page.getByTestId('box-maintenances')
+    await expect(box.getByTestId('box-item')).toHaveCount(3)
+    // 12 geplant, 3 gezeigt: 9 weitere
+    await expect(box.getByTestId('box-more')).toHaveText(/Show 9 more|9 weitere anzeigen/)
+    // der Kopf nennt 12 mit der Beschriftung für Screenreader
+    await expect(box.locator('header > span')).toHaveText(/12$/)
   })
 
   test('offene Störung steht in der Box, gelöste nicht', async ({ page }) => {
@@ -212,14 +251,9 @@ test.describe('Tooltip an der Gruppe', () => {
   const button = (page: import('@playwright/test').Page) => tile(page).getByRole('button')
   const tip = (page: import('@playwright/test').Page) => tile(page).locator('[role="tooltip"]')
   const panel = (page: import('@playwright/test').Page) => page.getByTestId(`lagebild-panel-${groupId}`)
-  // Erst nach der Hydrierung reagiert die Kachel auf Maus, Fokus und Tippen (Hinweis in der Memory zur E2E-Umgebung)
   const load = async (page: import('@playwright/test').Page) => {
     await page.goto('/')
-    await expect
-      .poll(() => button(page).evaluate((element) => Object.keys(element).some((key) => key.startsWith('__reactProps'))), {
-        timeout: 30_000,
-      })
-      .toBe(true)
+    await waitForHydration(button(page))
   }
   // Mit vielen Gruppen liegt die Kachel weit unten. Der Tooltip steht unter ihr und muss im Fenster liegen.
   const hover = async (page: import('@playwright/test').Page) => {
@@ -246,6 +280,26 @@ test.describe('Tooltip an der Gruppe', () => {
     await expect(tip(page)).toBeVisible()
     await tip(page).click()
     await expect(panel(page)).toBeVisible()
+  })
+
+  test('nach einem Klick bleibt der Tooltip bei kleiner Mausbewegung geschlossen, bis die Maus die Kachel verlassen hat', async ({ page }) => {
+    await load(page)
+    await hover(page)
+    await expect(tip(page)).toBeVisible()
+    await button(page).click()
+    await expect(panel(page)).toBeVisible()
+    await expect(tip(page)).toBeHidden()
+    // kleine Bewegung über derselben Kachel öffnet ihn nicht erneut
+    const box = await button(page).boundingBox()
+    expect(box).not.toBeNull()
+    await page.mouse.move(box!.x + box!.width / 2 + 3, box!.y + box!.height / 2 + 2, { steps: 3 })
+    await page.waitForTimeout(400)
+    await expect(tip(page)).toBeHidden()
+    // nach dem Verlassen der Kachel öffnet er wieder
+    await page.mouse.move(2, 2)
+    await page.waitForTimeout(400)
+    await button(page).hover()
+    await expect(tip(page)).toBeVisible()
   })
 
   test('Maus weg schließt den Tooltip nach höchstens 500 ms', async ({ page }) => {
@@ -316,11 +370,7 @@ test.describe('Kachel „Alle“', () => {
   const allButton = (page: import('@playwright/test').Page) => allTile(page).getByRole('button')
   const load = async (page: import('@playwright/test').Page) => {
     await page.goto('/')
-    await expect
-      .poll(() => allButton(page).evaluate((element) => Object.keys(element).some((key) => key.startsWith('__reactProps'))), {
-        timeout: 30_000,
-      })
-      .toBe(true)
+    await waitForHydration(allButton(page))
   }
 
   test('Variante A: „Alle“ ist vorgewählt, Variante B: nichts', async ({ page }) => {
@@ -447,9 +497,7 @@ test.describe('Testmodus per Adresse', () => {
     await page.goto('/?lagebild=a')
     const tile = page.getByTestId(`lagebild-tile-${groupId}`)
     const button = tile.getByRole('button')
-    await expect
-      .poll(() => button.evaluate((element) => Object.keys(element).some((key) => key.startsWith('__reactProps'))), { timeout: 30_000 })
-      .toBe(true)
+    await waitForHydration(button)
     await button.click()
     await expect(page.getByTestId(`lagebild-panel-${groupId}`)).toBeVisible()
     await expect(page).toHaveURL(new RegExp(`gruppe=${groupId}`))

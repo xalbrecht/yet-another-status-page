@@ -1,7 +1,7 @@
 import { worstStatus, type AvailabilityStatus } from '@/lib/availability'
 
 /**
- * Nachrechnung des Verlaufs je Dienst aus Vorfällen (Konzept 5). Reine Funktion ohne Datenbankzugriff.
+ * Nachrechnung des Verlaufs je Dienst aus Vorfällen. Reine Funktion ohne Datenbankzugriff.
  * Jeder Dienst bekommt am Anker den Zustand „Betriebsbereit“. Danach gilt je Zeitpunkt der schlechteste Zustand
  * der laufenden Vorfälle. Es entsteht nur ein Eintrag, wenn sich der Zustand ändert. Einträge ab dem ersten
  * Betriebseintrag des Dienstes entfallen, dort gilt der echte Zustand.

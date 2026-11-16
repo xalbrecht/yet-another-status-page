@@ -10,9 +10,10 @@ import { BAR_COLOR, GRID_COLOR, MUTED_COLOR, SEVERITY_COLOR, TRACK_COLOR } from 
 import { svgDocument, textEl, truncate } from './svg'
 
 /**
- * Bilder eines Gruppenblatts (Konzept 4): jeder Block einzeln und das ganze Blatt untereinander. Die Blöcke 3 und 4
- * fehlen, wenn die Gruppe im Monat keine Störung hatte. Block 4 steht einzeln nur mit den Tagen mit Ausfall, im
- * Gruppenblatt mit allen Tagen des Monats.
+ * Bilder eines Gruppenblatts: jeder Block einzeln und das ganze Blatt untereinander. Die Blöcke zu den
+ * Störungen (Dauer je Dienst, Störungen je Tag) fehlen, wenn die Gruppe im Monat keine Störung hatte.
+ * Der Block „Störungen je Tag“ steht einzeln nur mit den Tagen mit Ausfall, im Gruppenblatt mit allen
+ * Tagen des Monats.
  */
 type Section = { title: string; height: number; body: string }
 

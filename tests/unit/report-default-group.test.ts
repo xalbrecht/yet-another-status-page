@@ -3,7 +3,7 @@ import assert from 'node:assert/strict'
 import { defaultGroupId } from '@/lib/report/load'
 import { outageWord, serviceWord } from '@/lib/report/format'
 
-// Standardgruppe der Gruppenberichte: bisher nur per E2E abgedeckt (Issue #116)
+// Standardgruppe der Gruppenberichte: bisher nur per E2E abgedeckt
 test('Gruppenberichte ohne Gruppenwahl: die schwächste Gruppe ist vorgewählt', () => {
   assert.equal(defaultGroupId({ view: 'groups', group: undefined }, () => 7), 7)
 })

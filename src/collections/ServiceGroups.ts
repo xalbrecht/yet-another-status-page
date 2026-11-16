@@ -78,7 +78,7 @@ export const ServiceGroups: CollectionConfig = {
       },
     },
     {
-      // Zielwert der Gruppe (Konzept 4.4). Noch ohne Eingabe im Admin, leer = erbt vom Gesamtzielwert.
+      // Zielwert der Gruppe. Noch ohne Eingabe im Admin, leer = erbt vom Gesamtzielwert.
       name: 'availabilityTarget',
       type: 'number',
       label: ta('Availability target (%)'),

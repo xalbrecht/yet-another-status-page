@@ -9,7 +9,7 @@ import {
 } from '../utils/payload-helpers'
 
 /**
- * Statusseite mit Boxen „Aktuelle Störungen“ und „Wartungen“ (Fork-Issue #73).
+ * Statusseite mit Boxen „Aktuelle Störungen“ und „Wartungen“.
  * Die Tests räumen Störungen und Wartungen vor jedem Test weg und setzen die Anzeige nach dem Lauf auf „off“ zurück.
  * Die Oberfläche läuft in den E2E-Tests auf Englisch, die Erwartungen erlauben beide Sprachen.
  */
@@ -335,7 +335,7 @@ test.describe('Kachel „Alle“', () => {
     await expect(page.getByTestId('lagebild-panel-all')).toHaveCount(0)
   })
 
-  test('Kachel „Alle“ trägt ein Symbol statt des Wortes (Issue #112)', async ({ page }) => {
+  test('Kachel „Alle“ trägt ein Symbol statt des Wortes', async ({ page }) => {
     await updateSettings({ lagebildVariant: 'a' })
     await load(page)
     await expect(page.getByTestId('lagebild-tile-all').locator('svg').first()).toBeVisible()
@@ -383,7 +383,7 @@ test.describe('Seite ohne seitliches Scrollen', () => {
 })
 
 /**
- * Testmodus „Beide“: Variante per Adresse (`?lagebild=a|b`) und Hinweis „Testmodus“ in der Kopfzeile (Issue #82).
+ * Testmodus „Beide“: Variante per Adresse (`?lagebild=a|b`) und Hinweis „Testmodus“ in der Kopfzeile.
  */
 test.describe('Testmodus per Adresse', () => {
   test.describe.configure({ mode: 'serial' })

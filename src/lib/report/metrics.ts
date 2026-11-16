@@ -1,7 +1,7 @@
 import { statusAt, type Timeline } from '@/lib/availability'
 
 /**
- * Kennzahlen eines Dienstes in einem Zeitraum (Konzept 4.1, 4.7 und 4.8). Reine Funktion.
+ * Kennzahlen eines Dienstes in einem Zeitraum. Reine Funktion.
  * Der Zeitraum wird an den Einträgen der Zeitleiste und den Wartungsfenstern in Abschnitte geteilt.
  * „In Wartung“ gilt nur für die Wartungsfenster. Der Zustand `maintenance` im Protokoll zählt wie `operational`.
  *

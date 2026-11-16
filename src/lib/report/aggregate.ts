@@ -6,8 +6,8 @@ import type { ReportParams } from '@/lib/report/params'
 import { periodMonths, type ReportPeriod } from '@/lib/report/period'
 
 /**
- * Berichtsdaten aus den Verläufen der Dienste (Konzept 4 und 6). Reine Funktion ohne Datenbankzugriff.
- * Gruppen- und Gesamtwert sind der Mittelwert der Dienste, jeder gleich gewichtet (Konzept 9, Annahmen 3 und 4).
+ * Berichtsdaten aus den Verläufen der Dienste. Reine Funktion ohne Datenbankzugriff.
+ * Gruppen- und Gesamtwert sind der Mittelwert der Dienste, jeder gleich gewichtet.
  */
 export type ReportInput = {
   period: ReportPeriod
@@ -53,7 +53,7 @@ export type RankingRow = {
   history: Array<number | null>
 }
 
-/** Eintrag der Gruppenliste (Konzept 4): Gruppenwert als Mittelwert der Dienste, `level` ist die Farbstufe der Wärmekarte. */
+/** Eintrag der Gruppenliste: Gruppenwert als Mittelwert der Dienste, `level` ist die Farbstufe der Wärmekarte. */
 export type GroupListEntry = {
   id: number
   name: string

@@ -3,7 +3,7 @@ import assert from 'node:assert/strict'
 import { readdirSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 
-// Texte in Collections und Globals laufen durch ta(). Ein nacktes Textliteral bleibt im Admin englisch (Issue #114, #123).
+// Texte in Collections und Globals laufen durch ta(). Ein nacktes Textliteral bleibt im Admin englisch.
 const dirs = ['src/globals', 'src/collections']
 
 function scan(pattern: RegExp): string[] {

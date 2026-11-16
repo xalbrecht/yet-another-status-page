@@ -6,7 +6,7 @@ import { parseReportParams } from '@/lib/report/params'
 import { reportViewState, searchForLoad } from '@/lib/report/view-state'
 import { makeReportData } from './export-fixtures'
 
-// Zustand der Berichtsseite (index.tsx): Gruppe in Adresse, Formular und Tabs (Issue #116)
+// Zustand der Berichtsseite (index.tsx): Gruppe in Adresse, Formular und Tabs
 const loaded = (query: Record<string, string>, data: ReportData = makeReportData(), groupFromReport?: string): LoadedReport => ({
   ok: true,
   data,

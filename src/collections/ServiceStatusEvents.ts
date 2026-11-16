@@ -68,7 +68,7 @@ export const ServiceStatusEvents: CollectionConfig = {
       label: ta('Changed at'),
     },
     {
-      // „reconstructed“: aus Vorfällen nachgerechnet (Konzept 5.3), „operation“: im Betrieb entstanden
+      // „reconstructed“: aus Vorfällen nachgerechnet, „operation“: im Betrieb entstanden
       name: 'source',
       type: 'select',
       required: true,

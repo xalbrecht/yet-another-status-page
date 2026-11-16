@@ -9,7 +9,7 @@ import { GroupBars } from './GroupBars'
 import { Heatmap } from './Heatmap'
 import { TrendChart } from './TrendChart'
 
-/** Gruppenblatt (Konzept 4): fünf Blöcke einer Gruppe. Die Daten sind der Bericht für die gewählte Gruppe (`scope.groupName` gesetzt). */
+/** Gruppenblatt: fünf Blöcke einer Gruppe. Die Daten sind der Bericht für die gewählte Gruppe (`scope.groupName` gesetzt). */
 export function GroupSheet({ data, locale }: { data: ReportData; locale: string }) {
   const { kpis, scope, sheet } = data
   return (

@@ -1,5 +1,5 @@
 /**
- * Wartungszeit einer Wartung für den Bericht (Konzept 4.8): die tatsächliche Zeit, soweit erfasst, sonst die geplante.
+ * Wartungszeit einer Wartung für den Bericht: die tatsächliche Zeit, soweit erfasst, sonst die geplante.
  * Beginn ist die erste Aktualisierung „Läuft“, sonst der geplante Beginn. Ende ist die letzte Aktualisierung
  * „Abgeschlossen“, sonst das geplante Ende. „Abgeschlossen am“ allein zählt nicht: Bei der automatischen Umstellung
  * steht dort der Zeitpunkt des Lesens und nicht das Ende der Wartung.

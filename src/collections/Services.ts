@@ -108,7 +108,7 @@ export const Services: CollectionConfig = {
       },
     },
     {
-      // Zielwert des Dienstes (Konzept 4.4). Noch ohne Eingabe im Admin, leer = erbt von Gruppe oder Gesamt.
+      // Zielwert des Dienstes. Noch ohne Eingabe im Admin, leer = erbt von Gruppe oder Gesamt.
       name: 'availabilityTarget',
       type: 'number',
       label: ta('Availability target (%)'),

@@ -2,7 +2,7 @@ import React from 'react'
 import { useAdminText } from '@/lib/i18n/admin-client'
 
 /**
- * Darstellung des Mailversands auf der Berichtsseite (Issue #65). Reine Komponente: der Zustand kommt von außen
+ * Darstellung des Mailversands auf der Berichtsseite. Reine Komponente: der Zustand kommt von außen
  * (SendReportButton). Bei jedem Fehler erklärt sie den Grund und bietet nur die Schritte an, die möglich sind.
  */
 export type SendState =

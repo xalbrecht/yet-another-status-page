@@ -1,7 +1,7 @@
 import type { Payload } from 'payload'
 
 /**
- * Sperre gegen gleichzeitige Versände des Berichts (Issue #116). Rendern und Anhänge brauchen viel Speicher, zwei Versände
+ * Sperre gegen gleichzeitige Versände des Berichts. Rendern und Anhänge brauchen viel Speicher, zwei Versände
  * zugleich überschreiten das Limit. Die Sperre ist eine Advisory Lock von PostgreSQL auf einer eigenen Verbindung: sie gilt
  * für alle Prozesse und Replikate und fällt von selbst weg, wenn der Prozess abstürzt (die Verbindung bricht ab).
  */

@@ -1,6 +1,6 @@
 import sharp from 'sharp'
 
-/** Breite der exportierten Bilder in Pixeln (Konzept 3). */
+/** Breite der exportierten Bilder in Pixeln. */
 export const EXPORT_IMAGE_WIDTH = 2000
 
 /**

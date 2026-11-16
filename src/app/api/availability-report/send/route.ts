@@ -13,7 +13,7 @@ import { loadReportContext } from '@/lib/report/load'
 import type { EmailSetting } from '@/payload-types'
 
 /**
- * Versendet den Bericht per Mail (Issue #65). Nur POST, nur angemeldete Nutzer (im Testmodus offen wie die übrigen
+ * Versendet den Bericht per Mail. Nur POST, nur angemeldete Nutzer (im Testmodus offen wie die übrigen
  * Routen). Die Empfänger kommen ausschließlich aus den E-Mail-Einstellungen. Jede Fehlerantwort trägt einen `code`,
  * nach dem die Berichtsseite ihre Erklärung wählt. Mit `resume=<k>&plan=<Kennung>` setzt der Versand ab Mail k fort.
  */

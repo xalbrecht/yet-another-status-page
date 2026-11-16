@@ -4,7 +4,7 @@ import pg from 'pg'
 import { acquireSendLockWith, SEND_LOCK_KEY } from '@/lib/report/export/send-lock'
 
 /**
- * Die Sperre des Berichtsversands gegen eine echte PostgreSQL (Issue #123). Läuft nur mit gesetztem `TEST_DATABASE_URL`,
+ * Die Sperre des Berichtsversands gegen eine echte PostgreSQL. Läuft nur mit gesetztem `TEST_DATABASE_URL`,
  * sonst übersprungen. Wegwerf-Datenbank starten und aufrufen, siehe docs/src/development/testing.md.
  */
 const url = process.env.TEST_DATABASE_URL

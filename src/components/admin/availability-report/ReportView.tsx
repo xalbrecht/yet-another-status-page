@@ -9,7 +9,7 @@ import { Heatmap } from './Heatmap'
 import { TrendChart } from './TrendChart'
 
 /**
- * Darstellung der Berichtsseite (Konzept 6). Reine Komponente: Daten, Auswahl und Auswahlfelder kommen von außen.
+ * Darstellung der Berichtsseite. Reine Komponente: Daten, Auswahl und Auswahlfelder kommen von außen.
  */
 export type ReportViewProps = {
   data: ReportData

@@ -1,7 +1,7 @@
 import type { Service } from '@/payload-types'
 
 /**
- * Gemeinsame Rechenregeln für Lagebild und Verfügbarkeitsbericht (Konzept 4.1 und 4.6).
+ * Gemeinsame Rechenregeln für Lagebild und Verfügbarkeitsbericht.
  * Grundlage ist der Verlauf je Dienst aus dem Statusprotokoll. Diese Datei enthält keinen Datenbankzugriff.
  */
 
@@ -140,7 +140,7 @@ export function formatAvailability(value: number | null, locale: string): string
 export const DEFAULT_AVAILABILITY_TARGET = 99
 
 /**
- * Zielwert eines Dienstes in Prozent: der erste gesetzte Wert in der Reihenfolge Dienst, Gruppe, Gesamt (Konzept 4.4).
+ * Zielwert eines Dienstes in Prozent: der erste gesetzte Wert in der Reihenfolge Dienst, Gruppe, Gesamt.
  * `0` ist ein gültiger Wert. Nur `null` und `undefined` gelten als nicht gesetzt.
  */
 export function resolveAvailabilityTarget(levels: {

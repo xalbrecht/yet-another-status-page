@@ -5,7 +5,7 @@ import { computeServiceMetrics, type MaintenanceMode } from '@/lib/report/metric
 import type { ReportPeriod } from '@/lib/report/period'
 
 /**
- * Störungen eines Monats für das Gruppenblatt (Konzept 4, Blöcke 3 und 4): je Dienst die Dauer nach Art der Störung
+ * Störungen eines Monats für das Gruppenblatt: je Dienst die Dauer nach Art der Störung
  * und je Tag die betroffenen Dienste. Reine Funktionen ohne Datenbankzugriff, Tagesgrenzen gelten in der Zeitzone
  * der Einstellungen. Aneinandergrenzende Ausfälle sind in `computeServiceMetrics` zusammengefasst und zählen als
  * der schlechtere Zustand.

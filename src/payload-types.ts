@@ -482,6 +482,10 @@ export interface Notification {
    * Short SMS message (160 characters recommended)
    */
   smsBody?: string | null;
+  /**
+   * Optional. A short text for a push message via ntfy (up to 500 characters). The application does not send it itself: a connection that reads sent notifications through the API can use it.
+   */
+  ntfyBody?: string | null;
   recipientCount?: number | null;
   errorMessage?: string | null;
   sentAt?: string | null;
@@ -903,6 +907,7 @@ export interface NotificationsSelect<T extends boolean = true> {
   subject?: T;
   emailBody?: T;
   smsBody?: T;
+  ntfyBody?: T;
   recipientCount?: T;
   errorMessage?: T;
   sentAt?: T;

@@ -24,6 +24,7 @@ import * as migration_20261116_500000_add_classification_rules from './20261116_
 import * as migration_20261116_500100_seed_classification_rules from './20261116_500100_seed_classification_rules';
 import * as migration_20261116_600000_add_message_templates from './20261116_600000_add_message_templates';
 import * as migration_20261116_700000_seed_message_templates from './20261116_700000_seed_message_templates';
+import * as migration_20261116_800000_add_notification_ntfy_body from './20261116_800000_add_notification_ntfy_body';
 
 export const migrations = [
   {
@@ -155,5 +156,10 @@ export const migrations = [
     up: migration_20261116_700000_seed_message_templates.up,
     down: migration_20261116_700000_seed_message_templates.down,
     name: '20261116_700000_seed_message_templates',
+  },
+  {
+    up: migration_20261116_800000_add_notification_ntfy_body.up,
+    down: migration_20261116_800000_add_notification_ntfy_body.down,
+    name: '20261116_800000_add_notification_ntfy_body',
   },
 ];

@@ -840,6 +840,8 @@
     "SMS text": "SMS-Text",
     "Optional. A short text for SMS (up to 320 characters, longer texts are cut). The same placeholders as above.": "Optional. Ein kurzer Text für SMS (bis 320 Zeichen, längere werden gekürzt). Dieselben Platzhalter wie oben.",
     "ntfy text": "ntfy-Text",
-    "Optional. A short text for a push message via ntfy (up to 500 characters). The same placeholders as above.": "Optional. Ein kurzer Text für eine Push-Nachricht über ntfy (bis 500 Zeichen). Dieselben Platzhalter wie oben."
+    "Optional. A short text for a push message via ntfy (up to 500 characters). The same placeholders as above.": "Optional. Ein kurzer Text für eine Push-Nachricht über ntfy (bis 500 Zeichen). Dieselben Platzhalter wie oben.",
+    "ntfy message": "ntfy-Nachricht",
+    "Optional. A short text for a push message via ntfy (up to 500 characters). The application does not send it itself: a connection that reads sent notifications through the API can use it.": "Optional. Ein kurzer Text für eine Push-Nachricht über ntfy (bis 500 Zeichen). Die Anwendung versendet ihn nicht selbst: Eine Anbindung, die gesendete Benachrichtigungen über die API abholt, kann ihn verwenden."
   }
 }

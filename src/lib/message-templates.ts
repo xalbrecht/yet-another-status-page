@@ -8,6 +8,10 @@ import { maintenanceStatusOptions } from '@/collections/Maintenances'
 
 export type TemplateKind = 'incident' | 'maintenance'
 
+/** Längengrenzen: Ein SMS-Text über 320 Zeichen kürzt `formatSmsMessage` ohnehin (zwei Segmente). Der ntfy-Text soll kurz sein. */
+export const SMS_TEXT_MAX_LENGTH = 320
+export const NTFY_TEXT_MAX_LENGTH = 500
+
 /** Platzhalter je Art der Vorlage. `link` kennt erst der Hook, der die Benachrichtigung anlegt (die Kennung der Meldung entsteht beim Speichern). */
 export const PLACEHOLDERS = {
   incident: ['services', 'group', 'impact', 'link'],

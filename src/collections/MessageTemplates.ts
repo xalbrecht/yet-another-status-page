@@ -3,11 +3,9 @@ import { authenticatedOrTestWrite } from '@/lib/access'
 import { ta } from '@/lib/i18n/admin'
 import { incidentStatusOptions } from './Incidents'
 import { maintenanceStatusOptions } from './Maintenances'
-import { checkTemplateText, isStatusOfKind, type TemplateKind } from '@/lib/message-templates'
+import { checkTemplateText, isStatusOfKind, NTFY_TEXT_MAX_LENGTH, SMS_TEXT_MAX_LENGTH, type TemplateKind } from '@/lib/message-templates'
 
-/** Längengrenzen: Ein SMS-Text über 320 Zeichen kürzt `formatSmsMessage` ohnehin (zwei Segmente). Der ntfy-Text soll kurz sein. */
-export const SMS_TEXT_MAX_LENGTH = 320
-export const NTFY_TEXT_MAX_LENGTH = 500
+export { NTFY_TEXT_MAX_LENGTH, SMS_TEXT_MAX_LENGTH }
 
 const kindOf = (data: Record<string, unknown> | undefined): TemplateKind => (data?.kind === 'maintenance' ? 'maintenance' : 'incident')
 

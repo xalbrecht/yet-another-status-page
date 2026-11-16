@@ -112,6 +112,14 @@ You can customize SMS message templates in **Configuration → SMS Settings** (K
 
 Configure **Title Max Length** and **Message Max Length** to control how content is truncated to fit SMS limits.
 
+## Push Messages (ntfy)
+
+A notification has an optional field **ntfy message** (ntfy-Nachricht): a short text of up to 500 characters for a push message via [ntfy](https://ntfy.sh). The application does not send push messages itself. A connection that reads sent notifications through the [Payload REST API](../api/payload-rest.md) can use the field `ntfyBody`: if it is set, the connection uses it as the text of the push message, otherwise it derives a text from `title` or `smsBody`. Such a connection should sign in with an API key of its own user (see [API keys](../api/payload-rest.md#api-keys)).
+
+The field holds only the text. Title, urgency and tags of the push message are not part of it. The connection derives them from the incident or maintenance the notification belongs to (`relatedIncident` or `relatedMaintenance`, with its impact and status).
+
+[Templates](./templates.md) carry an ntfy text as well.
+
 ## Recipient Count
 
 The notification form shows the estimated recipient count based on:

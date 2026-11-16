@@ -2,6 +2,7 @@ import type { CollectionConfig } from 'payload'
 import { deliverableSubscribersWhere } from '@/lib/subscriber-filter'
 import { localizedDateAdmin } from '@/lib/localizedDateAdmin'
 import { ta } from '@/lib/i18n/admin'
+import { NTFY_TEXT_MAX_LENGTH } from '@/lib/message-templates'
 
 export const notificationChannelOptions = [
   { label: ta('Email'), value: 'email' },
@@ -168,6 +169,19 @@ export const Notifications: CollectionConfig = {
       admin: {
         description: ta('Short SMS message (160 characters recommended)'),
         condition: (data) => data?.channel !== 'email',
+      },
+    },
+    {
+      name: 'ntfyBody',
+      type: 'textarea',
+      label: ta('ntfy message'),
+      // Dieselbe Grenze wie der ntfy-Text der Vorlagen
+      maxLength: NTFY_TEXT_MAX_LENGTH,
+      admin: {
+        rows: 3,
+        description: ta(
+          'Optional. A short text for a push message via ntfy (up to 500 characters). The application does not send it itself: a connection that reads sent notifications through the API can use it.',
+        ),
       },
     },
     {

@@ -1,4 +1,5 @@
 import { validateRecipients } from '@/lib/report/export/recipients'
+import { MAIL_PART_LIMIT_DEFAULT_MB, MAIL_PART_LIMIT_MAX_MB, MAIL_PART_LIMIT_MIN_MB } from '@/lib/report/export/mail-limit'
 import type { FieldAccess, GlobalConfig } from 'payload'
 import { ta } from '@/lib/i18n/admin'
 
@@ -148,6 +149,20 @@ export const EmailSettings: GlobalConfig = {
           validate: (value: string | null | undefined) => validateRecipients(value),
           admin: {
             description: ta('One address per line or separated by commas. Leave empty to send none'),
+          },
+        },
+        {
+          name: 'reportMailLimitMb',
+          type: 'number',
+          access: { read: authenticatedRead },
+          label: ta('Size limit per email of the availability report (MB)'),
+          defaultValue: MAIL_PART_LIMIT_DEFAULT_MB,
+          min: MAIL_PART_LIMIT_MIN_MB,
+          max: MAIL_PART_LIMIT_MAX_MB,
+          admin: {
+            description: ta(
+              'Largest total size of the attachments of one email. A larger report is split into several emails. Choose a value below the limit of your mail server: attachments grow by about a third in transit. Empty means 6 MB',
+            ),
           },
         },
       ],

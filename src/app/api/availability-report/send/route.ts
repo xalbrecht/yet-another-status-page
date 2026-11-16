@@ -6,6 +6,7 @@ import { isTestMode } from '@/lib/access'
 import { sendEmail, verifySmtp } from '@/lib/email'
 import { ta } from '@/lib/i18n/admin'
 import { parseRecipients } from '@/lib/report/export/recipients'
+import { mailPartLimitBytes } from '@/lib/report/export/mail-limit'
 import { ReportMailImageTooLargeError, ReportMailPlanChangedError, ReportMailResumeError, ReportMailTooLargeError, sendReportMail } from '@/lib/report/export/mail'
 import { acquireSendLock } from '@/lib/report/export/send-lock'
 import { loadReportContext } from '@/lib/report/load'
@@ -67,7 +68,7 @@ export async function POST(request: NextRequest) {
       const smtp = await verifySmtp(settings)
       if (!smtp.ok) return fail('smtp-failed', `${ta('The mail server does not respond')}: ${smtp.error}. ${ta('Nothing was sent.')}`, 502)
       const serviceCount = loaded.context.build(undefined).data.scope.serviceCount
-      const result = await sendReportMail({ context: loaded.context, recipients, send: (options) => sendEmail(settings, options), resume, serviceCount })
+      const result = await sendReportMail({ context: loaded.context, recipients, send: (options) => sendEmail(settings, options), resume, serviceCount, limit: mailPartLimitBytes(settings.reportMailLimitMb) })
       if (result.failed > 0) {
         return fail('send-failed', result.errors[0] ?? ta('Unknown error'), 502, {
           sent: result.sent,

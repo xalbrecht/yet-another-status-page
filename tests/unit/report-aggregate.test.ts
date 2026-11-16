@@ -171,12 +171,12 @@ test('Fußnoten werden durchgereicht', () => {
   assert.deepEqual(data.footnotes, { unsure: 78, withoutService: 19 })
 })
 
-test('Rechenart 2 über ein Jahr mit 166 Diensten bleibt unter 3 Sekunden', () => {
-  const services = Array.from({ length: 166 }, (_, index) => service(index + 1, `Dienst ${index + 1}`, timelineWith([[octoberLength.start, octoberLength.start + 3_600_000]])))
+test('Rechenart 2 über ein Jahr mit 200 Diensten bleibt unter 3 Sekunden', () => {
+  const services = Array.from({ length: 200 }, (_, index) => service(index + 1, `Dienst ${index + 1}`, timelineWith([[octoberLength.start, octoberLength.start + 3_600_000]])))
   const startedAt = Date.now()
   const data = buildReport(input('2026', services, { params: { calc: 'monthly' } }))
   const elapsed = Date.now() - startedAt
-  assert.equal(data.kpis.serviceCount, 166)
+  assert.equal(data.kpis.serviceCount, 200)
   assert.ok(elapsed < 3000, `Rechenart 2 brauchte ${elapsed} ms`)
 })
 

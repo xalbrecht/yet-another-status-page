@@ -33,14 +33,14 @@ const row = (name: string, availability: number | null, belowTarget: boolean): R
   history: Array.from({ length: 12 }, () => availability),
 })
 const data: ReportData = {
-  scope: { groupId: null, groupName: null, serviceCount: 166 },
+  scope: { groupId: null, groupName: null, serviceCount: 200 },
   kpis: {
     availability: 99.7123,
     previousAvailability: 99.5,
     downMs: 357 * 60 * MIN,
     previousDownMs: 80 * 60 * MIN,
     affectedServices: 20,
-    serviceCount: 166,
+    serviceCount: 200,
     outageCount: 24,
     longestOutage: { ms: 2793 * MIN, serviceName: 'Infoma' },
     degradedMs: 180 * MIN,

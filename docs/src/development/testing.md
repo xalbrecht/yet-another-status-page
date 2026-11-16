@@ -137,7 +137,7 @@ The seed script reads `API_BASE`, Playwright reads `PLAYWRIGHT_BASE_URL`. Both d
 
 ## Measuring performance and memory
 
-The situation overview calculates a bar per service on every request of the start page (`force-dynamic`). With 166 services this has already caused one outage (issue #23: about 11 seconds per request, container killed at 768 MiB). Measure before and after a change that adds work per service.
+The situation overview calculates a bar per service on every request of the start page (`force-dynamic`). With a few hundred services, work per service adds up quickly: an earlier version needed about 11 seconds per request and exceeded the memory limit of a small container. Measure before and after a change that adds work per service.
 
 **Calculation time** (one-off script, `tsx` is part of the dev dependencies):
 
@@ -149,11 +149,11 @@ const now = Date.now()
 const timeline = [{ at: now - 3 * 3600_000, status: 'operational' as const }]
 const window = computeBarWindow(now)
 const t0 = performance.now()
-for (let i = 0; i < 202; i++) computeBarRuns([timeline], window) // 36 groups + 166 services
+for (let i = 0; i < 200; i++) computeBarRuns([timeline], window) // 200 timelines, a large installation
 console.log(`${(performance.now() - t0).toFixed(0)} ms`)
 ```
 
-Reference values for 202 timelines on the development machine: 11 s before the fix of issue #23, 650 ms after it, 16 ms with the strokes of issue #29. Do not format times per slot on the server: `formatTime` costs about 0.6 ms per call.
+Reference values for 200 timelines on a development machine: about 11 s with the first implementation, about 650 ms after the first optimization, about 16 ms with the current strokes. Do not format times per slot on the server: `formatTime` costs about 0.6 ms per call.
 
 **Memory under load** (container with limit, here the test environment of the deployment project):
 

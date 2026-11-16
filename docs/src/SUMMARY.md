@@ -19,6 +19,7 @@
 - [Availability Report](./admin/availability-report.md)
 - [Incidents](./admin/incidents.md)
 - [Maintenances](./admin/maintenances.md)
+- [Templates](./admin/templates.md)
 - [Notifications](./admin/notifications.md)
 - [Subscribers](./admin/subscribers.md)
 

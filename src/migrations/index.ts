@@ -22,6 +22,7 @@ import * as migration_20261116_300000_add_report_mail_limit from './20261116_300
 import * as migration_20261116_400000_approve_existing_sms_subscribers from './20261116_400000_approve_existing_sms_subscribers';
 import * as migration_20261116_500000_add_classification_rules from './20261116_500000_add_classification_rules';
 import * as migration_20261116_500100_seed_classification_rules from './20261116_500100_seed_classification_rules';
+import * as migration_20261116_600000_add_message_templates from './20261116_600000_add_message_templates';
 
 export const migrations = [
   {
@@ -143,5 +144,10 @@ export const migrations = [
     up: migration_20261116_500100_seed_classification_rules.up,
     down: migration_20261116_500100_seed_classification_rules.down,
     name: '20261116_500100_seed_classification_rules',
+  },
+  {
+    up: migration_20261116_600000_add_message_templates.up,
+    down: migration_20261116_600000_add_message_templates.down,
+    name: '20261116_600000_add_message_templates',
   },
 ];

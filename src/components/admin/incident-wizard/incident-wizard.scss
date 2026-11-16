@@ -144,8 +144,8 @@
 }
 
 .iw-list-action {
-  display: flex; justify-content: flex-end;
-  padding: 0 var(--gutter-h, 1.5rem) 0.5rem;
+  display: flex; justify-content: flex-start;
+  margin: 0.25rem 0 0.5rem;
 }
 
 @media (max-width: 760px) {

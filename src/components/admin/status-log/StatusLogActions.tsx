@@ -3,6 +3,7 @@
 import React, { useState } from 'react'
 import type { RebuildResult } from '@/lib/status-log-rebuild'
 import type { ConversionResult } from '@/lib/maintenance-conversion'
+import type { PreviewCheck } from '@/lib/preview-check'
 import { useAdminText } from '@/lib/i18n/admin-client'
 import { StatusLogView } from './StatusLogView'
 
@@ -15,7 +16,12 @@ export const StatusLogActions: React.FC<{ ruleCount: number }> = ({ ruleCount })
   const [error, setError] = useState<string | null>(null)
   const [backupConfirmed, setBackupConfirmed] = useState(false)
 
-  async function call<T>(path: string, dryRun: boolean, done: (result: T) => void) {
+  /**
+   * `expect`: beim Ausführen das Feld `check` der Vorschau. Der Server prüft damit, ob die Vorschau noch stimmt.
+   * `onRejected`: bei einer abgelehnten Anfrage (zum Beispiel HTTP 409, Vorschau veraltet) die alte Vorschau verwerfen,
+   * damit „Ausführen“ erst nach einer neuen Vorschau wieder bedienbar ist.
+   */
+  async function call<T>(path: string, dryRun: boolean, done: (result: T) => void, expect?: PreviewCheck, onRejected?: () => void) {
     setBusy(true)
     setError(null)
     try {
@@ -23,10 +29,13 @@ export const StatusLogActions: React.FC<{ ruleCount: number }> = ({ ruleCount })
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ dryRun }),
+        body: JSON.stringify(dryRun ? { dryRun } : { dryRun, expect }),
       })
       const body = await response.json()
-      if (!response.ok) throw new Error(body?.error || `HTTP ${response.status}`)
+      if (!response.ok) {
+        if (response.status === 409) onRejected?.()
+        throw new Error(body?.error || `HTTP ${response.status}`)
+      }
       done(body as T)
     } catch (err) {
       setError(err instanceof Error ? err.message : ta('Unknown error'))
@@ -47,14 +56,14 @@ export const StatusLogActions: React.FC<{ ruleCount: number }> = ({ ruleCount })
       onPreviewRebuild={() => call<RebuildResult>('/api/status-log/rebuild', true, setRebuild)}
       onRunRebuild={() => {
         if (!window.confirm(ta('Replace the reconstructed entries now?'))) return
-        void call<RebuildResult>('/api/status-log/rebuild', false, setRebuild)
+        void call<RebuildResult>('/api/status-log/rebuild', false, setRebuild, rebuild?.check, () => setRebuild(null))
       }}
       onPreviewConversion={() => call<ConversionResult>('/api/status-log/convert-maintenance', true, setConversion)}
       onRunConversion={() => {
         if (!window.confirm(ta('Convert these incidents into maintenances and delete the incidents? This cannot be undone. Did you create a backup?'))) return
         // Der Haken gilt für einen Lauf: nach dem Ausführen muss er neu gesetzt werden
         setBackupConfirmed(false)
-        void call<ConversionResult>('/api/status-log/convert-maintenance', false, setConversion)
+        void call<ConversionResult>('/api/status-log/convert-maintenance', false, setConversion, conversion?.check, () => setConversion(null))
       }}
     />
   )

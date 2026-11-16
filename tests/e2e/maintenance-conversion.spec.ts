@@ -14,6 +14,12 @@ async function convert(request: APIRequestContext, body: Record<string, unknown>
   return response.json()
 }
 
+/** Ausführen wie die Oberfläche: erst Vorschau, dann Ausführen mit deren Prüfwert (`check`). */
+async function convertRun(request: APIRequestContext) {
+  const preview = await convert(request)
+  return convert(request, { dryRun: false, expect: preview.check })
+}
+
 async function findMaintenances(request: APIRequestContext, title: string) {
   const response = await request.get(`/api/maintenances?where[title][equals]=${encodeURIComponent(title)}&depth=0`)
   expect(response.ok()).toBe(true)
@@ -78,7 +84,7 @@ test.describe('Umwandlung der Wartungsvorfälle', () => {
     expect((await request.get(`/api/incidents/${incident.id}`)).status()).toBe(200)
     expect(await findMaintenances(request, title)).toHaveLength(0)
 
-    const run = await convert(request, { dryRun: false })
+    const run = await convert(request, { dryRun: false, expect: preview.check })
     expect(run.dryRun).toBe(false)
     expect(run.rebuild.dryRun).toBe(false)
     const maintenances = await findMaintenances(request, title)
@@ -89,8 +95,35 @@ test.describe('Umwandlung der Wartungsvorfälle', () => {
     const notifications = await request.get(`/api/notifications?where[relatedMaintenance][equals]=${maintenances[0].id}&limit=1`)
     expect((await notifications.json()).totalDocs).toBe(0)
 
-    const again = await convert(request, { dryRun: false })
+    const again = await convertRun(request)
     expect(again.converted.some((entry: { title: string }) => entry.title === title)).toBe(false)
+    expect(await findMaintenances(request, title)).toHaveLength(1)
+  })
+
+  test('Ausführen ohne Vorschau wird abgelehnt, mit veralteter Vorschau ebenso, und nichts wird geändert', async ({ request }) => {
+    const id = Date.now()
+    const group = await createServiceGroup({ name: `Umwandlung Prüfung ${id}`, icon: 'Server' })
+    const service = await createService({ name: `Umwandlung Prüfung Dienst ${id}`, group: group.id })
+    const title = `Nichtverfügbarkeit des Services Prüfung ${id} aufgrund von Wartungsarbeiten`
+    const { incident } = await createMaintenanceIncident(title, service.id)
+
+    const noExpect = await request.post('/api/status-log/convert-maintenance', { data: { dryRun: false } })
+    expect(noExpect.status()).toBe(400)
+
+    const preview = await convert(request)
+    // Zwischen Vorschau und Ausführen kommt ein weiterer Wartungsvorfall dazu (oder die andere Aktion ändert den Bestand)
+    const other = await createMaintenanceIncident(`Nichtverfügbarkeit des Services Prüfung zwei ${id} aufgrund von Wartungsarbeiten`, service.id)
+    const stale = await request.post('/api/status-log/convert-maintenance', { data: { dryRun: false, expect: preview.check } })
+    expect(stale.status()).toBe(409)
+    const message = (await stale.json()).error as string
+    expect(message).toMatch(/Vorschau|preview/)
+    expect(message).toContain(String(preview.check.count))
+    expect(await findMaintenances(request, title)).toHaveLength(0)
+    expect((await request.get(`/api/incidents/${incident.id}`)).status()).toBe(200)
+    expect((await request.get(`/api/incidents/${other.incident.id}`)).status()).toBe(200)
+
+    // Nach einer neuen Vorschau läuft es
+    await convertRun(request)
     expect(await findMaintenances(request, title)).toHaveLength(1)
   })
 
@@ -114,7 +147,7 @@ test.describe('Umwandlung der Wartungsvorfälle', () => {
     expect(reasons[openTitle]).toBe('open')
     expect(preview.converted.some((entry: { title: string }) => entry.title === manualTitle || entry.title === openTitle)).toBe(false)
 
-    await convert(request, { dryRun: false })
+    await convertRun(request)
     expect((await request.get(`/api/incidents/${manual.id}`)).status()).toBe(200)
     expect((await request.get(`/api/incidents/${open.id}`)).status()).toBe(200)
   })
@@ -127,7 +160,7 @@ test.describe('Umwandlung der Wartungsvorfälle', () => {
     // Zustand nach einem abgebrochenen Lauf: Die Wartung besteht schon, der Vorfall noch nicht gelöscht
     await createMaintenance({ title, status: 'completed', scheduledStartAt: start, scheduledEndAt: end, affectedServices: [service.id] })
 
-    await convert(request, { dryRun: false })
+    await convertRun(request)
     expect(await findMaintenances(request, title)).toHaveLength(1)
     expect((await request.get(`/api/incidents/${incident.id}`)).status()).toBe(404)
   })
@@ -140,7 +173,7 @@ test.describe('Umwandlung der Wartungsvorfälle', () => {
     await createMaintenanceIncident(title, service.id)
     await updateService(service.id, { status: 'partial' })
 
-    await convert(request, { dryRun: false })
+    await convertRun(request)
     const response = await request.get(`/api/services/${service.id}`)
     expect((await response.json()).status).toBe('partial')
   })
@@ -162,7 +195,7 @@ test.describe('Umwandlung der Wartungsvorfälle', () => {
     const preview = await convert(request)
     const reasons = Object.fromEntries(preview.skipped.map((entry: { title: string; reason: string }) => [entry.title, entry.reason]))
     expect(reasons[title]).toBe('after-start')
-    await convert(request, { dryRun: false })
+    await convertRun(request)
     expect((await request.get(`/api/incidents/${incident.id}`)).status()).toBe(200)
     expect(await findMaintenances(request, title)).toHaveLength(0)
   })

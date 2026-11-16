@@ -1,6 +1,7 @@
 import { sql } from '@payloadcms/db-postgres'
 import { classifyIncident, summarizeClassification, type ClassificationRule } from '@/lib/incident-classification'
 import { buildReconstructedEvents } from '@/lib/status-reconstruction'
+import { assertPreviewMatches, fingerprintOf, type PreviewCheck } from '@/lib/preview-check'
 
 /**
  * Nachrechnung des Statusprotokolls vor dem ersten Betriebseintrag aus den Vorfällen, wiederholbar.
@@ -22,11 +23,16 @@ export type RebuildResult = {
   reconstructedAfter: number
   unsure: number
   withoutService: number
+  /** Zahl und Hash der Menge, auf die sich diese Zahlen beziehen. Die Oberfläche schickt sie beim Ausführen zurück (Prüfung in `assertPreviewMatches`). */
+  check: PreviewCheck
 }
 
 const INSERT_BATCH = 200
 
-export async function rebuildStatusLog(db: SqlRunner, options: { dryRun: boolean; rules?: readonly ClassificationRule[] }): Promise<RebuildResult> {
+export async function rebuildStatusLog(
+  db: SqlRunner,
+  options: { dryRun: boolean; rules?: readonly ClassificationRule[]; expect?: PreviewCheck },
+): Promise<RebuildResult> {
   const rules = options.rules ?? []
   const incidentRows = (
     await db.execute(sql`
@@ -89,7 +95,18 @@ export async function rebuildStatusLog(db: SqlRunner, options: { dryRun: boolean
     })
   }
 
+  // Der Hash deckt ab, was „Ausführen“ schreibt (die neuen Einträge) und wie viele alte es ersetzt. Die Reihenfolge der Einträge ist egal.
+  const sortedEvents = events
+    .map((event) => [event.serviceId, event.at, event.status] as const)
+    .sort((a, b) => a[0] - b[0] || a[1] - b[1] || a[2].localeCompare(b[2]))
+  const check: PreviewCheck = {
+    count: incidentRows.length,
+    fingerprint: fingerprintOf({ events: sortedEvents, reconstructedBefore, counts: Object.entries(counts).sort(([a], [b]) => a.localeCompare(b)) }),
+  }
+
   if (!options.dryRun) {
+    // Vor dem ersten Schreiben: weicht die Menge von der Vorschau ab, wird nichts gelöscht
+    assertPreviewMatches(options.expect, check)
     const write = async (runner: SqlRunner) => {
       await runner.execute(sql`DELETE FROM service_status_events WHERE source = 'reconstructed'`)
       for (let offset = 0; offset < events.length; offset += INSERT_BATCH) {
@@ -113,5 +130,6 @@ export async function rebuildStatusLog(db: SqlRunner, options: { dryRun: boolean
     reconstructedAfter: events.length,
     unsure: summary.unsure,
     withoutService: summary.withoutService,
+    check,
   }
 }

@@ -82,6 +82,26 @@ npm run build
 npm start
 ```
 
+### Build information (optional)
+
+The `Dockerfile` accepts three build arguments. The admin area shows them on the dashboard card **System** and in the sidebar, so you can see which image runs.
+
+| Build argument | Meaning | Example |
+|----------------|---------|---------|
+| `YASP_BUILD_TAG` | Name of the image | `status-page:2026-11-16` |
+| `YASP_BUILD_DATE` | Build time in UTC (ISO 8601) | `2026-11-16T09:15:35Z` |
+| `YASP_BUILD_COMMIT` | Short commit | `0738982` |
+
+```bash
+docker build \
+  --build-arg YASP_BUILD_TAG=status-page:2026-11-16 \
+  --build-arg YASP_BUILD_DATE="$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+  --build-arg YASP_BUILD_COMMIT="$(git rev-parse --short HEAD)" \
+  -t status-page:2026-11-16 .
+```
+
+Without the arguments the admin area shows the version from `package.json` and the note "Development build, no YASP image". Nothing else changes.
+
 ## First-Time Setup
 
 1. **Access the admin panel** at `<serverUrl>/admin`.

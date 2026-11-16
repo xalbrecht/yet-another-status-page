@@ -103,10 +103,11 @@ export default buildConfig({
       titleSuffix: ' | Status',
     },
     components: {
-      beforeDashboard: ['@/components/admin/DashboardWidgets#DashboardWidgets'],
+      beforeDashboard: ['@/components/admin/DashboardWidgets#DashboardWidgets', '@/components/admin/SystemInfo#SystemCard'],
       afterNavLinks: [
         '@/components/admin/availability-report/AvailabilityReportNavLink#AvailabilityReportNavLink',
         '@/components/admin/status-log/StatusLogNavLink#StatusLogNavLink',
+        '@/components/admin/SystemInfo#SystemNavLine',
       ],
       views: {
         availabilityReport: {

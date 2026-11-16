@@ -100,9 +100,29 @@ test.describe('Subscriber approval and confirmation', () => {
     expect(missing.status()).toBe(400)
   })
 
-  test('SMS subscription is rejected', async ({ request }) => {
+  test('SMS subscription is rejected while SMS is not set up', async ({ request }) => {
     const response = await request.post('/api/subscribe', { data: { type: 'sms', phone: '+4915112345678' } })
     expect(response.status()).toBe(503)
+    const availability = await (await request.get('/api/subscribe')).json()
+    expect(availability.sms).toBe(false)
+  })
+
+  test('SMS subscriber is counted only after approval', async ({ request }) => {
+    // The sign-up itself needs SMS settings, which only a signed-in user can change. The subscriber is
+    // therefore created through the collection, the way POST /api/subscribe creates it (not approved).
+    const smsCount = async () => (await (await request.get('/api/subscribers/count?channel=sms')).json()).count as number
+    const before = await smsCount()
+    // 49 + 9 digits from the timestamp: a new number in every run
+    const created = await request.post('/api/subscribers', {
+      data: { type: 'sms', phone: `+49${String(stamp).slice(-9)}`, active: true, verified: false },
+    })
+    expect(created.ok(), await created.text()).toBeTruthy()
+    const id = (await created.json()).doc.id as number
+    expect(await smsCount()).toBe(before)
+
+    const approve = await request.patch(`/api/subscribers/${id}`, { data: { verified: true } })
+    expect(approve.ok(), await approve.text()).toBeTruthy()
+    expect(await smsCount()).toBe(before + 1)
   })
 
   test('confirmation page asks for a click before it confirms', async ({ page, request }) => {

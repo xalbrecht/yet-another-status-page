@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { getPayload } from 'payload'
 import config from '@payload-config'
 import { getIncidentStatus } from '@/collections/Incidents'
+import { pendingSubscribersWhere } from '@/lib/subscriber-filter'
 
 export async function GET() {
   try {
@@ -47,21 +48,10 @@ export async function GET() {
           ],
         },
       }),
-      // Email subscribers waiting for approval or address confirmation
+      // Subscribers waiting for approval (email also: address confirmation)
       payload.count({
         collection: 'subscribers',
-        where: {
-          and: [
-            { type: { equals: 'email' } },
-            { active: { equals: true } },
-            {
-              or: [
-                { verified: { not_equals: true } },
-                { addressConfirmed: { not_equals: true } },
-              ],
-            },
-          ],
-        },
+        where: pendingSubscribersWhere(),
       }),
       // Fetch all incidents to compute active count
       // (Incidents don't have a top-level status field - it's derived from updates)

@@ -140,7 +140,7 @@ export const Subscribers: CollectionConfig = {
       defaultValue: false,
       label: ta('Approved'),
       admin: {
-        description: ta('Operator approval. Email subscribers receive notifications only when approved and the address is confirmed'),
+        description: ta('Operator approval. Email subscribers receive notifications only when approved and the address is confirmed, SMS subscribers when approved'),
       },
     },
     {

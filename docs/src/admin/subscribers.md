@@ -92,9 +92,11 @@ A new email subscription from the status page needs two steps before notificatio
 1. **Address confirmation.** The subscriber receives an email with a link. The link opens a page with a **Confirm** button. Only the click sets **Address confirmed**. The token works once.
 2. **Approval.** The operator sets **Approved** on the subscriber. The dashboard shows a notice with the number of subscribers who wait for approval or confirmation and links to the list.
 
-Notifications and the recipient count include only **email** subscribers that are **active**, **approved** and **address confirmed**. SMS subscribers need only **Active**.
+Notifications and the recipient count include only **email** subscribers that are **active**, **approved** and **address confirmed**.
 
-To be told about every new request, enter an address under **Settings → Email Settings → Address for new subscription requests**. It receives the mail "New subscription request on <host>" with a link to the subscriber. Leave the field empty to send none.
+**SMS subscriptions** are accepted only when SMS is set up and enabled (**Settings → SMS Settings**). Otherwise the status page does not offer SMS and the API answers with 503. An SMS subscriber does not confirm the phone number: the only step is the **approval** by the operator. Until then no SMS is sent to the number, and the subscriber counts as waiting on the dashboard. Check that the number belongs to the person who asked before you approve it. SMS subscribers that existed before this rule were approved by a migration.
+
+To be told about every new request, enter an address under **Settings → Email Settings → Address for new subscription requests**. It receives the mail "New subscription request on <host>" with a link to the subscriber, for email and for SMS subscriptions. Leave the field empty to send none.
 
 Subscribers created in the admin area are not confirmed by link: set both **Approved** and **Address confirmed** by hand when you trust the address.
 

@@ -45,7 +45,7 @@ const mach: Timeline = [
 ]
 
 test('buildGroupSheet summiert Teilausfall und Schwerer Ausfall je Dienst', () => {
-  const sheet = buildGroupSheet({ month, services: [serviceOf(1, 'MACH', mach)], mode: 'A', timeZone: Z })
+  const sheet = buildGroupSheet({ month, services: [serviceOf(1, 'MACH', mach)], mode: 'A', timeZone: Z, locale: 'de-DE' })
   assert.equal(sheet.month.key, '2026-10')
   assert.equal(sheet.perService.length, 1)
   assert.deepEqual(
@@ -55,7 +55,7 @@ test('buildGroupSheet summiert Teilausfall und Schwerer Ausfall je Dienst', () =
 })
 
 test('buildGroupSheet führt jeden Tag des Monats auf und ordnet die Balken den Tagen zu', () => {
-  const sheet = buildGroupSheet({ month, services: [serviceOf(1, 'MACH', mach)], mode: 'A', timeZone: Z })
+  const sheet = buildGroupSheet({ month, services: [serviceOf(1, 'MACH', mach)], mode: 'A', timeZone: Z, locale: 'de-DE' })
   assert.equal(sheet.perDay.length, 31)
   const day12 = sheet.perDay[11]
   assert.equal(day12.day, '2026-10-12')
@@ -69,27 +69,27 @@ test('buildGroupSheet führt jeden Tag des Monats auf und ordnet die Balken den 
 test('buildGroupSheet sortiert die Balken eines Tages absteigend nach Dauer', () => {
   const short: Timeline = [baseline, { at: ms('2026-10-15T08:00:00Z'), status: 'partial' }, { at: ms('2026-10-15T08:30:00Z'), status: 'operational' }]
   const long: Timeline = [baseline, { at: ms('2026-10-15T09:00:00Z'), status: 'major' }, { at: ms('2026-10-15T10:30:00Z'), status: 'operational' }]
-  const sheet = buildGroupSheet({ month, services: [serviceOf(1, 'Kurz', short), serviceOf(2, 'Lang', long)], mode: 'A', timeZone: Z })
+  const sheet = buildGroupSheet({ month, services: [serviceOf(1, 'Kurz', short), serviceOf(2, 'Lang', long)], mode: 'A', timeZone: Z, locale: 'de-DE' })
   assert.deepEqual(sheet.perDay[14].bars.map((bar) => bar.name), ['Lang', 'Kurz'])
   assert.deepEqual(sheet.perService.map((entry) => entry.name), ['Lang', 'Kurz'])
 })
 
 test('buildGroupSheet führt einen Dienst nur mit Einschränkung in perService, aber ohne Balken', () => {
   const degraded: Timeline = [baseline, { at: ms('2026-10-05T08:00:00Z'), status: 'degraded' }, { at: ms('2026-10-05T10:00:00Z'), status: 'operational' }]
-  const sheet = buildGroupSheet({ month, services: [serviceOf(1, 'Langsam', degraded)], mode: 'A', timeZone: Z })
+  const sheet = buildGroupSheet({ month, services: [serviceOf(1, 'Langsam', degraded)], mode: 'A', timeZone: Z, locale: 'de-DE' })
   assert.equal(sheet.perService.length, 1)
   assert.equal(sheet.perService[0].degradedMs, 2 * HOUR)
   assert.ok(sheet.perDay.every((day) => day.bars.length === 0))
 })
 
 test('buildGroupSheet lässt einen Dienst ohne Störung aus', () => {
-  const sheet = buildGroupSheet({ month, services: [serviceOf(1, 'Ruhig', [baseline])], mode: 'A', timeZone: Z })
+  const sheet = buildGroupSheet({ month, services: [serviceOf(1, 'Ruhig', [baseline])], mode: 'A', timeZone: Z, locale: 'de-DE' })
   assert.deepEqual(sheet.perService, [])
 })
 
 test('buildGroupSheet endet im laufenden Monat mit dem heutigen Tag', () => {
   const running = { ...month, end: ms('2026-10-14T10:00:00Z'), partial: true }
-  const sheet = buildGroupSheet({ month: running, services: [serviceOf(1, 'MACH', mach)], mode: 'A', timeZone: Z })
+  const sheet = buildGroupSheet({ month: running, services: [serviceOf(1, 'MACH', mach)], mode: 'A', timeZone: Z, locale: 'de-DE' })
   assert.equal(sheet.perDay.length, 14)
   assert.equal(sheet.perDay[13].dayOfMonth, 14)
 })
@@ -108,15 +108,27 @@ test('splitOutageByDay endet auch in einer Zeitzone ohne Mitternacht am Umstellu
 
 test('buildGroupSheet endet in dieser Zeitzone und führt jeden Tag genau einmal auf', () => {
   const september = { key: '2026-09', label: 'September 2026', start: ms('2026-09-01T04:00:00Z'), end: ms('2026-10-01T03:00:00Z'), partial: false }
-  const sheet = buildGroupSheet({ month: september, services: [serviceOf(1, 'A', [baseline])], mode: 'A', timeZone: SANTIAGO })
+  const sheet = buildGroupSheet({ month: september, services: [serviceOf(1, 'A', [baseline])], mode: 'A', timeZone: SANTIAGO, locale: 'de-DE' })
   assert.equal(sheet.perDay.length, 30)
   assert.equal(new Set(sheet.perDay.map((day) => day.day)).size, 30)
 })
 
 test('buildGroupSheet: Überschrift nennt die Tage, wenn die Achse nur einen Teil des Monats zeigt', () => {
   const running = { ...month, end: ms('2026-10-14T10:00:00Z'), partial: true }
-  const partial = buildGroupSheet({ month: running, services: [serviceOf(1, 'MACH', mach)], mode: 'A', timeZone: Z })
+  const partial = buildGroupSheet({ month: running, services: [serviceOf(1, 'MACH', mach)], mode: 'A', timeZone: Z, locale: 'de-DE' })
   assert.match(partial.month.label, /^Oktober 2026 \((Tage|days) 1–14\)$/)
-  const full = buildGroupSheet({ month, services: [serviceOf(1, 'MACH', mach)], mode: 'A', timeZone: Z })
+  const full = buildGroupSheet({ month, services: [serviceOf(1, 'MACH', mach)], mode: 'A', timeZone: Z, locale: 'de-DE' })
   assert.equal(full.month.label, 'Oktober 2026')
+})
+
+test('buildGroupSheet ordnet gleich lange Ausfälle nach der eingestellten Sprache', () => {
+  const outage: Timeline = [baseline, { at: ms('2026-10-15T08:00:00Z'), status: 'partial' }, { at: ms('2026-10-15T09:00:00Z'), status: 'operational' }]
+  const services = [serviceOf(1, 'Zoo', outage), serviceOf(2, 'Ämter', outage)]
+  const german = buildGroupSheet({ month, services, mode: 'A', timeZone: Z, locale: 'de-DE' })
+  const swedish = buildGroupSheet({ month, services, mode: 'A', timeZone: Z, locale: 'sv-SE' })
+  // Deutsch ordnet „Ä“ bei „A“ ein, Schwedisch hinter „Z“
+  assert.deepEqual(german.perService.map((entry) => entry.name), ['Ämter', 'Zoo'])
+  assert.deepEqual(swedish.perService.map((entry) => entry.name), ['Zoo', 'Ämter'])
+  assert.deepEqual(german.perDay[14].bars.map((bar) => bar.name), ['Ämter', 'Zoo'])
+  assert.deepEqual(swedish.perDay[14].bars.map((bar) => bar.name), ['Zoo', 'Ämter'])
 })

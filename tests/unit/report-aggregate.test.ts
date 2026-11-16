@@ -267,3 +267,21 @@ test('buildGroupList liefert dieselbe Liste wie der ganze Bericht, bei beiden Re
     assert.deepEqual(buildGroupList(config), buildReport(config).groupList, calc)
   }
 })
+
+test('Gruppen mit gleichem Wert stehen in der Reihenfolge der eingestellten Sprache', () => {
+  const groups = [
+    { id: 1, name: 'Zebra' },
+    { id: 2, name: 'Ärzte' },
+  ]
+  const services = [service(1, 'Zoo', timelineWith([]), { groupId: 1 }), service(2, 'Ämter', timelineWith([]), { groupId: 2 })]
+  const german = input('2026-10', services, { groups })
+  const swedish = { ...german, locale: 'sv-SE' }
+  // Deutsch ordnet „Ä“ bei „A“ ein, Schwedisch hinter „Z“
+  assert.deepEqual(buildGroupList(german).map((group) => group.name), ['Ärzte', 'Zebra'])
+  assert.deepEqual(buildGroupList(swedish).map((group) => group.name), ['Zebra', 'Ärzte'])
+  assert.deepEqual(buildReport(german).ranking.map((row) => row.name), ['Ämter', 'Zoo'])
+  assert.deepEqual(buildReport(swedish).ranking.map((row) => row.name), ['Zoo', 'Ämter'])
+  // Zeile 0 der Wärmekarte ist die Gesamtzeile
+  assert.deepEqual(buildReport(german).heat.rows.slice(1).map((row) => row.name), ['Ärzte', 'Zebra'])
+  assert.deepEqual(buildReport(swedish).heat.rows.slice(1).map((row) => row.name), ['Zebra', 'Ärzte'])
+})

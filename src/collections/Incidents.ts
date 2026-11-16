@@ -208,7 +208,7 @@ export const Incidents: CollectionConfig = {
       },
     },
     {
-      // Einordnung für die Nachrechnung des Verlaufs vor dem 10.11.2026 (Konzept 5). Ein Wert ungleich „auto“ gilt immer.
+      // Einordnung für die Nachrechnung des Verlaufs vor Beginn des Statusprotokolls. Ein Wert ungleich „auto“ gilt immer.
       name: 'availabilityClass',
       type: 'select',
       defaultValue: 'auto',
@@ -223,7 +223,7 @@ export const Incidents: CollectionConfig = {
       admin: {
         position: 'sidebar',
         description: ta(
-          'Applies to the reconstruction of the availability history before 10 Nov 2026. "Automatic" rates the title and the text of the updates.',
+          'Applies to the reconstruction of the availability history before the status log began. "Automatic" rates the title and the text of the updates.',
         ),
       },
     },

@@ -273,7 +273,7 @@
     "Alternative text for accessibility": "Alternativtext für die Barrierefreiheit",
     "Applications": "Applikationen",
     "Applies to all services until a group or a service has its own value. Used by the availability report.": "Gilt für alle Dienste, bis eine Gruppe oder ein Dienst einen eigenen Wert hat. Grundlage des Verfügbarkeitsberichts.",
-    "Applies to the reconstruction of the availability history before 10 Nov 2026. \"Automatic\" rates the title and the text of the updates.": "Gilt für die Nachrechnung des Verfügbarkeitsverlaufs vor dem 10.11.2026. „Automatisch“ bewertet Titel und Text der Aktualisierungen.",
+    "Applies to the reconstruction of the availability history before the status log began. \"Automatic\" rates the title and the text of the updates.": "Gilt für die Nachrechnung des Verfügbarkeitsverlaufs vor Beginn des Statusprotokolls. „Automatisch“ bewertet Titel und Text der Aktualisierungen.",
     "Apply": "Anwenden",
     "Approved": "Freigegeben",
     "Auth Token": "Auth-Token",

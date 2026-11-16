@@ -3,9 +3,9 @@ import { classifyIncident } from '../lib/incident-classification'
 import { buildReconstructedEvents } from '../lib/status-reconstruction'
 
 /**
- * Rechnet das Statusprotokoll vor dem 10.11.2026 aus den Vorfällen nach (Konzept 5).
+ * Rechnet das Statusprotokoll für die Zeit vor dem ersten Betriebseintrag aus den Vorfällen nach.
  * Wiederholbar: zuerst werden alle Zeilen mit source = 'reconstructed' gelöscht. Die Zeilen mit source = 'operation'
- * (auch die Startwerte vom 10.11.2026) bleiben unverändert. Das Feld `impact` der Vorfälle wird nicht gelesen.
+ * (auch die Startwerte) bleiben unverändert. Das Feld `impact` der Vorfälle wird nicht gelesen.
  */
 export async function up({ db, payload }: MigrateUpArgs): Promise<void> {
   // Auch offene Vorfälle: sie gelten ab Beginn bis zum ersten Betriebseintrag des Dienstes (danach gilt der echte Zustand)

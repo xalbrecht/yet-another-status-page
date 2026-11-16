@@ -68,7 +68,7 @@ export function buildMailMessage(emailSettings: EmailSetting, options: EmailOpti
     replyTo: emailSettings.smtpReplyTo || emailSettings.smtpFromAddress || undefined,
     subject: options.subject,
     html: options.html,
-    text: options.text || options.html.replace(/<[^>]*>/g, ''),
+    text: options.text || htmlToText(options.html),
     headers,
     attachments: options.attachments?.map((attachment) => ({
       filename: attachment.filename,
@@ -147,12 +147,19 @@ export function generateEmailHtml(options: {
   /** Sprache der festen Texte der Mail (Fußzeile, Abmeldelink) und des lang-Attributs. */
   language: string
 }): string {
-  const { siteName, title, body, ctaText, ctaUrl, unsubscribeUrl, siteUrl, logoUrl } = options
+  const { unsubscribeUrl, siteUrl, logoUrl } = options
   const { t, lang } = translatorsFor(options.language)
 
+  // Alle Werte der Aufrufer sind Klartext und werden hier maskiert, auch in Attributen.
+  const siteName = escapeHtml(options.siteName)
+  const title = escapeHtml(options.title)
+  const body = escapeHtml(options.body)
+  const ctaText = options.ctaText ? escapeHtml(options.ctaText) : undefined
+  const ctaUrl = options.ctaUrl ? escapeHtml(options.ctaUrl) : undefined
+
   // Build absolute logo URL if it's a relative path
-  const absoluteLogoUrl = logoUrl 
-    ? (logoUrl.startsWith('http') ? logoUrl : `${siteUrl}${logoUrl.startsWith('/') ? '' : '/'}${logoUrl}`)
+  const absoluteLogoUrl = logoUrl
+    ? escapeHtml(logoUrl.startsWith('http') ? logoUrl : `${siteUrl}${logoUrl.startsWith('/') ? '' : '/'}${logoUrl}`)
     : null
 
   return `
@@ -246,8 +253,8 @@ export function generateEmailHtml(options: {
     </div>
     ` : ''}
     <div class="footer">
-      <p>${escapeHtml(t('mail.sentFrom'))} <a href="${siteUrl}">${siteName}</a></p>
-      ${unsubscribeUrl ? `<p><a href="${unsubscribeUrl}">${escapeHtml(t('mail.unsubscribe'))}</a></p>` : ''}
+      <p>${escapeHtml(t('mail.sentFrom'))} <a href="${escapeHtml(siteUrl)}">${siteName}</a></p>
+      ${unsubscribeUrl ? `<p><a href="${escapeHtml(unsubscribeUrl)}">${escapeHtml(t('mail.unsubscribe'))}</a></p>` : ''}
     </div>
   </div>
 </body>
@@ -261,6 +268,16 @@ function escapeHtml(value: string): string {
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
+}
+
+/** Textteil einer Mail ohne eigenen Text: Tags entfernen, dann die vier Maskierungen von `escapeHtml` zurücknehmen (`&amp;` zuletzt). */
+function htmlToText(html: string): string {
+  return html
+    .replace(/<[^>]*>/g, '')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&amp;/g, '&')
 }
 
 /**
@@ -291,14 +308,11 @@ export async function sendSubscriptionConfirmationEmail(
   })
 }
 
-/**
- * Hinweis an den Betreiber: neuer Abonnementantrag wartet auf Freigabe.
- */
-export async function sendSubscriptionRequestEmail(
-  emailSettings: EmailSetting,
-  options: { to: string; subscriberEmail: string; subscriberId: number | string; siteName: string; siteUrl: string; logoUrl?: string; language: string }
-): Promise<EmailResult> {
-  const { to, subscriberEmail, subscriberId, siteName, siteUrl, logoUrl, language } = options
+/** Betreff und HTML des Hinweises an den Betreiber. Reine Funktion, damit die Maskierung ohne Mailserver prüfbar ist. */
+export function buildSubscriptionRequestMail(
+  options: { subscriberEmail: string; subscriberId: number | string; siteName: string; siteUrl: string; logoUrl?: string; language: string }
+): { subject: string; html: string } {
+  const { subscriberEmail, subscriberId, siteName, siteUrl, logoUrl, language } = options
   const { t, tf } = translatorsFor(language)
   let host = siteUrl
   try {
@@ -309,17 +323,24 @@ export async function sendSubscriptionRequestEmail(
   const html = generateEmailHtml({
     siteName,
     title: t('mail.requestTitle'),
-    body: tf('mail.requestBody', { email: escapeHtml(subscriberEmail), siteName }),
+    body: tf('mail.requestBody', { email: subscriberEmail, siteName }),
     ctaText: t('mail.requestCta'),
     ctaUrl: `${siteUrl}/admin/collections/subscribers/${subscriberId}`,
     siteUrl,
     logoUrl,
     language,
   })
-  return sendEmail(emailSettings, {
-    to,
-    subject: tf('mail.requestSubject', { host }),
-    html,
-    language,
-  })
+  return { subject: tf('mail.requestSubject', { host }), html }
+}
+
+/**
+ * Hinweis an den Betreiber: neuer Abonnementantrag wartet auf Freigabe.
+ */
+export async function sendSubscriptionRequestEmail(
+  emailSettings: EmailSetting,
+  options: { to: string; subscriberEmail: string; subscriberId: number | string; siteName: string; siteUrl: string; logoUrl?: string; language: string }
+): Promise<EmailResult> {
+  const { to, language, ...rest } = options
+  const { subject, html } = buildSubscriptionRequestMail({ ...rest, language })
+  return sendEmail(emailSettings, { to, subject, html, language })
 }

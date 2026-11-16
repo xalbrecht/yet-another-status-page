@@ -17,7 +17,8 @@ services:
       - NODE_ENV=development
       # Allow unauthenticated writes for E2E tests
       - PAYLOAD_PUBLIC_ALLOW_WRITES=true
-      # The upstream specs read English texts ("Page Not Found", "Past Incidents"). The default is German.
+      # The specs read English texts ("Page Not Found", "Past Incidents"). English is the default, set here so that
+      # a DEFAULT_LANGUAGE in a local .env does not change the test run.
       - DEFAULT_LANGUAGE=en
       # Do not rewrite src/payload-types.ts and the import map in the working directory
       - PAYLOAD_AUTO_GENERATE=false

@@ -5,7 +5,7 @@ This page describes how the tests of this fork are run, what they cover and whic
 ## What exists
 
 - **End-to-end tests** (Playwright, project `chromium`, folder `tests/e2e/`).
-- **Unit tests for pure calculation code** (`npm run test:unit`, folder `tests/unit/`, `tsx --test`). They need neither a browser nor a running server. They cover the availability rules in `src/lib/availability.ts`.
+- **Unit tests for pure calculation code** (`npm run test:unit`, folder `tests/unit/`, `tsx --test`). They need neither a browser nor a running server. The script loads `tests/unit/setup-language.ts` first, which sets `DEFAULT_LANGUAGE=de` unless the variable is already set: many of these tests expect German texts. They cover the availability rules in `src/lib/availability.ts`.
 - **Unit test against a real PostgreSQL** (`tests/unit/report-send-lock-postgres.test.ts`). It checks the lock that allows only one report dispatch at a time (two connection pools exclude each other, a dropped connection frees the lock). It is skipped unless `TEST_DATABASE_URL` is set. Run it against a throwaway database:
 
   ```bash
@@ -133,7 +133,7 @@ The seed script reads `API_BASE`, Playwright reads `PLAYWRIGHT_BASE_URL`. Both d
 - **Reset global settings** in `afterAll`, also when the test fails.
 - **Unique names**: `Date.now()` in names of groups and services, and select by name, not by position.
 - **The dev server in the container writes to your working directory.** By default Payload rewrites `src/payload-types.ts` and `src/app/(payload)/admin/importMap.js` while it runs, in the language of the interface. The test compose file sets `PAYLOAD_AUTO_GENERATE=false`, so a test run does not change tracked files. If you start the dev server by hand, run `git status` afterwards and restore these two files instead of committing them.
-- **Language**: The test compose file starts the application with `DEFAULT_LANGUAGE=en`, because the upstream specs read English texts ("Page Not Found", "Past Incidents"). Without it the page is German (the default of this fork) and 11 of them fail. Specs written in this fork accept both languages (`/(Letzte|Last) 24 (Stunden|hours)/`), so they pass in either setting.
+- **Language**: The test compose file starts the application with `DEFAULT_LANGUAGE=en`, because the upstream specs read English texts ("Page Not Found", "Past Incidents"). English is also the default. The explicit setting keeps a `DEFAULT_LANGUAGE` from a local `.env` out of the test run: with German, 11 of them fail. Specs written in this fork accept both languages (`/(Letzte|Last) 24 (Stunden|hours)/`), so they pass in either setting.
 
 ## Measuring performance and memory
 
@@ -175,4 +175,4 @@ Increase the load in small steps and stop at about 80 % of the limit. A containe
 | First test times out, later ones pass | Cold dev server | Warm up with `curl`, raise `--timeout` |
 | `toHaveURL` never matches after `selectOption` | Not hydrated yet, or two quick address changes | Wait for hydration, separate the steps |
 | Test passes alone, fails in the full run | Test depends on global settings of another test | Set the settings it needs at its start |
-| Many tests fail with "element not found" for English texts | Application runs in German (`DEFAULT_LANGUAGE` not `en`) | Use `docker-compose.test.yml`, or set `DEFAULT_LANGUAGE=en` when you start the dev server by hand |
+| Many tests fail with "element not found" for English texts | Application runs in another language (`DEFAULT_LANGUAGE` set, for example in `.env`) | Use `docker-compose.test.yml`, or set `DEFAULT_LANGUAGE=en` when you start the dev server by hand |

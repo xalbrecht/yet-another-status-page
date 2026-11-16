@@ -24,7 +24,7 @@ fullnameOverride: ""
 serverUrl: ""
 
 # -- Interface language code (sets DEFAULT_LANGUAGE), written like the file name, for example "de", "en" or "fr".
-# Empty uses the image default (de). A change restarts the pods.
+# Empty uses the image default (en). A change restarts the pods.
 language: ""
 
 # Additional language files (see docs: Configuration, Interface Language). German and English are built in.

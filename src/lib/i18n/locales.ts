@@ -7,7 +7,7 @@ export type LocaleFile = {
   admin: Record<string, string>
 }
 
-const FALLBACK_LANGUAGE = 'de'
+const FALLBACK_LANGUAGE = 'en'
 
 // Grund, warum ein Block nicht aus Texten besteht, oder null. Fehlt der Block ganz, gilt er als leer.
 function textRecordProblem(name: string, value: unknown): string | null {
@@ -40,7 +40,7 @@ export function parseLocaleFile(
   }
 }
 
-// Wählt die Sprache. Ist die gewünschte nicht verfügbar, gilt Deutsch und das Problem wird gemeldet.
+// Wählt die Sprache. Ohne Angabe gilt Englisch. Ist die gewünschte nicht verfügbar, gilt ebenfalls Englisch und das Problem wird gemeldet.
 export function selectLanguage(
   requested: string | undefined,
   available: readonly string[],

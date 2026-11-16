@@ -142,7 +142,7 @@ The language of the status page, notification emails, feeds and the admin panel 
 
 | Variable | Meaning | Default |
 |----------|---------|---------|
-| `DEFAULT_LANGUAGE` | Language code of the interface, written exactly like the file name, for example `de`, `en` or `fr` (lower case, no `de-DE`). | `de` |
+| `DEFAULT_LANGUAGE` | Language code of the interface, written exactly like the file name, for example `de`, `en` or `fr` (lower case, no `de-DE`). | `en` |
 | `LOCALES_DIR` | Directory with the language files. | `locales` in the working directory |
 
 **Language files.** Each language is one JSON file named after its language code (`de.json`, `en.json`, `fr.json`). The code must be one of the languages Payload knows (the texts of the admin panel's own buttons come from Payload). The repository folder `locales/` holds `de.json` and `en.json`. They are also the template for a new language: copy `en.json`, rename it, translate the values. A file has the blocks `meta` (`name` as shown to users), `site` (status page, emails, feeds) and `admin` (admin panel, the English text is the key).
@@ -155,13 +155,13 @@ Where to set it:
 
 | Situation | Where |
 |-----------|-------|
-| German (default) | Nothing to set |
+| English (default) | Nothing to set |
 | Docker | Environment `DEFAULT_LANGUAGE`, and a volume for your files, for example `./locales:/app/locales:ro` with `LOCALES_DIR=/app/locales` |
 | Helm | Values `language` and `locales.files` (see [Helm](./helm.md#interface-language)) |
 | Local development | `.env` or the shell, for example `DEFAULT_LANGUAGE=en npm run dev` (the folder `locales/` of the repository is read) |
 | E2E tests | `DEFAULT_LANGUAGE=en` in the environment of the server under test |
 
-**Upgrading.** The build variable `NEXT_PUBLIC_UI_LANG` is no longer read. An installation that was built with `NEXT_PUBLIC_UI_LANG=en` shows German after the update until you set `DEFAULT_LANGUAGE=en`; the log says so (`[i18n] NEXT_PUBLIC_UI_LANG wird nicht mehr gelesen …`). The language is not a setting in the admin panel: it comes from `DEFAULT_LANGUAGE` and changes with a restart. The setting **Locale** (date and time format) is empty after the update and then follows the language (`de` gives `de-DE`, a 24-hour clock). A value you saved earlier is kept, except the old default `en-US`, which the update resets to empty.
+**Upgrading.** The build variable `NEXT_PUBLIC_UI_LANG` is no longer read. The log says so when the variable is still set (`[i18n] NEXT_PUBLIC_UI_LANG wird nicht mehr gelesen …`). The default language is English. An installation that ran in German without `DEFAULT_LANGUAGE` (German was the default before) shows English after the update: set `DEFAULT_LANGUAGE=de` before you update. The language is not a setting in the admin panel: it comes from `DEFAULT_LANGUAGE` and changes with a restart. The setting **Locale** (date and time format) is empty after the update and then follows the language (`de` gives `de-DE`, a 24-hour clock). A value you saved earlier is kept, except the old default `en-US`, which the update resets to empty.
 
 Check your files with `npm run check:locales [directory]`. It reports missing or surplus keys (warnings) and placeholders such as `{timezone}` or `{{siteName}}` that differ from the English text (errors).
 

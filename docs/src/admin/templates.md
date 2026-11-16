@@ -6,7 +6,7 @@ Templates are kept apart from the real incidents and maintenances. A template st
 
 Go to **Status → Templates** (Status → Vorlagen).
 
-> **Status of the feature.** You can create and maintain templates. Choosing a template while you report an incident or a maintenance follows in a later step.
+> **Where templates are used.** When you report a new incident, choose a template with the button **Create new with template** in the list of incidents, see [Creating an Incident with a Template](./incidents.md#creating-an-incident-with-a-template). Using templates for maintenances and for further updates of an incident follows in later steps.
 
 ## Fields
 

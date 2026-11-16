@@ -15,6 +15,24 @@ Incidents represent unplanned service disruptions or issues affecting your infra
 
 A notification draft is automatically created when you save.
 
+### Creating an Incident with a Template
+
+If you keep ready-made texts as [templates](./templates.md), use the button **Create new with template** (Neu erstellen mit Vorlage) above the list. It opens a guided page:
+
+1. **Group**: choose the service group.
+2. **Affected services**: choose all services of the group or single ones. Services that already have an open incident carry the note "open incident". It does not prevent you from continuing. If you choose all services of a group, you decide whether the text lists them one by one or says "all services of the group ...".
+3. **Template**: the templates of the type incident with the status Investigating are offered, because this is a new message. You can also choose **Without a template** and write title and text yourself.
+4. **Impact**: preset by the template, you can change it. It sets the state of the affected services.
+5. **Check and adjust**: title and text, and optionally the SMS text and the ntfy text, with the placeholders already filled in (see [Placeholders](./templates.md#placeholders)). All texts stay editable. The counters show the limits of 320 characters for SMS and 500 for ntfy. `{{link}}` stays in the text until you publish and is then replaced by the address of the incident.
+
+If you change the services, the naming or the template afterwards, the texts are filled in again from the template, and your own changes are lost.
+
+**View preview** shows what happens before anything is saved: the incident as it appears on the status page, the new state of every service and the notification draft with email, SMS and ntfy text. Only **Publish now** creates the incident. It then behaves like an incident created in the normal form: the incident is public at once, the services get the chosen state, the status log gets an entry and a notification draft is created. **Nothing is sent automatically.** You review and send the draft under **Notifications**. If you filled in an SMS text or an ntfy text, the draft carries them (the field **SMS Message** and the field **ntfy message**).
+
+The same texts are kept on the first update of the incident in two hidden fields that only signed-in users can read. The normal form does not show them, the public API does not return them.
+
+In every incident, `{{link}}` in the title or in an update text is replaced by the address of the incident when the incident is saved.
+
 ## Incident Statuses
 
 | Status | Description |

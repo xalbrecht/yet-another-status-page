@@ -1,4 +1,5 @@
 import { LocalizedDateField as LocalizedDateField_5565580924a7fcfc6f968cbe9a2ca4e8 } from '@/components/admin/LocalizedDateField'
+import { NewWithTemplateButton as NewWithTemplateButton_06d16fae53404081c552d973d02d1fdc } from '@/components/admin/incident-wizard/NewWithTemplateButton'
 import { RscEntryLexicalCell as RscEntryLexicalCell_44fe37237e0ebf4470c9990d8cb7b07e } from '@payloadcms/richtext-lexical/rsc'
 import { RscEntryLexicalField as RscEntryLexicalField_44fe37237e0ebf4470c9990d8cb7b07e } from '@payloadcms/richtext-lexical/rsc'
 import { LexicalDiffComponent as LexicalDiffComponent_44fe37237e0ebf4470c9990d8cb7b07e } from '@payloadcms/richtext-lexical/rsc'
@@ -18,12 +19,14 @@ import { DashboardWidgets as DashboardWidgets_55e8c9f1aba7d352d950aef48719be05 }
 import { SystemCard as SystemCard_46c0d64f8848b895e6aede541fc021c5 } from '@/components/admin/SystemInfo'
 import { AvailabilityReportView as AvailabilityReportView_5550af07d623cc41d27945af83527692 } from '@/components/admin/availability-report'
 import { StatusLogAdminView as StatusLogAdminView_99d04bdba5865d3d3bff5f4a304dc81d } from '@/components/admin/status-log'
+import { IncidentFromTemplateView as IncidentFromTemplateView_a925f0e00babbf0f132057dbed4787e5 } from '@/components/admin/incident-wizard'
 import { CollectionCards as CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1 } from '@payloadcms/next/rsc'
 import { VercelBlobClientUploadHandler as VercelBlobClientUploadHandler_16c82c5e25f430251a3e3ba57219ff4e } from '@payloadcms/storage-vercel-blob/client'
 
 /** @type import('payload').ImportMap */
 export const importMap = {
   "@/components/admin/LocalizedDateField#LocalizedDateField": LocalizedDateField_5565580924a7fcfc6f968cbe9a2ca4e8,
+  "@/components/admin/incident-wizard/NewWithTemplateButton#NewWithTemplateButton": NewWithTemplateButton_06d16fae53404081c552d973d02d1fdc,
   "@payloadcms/richtext-lexical/rsc#RscEntryLexicalCell": RscEntryLexicalCell_44fe37237e0ebf4470c9990d8cb7b07e,
   "@payloadcms/richtext-lexical/rsc#RscEntryLexicalField": RscEntryLexicalField_44fe37237e0ebf4470c9990d8cb7b07e,
   "@payloadcms/richtext-lexical/rsc#LexicalDiffComponent": LexicalDiffComponent_44fe37237e0ebf4470c9990d8cb7b07e,
@@ -43,6 +46,7 @@ export const importMap = {
   "@/components/admin/SystemInfo#SystemCard": SystemCard_46c0d64f8848b895e6aede541fc021c5,
   "@/components/admin/availability-report#AvailabilityReportView": AvailabilityReportView_5550af07d623cc41d27945af83527692,
   "@/components/admin/status-log#StatusLogAdminView": StatusLogAdminView_99d04bdba5865d3d3bff5f4a304dc81d,
+  "@/components/admin/incident-wizard#IncidentFromTemplateView": IncidentFromTemplateView_a925f0e00babbf0f132057dbed4787e5,
   "@payloadcms/next/rsc#CollectionCards": CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1,
   "@payloadcms/storage-vercel-blob/client#VercelBlobClientUploadHandler": VercelBlobClientUploadHandler_16c82c5e25f430251a3e3ba57219ff4e
 }

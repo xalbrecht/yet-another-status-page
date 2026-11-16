@@ -119,6 +119,10 @@ export default buildConfig({
           Component: '@/components/admin/status-log#StatusLogAdminView',
           path: '/protokoll-pflege',
         },
+        incidentFromTemplate: {
+          Component: '@/components/admin/incident-wizard#IncidentFromTemplateView',
+          path: '/incident-from-template',
+        },
       },
     },
     importMap: { autoGenerate },

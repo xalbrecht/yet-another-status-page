@@ -4,6 +4,7 @@ import { DEFAULT_AVAILABILITY_TARGET } from '@/lib/availability'
 import { resolveDateTimeConfig } from '@/lib/datetime'
 import { buildGroupList, buildReport, type ReportData } from '@/lib/report/aggregate'
 import { countFootnotes } from '@/lib/report/footnotes'
+import { normalizeRules } from '@/lib/incident-classification'
 import { maintenanceWindow } from '@/lib/report/maintenance-time'
 import { parseReportParams, type ReportParams } from '@/lib/report/params'
 import { reportDataEnd, resolvePeriod, type ReportPeriod } from '@/lib/report/period'
@@ -96,6 +97,7 @@ export async function loadReportContext(
 
   const groups = groupDocs.docs.map((group) => ({ id: Number(group.id), name: group.name, target: group.availabilityTarget ?? null }))
   const globalTarget = settings.availabilityTarget ?? DEFAULT_AVAILABILITY_TARGET
+  const rules = normalizeRules(settings.classificationRules)
   const services = serviceDocs.docs.map((service) => ({
     id: Number(service.id),
     name: service.name,
@@ -120,7 +122,7 @@ export async function loadReportContext(
         resolvedAt: incident.resolvedAt ? new Date(incident.resolvedAt).getTime() : null,
         serviceIds: (incident.affectedServices || []).map(idOf),
       })),
-      { rangeStart: Math.min(period.start, months[0]?.start ?? period.start), rangeEnd: dataEnd, firstOperationAt, groupServiceIds },
+      { rangeStart: Math.min(period.start, months[0]?.start ?? period.start), rangeEnd: dataEnd, firstOperationAt, groupServiceIds, rules },
     )
     const data = buildReport({ period, previous, months, params: scoped, globalTarget, groups, services, footnotes, now, timeZone: dt.timezone, locale: dt.locale })
     return { data, scoped }

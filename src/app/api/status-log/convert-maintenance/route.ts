@@ -6,6 +6,7 @@ import { isTestMode } from '@/lib/access'
 import { invalidateLagebild } from '@/lib/lagebild-invalidate'
 import { convertMaintenanceIncidents } from '@/lib/maintenance-conversion'
 import { ta } from '@/lib/i18n/admin'
+import { normalizeRules } from '@/lib/incident-classification'
 
 /**
  * Wandelt als Störungen übernommene Wartungen in Wartungen um. Standard ist die Vorschau (`dryRun: true`),
@@ -22,7 +23,8 @@ export async function POST(request: NextRequest) {
     const body = (await request.json().catch(() => ({}))) as { dryRun?: unknown }
     const dryRun = body.dryRun !== false
 
-    const result = await convertMaintenanceIncidents(payload, { dryRun })
+    const rules = normalizeRules((await payload.findGlobal({ slug: 'settings' })).classificationRules)
+    const result = await convertMaintenanceIncidents(payload, { dryRun, rules })
     if (!dryRun) invalidateLagebild()
     return NextResponse.json(result)
   } catch (error) {

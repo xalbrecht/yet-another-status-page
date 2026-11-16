@@ -15,7 +15,8 @@ const incident = (extra: Partial<FootnoteIncident>): FootnoteIncident => ({
   serviceIds: [1],
   ...extra,
 })
-const range = { rangeStart: START, rangeEnd: START + 300 * DAY, firstOperationAt: FIRST_OPERATION, groupServiceIds: null as number[] | null }
+const rules = [{ field: 'title', match: 'starts', words: 'teilweiser ausfall', classification: 'partial' }] as const
+const range = { rangeStart: START, rangeEnd: START + 300 * DAY, firstOperationAt: FIRST_OPERATION, groupServiceIds: null as number[] | null, rules }
 
 test('zählt unsichere Vorfälle und Vorfälle ohne Dienst im ganzen angezeigten Bereich', () => {
   const result = countFootnotes([incident({}), incident({ serviceIds: [] }), incident({ title: 'Teilweiser Ausfall X' })], range)

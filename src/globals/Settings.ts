@@ -267,6 +267,70 @@ export const Settings: GlobalConfig = {
             ),
           },
         },
+        {
+          name: 'classificationRules',
+          type: 'array',
+          label: ta('Classify old incidents automatically'),
+          labels: { singular: ta('Rule'), plural: ta('Rules') },
+          admin: {
+            description: ta(
+              'For the time before the status log, these rules read the title and the text of an old incident and decide how it counts in the availability report. They apply from top to bottom, the first matching rule decides. Upper and lower case do not matter. A classification set by hand on an incident always applies. New incidents are not affected. Changed rules take effect when the reconstruction is started under "Maintain the status log". Without rules every old incident counts as a partial outage that is not clearly classified.',
+            ),
+            initCollapsed: false,
+          },
+          fields: [
+            {
+              type: 'row',
+              fields: [
+                {
+                  name: 'field',
+                  type: 'select',
+                  required: true,
+                  defaultValue: 'title',
+                  label: ta('Searches in'),
+                  options: [
+                    { label: ta('Title'), value: 'title' },
+                    { label: ta('Text of the updates'), value: 'updates' },
+                  ],
+                },
+                {
+                  name: 'match',
+                  type: 'select',
+                  required: true,
+                  defaultValue: 'contains',
+                  label: ta('Condition'),
+                  options: [
+                    { label: ta('contains'), value: 'contains' },
+                    { label: ta('starts with'), value: 'starts' },
+                  ],
+                },
+                {
+                  name: 'classification',
+                  type: 'select',
+                  required: true,
+                  defaultValue: 'partial',
+                  label: ta('Counts as'),
+                  options: [
+                    { label: ta('Maintenance'), value: 'maintenance' },
+                    { label: ta('No impact'), value: 'none' },
+                    { label: ta('Degraded Performance'), value: 'degraded' },
+                    { label: ta('Partial Outage'), value: 'partial' },
+                    { label: ta('Major Outage'), value: 'major' },
+                  ],
+                },
+              ],
+            },
+            {
+              name: 'words',
+              type: 'text',
+              required: true,
+              label: ta('Words'),
+              admin: {
+                description: ta('Words or phrases, separated by commas. One of them is enough.'),
+              },
+            },
+          ],
+        },
       ],
     },
     {

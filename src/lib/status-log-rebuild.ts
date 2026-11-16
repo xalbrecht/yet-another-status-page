@@ -1,5 +1,5 @@
 import { sql } from '@payloadcms/db-postgres'
-import { classifyIncident, summarizeClassification } from '@/lib/incident-classification'
+import { classifyIncident, summarizeClassification, type ClassificationRule } from '@/lib/incident-classification'
 import { buildReconstructedEvents } from '@/lib/status-reconstruction'
 
 /**
@@ -26,7 +26,8 @@ export type RebuildResult = {
 
 const INSERT_BATCH = 200
 
-export async function rebuildStatusLog(db: SqlRunner, options: { dryRun: boolean }): Promise<RebuildResult> {
+export async function rebuildStatusLog(db: SqlRunner, options: { dryRun: boolean; rules?: readonly ClassificationRule[] }): Promise<RebuildResult> {
+  const rules = options.rules ?? []
   const incidentRows = (
     await db.execute(sql`
       SELECT i.id,
@@ -56,7 +57,7 @@ export async function rebuildStatusLog(db: SqlRunner, options: { dryRun: boolean
   const counts: Record<string, number> = {}
   const incidents: Parameters<typeof buildReconstructedEvents>[0]['incidents'] = []
   for (const row of incidentRows) {
-    const result = classifyIncident({ title: row.title, messages: row.messages, availabilityClass: row.availability_class })
+    const result = classifyIncident({ title: row.title, messages: row.messages, availabilityClass: row.availability_class }, rules)
     const key = result.status === 'partial' && !result.sure ? 'partial (nicht eindeutig)' : result.status
     counts[key] = (counts[key] ?? 0) + 1
     if (result.status === 'none') continue
@@ -69,6 +70,7 @@ export async function rebuildStatusLog(db: SqlRunner, options: { dryRun: boolean
       serviceCount: row.service_ids.length,
       availabilityClass: row.availability_class,
     })),
+    rules,
   )
 
   let events: ReturnType<typeof buildReconstructedEvents> = []

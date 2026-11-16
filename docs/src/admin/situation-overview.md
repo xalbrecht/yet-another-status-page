@@ -1,24 +1,67 @@
 # Situation Overview
 
-The situation overview shows the state of every service group on the start page, modelled on the TI-Lagebild of the gematik. It is built only from the statuses maintained in this application.
+The situation overview shows the state of every service group on the start page, modelled on the TI-Lagebild of the gematik. It is built only from the statuses maintained in this application. Next to it, two boxes show the current incidents and the maintenance.
 
 ## Enabling
 
-Go to **Configuration → Site Settings → Situation overview** (Konfiguration → Website-Einstellungen → Lagebild) and choose **Display**:
+Go to **Configuration → Site Settings → Situation overview** (Konfiguration → Website-Einstellungen → Lagebild) and choose **Display** (Anzeige):
 
 | Option | German | Result |
 |--------|--------|--------|
-| Off | Aus | No situation overview (default) |
-| Variant A | Variante A | Tiles per group, a click opens the services of the group below the tile row |
-| Variant B | Variante B | Tiles per group, each with its own small bar. A click opens the services of the group below the tile row, like in variant A |
-| Both (for testing) | Beide (zum Testen) | Both variants one after the other, to compare them |
+| Variant C (simple list) | Variante C (einfache Liste) | No situation overview and no boxes. The start page shows the list of services per group, the legend and the incidents of the last days (default) |
+| Variant A | Variante A | Tiles per group. The tile **All** is preselected. A click on a tile opens the services of the group below the tile row |
+| Variant B | Variante B | Tiles per group, each with its own small bar. Nothing is preselected. A click opens the services of the group below the tile row, like in variant A |
+| Both (for testing) | Beide (zum Testen) | Both variants one after the other, to compare them (see [Test mode](#test-mode-both)) |
+
+Variants A and B (and "Both") also show the boxes and the three blocks described below. The settings for the boxes apply to these options only.
+
+## Layout of the start page
+
+With variant A or B the start page has this order:
+
+1. The status banner.
+2. The situation overview on the left and the boxes **Current incidents** (Aktuelle Störungen) and **Maintenance** (Wartungen) on the right. On wide screens (1024 pixels and more) the situation overview takes about two thirds of the width. On narrow screens the boxes stand above or below it, see [Settings](#settings-for-the-boxes).
+3. The block **Current incidents** (anchor `#incidents`): all open incidents with their updates.
+4. The block **Scheduled Maintenance** (Geplante Wartungen, anchor `#maintenance`), only if there is a maintenance to show: scheduled and running ones, and finished ones for the time set in **Maintenance retention (hours)**.
+5. The block **Past Incidents** (Vergangene Störungen, anchor `#past-incidents`): resolved incidents of the last five days, by day, with a link to the incident history.
 
 ## What is shown
 
-- **Tile per group** - icon, the worst status of the group's services and the number of services (with the number of affected ones). A click on a tile opens the services of the group below the tile row, a second click closes them. The tiles below move down. The click also filters the list of disruptions to that group.
+- **Tile per group** - icon, the worst status of the group's services and the number of services (with the number of affected ones). In variant B the tile also shows a small bar. A click on a tile opens the services of the group below the tile row, a second click closes them. The tiles below move down. The click also filters the list of disruptions to that group and puts the group into the address (`/?gruppe=<id>`).
+- **Tile All** (Alle) - the first tile, with a grid symbol. It shows the worst status of all groups and the number of groups (with the number of affected ones). A click opens a panel with one row per group: its bar and its availability. A click on a row selects that group. **Close** returns to the tile row. In variant A the tile is preselected, in variant B nothing is. The tile **All** does not put anything into the address.
+- **Tooltip** - hovering over a tile shows the services of the group with a coloured dot and the status of each service. The tooltip of the tile **All** lists the groups that are not Operational, and below them how many other groups are operational ("All groups operational" if none is affected). Details: [Tooltip](#tooltip).
 - **Services of a group** - for every service the bar of the last 12 hours and its availability in the selected look-back period. The bar has one stroke per 5 minutes (144 strokes). Each stroke shows the worst status within its 5 minutes, so a short outage stays visible. Grey means no data. Hovering over a stroke or tapping it shows the end of its 5 minutes (for example 12:05) and the status. The start and end of the bar are shown as times above the bars.
-- **Availability** - share of the known time in which the service was neither Partial Outage nor Major Outage. Degraded and Maintenance count as available. Time before the first log entry is not counted. The value is rounded down to two decimals.
+- **Availability** - share of the known time in which the service was neither Partial Outage nor Major Outage. Degraded and Maintenance count as available. Time before the first log entry is not counted. The value is rounded down to two decimals. If the status log reaches back less far than the look-back period, a note shows since when the value is known ("since <date and time>"), instead of the name of the period. The note appears for services and, in the panel of the tile **All**, for groups. The availability of a group is the worst state of its services at each moment: an outage of one service counts for the group.
 - **Disruptions** - every period of the selected look-back in which a group was not Operational, with start and end. A related incident or maintenance is linked. Chips filter by group. The filter is part of the address (`/?gruppe=<id>`).
+
+### Tooltip
+
+| Input | Behaviour |
+|-------|-----------|
+| Mouse | The tooltip opens when the mouse moves over the tile. It stays open while the mouse is on the tile or in the tooltip and closes shortly after the mouse leaves both. A click on the tile or in the tooltip selects the group and closes the tooltip. It stays closed until the mouse has left the tile |
+| Keyboard | Tab to the tile shows the tooltip. **Esc** closes it. Enter or Space selects the group |
+| Touch | The first tap shows the tooltip, the second tap selects the group. A tap outside closes it |
+
+**Esc** also closes a tooltip that was opened with the mouse. The list of services stands in the page for screen readers and is read as the description of the tile, even while the tooltip is closed.
+
+## Boxes
+
+The two boxes show a short form of what is happening now:
+
+- **Current incidents** - open incidents (the latest update is not "Resolved"), newest first. The status label shows the latest update (for example "Identified"), the colour at the left edge the impact of the incident.
+- **Maintenance** - maintenances that are scheduled or in progress, earliest start first. The time of a maintenance is shown as a period (start – end) or, without an end, as "from <start>".
+
+The number in the head of a box is the number of all entries. The box shows as many entries as **Entries per box** allows. The rest is behind the link "Show N more", which jumps to the block **Current incidents** or **Scheduled Maintenance** further down. Every entry links to the detail page of the incident or maintenance. An empty box shows a short note.
+
+## Settings for the boxes
+
+All settings are in the same section **Situation overview** and apply to variants A, B and "Both".
+
+| Setting | German | Values | Default |
+|---------|--------|--------|---------|
+| Entries per box | Einträge je Box | 1 to 10 | 3 |
+| Content of the boxes | Inhalt der Boxen | **With services and latest update** (Mit Diensten und letztem Stand): the services as chips and the text of the latest update. **Title and time only** (Nur Titel und Zeit): a compact entry | With services and latest update |
+| Boxes on narrow screens | Boxen auf schmalen Bildschirmen | **Before the situation overview** (Vor dem Lagebild) or **After the situation overview** (Nach dem Lagebild). Below 1024 pixels the boxes stand above or below the situation overview. On wide screens they are always on the right | Before the situation overview |
 
 ## Look-back period
 
@@ -46,3 +89,17 @@ Every status change of a service is recorded in **Status → Status log** (Statu
 ## Status from incidents
 
 Each incident has the field **Impact on affected services**. Saving an incident sets that status on the affected services. The worst impact of all open incidents applies. When the last open incident of a service is resolved, the service returns to Operational. A service in **Under Maintenance** stays in maintenance.
+
+## Test mode "Both"
+
+The option **Both (for testing)** shows variant A and variant B one after the other, so that you can compare them. The heading of each is marked with its variant, and the header of the page shows the badge **Test mode** (Testmodus).
+
+To compare the variants in two browser tabs, add a parameter to the address:
+
+| Address | Result |
+|---------|--------|
+| `/?lagebild=a` | Only variant A, the badge reads "Test mode: Variant A" |
+| `/?lagebild=b` | Only variant B, the badge reads "Test mode: Variant B" |
+| `/` or an invalid value | Both variants, the badge reads "Test mode" |
+
+The parameter has an effect only with the option **Both**. With every other option it is ignored and there is no badge. It stays in the address when a group is selected. While both variants are shown at once, the selection of a group is not written to the address.

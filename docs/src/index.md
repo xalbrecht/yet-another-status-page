@@ -8,7 +8,7 @@ A modern, self-hosted status page built with [Payload CMS](https://payloadcms.co
 - **Scheduled maintenance** — plan and notify users about upcoming work
 - **Email & SMS notifications** — automatic subscriber alerts via SMTP and Twilio
 - **Service groups** — organize services into logical groups
-- **Situation overview** — tile per group with icon and status, bars of the last 12 hours and the disruptions of the last 14 days, filterable by group
+- **Situation overview** — tile per group with icon and status, bars of the last 12 hours and the disruptions of the last 14 days, filterable by group; next to it boxes for current incidents and maintenance
 - **Status log** — every status change of a service is recorded; incidents set the status of the affected services
 - **German interface** — status page, emails, feeds and admin panel are German by default (English via build setting)
 - **Modern UI** — responsive status page with dark mode

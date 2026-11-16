@@ -1185,6 +1185,10 @@ export interface EmailSetting {
    * Eine Adresse je Zeile oder durch Komma getrennt. Leer: kein Versand
    */
   reportRecipients?: string | null;
+  /**
+   * Größte Gesamtgröße der Anhänge einer Mail. Ein größerer Bericht wird auf mehrere Mails verteilt. Einen Wert unter der Grenze des eigenen Mailservers wählen: Anhänge wachsen beim Versand um etwa ein Drittel. Leer bedeutet 6 MB
+   */
+  reportMailLimitMb?: number | null;
   updatedAt?: string | null;
   createdAt?: string | null;
 }
@@ -1290,6 +1294,7 @@ export interface EmailSettingsSelect<T extends boolean = true> {
   smtpReplyTo?: T;
   subscriberRequestTo?: T;
   reportRecipients?: T;
+  reportMailLimitMb?: T;
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;

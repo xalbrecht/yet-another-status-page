@@ -4,15 +4,13 @@ import { ta } from '@/lib/i18n/admin'
 import type { EmailAttachment, EmailOptions, EmailResult } from '@/lib/email'
 import type { ReportContext } from '@/lib/report/load'
 import { exportFiles, type ExportFile } from './files'
+import { MAIL_PART_LIMIT_BYTES } from './mail-limit'
 
 /**
- * Mailversand des Berichts (Issue #65): Mail 1 trägt PDF und Excel, die Bilder folgen in ZIP-Teilen unter einer festen
+ * Mailversand des Berichts: Mail 1 trägt PDF und Excel, die Bilder folgen in ZIP-Teilen unter einer einstellbaren
  * Größengrenze, jeder Teil eine eigene Mail. Mails gehen nacheinander raus. Nach einem Fehler lässt sich ab der ersten
  * nicht gesendeten Mail fortsetzen, solange die Kennung des Plans (Inhalt der Bilder) gleich geblieben ist.
  */
-
-/** Postfix nimmt standardmäßig 10 240 000 Byte je Mail an, Base64 macht aus 6 MB rund 8,2 MB. */
-export const MAIL_PART_LIMIT_BYTES = 6_000_000
 
 const FIXED_MTIME = new Date('2000-01-01T00:00:00Z')
 

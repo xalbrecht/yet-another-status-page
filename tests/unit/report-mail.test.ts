@@ -3,6 +3,7 @@ import assert from 'node:assert/strict'
 import { unzipSync } from 'fflate'
 import type { EmailOptions, EmailResult } from '@/lib/email'
 import type { ExportFile } from '@/lib/report/export/files'
+import { mailPartLimitBytes } from '@/lib/report/export/mail-limit'
 import { planReportMails, reportPlanId, ReportMailImageTooLargeError, ReportMailPlanChangedError, ReportMailResumeError, ReportMailTooLargeError, sendReportMail } from '@/lib/report/export/mail'
 import type { ReportContext } from '@/lib/report/load'
 import { parseReportParams } from '@/lib/report/params'
@@ -196,4 +197,26 @@ test('Fortsetzen mit geändertem Plan: laufender Zeitraum wird als solcher gemel
     () => sendReportMail({ context, recipients: ['a@x.de'], send: recorder().send, filesOf: filesOf(changed), limit: 6000, resume: { from: 2, planId: failed.planId } }),
     (error: unknown) => error instanceof ReportMailPlanChangedError && error.openPeriod === false,
   )
+})
+
+test('mailPartLimitBytes: die Einstellung in Megabyte ergibt die Grenze in Byte', () => {
+  assert.equal(mailPartLimitBytes(6), 6_000_000)
+  assert.equal(mailPartLimitBytes(20), 20_000_000)
+  assert.equal(mailPartLimitBytes(2.5), 2_500_000)
+})
+
+test('mailPartLimitBytes: ohne Wert oder mit unbrauchbarem Wert gilt die Vorgabe von 6 MB', () => {
+  for (const value of [null, undefined, Number.NaN, 0, -3]) assert.equal(mailPartLimitBytes(value), 6_000_000, String(value))
+})
+
+test('mailPartLimitBytes: Werte außerhalb von 1 bis 50 MB werden auf den Rand gesetzt', () => {
+  assert.equal(mailPartLimitBytes(0.2), 1_000_000)
+  assert.equal(mailPartLimitBytes(500), 50_000_000)
+})
+
+test('planReportMails: dieselben Dateien ergeben bei kleinerer Grenze mehr Mails', () => {
+  const files = () => [file('b.pdf', 500_000), file('b.xlsx', 500_000), ...Array.from({ length: 6 }, (_, index) => png(index + 1, 900_000))]
+  // 6 Bilder zu 0,9 MB: bei 6 MB ein ZIP-Teil, bei 2 MB drei Teile mit je zwei Bildern
+  assert.equal(planReportMails(files(), mailPartLimitBytes(6)).length, 2)
+  assert.equal(planReportMails(files(), mailPartLimitBytes(2)).length, 4)
 })

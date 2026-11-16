@@ -63,6 +63,16 @@ COPY --from=builder --chown=nextjs:nodejs /app/src/migrations ./src/migrations
 COPY --chown=nextjs:nodejs scripts/docker-entrypoint.sh ./docker-entrypoint.sh
 RUN chmod +x ./docker-entrypoint.sh
 
+# Optional build information, shown in the admin area (card "System" and the line in the sidebar).
+# Pass them with `docker build --build-arg YASP_BUILD_TAG=... --build-arg YASP_BUILD_DATE=... --build-arg YASP_BUILD_COMMIT=...`.
+# Without them the admin area shows the version from package.json and "Development build, no YASP image".
+ARG YASP_BUILD_TAG=""
+ARG YASP_BUILD_DATE=""
+ARG YASP_BUILD_COMMIT=""
+ENV YASP_BUILD_TAG=${YASP_BUILD_TAG}
+ENV YASP_BUILD_DATE=${YASP_BUILD_DATE}
+ENV YASP_BUILD_COMMIT=${YASP_BUILD_COMMIT}
+
 USER nextjs
 
 EXPOSE 3000

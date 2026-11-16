@@ -13,6 +13,8 @@ The dashboard shows at-a-glance metrics:
 - **Email Subscribers** (E-Mail-Abonnenten) - Active email subscribers
 - **SMS Subscribers** (SMS-Abonnenten) - Active SMS subscribers
 
+Below the metrics, the card **System** shows which build is running: image tag, build date and commit (only if the image was built with build information, see [Build information](../getting-started/installation.md#build-information-optional)), the version from `package.json`, the Node.js version, the start time of the process, whether the process runs in a container and the last applied migration. A line with the tag and the build date, or the version for a build without image information, also appears at the bottom of the sidebar. If a value cannot be read, the card shows "unknown" instead of an error. Only signed-in users can see this information.
+
 ## Navigation
 
 The admin panel is organized into sections:

@@ -803,6 +803,20 @@
     "Please enter a valid phone number (e.g., +1234567890)": "Bitte eine gültige Rufnummer eingeben (z. B. +491701234567)",
     "This phone number is already subscribed": "Diese Rufnummer ist bereits abonniert",
     "Password changes are disabled in demo mode.": "Passwortänderungen sind im Demomodus gesperrt.",
-    "Failed to fetch dashboard stats": "Die Kennzahlen konnten nicht abgerufen werden"
+    "Failed to fetch dashboard stats": "Die Kennzahlen konnten nicht abgerufen werden",
+    "System": "System",
+    "Image tag": "Image-Tag",
+    "Build date": "Build-Datum",
+    "Commit": "Commit",
+    "Version": "Version",
+    "Node.js": "Node.js",
+    "Started": "Gestartet",
+    "Container": "Container",
+    "Last migration": "Letzte Migration",
+    "yes": "ja",
+    "no": "nein",
+    "unknown": "unbekannt",
+    "Development build, no YASP image": "Entwicklungsstand, kein YASP-Image",
+    "System information is not available.": "Die Systemangaben sind nicht abrufbar."
   }
 }

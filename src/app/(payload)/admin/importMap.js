@@ -13,7 +13,9 @@ import { SendNotificationCollectionButton as SendNotificationCollectionButton_d0
 import { RecipientCountField as RecipientCountField_a92dd7a84f1ac5bf2f0c7a2ae42e7fcd } from '@/components/admin/RecipientCountField'
 import { AvailabilityReportNavLink as AvailabilityReportNavLink_a4d90559fc0de3f416b799fd68d772c9 } from '@/components/admin/availability-report/AvailabilityReportNavLink'
 import { StatusLogNavLink as StatusLogNavLink_aaf557aedce5b7e65dd708b4b56f4d66 } from '@/components/admin/status-log/StatusLogNavLink'
+import { SystemNavLine as SystemNavLine_46c0d64f8848b895e6aede541fc021c5 } from '@/components/admin/SystemInfo'
 import { DashboardWidgets as DashboardWidgets_55e8c9f1aba7d352d950aef48719be05 } from '@/components/admin/DashboardWidgets'
+import { SystemCard as SystemCard_46c0d64f8848b895e6aede541fc021c5 } from '@/components/admin/SystemInfo'
 import { AvailabilityReportView as AvailabilityReportView_5550af07d623cc41d27945af83527692 } from '@/components/admin/availability-report'
 import { StatusLogAdminView as StatusLogAdminView_99d04bdba5865d3d3bff5f4a304dc81d } from '@/components/admin/status-log'
 import { CollectionCards as CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1 } from '@payloadcms/next/rsc'
@@ -36,7 +38,9 @@ export const importMap = {
   "@/components/admin/RecipientCountField#RecipientCountField": RecipientCountField_a92dd7a84f1ac5bf2f0c7a2ae42e7fcd,
   "@/components/admin/availability-report/AvailabilityReportNavLink#AvailabilityReportNavLink": AvailabilityReportNavLink_a4d90559fc0de3f416b799fd68d772c9,
   "@/components/admin/status-log/StatusLogNavLink#StatusLogNavLink": StatusLogNavLink_aaf557aedce5b7e65dd708b4b56f4d66,
+  "@/components/admin/SystemInfo#SystemNavLine": SystemNavLine_46c0d64f8848b895e6aede541fc021c5,
   "@/components/admin/DashboardWidgets#DashboardWidgets": DashboardWidgets_55e8c9f1aba7d352d950aef48719be05,
+  "@/components/admin/SystemInfo#SystemCard": SystemCard_46c0d64f8848b895e6aede541fc021c5,
   "@/components/admin/availability-report#AvailabilityReportView": AvailabilityReportView_5550af07d623cc41d27945af83527692,
   "@/components/admin/status-log#StatusLogAdminView": StatusLogAdminView_99d04bdba5865d3d3bff5f4a304dc81d,
   "@payloadcms/next/rsc#CollectionCards": CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1,

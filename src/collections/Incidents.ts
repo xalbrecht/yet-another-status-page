@@ -141,8 +141,8 @@ export const Incidents: CollectionConfig = {
     useAsTitle: 'title',
     defaultColumns: ['title', 'status', 'shortId', 'createdAt'],
     components: {
-      // Knopf „Neu erstellen mit Vorlage“ über der Liste
-      beforeListTable: ['@/components/admin/incident-wizard/NewWithTemplateButton#NewWithTemplateButton'],
+      // Knopf „Neu erstellen mit Vorlage“ im Kopfbereich der Liste, unter dem Titel
+      Description: '@/components/admin/incident-wizard/NewWithTemplateButton#NewWithTemplateButton',
     },
     group: ta('Status'),
   },

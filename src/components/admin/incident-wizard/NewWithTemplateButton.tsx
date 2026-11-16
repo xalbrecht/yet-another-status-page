@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { useAdminText } from '@/lib/i18n/admin-client'
 import './incident-wizard.scss'
 
-/** Knopf „Neu erstellen mit Vorlage“ über der Tabelle der Liste „Störungen“, neben dem Knopf „Neu erstellen“ von Payload. */
+/** Knopf „Neu erstellen mit Vorlage“ im Kopfbereich der Liste „Störungen“, unter dem Titel (Platz „Description“ der Collection). */
 export const NewWithTemplateButton: React.FC = () => {
   const ta = useAdminText()
   return (

@@ -5,7 +5,7 @@ import config from '@payload-config'
 import type { EmailSetting, Media, Setting, SmsSetting } from '@/payload-types'
 import { getServerUrl } from '@/lib/utils'
 import { sendSubscriptionConfirmationEmail, sendSubscriptionRequestEmail } from '@/lib/email'
-import { isSmsConfigured } from '@/lib/sms-configured'
+import { isSmsConfigured, isValidPhone, smsSubscriptionProblem } from '@/lib/sms-configured'
 
 // Rate limit configuration: 5 subscription attempts per IP per hour
 const RATE_LIMIT_MAX = 5
@@ -202,36 +202,26 @@ export async function POST(request: NextRequest) {
         slug: 'sms-settings',
       }) as SmsSetting
 
-      if (!isSmsConfigured(smsSettings)) {
+      const configured = isSmsConfigured(smsSettings)
+      // Look for the number only when the request can still succeed
+      const existing = configured && isValidPhone(phone)
+        ? await payload.find({
+            collection: 'subscribers',
+            where: {
+              phone: {
+                equals: phone,
+              },
+              type: {
+                equals: 'sms',
+              },
+            },
+          })
+        : null
+      const problem = smsSubscriptionProblem({ configured, phone, exists: (existing?.docs.length ?? 0) > 0 })
+      if (problem) {
         return NextResponse.json(
-          { error: t('api.smsUnavailable') },
-          { status: 503 }
-        )
-      }
-
-      if (typeof phone !== 'string' || !/^\+?[1-9]\d{6,14}$/.test(phone)) {
-        return NextResponse.json(
-          { error: t('api.invalidPhone') },
-          { status: 400 }
-        )
-      }
-
-      const existing = await payload.find({
-        collection: 'subscribers',
-        where: {
-          phone: {
-            equals: phone,
-          },
-          type: {
-            equals: 'sms',
-          },
-        },
-      })
-
-      if (existing.docs.length > 0) {
-        return NextResponse.json(
-          { error: t('api.phoneExists') },
-          { status: 409 }
+          { error: t(problem.key) },
+          { status: problem.status }
         )
       }
 

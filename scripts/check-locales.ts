@@ -1,6 +1,6 @@
 /**
  * Dateiname:   check-locales.ts
- * Zweck:       Prüft Sprachdateien (Format: docs/superpowers/specs/2026-11-14-sprachdateien-design.md, Abschnitt 4.2)
+ * Zweck:       Prüft Sprachdateien (Format: docs/src/getting-started/adding-a-language.md)
  *              gegen die englische Referenz locales/en.json.
  * Aufruf:      npm run check:locales [Verzeichnis]   (Standard: locales)
  * Ergebnis:    Warnungen (fehlende, überzählige oder leere Werte in "site", leere Werte in "admin") und Fehler (ungültige Datei,

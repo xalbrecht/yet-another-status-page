@@ -16,11 +16,13 @@ const rebuild = {
   reconstructedAfter: 432,
   unsure: 78,
   withoutService: 19,
+  check: { count: 165, fingerprint: 'r1' },
 }
 const conversion = {
   dryRun: true,
   converted: [{ incidentId: '7', title: 'Wartung <script>alert(1)</script>', services: 2, from: '2026-10-12T18:00:00.000Z', to: '2026-10-12T20:10:00.000Z' }],
   skipped: [{ incidentId: '8', title: 'Wartung noch offen', reason: 'open' }],
+  check: { count: 1, fingerprint: 'c1' },
 }
 const buttonTag = (markup: string, testId: string) => markup.match(new RegExp(`<button[^>]*data-testid="${testId}"[^>]*>`))?.[0] ?? ''
 
@@ -96,7 +98,7 @@ test('der Grund „nach dem Start des Statusprotokolls erfasst“ wird lesbar an
   const markup = renderToStaticMarkup(
     <StatusLogView
       rebuild={null}
-      conversion={{ dryRun: true, converted: [], skipped: [{ incidentId: '9', title: 'Störung nach Wartung', reason: 'after-start' }] }}
+      conversion={{ dryRun: true, converted: [], skipped: [{ incidentId: '9', title: 'Störung nach Wartung', reason: 'after-start' }], check: { count: 0, fingerprint: 'c2' } }}
       busy={false}
     />,
   )

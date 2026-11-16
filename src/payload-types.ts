@@ -72,6 +72,7 @@ export interface Config {
     'service-status-events': ServiceStatusEvent;
     incidents: Incident;
     maintenances: Maintenance;
+    'message-templates': MessageTemplate;
     notifications: Notification;
     subscribers: Subscriber;
     users: User;
@@ -89,6 +90,7 @@ export interface Config {
     'service-status-events': ServiceStatusEventsSelect<false> | ServiceStatusEventsSelect<true>;
     incidents: IncidentsSelect<false> | IncidentsSelect<true>;
     maintenances: MaintenancesSelect<false> | MaintenancesSelect<true>;
+    'message-templates': MessageTemplatesSelect<false> | MessageTemplatesSelect<true>;
     notifications: NotificationsSelect<false> | NotificationsSelect<true>;
     subscribers: SubscribersSelect<false> | SubscribersSelect<true>;
     users: UsersSelect<false> | UsersSelect<true>;
@@ -411,6 +413,47 @@ export interface Maintenance {
   createdAt: string;
 }
 /**
+ * Texts for incidents and maintenances. When you report something, you choose a template and the placeholders are filled in. Only signed-in users can see templates.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "message-templates".
+ */
+export interface MessageTemplate {
+  id: number;
+  /**
+   * How the template appears in the list, for example "Investigating: partial outage".
+   */
+  name: string;
+  kind: 'incident' | 'maintenance';
+  /**
+   * The status of the update for which the template is meant.
+   */
+  status:
+    'investigating' | 'identified' | 'monitoring' | 'resolved' | 'upcoming' | 'in_progress' | 'completed' | 'cancelled';
+  /**
+   * Optional. Preselects the impact when this template is chosen.
+   */
+  impact?: ('degraded' | 'partial' | 'major') | null;
+  /**
+   * Title of the incident or maintenance. Placeholders: {{services}} (the affected services as a list), {{group}} (the group), {{impact}} (the impact, incidents only), {{start}} and {{end}} (maintenances only), {{link}} (the address of the message).
+   */
+  title: string;
+  /**
+   * Text for the status page and the email. Word it so that it fits one service and several, for example "Affected: {{services}}".
+   */
+  body: string;
+  /**
+   * Optional. A short text for SMS (up to 320 characters, longer texts are cut). The same placeholders as above.
+   */
+  smsBody?: string | null;
+  /**
+   * Optional. A short text for a push message via ntfy (up to 500 characters). The same placeholders as above.
+   */
+  ntfyBody?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * Manage and send notifications to subscribers
  *
  * This interface was referenced by `Config`'s JSON-Schema
@@ -677,6 +720,10 @@ export interface PayloadLockedDocument {
         value: number | Maintenance;
       } | null)
     | ({
+        relationTo: 'message-templates';
+        value: number | MessageTemplate;
+      } | null)
+    | ({
         relationTo: 'notifications';
         value: number | Notification;
       } | null)
@@ -823,6 +870,22 @@ export interface MaintenancesSelect<T extends boolean = true> {
         createdAt?: T;
         id?: T;
       };
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "message-templates_select".
+ */
+export interface MessageTemplatesSelect<T extends boolean = true> {
+  name?: T;
+  kind?: T;
+  status?: T;
+  impact?: T;
+  title?: T;
+  body?: T;
+  smsBody?: T;
+  ntfyBody?: T;
   updatedAt?: T;
   createdAt?: T;
 }

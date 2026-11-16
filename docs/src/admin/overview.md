@@ -25,6 +25,7 @@ The admin panel is organized into sections:
 - **Services** - Individual services to monitor
 - **Incidents** - Service disruptions and issues
 - **Maintenances** - Scheduled maintenance windows
+- **Templates** - Ready-made titles and texts for incidents and maintenances, see [Templates](./templates.md)
 - **Status log** - Automatic record of every service status change (read-only). See [Situation Overview](./situation-overview.md#status-log)
 
 ### Notifications

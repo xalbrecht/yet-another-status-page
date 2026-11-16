@@ -20,6 +20,7 @@ import {
   Incidents,
   Maintenances,
   Media,
+  MessageTemplates,
   Notifications,
   ServiceGroups,
   Services,
@@ -129,6 +130,7 @@ export default buildConfig({
     ServiceStatusEvents,
     Incidents,
     Maintenances,
+    MessageTemplates,
     // Notification collections
     Notifications,
     Subscribers,

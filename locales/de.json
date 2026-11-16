@@ -820,6 +820,26 @@
     "no": "nein",
     "unknown": "unbekannt",
     "Development build, no YASP image": "Entwicklungsstand, kein YASP-Image",
-    "System information is not available.": "Die Systemangaben sind nicht abrufbar."
+    "System information is not available.": "Die Systemangaben sind nicht abrufbar.",
+    "This field is required.": "Dieses Feld ist erforderlich.",
+    "The text is longer than {max} characters.": "Der Text ist länger als {max} Zeichen.",
+    "Unknown placeholder: {names}. Allowed for this type: {allowed}.": "Unbekannter Platzhalter: {names}. Erlaubt für diese Art: {allowed}.",
+    "Template": "Vorlage",
+    "Templates": "Vorlagen",
+    "Texts for incidents and maintenances. When you report something, you choose a template and the placeholders are filled in. Only signed-in users can see templates.": "Texte für Störungen und Wartungen. Beim Melden wählen Sie eine Vorlage, die Platzhalter werden ausgefüllt. Vorlagen sehen nur angemeldete Benutzer.",
+    "Name": "Name",
+    "How the template appears in the list, for example \"Investigating: partial outage\".": "So erscheint die Vorlage in der Liste, zum Beispiel „Wird untersucht: Teilausfall“.",
+    "Update status": "Status der Aktualisierung",
+    "This status does not belong to the chosen type.": "Dieser Status gehört nicht zur gewählten Art.",
+    "The status of the update for which the template is meant.": "Der Status der Aktualisierung, für die die Vorlage gedacht ist.",
+    "Preset impact": "Vorbelegung der Auswirkung",
+    "Optional. Preselects the impact when this template is chosen.": "Optional. Belegt die Auswirkung vor, wenn diese Vorlage gewählt wird.",
+    "Title of the incident or maintenance. Placeholders: {{services}} (the affected services as a list), {{group}} (the group), {{impact}} (the impact, incidents only), {{start}} and {{end}} (maintenances only), {{link}} (the address of the message).": "Titel der Störung oder Wartung. Platzhalter: {{services}} (die betroffenen Dienste als Aufzählung), {{group}} (die Gruppe), {{impact}} (die Auswirkung, nur Störungen), {{start}} und {{end}} (nur Wartungen), {{link}} (die Adresse der Meldung).",
+    "Text": "Text",
+    "Text for the status page and the email. Word it so that it fits one service and several, for example \"Affected: {{services}}\".": "Text für Statusseite und E-Mail. Formulieren Sie ihn so, dass er für einen und für mehrere Dienste passt, zum Beispiel „Betroffen: {{services}}“.",
+    "SMS text": "SMS-Text",
+    "Optional. A short text for SMS (up to 320 characters, longer texts are cut). The same placeholders as above.": "Optional. Ein kurzer Text für SMS (bis 320 Zeichen, längere werden gekürzt). Dieselben Platzhalter wie oben.",
+    "ntfy text": "ntfy-Text",
+    "Optional. A short text for a push message via ntfy (up to 500 characters). The same placeholders as above.": "Optional. Ein kurzer Text für eine Push-Nachricht über ntfy (bis 500 Zeichen). Dieselben Platzhalter wie oben."
   }
 }

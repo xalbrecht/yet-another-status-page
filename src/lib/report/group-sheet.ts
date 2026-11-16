@@ -64,8 +64,10 @@ export function buildGroupSheet(input: {
   services: Array<{ id: number; name: string; timeline: Timeline; windows: Array<{ from: number; to: number }> }>
   mode: MaintenanceMode
   timeZone: string
+  /** Sprache für die Reihenfolge gleich langer Ausfälle (BCP 47, z. B. `de-DE`) */
+  locale: string
 }): GroupSheetData {
-  const { month, timeZone } = input
+  const { month, timeZone, locale } = input
   const days: GroupSheetData['perDay'] = []
   const dayIndex = new Map<string, GroupSheetData['perDay'][number]>()
   for (let cursor = startOfZonedDay(new Date(month.start), timeZone).getTime(); cursor < month.end; ) {
@@ -105,7 +107,7 @@ export function buildGroupSheet(input: {
     }
   }
 
-  perService.sort((a, b) => b.majorMs + b.partialMs - (a.majorMs + a.partialMs) || a.name.localeCompare(b.name, 'de'))
-  for (const day of days) day.bars.sort((a, b) => b.ms - a.ms || a.name.localeCompare(b.name, 'de'))
+  perService.sort((a, b) => b.majorMs + b.partialMs - (a.majorMs + a.partialMs) || a.name.localeCompare(b.name, locale))
+  for (const day of days) day.bars.sort((a, b) => b.ms - a.ms || a.name.localeCompare(b.name, locale))
   return { month: { key: month.key, label: monthLabel(month.label, days) }, perService, perDay: days }
 }

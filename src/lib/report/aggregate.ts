@@ -144,9 +144,9 @@ function groupListOf(input: Omit<ReportInput, 'footnotes'>, periodValue: (servic
     })
     .sort((a, b) => {
       if (a.availability === null || b.availability === null) {
-        return Number(a.availability === null) - Number(b.availability === null) || a.name.localeCompare(b.name, 'de')
+        return Number(a.availability === null) - Number(b.availability === null) || a.name.localeCompare(b.name, input.locale)
       }
-      return a.availability - b.availability || a.name.localeCompare(b.name, 'de')
+      return a.availability - b.availability || a.name.localeCompare(b.name, input.locale)
     })
 }
 
@@ -222,10 +222,10 @@ export function buildReport(input: ReportInput): ReportData {
   const ranking = rows
     .map((entry) => entry.row)
     .sort((a, b) => {
-      if (a.availability === null && b.availability === null) return a.name.localeCompare(b.name, 'de')
+      if (a.availability === null && b.availability === null) return a.name.localeCompare(b.name, locale)
       if (a.availability === null) return 1
       if (b.availability === null) return -1
-      return a.availability - b.availability || b.downMs - a.downMs || a.name.localeCompare(b.name, 'de')
+      return a.availability - b.availability || b.downMs - a.downMs || a.name.localeCompare(b.name, locale)
     })
 
   let longestOutage: ReportData['kpis']['longestOutage'] = null
@@ -253,7 +253,7 @@ export function buildReport(input: ReportInput): ReportData {
     }
   }
   const worstOf = (values: Array<number | null>) => Math.min(...values.map((value) => value ?? Number.POSITIVE_INFINITY))
-  heatRows.sort((a, b) => worstOf(a.values) - worstOf(b.values) || a.name.localeCompare(b.name, 'de'))
+  heatRows.sort((a, b) => worstOf(a.values) - worstOf(b.values) || a.name.localeCompare(b.name, locale))
   const trendValues = historyOf(services)
 
   const groupList = groupListOf(input, periodValue)
@@ -266,6 +266,7 @@ export function buildReport(input: ReportInput): ReportData {
           services: services.map(({ id, name, timeline, windows }) => ({ id, name, timeline, windows })),
           mode: params.maintenance,
           timeZone,
+          locale,
         })
       : null
 

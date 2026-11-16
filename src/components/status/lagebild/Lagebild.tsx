@@ -306,7 +306,7 @@ function TileFrame({
   const [input, setInput] = useState('mouse')
   const { open, enter, leave, close } = useDelayedHover()
   // Gesetzt nach einem Mausklick, zurückgenommen beim Verlassen der Kachel
-  const reopenBlocked = useRef(false)
+  const [reopenBlocked, setReopenBlocked] = useState(false)
 
   useEffect(() => {
     if (!open) return
@@ -326,7 +326,7 @@ function TileFrame({
   }, [open, close])
 
   const activate = () => {
-    if (input === 'mouse') reopenBlocked.current = true
+    if (input === 'mouse') setReopenBlocked(true)
     close()
     onSelect()
   }
@@ -335,10 +335,10 @@ function TileFrame({
     <div
       ref={frame}
       data-testid={`lagebild-tile-${tile.id === ALL_GROUPS ? 'all' : tile.id}`}
-      onPointerMove={(event) => event.pointerType !== 'touch' && !reopenBlocked.current && enter()}
+      onPointerMove={(event) => event.pointerType !== 'touch' && !reopenBlocked && enter()}
       onPointerLeave={(event) => {
         if (event.pointerType === 'touch') return
-        reopenBlocked.current = false
+        setReopenBlocked(false)
         leave()
       }}
       className={cn('relative flex', open && 'z-20')}

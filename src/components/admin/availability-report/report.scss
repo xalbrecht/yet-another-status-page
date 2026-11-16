@@ -67,11 +67,6 @@
   }
 
   &__layout { display: flex; gap: 1.25rem; align-items: flex-start; }
-  /* Schmale Fenster: Liste über dem Blatt statt daneben */
-  @media (max-width: 800px) {
-    &__layout { flex-direction: column; align-items: stretch; }
-    &__groups { width: auto; max-height: 40vh; }
-  }
   &__layout-main { flex: 1; min-width: 0; }
   &__groups {
     list-style: none;
@@ -88,6 +83,12 @@
     a { display: flex; align-items: center; gap: 0.5rem; padding: 0.45rem 0.7rem; text-decoration: none; color: var(--theme-text); font-size: 0.85rem; }
     a:hover { background: var(--theme-elevation-50); }
     a[aria-current='true'] { background: var(--theme-elevation-100); font-weight: 600; }
+  }
+  /* Schmale Fenster: Liste über dem Blatt statt daneben. Muss nach den Grundregeln stehen, sonst gewinnen sie
+     bei gleicher Gewichtung (Breite 260px, Höhe 80vh). */
+  @media (max-width: 800px) {
+    &__layout { flex-direction: column; align-items: stretch; }
+    &__groups { width: auto; max-height: 40vh; }
   }
   &__dot-level { width: 10px; height: 10px; border-radius: 50%; flex: none; border: 1px solid var(--theme-elevation-300); }
   &__group-name { flex: 1; min-width: 0; overflow-wrap: anywhere; }

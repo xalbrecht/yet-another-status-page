@@ -1,5 +1,5 @@
 // Reine Logik für Sprachdateien (ohne Dateizugriff): prüfen, Sprache wählen, Wörterbücher bauen.
-// Format der Dateien: docs/superpowers/specs/2026-11-14-sprachdateien-design.md, Abschnitt 4.2.
+// Format der Dateien: docs/src/getting-started/adding-a-language.md.
 
 export type LocaleFile = {
   meta: { name: string; dateLocale?: string }

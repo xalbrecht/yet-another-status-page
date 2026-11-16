@@ -176,9 +176,9 @@ test('die Reihenfolge der Bilder und die Kennung hängen nicht von der Locale ab
 
 test('Mail 1 nennt die Zahl der Dienste, wenn sie bekannt ist, die übrigen Mails nicht', async () => {
   const r = recorder()
-  await sendReportMail({ context, recipients: ['a@x.de'], send: r.send, filesOf: filesOf(fourMails()), limit: 6000, serviceCount: 166 })
-  assert.match(r.calls[0].text ?? '', /(Dienste im Bericht|Services in the report): 166/)
-  assert.doesNotMatch(r.calls[1].text ?? '', /166/)
+  await sendReportMail({ context, recipients: ['a@x.de'], send: r.send, filesOf: filesOf(fourMails()), limit: 6000, serviceCount: 200 })
+  assert.match(r.calls[0].text ?? '', /(Dienste im Bericht|Services in the report): 200/)
+  assert.doesNotMatch(r.calls[1].text ?? '', /200/)
   const without = recorder()
   await sendReportMail({ context, recipients: ['a@x.de'], send: without.send, filesOf: filesOf(fourMails()), limit: 6000 })
   assert.doesNotMatch(without.calls[0].text ?? '', /Dienste im Bericht|Services in the report/)

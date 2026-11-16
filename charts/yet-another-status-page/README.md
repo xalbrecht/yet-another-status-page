@@ -52,7 +52,7 @@ ingress:
 
 ## Uploads
 
-Interface language: `language` sets `DEFAULT_LANGUAGE` (default `de`). Files for further languages go into `locales.files` or an existing ConfigMap (`locales.existingConfigMap`); the chart mounts them at `/app/locales` and sets `LOCALES_DIR`.
+Interface language: `language` sets `DEFAULT_LANGUAGE` (default `en`). Files for further languages go into `locales.files` or an existing ConfigMap (`locales.existingConfigMap`); the chart mounts them at `/app/locales` and sets `LOCALES_DIR`.
 
 Media uploaded through the Payload admin is written to `/app/public/media`. By default a PVC of `5Gi` is created (`persistence.enabled: true`). Disable it for stateless deployments behind object storage (e.g. configure `@payloadcms/storage-vercel-blob` via `extraEnv`).
 

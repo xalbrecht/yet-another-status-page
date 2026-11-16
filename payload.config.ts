@@ -91,7 +91,7 @@ export default buildConfig({
   csrf: [
     getServerUrl(),
   ],
-  // Sprache der Admin-Oberfläche folgt DEFAULT_LANGUAGE (Standard: Deutsch). Hat Payload für die
+  // Sprache der Admin-Oberfläche folgt DEFAULT_LANGUAGE (Standard: Englisch). Hat Payload für die
   // Sprache keine eigenen Texte, gilt Englisch.
   i18n: {
     supportedLanguages: { [adminLanguage]: payloadTranslations[adminLanguage]! },

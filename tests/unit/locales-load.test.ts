@@ -62,13 +62,13 @@ test('parseLocaleFile: die Meldung nennt den fehlerhaften Block und Schlüssel',
   assert.ok('problem' in wrongValue && wrongValue.problem.includes('"a.key"'))
 })
 
-test('selectLanguage: ohne Angabe Deutsch', () => {
-  assert.deepEqual(selectLanguage(undefined, ['de']), { language: 'de' })
+test('selectLanguage: ohne Angabe Englisch', () => {
+  assert.deepEqual(selectLanguage(undefined, ['de', 'en']), { language: 'en' })
 })
 
-test('selectLanguage: nicht verfügbare Sprache fällt auf Deutsch zurück und meldet es', () => {
+test('selectLanguage: nicht verfügbare Sprache fällt auf Englisch zurück und meldet es', () => {
   const result = selectLanguage('fr', ['de', 'en'])
-  assert.equal(result.language, 'de')
+  assert.equal(result.language, 'en')
   assert.ok(result.problem)
 })
 

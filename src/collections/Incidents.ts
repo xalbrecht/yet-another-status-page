@@ -1,7 +1,8 @@
 import type { CollectionConfig } from 'payload'
 import { translatorsFor } from '@/lib/i18n/translators'
 import { generateShortId } from '@/lib/shortId'
-import { standardAccess } from '@/lib/access'
+import { authenticatedOrTestWriteField, standardAccess } from '@/lib/access'
+import { NTFY_TEXT_MAX_LENGTH, renderTemplate, SMS_TEXT_MAX_LENGTH } from '@/lib/template-text'
 import { getServerUrl } from '@/lib/utils'
 import { localizedDateAdmin } from '@/lib/localizedDateAdmin'
 import { invalidateLagebild } from '@/lib/lagebild-invalidate'
@@ -26,6 +27,9 @@ interface DeferredNotification {
   isInitial: boolean
   updateIndex: number
   message: string
+  /** Eigener SMS- und ntfy-Text der Aktualisierung (aus einer Vorlage), sonst leer */
+  smsBody?: string | null
+  ntfyBody?: string | null
 }
 
 // Helper to interpolate template placeholders
@@ -86,6 +90,9 @@ async function createIncidentNotificationDeferred(data: DeferredNotification) {
       emailBody = `${t('notif.status')}: ${data.statusLabel}\n\n${data.message}\n\n${t('notif.viewDetails')}: ${url}`
     }
     
+    // Ein eigener Text der Aktualisierung (aus einer Vorlage) ersetzt den allgemeinen SMS-Text aus den Einstellungen
+    const ownSms = data.smsBody?.trim()
+    const ownNtfy = data.ntfyBody?.trim()
     const notification = await payload.create({
       collection: 'notifications',
       data: {
@@ -96,7 +103,8 @@ async function createIncidentNotificationDeferred(data: DeferredNotification) {
         status: 'draft',
         subject: `[${data.statusLabel}] ${data.title}`,
         emailBody,
-        smsBody,
+        smsBody: ownSms || smsBody,
+        ...(ownNtfy ? { ntfyBody: ownNtfy } : {}),
       },
     })
     return notification
@@ -132,6 +140,10 @@ export const Incidents: CollectionConfig = {
   admin: {
     useAsTitle: 'title',
     defaultColumns: ['title', 'status', 'shortId', 'createdAt'],
+    components: {
+      // Knopf „Neu erstellen mit Vorlage“ über der Liste
+      beforeListTable: ['@/components/admin/incident-wizard/NewWithTemplateButton#NewWithTemplateButton'],
+    },
     group: ta('Status'),
   },
   access: standardAccess,
@@ -267,6 +279,24 @@ export const Incidents: CollectionConfig = {
             description: ta('When this update was posted'),
           }),
         },
+        // Texte für den Benachrichtigungsentwurf, aus einer Vorlage gesetzt. Nur Angemeldete lesen und schreiben sie,
+        // sie stehen weder in der öffentlichen API noch im Formular.
+        {
+          name: 'smsBody',
+          label: ta('SMS text'),
+          type: 'textarea',
+          maxLength: SMS_TEXT_MAX_LENGTH,
+          admin: { hidden: true },
+          access: { read: authenticatedOrTestWriteField, create: authenticatedOrTestWriteField, update: authenticatedOrTestWriteField },
+        },
+        {
+          name: 'ntfyBody',
+          label: ta('ntfy text'),
+          type: 'textarea',
+          maxLength: NTFY_TEXT_MAX_LENGTH,
+          admin: { hidden: true },
+          access: { read: authenticatedOrTestWriteField, create: authenticatedOrTestWriteField, update: authenticatedOrTestWriteField },
+        },
       ],
     },
   ],
@@ -285,12 +315,27 @@ export const Incidents: CollectionConfig = {
       },
     ],
     beforeChange: [
-      ({ data, operation }) => {
+      ({ data, operation, originalDoc }) => {
         data = data || {}
         
         // Always generate a new shortId on create (including duplicates)
         if (operation === 'create') {
           data.shortId = generateShortId(8)
+        }
+
+        // `{{link}}` in Titel und Texten (aus einer Vorlage) durch die Adresse der Störung ersetzen. Die Kennung besteht erst
+        // jetzt, deshalb geschieht es hier und nicht in der Vorlage.
+        const shortIdForLink = (data.shortId as string | undefined) ?? (originalDoc?.shortId as string | undefined)
+        if (shortIdForLink) {
+          const values = { link: `${getServerUrl()}/i/${shortIdForLink}` }
+          if (typeof data.title === 'string') data.title = renderTemplate(data.title, values)
+          if (Array.isArray(data.updates)) {
+            for (const update of data.updates as Array<Record<string, unknown>>) {
+              for (const key of ['message', 'smsBody', 'ntfyBody']) {
+                if (typeof update[key] === 'string') update[key] = renderTemplate(update[key] as string, values)
+              }
+            }
+          }
         }
         
         // Sync status and resolvedAt from the latest update
@@ -358,6 +403,8 @@ export const Incidents: CollectionConfig = {
             isInitial: true,
             updateIndex: 0,
             message: firstUpdate.message,
+            smsBody: firstUpdate.smsBody,
+            ntfyBody: firstUpdate.ntfyBody,
           }
           
           // Defer execution to after transaction commits
@@ -382,6 +429,8 @@ export const Incidents: CollectionConfig = {
               isInitial: false,
               updateIndex: index,
               message: update.message,
+              smsBody: update.smsBody,
+              ntfyBody: update.ntfyBody,
             }
             
             // Defer execution to after transaction commits

@@ -316,6 +316,8 @@ export interface Incident {
      * When this update was posted
      */
     createdAt: string;
+    smsBody?: string | null;
+    ntfyBody?: string | null;
     id?: string | null;
   }[];
   updatedAt: string;
@@ -844,6 +846,8 @@ export interface IncidentsSelect<T extends boolean = true> {
         status?: T;
         message?: T;
         createdAt?: T;
+        smsBody?: T;
+        ntfyBody?: T;
         id?: T;
       };
   updatedAt?: T;

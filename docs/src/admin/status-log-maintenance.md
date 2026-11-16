@@ -4,7 +4,7 @@ The status log (Statusprotokoll) lists every change of a service status with its
 
 ## Reconstruction
 
-The status log starts on 10 Nov 2026. For the time before, the history is calculated from the incidents and stored as entries with the source **Reconstructed from incidents**. Entries from operation are never changed.
+The status log starts with the first status change that is recorded in operation. For the time before, the history is calculated from the incidents and stored as entries with the source **Reconstructed from incidents**. Entries from operation are never changed.
 
 Run the reconstruction again after you have reworked incidents. It deletes the reconstructed entries and builds them again from the current incidents. The preview shows the number of entries before and after, how many incidents fall under each classification and how many incidents are not clearly classified or have no service.
 

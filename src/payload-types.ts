@@ -295,7 +295,7 @@ export interface Incident {
    */
   impact: 'degraded' | 'partial' | 'major';
   /**
-   * Gilt für die Nachrechnung des Verfügbarkeitsverlaufs vor dem 10.11.2026. „Automatisch“ bewertet Titel und Text der Aktualisierungen.
+   * Gilt für die Nachrechnung des Verfügbarkeitsverlaufs vor Beginn des Statusprotokolls. „Automatisch“ bewertet Titel und Text der Aktualisierungen.
    */
   availabilityClass?: ('auto' | 'none' | 'degraded' | 'partial' | 'major') | null;
   /**

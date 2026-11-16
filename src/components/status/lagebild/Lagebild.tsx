@@ -288,6 +288,9 @@ type TileButtonProps = {
  * Geöffnet wird erst bei einer echten Mausbewegung (`pointermove`), nicht beim bloßen Eintritt: Verschiebt sich das
  * Layout unter der ruhenden Maus (Dienstfeld klappt auf, Seite scrollt), erzeugt der Browser Eintrittsereignisse ohne
  * Bewegung, und fremde Tooltips würden aufgehen.
+ * Nach einem Mausklick bleibt der Tooltip geschlossen, bis die Maus die Kachel verlassen hat: Sonst öffnet schon eine
+ * kleine Bewegung über dem gerade geöffneten Dienstfeld ihn erneut. Der Tooltip ist ein Kind des Rahmens, die Ereignisse
+ * `pointermove` und `pointerleave` des Rahmens gelten daher auch über dem Tooltip.
  */
 function TileFrame({
   tile,
@@ -302,6 +305,8 @@ function TileFrame({
   const frame = useRef<HTMLDivElement>(null)
   const [input, setInput] = useState('mouse')
   const { open, enter, leave, close } = useDelayedHover()
+  // Gesetzt nach einem Mausklick, zurückgenommen beim Verlassen der Kachel
+  const [reopenBlocked, setReopenBlocked] = useState(false)
 
   useEffect(() => {
     if (!open) return
@@ -321,6 +326,7 @@ function TileFrame({
   }, [open, close])
 
   const activate = () => {
+    if (input === 'mouse') setReopenBlocked(true)
     close()
     onSelect()
   }
@@ -329,8 +335,12 @@ function TileFrame({
     <div
       ref={frame}
       data-testid={`lagebild-tile-${tile.id === ALL_GROUPS ? 'all' : tile.id}`}
-      onPointerMove={(event) => event.pointerType !== 'touch' && enter()}
-      onPointerLeave={(event) => event.pointerType !== 'touch' && leave()}
+      onPointerMove={(event) => event.pointerType !== 'touch' && !reopenBlocked && enter()}
+      onPointerLeave={(event) => {
+        if (event.pointerType === 'touch') return
+        setReopenBlocked(false)
+        leave()
+      }}
       className={cn('relative flex', open && 'z-20')}
     >
       {children({
@@ -352,8 +362,6 @@ function TileFrame({
         items={tile.tipItems}
         footer={tile.tipFooter}
         open={open}
-        onEnter={enter}
-        onLeave={leave}
         onActivate={activate}
       />
     </div>

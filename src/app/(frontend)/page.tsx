@@ -21,6 +21,7 @@ import { loadLagebildCached } from '@/lib/lagebild-cache'
 import { parseBarHours, parseLagebildOverride, parsePeriodDays, type BarHours, type PeriodDays } from '@/lib/lagebild'
 import {
   buildIncidentItems,
+  isOpenIncident,
   buildMaintenanceItems,
   parseBoxContent,
   parseBoxEntries,
@@ -255,13 +256,24 @@ async function getStatusData(requestedPeriod: unknown, requestedBar: unknown) {
       depth: 1,
       limit: 50,
     })
+    // Box und Block „Aktuelle Störungen“ bauen auf derselben Liste auf: offen ist, wessen neuester Eintrag nicht „resolved“ ist
+    const currentIncidents = openIncidents.docs.filter(isOpenIncident)
+    // Die Box zeigt nur geplante und laufende Wartungen. Sie fragt selbst ab: Die Liste unten ist auf 10 begrenzt und enthält
+    // auch gerade abgeschlossene Wartungen, damit würden bei vielen Wartungen spätere geplante fehlen und der Zähler wäre zu niedrig.
+    const openMaintenances = await payload.find({
+      collection: 'maintenances',
+      where: { status: { in: ['upcoming', 'in_progress'] } },
+      sort: 'scheduledStartAt',
+      depth: 1,
+      pagination: false,
+    })
     boxes = {
       entries: parseBoxEntries(settings.statusBoxEntries),
       content: parseBoxContent(settings.statusBoxContent),
       placement: parseBoxesPlacement(settings.statusBoxesPlacement),
-      incidentItems: buildIncidentItems(openIncidents.docs, dt, t),
-      maintenanceItems: buildMaintenanceItems(maintenances.docs, dt, { t, tf }),
-      currentIncidents: openIncidents.docs.map(formatIncident).map(forDisplay),
+      incidentItems: buildIncidentItems(currentIncidents, dt, t),
+      maintenanceItems: buildMaintenanceItems(openMaintenances.docs, dt, { t, tf }),
+      currentIncidents: currentIncidents.map(formatIncident).map(forDisplay),
       pastResolvedIncidents,
     }
   }
@@ -368,7 +380,7 @@ export default async function StatusPage({
             </div>
 
             {/* Aktuelle Störungen: alle offenen, mit Verlauf */}
-            <section id="incidents" className="mb-10 scroll-mt-20 animate-fade-in">
+            <section id="incidents" className="mb-10 animate-fade-in">
               <h2 className="mb-4 text-xl font-bold text-foreground">{t('home.currentIncidents')}</h2>
               {boxes.currentIncidents.length === 0 ? (
                 <div className="rounded-lg border border-border bg-muted/30 px-5 py-4">
@@ -412,7 +424,7 @@ export default async function StatusPage({
 
         {/* Scheduled Maintenance */}
         {maintenances.length > 0 && (
-          <section id={boxes ? 'maintenance' : undefined} className="mb-10 scroll-mt-20 animate-fade-in">
+          <section id={boxes ? 'maintenance' : undefined} className="mb-10 animate-fade-in">
             <h2 className="mb-4 text-xl font-bold text-foreground">{t('home.scheduledMaintenance')}</h2>
             <div className="space-y-4">
               {maintenances.map((maintenance) => (
@@ -423,7 +435,7 @@ export default async function StatusPage({
         )}
 
         {/* Past Incidents */}
-        <section id={boxes ? 'past-incidents' : undefined} className="scroll-mt-20 animate-fade-in">
+        <section id={boxes ? 'past-incidents' : undefined} className="animate-fade-in">
           <h2 className="mb-6 text-xl font-bold text-foreground">{t('home.pastIncidents')}</h2>
           <IncidentTimelineWithLinks days={boxes ? boxes.pastResolvedIncidents : pastIncidents} />
           <div className="mt-6 text-center">

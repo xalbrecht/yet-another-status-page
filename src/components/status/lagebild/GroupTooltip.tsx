@@ -45,18 +45,17 @@ type Props = {
   /** Zeile unter der Liste, z. B. „9 weitere Gruppen betriebsbereit“ */
   footer?: string
   open: boolean
-  onEnter: () => void
-  onLeave: () => void
   onActivate: () => void
 }
 
 /**
  * Dienste einer Gruppe mit farbigem Punkt, ohne Beschreibung. Die Liste steht immer im Markup, damit `aria-describedby`
- * der Kachel sie auch geschlossen vorlesen kann; angezeigt wird sie nur bei `open`. Der Zustand steht zusätzlich als Text
+ * der Kachel sie auch geschlossen vorlesen kann; angezeigt wird sie nur bei `open`. Öffnen und Schließen beim Darüberfahren
+ * steuert der Rahmen der Kachel (`TileFrame`), der Tooltip ist sein Kind. Der Zustand steht zusätzlich als Text
  * für Screenreader da. Der Tooltip überlappt den unteren Rand der Kachel um 4 Pixel, damit die Maus keine Lücke quert,
  * und bleibt innerhalb des Rasters (`data-lagebild-grid`).
  */
-export function GroupTooltip({ id, title, items, footer, open, onEnter, onLeave, onActivate }: Props) {
+export function GroupTooltip({ id, title, items, footer, open, onActivate }: Props) {
   const { t } = useTranslation()
   const ref = useRef<HTMLDivElement>(null)
   const [place, setPlace] = useState({ width: MAX_WIDTH, shift: 0 })
@@ -80,8 +79,6 @@ export function GroupTooltip({ id, title, items, footer, open, onEnter, onLeave,
       id={id}
       role="tooltip"
       data-open={open ? 'true' : 'false'}
-      onPointerMove={(event) => event.pointerType !== 'touch' && onEnter()}
-      onPointerLeave={(event) => event.pointerType !== 'touch' && onLeave()}
       onClick={onActivate}
       style={{ left: place.shift, width: place.width }}
       className={cn(
@@ -91,7 +88,8 @@ export function GroupTooltip({ id, title, items, footer, open, onEnter, onLeave,
         open ? 'block' : 'hidden',
       )}
     >
-      <p className="mb-1.5 text-xs font-semibold text-foreground">{title}</p>
+      {/* Der Name der Gruppe steht schon im Namen der Kachel: Er fehlt in der Beschreibung (`aria-describedby`), damit er nicht doppelt vorgelesen wird. */}
+      <p aria-hidden="true" className="mb-1.5 text-xs font-semibold text-foreground">{title}</p>
       <ul className="space-y-1">
         {items.map((item, index) => (
           <li key={`${item.name}-${index}`} className="flex items-center gap-2 text-xs text-foreground">

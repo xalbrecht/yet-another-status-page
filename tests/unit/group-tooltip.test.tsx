@@ -22,8 +22,6 @@ const render = (open: boolean, extra: { footer?: string; items?: unknown[] } = {
       items={(extra.items ?? items) as typeof items}
       footer={extra.footer}
       open={open}
-      onEnter={() => {}}
-      onLeave={() => {}}
       onActivate={() => {}}
     />,
     ),
@@ -47,7 +45,13 @@ test('jeder Dienst hat einen Punkt für Sehende und einen Text mit dem Zustand f
   assert.equal(markup.split('sr-only').length - 1, 2)
   assert.ok(markup.includes(`<span class="sr-only">${statusLabel('partial', t)}</span>`))
   assert.ok(markup.includes(`<span class="sr-only">${statusLabel('operational', t)}</span>`))
-  assert.equal(markup.split('aria-hidden="true"').length - 1, 2)
+  // zwei Punkte der Dienste und der Titel
+  assert.equal(markup.split('aria-hidden="true"').length - 1, 3)
+})
+
+test('der Titel der Gruppe bleibt sichtbar, fehlt aber für Screenreader in der Beschreibung der Kachel', () => {
+  const markup = render(true)
+  assert.match(markup, /<p aria-hidden="true"[^>]*>Mail<\/p>/)
 })
 
 test('Beschreibungstexte der Dienste erscheinen nicht', () => {

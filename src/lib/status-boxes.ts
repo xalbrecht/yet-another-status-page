@@ -89,11 +89,21 @@ function lastMessage(updates: BoxUpdate[] | null | undefined): string | null {
   return message ? message : null
 }
 
+/** Zustand einer Störung nach ihrem neuesten Eintrag. Ohne Eintrag gilt „investigating“. */
+function incidentState(incident: Pick<BoxIncident, 'updates'>): string {
+  return latestUpdate(incident.updates)?.status || 'investigating'
+}
+
+/** Offen ist eine Störung, deren neuester Eintrag nicht „resolved“ ist. Die Box und der Block „Aktuelle Störungen“ bauen auf derselben Liste auf. */
+export function isOpenIncident(incident: Pick<BoxIncident, 'updates'>): boolean {
+  return incidentState(incident) !== 'resolved'
+}
+
 export function buildIncidentItems(incidents: BoxIncident[], dt: DateTimeConfig, t: Translate): BoxItem[] {
   const items: BoxItem[] = []
   for (const incident of incidents) {
-    const status = latestUpdate(incident.updates)?.status || 'investigating'
-    if (status === 'resolved') continue
+    if (!isOpenIncident(incident)) continue
+    const status = incidentState(incident)
     const started = incident.createdAt ?? incident.updates?.[0]?.createdAt
     items.push({
       id: String(incident.id),
@@ -126,7 +136,8 @@ export function buildMaintenanceItems(
         title: m.title,
         status: 'maintenance',
         stateLabel: t(`maintenance.${m.status}` as TranslationKey),
-        when: end === null ? tf('maintenance.noticeSoonOpen', { start }) : tf('maintenance.noticeSoon', { start, end }),
+        // Ohne das Wort „Wartung“: Die Box heißt schon „Wartungen“
+        when: end === null ? tf('statusBoxes.whenFrom', { start }) : tf('statusBoxes.whenRange', { start, end }),
         services: serviceNames(m.affectedServices),
         last: lastMessage(m.updates),
       }

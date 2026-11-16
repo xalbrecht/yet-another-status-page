@@ -6,6 +6,8 @@ import { limitBoxItems, type BoxContent, type BoxItem } from '@/lib/status-boxes
 type BoxProps = {
   testId: 'box-incidents' | 'box-maintenances'
   title: string
+  /** Beschriftung der Zahl im Kopf, nur für Screenreader („Anzahl:“) */
+  countLabel: string
   empty: string
   moreHref: string
   items: BoxItem[]
@@ -14,7 +16,7 @@ type BoxProps = {
   tf: TranslateFormat
 }
 
-function Box({ testId, title, empty, moreHref, items, entries, content, tf }: BoxProps) {
+function Box({ testId, title, countLabel, empty, moreHref, items, entries, content, tf }: BoxProps) {
   const { shown, more } = limitBoxItems(items, entries)
   return (
     <section data-testid={testId} className="overflow-hidden rounded-lg border border-border bg-card">
@@ -23,6 +25,7 @@ function Box({ testId, title, empty, moreHref, items, entries, content, tf }: Bo
         <span
           className={`rounded-full px-2 text-xs font-medium ${items.length > 0 ? 'bg-muted text-foreground' : 'text-muted-foreground'}`}
         >
+          <span className="sr-only">{countLabel} </span>
           {items.length}
         </span>
       </header>
@@ -49,9 +52,9 @@ function Box({ testId, title, empty, moreHref, items, entries, content, tf }: Bo
               {item.when && <p className="text-xs text-muted-foreground">{item.when}</p>}
               {content === 'full' && item.services.length > 0 && (
                 <ul className="flex flex-wrap gap-1">
-                  {item.services.map((name) => (
+                  {item.services.map((name, index) => (
                     <li
-                      key={name}
+                      key={`${index}-${name}`}
                       data-testid="box-service"
                       className="rounded-full border border-border bg-background px-2 text-[11px]"
                     >
@@ -96,11 +99,13 @@ export function StatusBoxes({
 }) {
   const incidentsTitle = t('statusBoxes.incidentsTitle')
   const maintenancesTitle = t('statusBoxes.maintenancesTitle')
+  const countLabel = t('statusBoxes.countLabel')
   return (
     <aside aria-label={`${incidentsTitle}, ${maintenancesTitle}`} className="flex flex-col gap-4">
       <Box
         testId="box-incidents"
         title={incidentsTitle}
+        countLabel={countLabel}
         empty={t('statusBoxes.noIncidents')}
         moreHref="#incidents"
         items={incidents}
@@ -111,6 +116,7 @@ export function StatusBoxes({
       <Box
         testId="box-maintenances"
         title={maintenancesTitle}
+        countLabel={countLabel}
         empty={t('statusBoxes.noMaintenances')}
         moreHref="#maintenance"
         items={maintenances}

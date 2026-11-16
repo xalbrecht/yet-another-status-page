@@ -13,6 +13,7 @@ const group = (n: number, over: Partial<LagebildGroup> = {}): LagebildGroup => (
   bars: [{ status: 'operational', slots: 144 }],
   availability: 100,
   availabilityLabel: '100,00 %',
+  availabilitySince: '',
   services: [],
   ...over,
 })
@@ -49,4 +50,13 @@ test('Panel „Alle“ ist eine Region mit Schaltfläche zum Schließen', () => 
   const markup = render([group(1)])
   assert.match(markup, /role="region"[^>]*data-testid="lagebild-panel-all"/)
   assert.match(markup, />Schließen<\/button>/)
+})
+
+test('Panel „Alle“ nennt unter der Verfügbarkeit den Zeitraum, bei kürzerem Protokoll „seit …“', () => {
+  const markup = render([group(1), group(2, { availabilitySince: 'seit 12.11.2026, 10:00' })])
+  const rows = markup.split('data-testid="all-groups-row"').slice(1)
+  assert.ok(rows[0].includes('14 Tage') || rows[0].includes('14 days'), 'ohne Angabe steht der Zeitraum da')
+  assert.ok(!rows[0].includes('seit 12.11.2026'))
+  assert.ok(rows[1].includes('seit 12.11.2026, 10:00'))
+  assert.ok(!rows[1].includes('14 Tage') && !rows[1].includes('14 days'), 'der Zeitraum entfällt, wenn „seit …“ gilt')
 })

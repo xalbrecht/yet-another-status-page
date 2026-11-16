@@ -4,6 +4,7 @@ import { DEFAULT_DATETIME_CONFIG, formatDateTime } from '@/lib/datetime'
 import { translatorsFor } from '@/lib/i18n/translators'
 import {
   buildIncidentItems,
+  isOpenIncident,
   buildMaintenanceItems,
   limitBoxItems,
   parseBoxContent,
@@ -150,7 +151,7 @@ test('buildMaintenanceItems setzt Link, Status und Zeitraum', () => {
   assert.equal(item.stateLabel, t('maintenance.upcoming'))
   assert.equal(
     item.when,
-    tf('maintenance.noticeSoon', {
+    tf('statusBoxes.whenRange', {
       start: at('2026-11-20T20:00:00.000Z'),
       end: at('2026-11-20T22:00:00.000Z'),
     }),
@@ -160,7 +161,14 @@ test('buildMaintenanceItems setzt Link, Status und Zeitraum', () => {
 
 test('buildMaintenanceItems nennt ohne Ende nur den Beginn', () => {
   const [item] = buildMaintenanceItems([maintenance({ scheduledEndAt: null })], dt, { t, tf })
-  assert.equal(item.when, tf('maintenance.noticeSoonOpen', { start: at('2026-11-20T20:00:00.000Z') }))
+  assert.equal(item.when, tf('statusBoxes.whenFrom', { start: at('2026-11-20T20:00:00.000Z') }))
+})
+
+test('der Zeitraum einer Wartung in der Box wiederholt das Wort „Wartung“ nicht', () => {
+  for (const scheduledEndAt of ['2026-11-20T22:00:00.000Z', null]) {
+    const [item] = buildMaintenanceItems([maintenance({ scheduledEndAt })], dt, { t, tf })
+    assert.doesNotMatch(item.when, /Wartung|Maintenance/i)
+  }
 })
 
 test('buildMaintenanceItems sortiert nach Beginn aufsteigend', () => {
@@ -193,4 +201,11 @@ test('buildIncidentItems übersetzt den Zustand in die übergebene Sprache', () 
   assert.equal(inDe.stateLabel, de.t('incident.investigating'))
   assert.equal(inEn.stateLabel, en.t('incident.investigating'))
   assert.notEqual(inDe.stateLabel, inEn.stateLabel)
+})
+
+test('isOpenIncident: offen ist, wessen neuester Eintrag nicht „resolved“ ist, ohne Einträge gilt die Störung als offen', () => {
+  assert.equal(isOpenIncident({ updates: [{ status: 'investigating' }, { status: 'resolved' }] }), false)
+  assert.equal(isOpenIncident({ updates: [{ status: 'resolved' }, { status: 'monitoring' }] }), true)
+  assert.equal(isOpenIncident({ updates: [] }), true)
+  assert.equal(isOpenIncident({ updates: null }), true)
 })

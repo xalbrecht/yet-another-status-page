@@ -85,3 +85,9 @@ test('last null und keine Dienste erzeugen keine leeren Elemente', () => {
   assert.ok(!/<p[^>]*><\/p>/.test(markup), 'leerer Absatz')
   assert.ok(!markup.includes('null'))
 })
+
+test('die Zahl im Kopf der Box trägt eine Beschriftung für Screenreader', () => {
+  const markup = render(items(4))
+  const incidents = section(markup, 'box-incidents')
+  assert.ok(incidents.includes(`<span class="sr-only">${t('statusBoxes.countLabel')} </span>4`), 'Beschriftung vor der Zahl')
+})

@@ -1115,7 +1115,7 @@ export interface Setting {
    */
   customStatusMessage?: string | null;
   /**
-   * Layout of the start page. Variants A and B show the situation overview on the left and boxes for disruptions and maintenance on the right. Variant A shows tiles, a click shows the services with bars. Variant B shows a small bar in every tile. "Both" displays both variants one after the other to compare them. Variant C is the simple list without situation overview. The three settings below apply to A, B and "Both" only.
+   * Layout of the start page. "Situation overview A" and "Situation overview B" show the situation overview on the left and boxes for disruptions and maintenance on the right. A shows tiles, a click shows the services with bars. B shows a small bar in every tile. "Situation overview A and B (test)" displays both one after the other to compare them. "List (original)" is the simple list without situation overview. The three settings below apply to the situation overview (A, B and A and B) only.
    */
   lagebildVariant?: ('off' | 'a' | 'b' | 'both') | null;
   /**

@@ -74,7 +74,7 @@ const dataWith = (override: Partial<ReportData> = {}): ReportData => ({
   ...override,
 })
 
-const render = (data: ReportData) => renderToStaticMarkup(<GroupSheet data={data} locale="de-DE" />)
+const render = (data: ReportData) => renderToStaticMarkup(<GroupSheet data={data} locale="de-DE" timeZone="Europe/Berlin" />)
 const dayBlock = (markup: string) => markup.slice(markup.indexOf('data-testid="sheet-by-day"'))
 
 test('das Blatt zeigt Titel, Entwicklung, Dienste, Störungen je Dienst und je Tag und die Wärmekarte', () => {
@@ -191,4 +191,12 @@ test('Dienstzahl im Kopf des Blatts: „1 Dienst“, nicht „1 Dienste“', () 
   assert.match(einer, /1 (Dienst|service)(?!e|s)/)
   assert.doesNotMatch(einer, /1 Dienste/)
   assert.match(render(dataWith()), /2 (Dienste|services)/)
+})
+
+test('Block 2: beendeter Dienst trägt den Text „beendet am“ und eine graue Zeile, aktive Dienste nicht', () => {
+  const ended = { ...row(3, 'Alte Kasse', 99.1, HOUR), activeToday: false, endedAt: Date.parse('2026-11-10T22:59:59.999Z') }
+  const markup = render(dataWith({ ranking: [row(1, 'MACH', 98.1, 3.5 * HOUR), ended] }))
+  const bars = markup.slice(markup.indexOf('data-testid="sheet-services"'), markup.indexOf('data-testid="sheet-services"') + 1500)
+  assert.match(bars, /beendet am 10\.11\.2026/)
+  assert.equal((bars.match(/availability-report__row--ended/g) ?? []).length, 1)
 })

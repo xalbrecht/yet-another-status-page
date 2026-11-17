@@ -10,7 +10,7 @@ import { Heatmap } from './Heatmap'
 import { TrendChart } from './TrendChart'
 
 /** Gruppenblatt: fünf Blöcke einer Gruppe. Die Daten sind der Bericht für die gewählte Gruppe (`scope.groupName` gesetzt). */
-export function GroupSheet({ data, locale }: { data: ReportData; locale: string }) {
+export function GroupSheet({ data, locale, timeZone }: { data: ReportData; locale: string; timeZone: string }) {
   const { kpis, scope, sheet } = data
   return (
     <article className="availability-report__sheet" data-testid="group-sheet">
@@ -24,7 +24,7 @@ export function GroupSheet({ data, locale }: { data: ReportData; locale: string 
       </section>
       <section className="availability-report__card">
         <h3>{ta('Services of the group, weakest first')}</h3>
-        <GroupBars rows={data.ranking} locale={locale} />
+        <GroupBars rows={data.ranking} locale={locale} timeZone={timeZone} />
       </section>
       {sheet && <DisruptionsByService sheet={sheet} />}
       {sheet && <DisruptionsByDay sheet={sheet} locale={locale} />}

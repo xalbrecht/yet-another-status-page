@@ -10,6 +10,8 @@ import type { ReportPeriod } from '@/lib/report/period'
  */
 const MINUTE = 60_000
 const HEADER_FILL = 'FFEEF1F5'
+const ENDED_FILL = 'FFECEEF1'
+const ENDED_FONT = 'FF5B6672'
 
 /** Prozentwert wie im Bericht auf zwei Stellen abgerundet, unbekannt als leere Zelle. */
 const percent = (value: number | null): number | null => (value === null ? null : Math.floor(value * 100 + 1e-9) / 100)
@@ -57,6 +59,9 @@ export async function buildWorkbook(input: { data: ReportData; params: ReportPar
     ta('Longest outage (min)'),
     ta('Degraded Performance (min)'),
     ta('Maintenance (min)'),
+    ta('Active in the report period'),
+    ta('Active today'),
+    ta('Ended on'),
   ]
   services.addRow(serviceHeader)
   for (const row of data.ranking) {
@@ -71,14 +76,24 @@ export async function buildWorkbook(input: { data: ReportData; params: ReportPar
       minutes(row.longestOutageMs),
       minutes(row.degradedMs),
       minutes(row.maintenanceMs),
+      row.activeInPeriod ? ta('yes') : ta('no'),
+      row.activeToday ? ta('yes') : ta('no'),
+      row.endedAt === null ? null : localStamp(row.endedAt, timeZone).slice(0, 10),
     ])
+    // beendete Dienste: graue Zeile wie im Bericht
+    if (row.endedAt !== null) {
+      services.lastRow?.eachCell({ includeEmpty: true }, (cell) => {
+        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: ENDED_FILL } }
+        cell.font = { color: { argb: ENDED_FONT } }
+      })
+    }
   }
   const percentColumns = [3, 4, ...monthColumns.map((_, index) => 5 + index)]
   for (const column of percentColumns) services.getColumn(column).numFmt = '0.00'
   const firstMinuteColumn = 5 + monthColumns.length
   for (const column of [firstMinuteColumn, firstMinuteColumn + 2, firstMinuteColumn + 3, firstMinuteColumn + 4]) services.getColumn(column).numFmt = '0.0'
   styleHeader(services, serviceHeader.length)
-  widths(services, [30, 26, 12, 16, ...monthColumns.map(() => 12), 14, 12, 14, 16, 14])
+  widths(services, [30, 26, 12, 16, ...monthColumns.map(() => 12), 14, 12, 14, 16, 14, 16, 12, 12])
 
   // Blatt 2: ein Ausfall je Zeile
   const outages = workbook.addWorksheet(ta('Outages'))

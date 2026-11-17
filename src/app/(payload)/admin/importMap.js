@@ -1,3 +1,4 @@
+import { ServiceDeleteNotice as ServiceDeleteNotice_b44acf9599e0763461dd09edaba54553 } from '@/components/admin/ServiceDeleteNotice'
 import { LocalizedDateField as LocalizedDateField_5565580924a7fcfc6f968cbe9a2ca4e8 } from '@/components/admin/LocalizedDateField'
 import { NewWithTemplateButton as NewWithTemplateButton_06d16fae53404081c552d973d02d1fdc } from '@/components/admin/incident-wizard/NewWithTemplateButton'
 import { RscEntryLexicalCell as RscEntryLexicalCell_44fe37237e0ebf4470c9990d8cb7b07e } from '@payloadcms/richtext-lexical/rsc'
@@ -25,6 +26,7 @@ import { VercelBlobClientUploadHandler as VercelBlobClientUploadHandler_16c82c5e
 
 /** @type import('payload').ImportMap */
 export const importMap = {
+  "@/components/admin/ServiceDeleteNotice#ServiceDeleteNotice": ServiceDeleteNotice_b44acf9599e0763461dd09edaba54553,
   "@/components/admin/LocalizedDateField#LocalizedDateField": LocalizedDateField_5565580924a7fcfc6f968cbe9a2ca4e8,
   "@/components/admin/incident-wizard/NewWithTemplateButton#NewWithTemplateButton": NewWithTemplateButton_06d16fae53404081c552d973d02d1fdc,
   "@payloadcms/richtext-lexical/rsc#RscEntryLexicalCell": RscEntryLexicalCell_44fe37237e0ebf4470c9990d8cb7b07e,

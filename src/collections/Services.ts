@@ -80,6 +80,16 @@ export const Services: CollectionConfig = {
   },
   fields: [
     {
+      // Hinweis zum Löschen, nur bei bestehenden Diensten
+      name: 'deleteNotice',
+      type: 'ui',
+      admin: {
+        components: {
+          Field: '@/components/admin/ServiceDeleteNotice#ServiceDeleteNotice',
+        },
+      },
+    },
+    {
       name: 'name',
       type: 'text',
       required: true,

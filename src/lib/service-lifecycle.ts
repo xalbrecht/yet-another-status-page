@@ -5,8 +5,10 @@
  * Beginn ist der Beginn des Tages, Ende das Ende des Tages (der Endtag zählt noch mit).
  * Die Felder speichern diese Zeitpunkte, die Hilfe vergleicht sie nur.
  *
- * Abhängigkeitsfrei, damit auch Dateien nutzen können, die im Browser laufen.
+ * Nur datetime.ts als Abhängigkeit, damit auch Dateien sie nutzen können, die im Browser laufen.
  */
+import { endOfZonedDay, startOfZonedDay } from '@/lib/datetime'
+
 export type LifecycleFields = {
   startsAt: string | number | Date
   endsAt?: string | number | Date | null
@@ -47,4 +49,12 @@ export function activeServiceWhere(at: number) {
       { or: [{ endsAt: { exists: false } }, { endsAt: { greater_than_equal: iso } }] },
     ],
   }
+}
+
+/**
+ * Tagesgrenze für die Eingabe als Tag: `start` ist der Tagesanfang (Beginn), `end` das Tagesende (Ende, der Endtag zählt mit).
+ * Der Kalendertag ist der Tag von `picked` in der Zeitzone der Installation.
+ */
+export function dayBoundary(picked: Date, edge: 'start' | 'end', timeZone: string): Date {
+  return edge === 'start' ? startOfZonedDay(picked, timeZone) : endOfZonedDay(picked, timeZone)
 }

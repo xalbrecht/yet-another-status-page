@@ -90,3 +90,30 @@ test.describe('Verfügbarkeitsbericht (Route)', () => {
     expect(response.status()).toBe(401)
   })
 })
+
+test.describe('Verfügbarkeitsbericht: beendete Dienste (Route)', () => {
+  const DAY = 24 * 3600 * 1000
+  const daysFromNow = (days: number) => new Date(Date.now() + days * DAY).toISOString()
+
+  test('beendete Dienste erscheinen nur mit dem Schalter, mit Ende und Aktiv-Werten', async ({ request }) => {
+    const id = Date.now()
+    const group = await createServiceGroup({ name: `Bericht Ende ${id}`, icon: 'Server' })
+    const active = await createService({ name: `Bericht aktiv ${id}`, group: group.id, startsAt: daysFromNow(-10) })
+    const ended = await createService({ name: `Bericht beendet ${id}`, group: group.id, startsAt: daysFromNow(-10), endsAt: daysFromNow(-2) })
+    const later = await createService({ name: `Bericht spaeter ${id}`, group: group.id, startsAt: daysFromNow(5) })
+
+    const without = await (await report(request, `period=${currentMonth()}&group=${group.id}`)).json()
+    expect(without.ranking.map((row: { name: string }) => row.name)).toEqual([active.name])
+
+    const withSwitch = await (await report(request, `period=${currentMonth()}&group=${group.id}&ended=true`)).json()
+    const names = withSwitch.ranking.map((row: { name: string }) => row.name).sort()
+    expect(names).toEqual([active.name, ended.name].sort())
+    expect(names).not.toContain(later.name)
+
+    const row = (name: string) => withSwitch.ranking.find((entry: { name: string }) => entry.name === name)
+    expect(row(active.name)).toMatchObject({ activeInPeriod: true, activeToday: true, endedAt: null })
+    expect(row(ended.name)).toMatchObject({ activeToday: false })
+    expect(typeof row(ended.name).endedAt).toBe('number')
+    expect(withSwitch.kpis.serviceCount).toBe(2)
+  })
+})

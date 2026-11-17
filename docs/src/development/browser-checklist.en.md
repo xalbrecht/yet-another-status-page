@@ -109,6 +109,10 @@ Applies to the page `/admin/verfuegbarkeitsbericht` (report, export and email di
 | H18 | Invalid recipient address | Enter `<a@x.de>` in the field "Recipients of the availability report" and save | Saving is refused, the message names the entry | ☐ | ☐ | |
 | H19 | SMTP data when logged out | In a private window without login call `/api/globals/email-settings` | Server, user and sender are missing in the answer | ☐ | ☐ | |
 | H20 | Two dispatches at once | Start "Send now" in two tabs at the same time | One tab reports "A dispatch is already running.", the other dispatches normally | ☐ | ☐ | |
+| H21 | Hide ended services | Create a service with an end date of yesterday, then look at the status page, the situation overview, `/api/v1/services` and the incident wizard | The service is missing everywhere. A group with only ended services does not appear | ☐ | ☐ | |
+| H22 | Delete only after the end | In the admin, delete an active service, then one with an end date in the past | The active service cannot be deleted (message), the ended one can. The note at the top of the form names the number of entries | ☐ | ☐ | |
+| H23 | Report with the switch | Open the report with and without "Include ended services" (light, dark, 390 px) | Ended services appear only with the switch, grey, with "ended on …". The two option circles differ without colour (check against empty ring) | ☐ | ☐ | |
+| H24 | Export with ended services | Download ZIP, PDF and Excel with the switch on | Ranking with marks and grey row, Excel with three columns at the end, the switch applies to the export | ☐ | ☐ | |
 
 ## Create the PDF
 

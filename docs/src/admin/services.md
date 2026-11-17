@@ -32,7 +32,19 @@ Services are individual components within a group.
    - **Description** - Brief description
    - **Service Group** - Which group it belongs to
    - **Status** - Current operational status
+   - **Start** - First day the service is operated (default: today). Before this day the service does not appear on the status page
+   - **End** - Last day the service is operated. Leave empty while the service is operated
 4. Click **Save**
+
+### Start, End and Deleting
+
+A service is **active** from the start day up to and including the end day. The start is the beginning of that day, the end is the end of that day, in the time zone of the installation. Nothing is stored for "active": it is calculated whenever a page or the report is read, so a service ends by itself on the day after its end date.
+
+- A service that has ended, or has not started yet, does not appear on the status page, in the [Situation Overview](./situation-overview.md), in the API (`/api/v1`) or in the incident wizard. A group with no active services is not shown.
+- To retire a service, set an **End** date. The end must not be before the start.
+- A service can only be deleted **after** its end. Deleting an active service, or one whose end is still in the future, is refused (HTTP 409 in the API). Deleting also removes the service's entries from the status log. The [availability report](./availability-report.md) then no longer contains the service, not even for past periods. As long as a service is only ended, the report can still evaluate it with the switch **Include ended services**.
+- The edit page of an existing service shows a note with the number of status log entries that would be deleted.
+- The migration set the start of all existing services to the earliest of 1 January 2025, the first status log entry and the creation date of the service.
 
 ### Service Statuses
 

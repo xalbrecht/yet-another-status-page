@@ -7,6 +7,7 @@
  *
  * Nur datetime.ts als Abhängigkeit, damit auch Dateien sie nutzen können, die im Browser laufen.
  */
+import type { Where } from 'payload'
 import { endOfZonedDay, startOfZonedDay } from '@/lib/datetime'
 
 export type LifecycleFields = {
@@ -41,7 +42,7 @@ export function endsAtBeforeStart(
 }
 
 /** Abfragefilter (Payload) für Dienste, die zum Zeitpunkt `at` aktiv sind. Entspricht `isServiceActive`. */
-export function activeServiceWhere(at: number) {
+export function activeServiceWhere(at: number): Where {
   const iso = new Date(at).toISOString()
   return {
     and: [
@@ -66,4 +67,9 @@ export function canDeleteService(
 ): { ok: true } | { ok: false; reason: 'active' | 'ends-in-future' } {
   if (service.endsAt == null) return { ok: false, reason: 'active' }
   return isServiceEnded(service, at) ? { ok: true } : { ok: false, reason: 'ends-in-future' }
+}
+
+/** Wie `activeServiceWhere`, für den Zeitpunkt der Abfrage. Für Seiten und Server-Komponenten (kein `Date.now()` im Rendern). */
+export function activeServiceWhereNow(): Where {
+  return activeServiceWhere(Date.now())
 }

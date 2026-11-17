@@ -5,6 +5,7 @@ import { Gutter } from '@payloadcms/ui'
 import { safeLocale } from '@/lib/datetime'
 import { translatorsFor } from '@/lib/i18n/translators'
 import { IncidentWizard } from './IncidentWizard'
+import { activeServiceWhereNow } from '@/lib/service-lifecycle'
 import type { WizardGroup, WizardTemplate, ServiceState } from './IncidentWizardParts'
 
 const idOf = (value: unknown): number => Number(typeof value === 'object' && value !== null ? (value as { id: unknown }).id : value)
@@ -21,7 +22,7 @@ export async function IncidentFromTemplateView({ initPageResult, params, searchP
 
   const [groupsResult, servicesResult, templatesResult, openIncidents, settings] = await Promise.all([
     payload.find({ collection: 'service-groups', sort: '_order', pagination: false, depth: 0 }),
-    payload.find({ collection: 'services', sort: '_order', pagination: false, depth: 0 }),
+    payload.find({ collection: 'services', where: activeServiceWhereNow(), sort: '_order', pagination: false, depth: 0 }),
     payload.find({
       collection: 'message-templates',
       where: { and: [{ kind: { equals: 'incident' } }, { status: { equals: 'investigating' } }] },

@@ -33,3 +33,12 @@ test('die Links tragen das Attribut download', () => {
   const markup = renderToStaticMarkup(<ExportButtons search={{}} groupId={3} />)
   assert.equal((markup.match(/<a [^>]*download/g) ?? []).length, 4)
 })
+
+test('der Schalter „Beendete Dienste einbeziehen“ wandert in die Export-Adressen, ohne Schalter fehlt er', () => {
+  for (const link of hrefs(renderToStaticMarkup(<ExportButtons search={{ period: '2026-10', ended: 'true' }} groupId={null} />))) {
+    assert.ok(link.includes('ended=true'), link)
+  }
+  for (const link of hrefs(renderToStaticMarkup(<ExportButtons search={{ period: '2026-10' }} groupId={null} />))) {
+    assert.ok(!link.includes('ended'), link)
+  }
+})

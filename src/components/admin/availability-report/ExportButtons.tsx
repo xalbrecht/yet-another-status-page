@@ -3,10 +3,10 @@ import { ta } from '@/lib/i18n/admin'
 
 /**
  * Schaltflächen für den Export: ZIP mit allen Dateien, PDF und Excel einzeln, im Gruppentab zusätzlich
- * nur diese Gruppe. Die Adressen tragen die Auswahl der Seite (Zeitraum, Rechenart, Wartungsart), nicht Ansicht und Gruppe.
+ * nur diese Gruppe. Die Adressen tragen die Auswahl der Seite (Zeitraum, Rechenart, Wartungsart, beendete Dienste), nicht Ansicht und Gruppe.
  */
 const EXPORT_PATH = '/api/availability-report/export'
-const KEPT = ['calc', 'from', 'maintenance', 'period', 'to'] as const
+const KEPT = ['calc', 'ended', 'from', 'maintenance', 'period', 'to'] as const
 
 const first = (value: string | string[] | undefined) => (Array.isArray(value) ? value[0] : value)
 

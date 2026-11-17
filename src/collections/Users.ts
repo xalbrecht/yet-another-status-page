@@ -30,6 +30,7 @@ export const Users: CollectionConfig = {
   labels: { singular: ta('User'), plural: ta('Users') },
   admin: {
     useAsTitle: 'email',
+    defaultColumns: ['name', 'email', 'role', 'isTest', 'createdAt'],
     group: ta('Admin'),
   },
   auth: {
@@ -89,6 +90,16 @@ export const Users: CollectionConfig = {
       ],
       admin: {
         description: ta('User role for access control'),
+      },
+    },
+    {
+      name: 'isTest',
+      type: 'checkbox',
+      defaultValue: false,
+      label: ta('Test record'),
+      admin: {
+        position: 'sidebar',
+        description: ta('Only a marker for takeover and evaluation. Changes no behavior: test subscribers still receive notifications, test users can still sign in'),
       },
     },
   ],

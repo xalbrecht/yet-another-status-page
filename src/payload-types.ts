@@ -533,6 +533,10 @@ export interface Subscriber {
    */
   active?: boolean | null;
   /**
+   * Only a marker for takeover and evaluation. Changes no behavior: test subscribers still receive notifications, test users can still sign in
+   */
+  isTest?: boolean | null;
+  /**
    * IP address used when subscribing (for rate limiting)
    */
   ipAddress?: string | null;
@@ -550,6 +554,10 @@ export interface User {
    * User role for access control
    */
   role: 'admin' | 'editor';
+  /**
+   * Only a marker for takeover and evaluation. Changes no behavior: test subscribers still receive notifications, test users can still sign in
+   */
+  isTest?: boolean | null;
   updatedAt: string;
   createdAt: string;
   enableAPIKey?: boolean | null;
@@ -931,6 +939,7 @@ export interface SubscribersSelect<T extends boolean = true> {
   verificationToken?: T;
   unsubscribeToken?: T;
   active?: T;
+  isTest?: T;
   ipAddress?: T;
   updatedAt?: T;
   createdAt?: T;
@@ -942,6 +951,7 @@ export interface SubscribersSelect<T extends boolean = true> {
 export interface UsersSelect<T extends boolean = true> {
   name?: T;
   role?: T;
+  isTest?: T;
   updatedAt?: T;
   createdAt?: T;
   enableAPIKey?: T;

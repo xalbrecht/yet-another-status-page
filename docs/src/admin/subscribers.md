@@ -46,6 +46,7 @@ SMS subscriptions through the status page are disabled, because there is no way 
 | Approved (`verified`) | Operator approval |
 | Address confirmed (`addressConfirmed`) | Subscriber clicked the link in the confirmation email |
 | Active | Whether to receive notifications |
+| Test record (`isTest`) | Marker for records that were created only for testing, see [Test records](#test-records) |
 | Verification Token | Auto-generated token for verification |
 | Unsubscribe Token | Auto-generated token for unsubscribe links |
 
@@ -99,6 +100,17 @@ Notifications and the recipient count include only **email** subscribers that ar
 To be told about every new request, enter an address under **Settings → Email Settings → Address for new subscription requests**. It receives the mail "New subscription request on <host>" with a link to the subscriber, for email and for SMS subscriptions. Leave the field empty to send none.
 
 Subscribers created in the admin area are not confirmed by link: set both **Approved** and **Address confirmed** by hand when you trust the address.
+
+## Test records
+
+Subscribers and users have a checkbox **Test record** (Testdatensatz, `isTest`) in the sidebar of the record. It is off by default and is shown as a column in both lists.
+
+The marker changes no behavior: a test subscriber still receives notifications and a test user can still sign in. It only lets you tell test data from real data, for example when an installation is initialized from the cleaned data of a test installation.
+
+- Filter the list by **Test record** to see or delete the marked records.
+- Over the API, `where[isTest][equals]=false` returns only the records that are not marked.
+- Public sign-ups never set the marker, and anonymous requests cannot read or change it.
+- Nothing sets the marker automatically. Mark the records by hand.
 
 ## Bulk Operations
 

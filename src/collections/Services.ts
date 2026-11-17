@@ -38,13 +38,19 @@ export const Services: CollectionConfig = {
         return doc
       },
     ],
-    afterDelete: [
+    // Die Einträge müssen vor dem Dienst entfallen: Der Fremdschlüssel steht auf
+    // „ON DELETE SET NULL“, die Spalte ist aber NOT NULL. Ein Löschen danach scheitert mit HTTP 500.
+    beforeDelete: [
       async ({ id, req }) => {
         await req.payload.delete({
           collection: 'service-status-events',
           where: { service: { equals: id } },
           req,
         })
+      },
+    ],
+    afterDelete: [
+      () => {
         invalidateLagebild()
       },
     ],

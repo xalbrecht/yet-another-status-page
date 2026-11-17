@@ -23,6 +23,9 @@ const row = (id: number, name: string, availability: number | null, downMs: numb
   target: 99,
   belowTarget: availability !== null && availability < 99,
   history: months.map(() => availability),
+  activeInPeriod: true,
+  activeToday: true,
+  endedAt: null,
 })
 
 const days = (bars: Record<number, GroupSheetData['perDay'][number]['bars']>): GroupSheetData['perDay'] =>

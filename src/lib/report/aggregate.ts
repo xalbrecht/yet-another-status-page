@@ -1,4 +1,5 @@
 import { resolveAvailabilityTarget, type Timeline } from '@/lib/availability'
+import { isServiceActive } from '@/lib/service-lifecycle'
 import { buildGroupSheet, type GroupSheetData } from '@/lib/report/group-sheet'
 import { heatClass, type HeatLevel } from '@/lib/report/heat'
 import { computeServiceMetrics, type ServiceMetrics } from '@/lib/report/metrics'
@@ -24,6 +25,10 @@ export type ReportInput = {
     target?: number | null
     timeline: Timeline
     windows: Array<{ from: number; to: number }>
+    /** Beginn des Dienstes (Beginn des Tages). Fehlt er, gilt der Dienst als immer aktiv. */
+    startsAt?: number
+    /** Ende des Dienstes (Ende des Tages, der Endtag zählt mit). Fehlt es, ist der Dienst offen. */
+    endsAt?: number | null
   }>
   footnotes: { unsure: number; withoutService: number }
   now: number
@@ -51,6 +56,12 @@ export type RankingRow = {
   target: number
   belowTarget: boolean
   history: Array<number | null>
+  /** Die Lebenszeit des Dienstes berührt den Berichtszeitraum. Sonst hat der Dienst keinen Wert. */
+  activeInPeriod: boolean
+  /** Der Dienst ist am Berichtsdatum aktiv. */
+  activeToday: boolean
+  /** Ende des Dienstes, wenn es zum Berichtsdatum überschritten ist, sonst `null`. */
+  endedAt: number | null
 }
 
 /** Eintrag der Gruppenliste: Gruppenwert als Mittelwert der Dienste, `level` ist die Farbstufe der Wärmekarte. */
@@ -101,6 +112,18 @@ const mean = (values: Array<number | null>): number | null => {
   return known.length === 0 ? null : known.reduce((sum, value) => sum + value, 0) / known.length
 }
 
+type ReportService = ReportInput['services'][number]
+
+/** Parameter für `computeServiceMetrics`: das Ende ist der letzte Tag, gewertet wird bis zu dessen Ende. */
+const lifetimeOf = (service: ReportService) => ({
+  activeFrom: service.startsAt,
+  activeTo: service.endsAt == null ? null : service.endsAt + 1,
+})
+
+/** Berührt die Lebenszeit des Dienstes den Zeitraum? Ohne Angaben gilt der Dienst als immer aktiv. */
+const activeInPeriod = (service: ReportService, range: ReportPeriod): boolean =>
+  (service.startsAt ?? Number.NEGATIVE_INFINITY) < range.end && (service.endsAt ?? Number.POSITIVE_INFINITY) >= range.start
+
 const emptyData = (input: ReportInput, error: string): ReportData => ({
   error,
   scope: { groupId: null, groupName: null, serviceCount: 0 },
@@ -139,8 +162,9 @@ function groupListOf(input: Omit<ReportInput, 'footnotes'>, periodValue: (servic
       const members = input.services.filter((service) => service.groupId === group.id)
       if (members.length === 0) return []
       const availability = mean(members.map(periodValue))
+      const countedMembers = members.filter((service) => activeInPeriod(service, input.period))
       const groupTarget = resolveAvailabilityTarget({ group: group.target, global: input.globalTarget })
-      return [{ id: group.id, name: group.name, serviceCount: members.length, availability, target: groupTarget, level: heatClass(availability, groupTarget) }]
+      return [{ id: group.id, name: group.name, serviceCount: countedMembers.length, availability, target: groupTarget, level: heatClass(availability, groupTarget) }]
     })
     .sort((a, b) => {
       if (a.availability === null || b.availability === null) {
@@ -155,7 +179,7 @@ export function buildGroupList(input: Omit<ReportInput, 'footnotes'>): GroupList
   const { params, period, now, locale, timeZone } = input
   const parts = periodMonths(period, now, locale, timeZone)
   const value = (service: ReportInput['services'][number]): number | null => {
-    const metricsIn = (range: ReportPeriod) => computeServiceMetrics({ timeline: service.timeline, windows: service.windows, start: range.start, end: range.end, mode: params.maintenance })
+    const metricsIn = (range: ReportPeriod) => computeServiceMetrics({ timeline: service.timeline, windows: service.windows, start: range.start, end: range.end, mode: params.maintenance, ...lifetimeOf(service) })
     if (params.calc === 'monthly' && parts.length > 0) return mean(parts.map((part) => metricsIn(part).availability))
     return metricsIn(period).availability
   }
@@ -174,7 +198,7 @@ export function buildReport(input: ReportInput): ReportData {
   const services = input.services.filter((service) => !scopeGroup || service.groupId === scopeGroup.id)
 
   const metricsFor = (service: ReportInput['services'][number], range: ReportPeriod): ServiceMetrics =>
-    computeServiceMetrics({ timeline: service.timeline, windows: service.windows, start: range.start, end: range.end, mode: params.maintenance })
+    computeServiceMetrics({ timeline: service.timeline, windows: service.windows, start: range.start, end: range.end, mode: params.maintenance, ...lifetimeOf(service) })
 
   // Die Zerlegung in Monate ist teuer und gilt für alle Dienste: einmal je Zeitraum berechnen
   const periodParts = periodMonths(period, now, locale, timeZone)
@@ -191,6 +215,9 @@ export function buildReport(input: ReportInput): ReportData {
     if (!periodValues.has(service.id)) periodValues.set(service.id, valueFor(service, period, periodParts))
     return periodValues.get(service.id) ?? null
   }
+
+  // Gezählt werden nur Dienste, die im Zeitraum aktiv waren: „x von y“ im Bericht bezieht sich darauf
+  const countedServices = services.filter((service) => activeInPeriod(service, period)).length
 
   const target = scopeGroup ? resolveAvailabilityTarget({ group: scopeGroup.target, global: input.globalTarget }) : input.globalTarget
 
@@ -215,6 +242,9 @@ export function buildReport(input: ReportInput): ReportData {
       target: serviceTarget,
       belowTarget: availability !== null && availability < serviceTarget,
       history: months.map((month) => metricsFor(service, month).availability),
+      activeInPeriod: activeInPeriod(service, period),
+      activeToday: isServiceActive({ startsAt: service.startsAt ?? 0, endsAt: service.endsAt ?? null }, now),
+      endedAt: service.endsAt != null && now > service.endsAt ? service.endsAt : null,
     }
     return { service, whole, row }
   })
@@ -263,7 +293,7 @@ export function buildReport(input: ReportInput): ReportData {
     scopeGroup && lastMonth
       ? buildGroupSheet({
           month: lastMonth,
-          services: services.map(({ id, name, timeline, windows }) => ({ id, name, timeline, windows })),
+          services: services.map(({ id, name, timeline, windows, startsAt, endsAt }) => ({ id, name, timeline, windows, startsAt, endsAt })),
           mode: params.maintenance,
           timeZone,
           locale,
@@ -271,14 +301,14 @@ export function buildReport(input: ReportInput): ReportData {
       : null
 
   return {
-    scope: { groupId: scopeGroup?.id ?? null, groupName: scopeGroup?.name ?? null, serviceCount: services.length },
+    scope: { groupId: scopeGroup?.id ?? null, groupName: scopeGroup?.name ?? null, serviceCount: countedServices },
     kpis: {
       availability: mean(rows.map((entry) => entry.row.availability)),
       previousAvailability: mean(rows.map((entry) => entry.row.previousAvailability)),
       downMs: rows.reduce((sum, entry) => sum + entry.whole.downMs, 0),
       previousDownMs: services.reduce((sum, service) => sum + metricsFor(service, previous).downMs, 0),
       affectedServices: rows.filter((entry) => entry.whole.outages.length > 0).length,
-      serviceCount: services.length,
+      serviceCount: countedServices,
       outageCount: rows.reduce((sum, entry) => sum + entry.whole.outages.length, 0),
       longestOutage,
       degradedMs: rows.reduce((sum, entry) => sum + entry.whole.degradedMs, 0),

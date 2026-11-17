@@ -21,6 +21,9 @@ export const rankingRow = (id: number, name: string, availability: number | null
   target: 99,
   belowTarget: availability !== null && availability < 99,
   history: months.map(() => availability),
+  activeInPeriod: true,
+  activeToday: true,
+  endedAt: null,
   ...extra,
 })
 

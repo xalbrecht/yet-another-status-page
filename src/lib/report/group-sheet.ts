@@ -61,7 +61,7 @@ function monthLabel(label: string, days: GroupSheetData['perDay']): string {
 
 export function buildGroupSheet(input: {
   month: ReportPeriod
-  services: Array<{ id: number; name: string; timeline: Timeline; windows: Array<{ from: number; to: number }> }>
+  services: Array<{ id: number; name: string; timeline: Timeline; windows: Array<{ from: number; to: number }>; startsAt?: number; endsAt?: number | null }>
   mode: MaintenanceMode
   timeZone: string
   /** Sprache für die Reihenfolge gleich langer Ausfälle (BCP 47, z. B. `de-DE`) */
@@ -88,6 +88,8 @@ export function buildGroupSheet(input: {
       start: month.start,
       end: month.end,
       mode: input.mode,
+      activeFrom: service.startsAt,
+      activeTo: service.endsAt == null ? null : service.endsAt + 1,
     })
     let majorMs = 0
     let partialMs = 0

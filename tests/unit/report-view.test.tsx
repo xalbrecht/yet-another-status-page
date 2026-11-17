@@ -31,6 +31,9 @@ const row = (name: string, availability: number | null, belowTarget: boolean): R
   target: 99,
   belowTarget,
   history: Array.from({ length: 12 }, () => availability),
+  activeInPeriod: true,
+  activeToday: true,
+  endedAt: null,
 })
 const data: ReportData = {
   scope: { groupId: null, groupName: null, serviceCount: 200 },

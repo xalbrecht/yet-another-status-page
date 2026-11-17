@@ -15,6 +15,8 @@ export type ReportParams = {
   maintenance: MaintenanceMode
   showMaintenance: boolean
   topN: number
+  /** Beendete Dienste in den Bericht aufnehmen (Vorgabe: aus) */
+  ended: boolean
 }
 
 export const TOP_N_MIN = 3
@@ -37,6 +39,7 @@ export function parseReportParams(search: Record<string, string | string[] | und
     maintenance: maintenance === 'B' || maintenance === 'C' ? maintenance : 'A',
     showMaintenance: !['false', '0', 'off'].includes((first(search.showMaintenance) ?? '').toLowerCase()),
     topN: Number.isNaN(topN) ? TOP_N_DEFAULT : Math.min(TOP_N_MAX, Math.max(TOP_N_MIN, topN)),
+    ended: first(search.ended)?.toLowerCase() === 'true',
   }
 }
 
@@ -76,9 +79,9 @@ export function reportTabHrefs(
   }
 }
 
-const SELECTION_KEYS = ['calc', 'from', 'maintenance', 'period', 'to'] as const
+const SELECTION_KEYS = ['calc', 'ended', 'from', 'maintenance', 'period', 'to'] as const
 
-/** Auswahl der Seite (Zeitraum, Rechenart, Wartungsart) als Query-String für Export und Versand, ohne Ansicht und Gruppe. */
+/** Auswahl der Seite (Zeitraum, Rechenart, Wartungsart, beendete Dienste) als Query-String für Export und Versand, ohne Ansicht und Gruppe. */
 export function selectionQuery(search: Record<string, string | string[] | undefined>): string {
   return SELECTION_KEYS.flatMap((key) => {
     const value = first(search[key])

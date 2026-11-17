@@ -51,3 +51,12 @@ export function fitText(x: number, y: number, content: string, maxWidth: number,
   const chars = Math.max(1, Math.floor(maxWidth / (size * factor)))
   return textEl(x, y, truncate(content, chars), { ...options, size })
 }
+
+/**
+ * Marke „aktiv“ im Bild: gefüllter Kreis mit Haken für ja, leerer Ring für nein. Die Füllung trägt die Aussage,
+ * die Farbe ist das Blau der Bilder (kein Grün, Rot-Grün-Sehschwäche).
+ */
+export function activeMark(cx: number, cy: number, active: boolean, color: string, ringColor: string): string {
+  if (!active) return `<circle cx="${cx}" cy="${cy}" r="7" fill="none" stroke="${ringColor}" stroke-width="2" data-active="false"/>`
+  return `<circle cx="${cx}" cy="${cy}" r="8" fill="${color}" data-active="true"/>` + textEl(cx, cy + 4, '✓', { size: 11, weight: 'bold', anchor: 'middle', fill: '#ffffff' })
+}

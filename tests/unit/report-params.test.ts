@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { parseReportParams, reportHref, reportTabHrefs } from '@/lib/report/params'
+import { parseReportParams, reportHref, reportTabHrefs, selectionQuery } from '@/lib/report/params'
 
 test('ohne Angaben gelten die Standardwerte', () => {
   assert.deepEqual(parseReportParams({}), {
@@ -13,6 +13,7 @@ test('ohne Angaben gelten die Standardwerte', () => {
     maintenance: 'A',
     showMaintenance: true,
     topN: 5,
+    ended: false,
   })
 })
 
@@ -68,4 +69,16 @@ test('reportTabHrefs lässt eine ungültige Gruppe weg, damit die Tabs keine Sac
     overall: '/admin/verfuegbarkeitsbericht?period=2026-10&view=overall',
     groups: '/admin/verfuegbarkeitsbericht?period=2026-10&view=groups',
   })
+})
+
+test('Schalter „Beendete Dienste einbeziehen“: nur ended=true schaltet ein, Vorgabe aus', () => {
+  assert.equal(parseReportParams({}).ended, false)
+  assert.equal(parseReportParams({ ended: 'true' }).ended, true)
+  assert.equal(parseReportParams({ ended: 'false' }).ended, false)
+  assert.equal(parseReportParams({ ended: 'ja' }).ended, false)
+})
+
+test('selectionQuery gibt den Schalter an Export und Versand weiter', () => {
+  assert.match(selectionQuery({ ended: 'true', period: '2026-10' }), /(^|&)ended=true(&|$)/)
+  assert.doesNotMatch(selectionQuery({ period: '2026-10' }), /ended/)
 })

@@ -111,6 +111,10 @@ Gilt für die Seite `/admin/verfuegbarkeitsbericht` (Bericht, Export und Mailver
 | H18 | Ungültige Empfängeradresse | Im Feld „Empfänger des Verfügbarkeitsberichts“ `<a@x.de>` eintragen und speichern | Speichern wird abgelehnt, die Meldung nennt den Eintrag | ☐ | ☐ | |
 | H19 | SMTP-Angaben abgemeldet | In einem privaten Fenster ohne Anmeldung `/api/globals/email-settings` aufrufen | Server, Benutzer und Absender fehlen in der Antwort | ☐ | ☐ | |
 | H20 | Zwei Versände zugleich | In zwei Tabs gleichzeitig „Jetzt senden“ auslösen | Ein Tab meldet „Es läuft bereits ein Versand.“, der andere versendet normal | ☐ | ☐ | |
+| H21 | Beendete Dienste ausblenden | Einen Dienst mit Ende gestern anlegen, Statusseite, Lagebild, `/api/v1/services` und den Störungsassistenten ansehen | Der Dienst fehlt überall. Eine Gruppe nur mit beendeten Diensten erscheint nicht | ☐ | ☐ | |
+| H22 | Löschen nur nach dem Ende | Im Admin einen aktiven Dienst löschen, danach einen mit Ende in der Vergangenheit | Der aktive Dienst lässt sich nicht löschen (Meldung), der beendete schon. Der Hinweis oben im Formular nennt die Zahl der Einträge | ☐ | ☐ | |
+| H23 | Bericht mit Schalter | Bericht mit und ohne „Beendete Dienste einbeziehen“ öffnen (Hell, Dunkel, 390 px) | Beendete Dienste erscheinen nur mit Schalter, grau, mit „beendet am …“. Die zwei Optionsfelder unterscheiden sich auch ohne Farbe (Haken gegen leerer Ring) | ☐ | ☐ | |
+| H24 | Export mit beendeten Diensten | Mit Schalter ZIP, PDF und Excel herunterladen | Rangliste mit Marken und grauer Zeile, Excel mit drei Spalten am Ende, der Schalter gilt im Export | ☐ | ☐ | |
 
 ## PDF erzeugen
 

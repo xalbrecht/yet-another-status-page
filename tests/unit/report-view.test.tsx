@@ -31,6 +31,9 @@ const row = (name: string, availability: number | null, belowTarget: boolean): R
   target: 99,
   belowTarget,
   history: Array.from({ length: 12 }, () => availability),
+  activeInPeriod: true,
+  activeToday: true,
+  endedAt: null,
 })
 const data: ReportData = {
   scope: { groupId: null, groupName: null, serviceCount: 200 },
@@ -66,7 +69,7 @@ const data: ReportData = {
 const params = parseReportParams({ maintenance: 'B', calc: 'monthly', topN: '7' })
 const period = { key: '2026-10', label: 'Oktober 2026', start: 0, end: 1, partial: false }
 const render = (override: Partial<Parameters<typeof ReportView>[0]> = {}) =>
-  renderToStaticMarkup(<ReportView data={data} params={params} period={period} locale="de-DE" controls={<div data-testid="controls" />} {...override} />)
+  renderToStaticMarkup(<ReportView data={data} params={params} period={period} locale="de-DE" timeZone="Europe/Berlin" controls={<div data-testid="controls" />} {...override} />)
 
 test('zeigt Überschrift mit Zeitraum, Verfügbarkeit mit Komma und Zielstatus', () => {
   const markup = render()
@@ -232,4 +235,45 @@ test('die Tabs stehen unter den Auswahlfeldern, übergebene Inhalte ersetzen den
   assert.match(markup, /data-testid="eigener-inhalt"/)
   assert.doesNotMatch(markup, /data-testid="report-ranking"/)
   assert.match(render({ tabs: <nav data-testid="tabs" /> }), /data-testid="report-ranking"/)
+})
+
+const endOfDayBerlin = Date.parse('2026-11-10T22:59:59.999Z') // Ende des 10.11.2026 in Berlin
+const withRanking = (ranking: RankingRow[]): ReportData => ({ ...data, ranking })
+const rankingSection = (markup: string) => markup.slice(markup.indexOf('data-testid="report-ranking"'))
+
+test('Rangliste: zwei Spalten „Aktiv im Berichtszeitraum“ und „Aktiv heute“ mit je einem Optionsfeld je Dienst', () => {
+  const markup = render({ data: withRanking([row('Infoma', 93.74, true), { ...row('Telefon', 98.4, false), activeToday: false, endedAt: endOfDayBerlin }]) })
+  const section = rankingSection(markup)
+  assert.match(section, /Aktiv im Berichtszeitraum/)
+  assert.match(section, /Aktiv heute/)
+  assert.equal((section.match(/data-active="true"/g) ?? []).length, 3) // Infoma 2x, Telefon im Zeitraum
+  assert.equal((section.match(/data-active="false"/g) ?? []).length, 1) // Telefon heute
+})
+
+test('Rangliste: beendeter Dienst trägt den Text „beendet am“ mit dem Tag in der Zeitzone der Installation und eine graue Zeile', () => {
+  const markup = render({ data: withRanking([row('Infoma', 93.74, true), { ...row('Telefon', 98.4, false), activeToday: false, endedAt: endOfDayBerlin }]) })
+  const section = rankingSection(markup)
+  assert.match(section, /beendet am 10\.11\.2026/)
+  assert.equal((section.match(/availability-report__row--ended/g) ?? []).length, 1)
+})
+
+test('Rangliste: Dienst ohne Berührung des Zeitraums nennt das statt einer Ausfalldauer, beide Felder leer', () => {
+  const none = { ...row('Altes Verfahren', null, false), activeInPeriod: false, activeToday: false, endedAt: Date.parse('2026-09-30T21:59:59.999Z') }
+  const section = rankingSection(render({ data: withRanking([none]) }))
+  assert.match(section, /beendet am 30\.09\.2026/)
+  assert.match(section, /Nicht im Zeitraum aktiv/)
+  assert.equal((section.match(/data-active="false"/g) ?? []).length, 2)
+})
+
+test('ohne beendete Dienste fehlt der Text „beendet am“ in der Seite', () => {
+  assert.doesNotMatch(render(), /beendet am/)
+})
+
+test('Bedienleiste: Kontrollkästchen „Beendete Dienste einbeziehen“ ist ohne Parameter aus und mit ended=true an', () => {
+  const off = renderToStaticMarkup(<ReportControlsForm params={parseReportParams({})} periodKey="2026-10" periodOptions={[{ value: '2026-10', label: 'Oktober 2026' }]} />)
+  assert.match(off, /Beendete Dienste einbeziehen/)
+  assert.match(off, /name="ended"/)
+  assert.doesNotMatch(off.slice(off.indexOf('name="ended"') - 80, off.indexOf('name="ended"') + 120), /checked/)
+  const on = renderToStaticMarkup(<ReportControlsForm params={parseReportParams({ ended: 'true' })} periodKey="2026-10" periodOptions={[{ value: '2026-10', label: 'Oktober 2026' }]} />)
+  assert.match(on.slice(on.indexOf('name="ended"') - 80, on.indexOf('name="ended"') + 160), /checked/)
 })

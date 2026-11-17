@@ -1,3 +1,4 @@
+import { isServiceActive, isServiceEnded } from '@/lib/service-lifecycle'
 import type { Payload } from 'payload'
 import type { Timeline } from '@/lib/availability'
 import { DEFAULT_AVAILABILITY_TARGET } from '@/lib/availability'
@@ -98,20 +99,24 @@ export async function loadReportContext(
   const groups = groupDocs.docs.map((group) => ({ id: Number(group.id), name: group.name, target: group.availabilityTarget ?? null }))
   const globalTarget = settings.availabilityTarget ?? DEFAULT_AVAILABILITY_TARGET
   const rules = normalizeRules(settings.classificationRules)
-  const services = serviceDocs.docs.map((service) => ({
+  // Dienste im Bericht: am Berichtsdatum aktive, mit Schalter auch beendete. Dienste mit Beginn in der Zukunft nie.
+  const reportedDocs = serviceDocs.docs.filter((service) => isServiceActive(service, now) || (params.ended && isServiceEnded(service, now)))
+  const services = reportedDocs.map((service) => ({
     id: Number(service.id),
     name: service.name,
     groupId: idOf(service.group),
     target: service.availabilityTarget ?? null,
     timeline: timelines.get(Number(service.id)) ?? [],
     windows: windows.get(Number(service.id)) ?? [],
+    startsAt: new Date(service.startsAt).getTime(),
+    endsAt: service.endsAt ? new Date(service.endsAt).getTime() : null,
   }))
 
   // Fußnoten: Vorfälle im ganzen angezeigten Bereich (Verlauf und Zeitraum), bei gewählter Gruppe nur deren Dienste
   const buildFor = (group: string | undefined) => {
     const scoped: ReportParams = { ...params, group }
     const groupServiceIds = group
-      ? serviceDocs.docs.filter((service) => String(idOf(service.group)) === group).map((service) => Number(service.id))
+      ? reportedDocs.filter((service) => String(idOf(service.group)) === group).map((service) => Number(service.id))
       : null
     const footnotes = countFootnotes(
       incidentDocs.docs.map((incident) => ({

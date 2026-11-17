@@ -15,6 +15,7 @@ All choices are on the page. Changing a selection reloads the page and puts the 
 | Maintenance | A, B or C, see below. With B the maintenance time is part of the outage time and is named next to the outages in the ranking |
 | Weakest services | 3 to 10, default 5 |
 | Show maintenance time | shows or hides the maintenance line, no effect on the percentage |
+| Include ended services | off by default. Adds services that have ended (see [Start, End and Deleting](./services.md)). They are marked in text and colour (see below) |
 
 The previous period has the same length and directly precedes the selected one. A period that has not ended yet ends now and is marked as not complete.
 
@@ -56,6 +57,16 @@ The ZIP file has one folder `verfuegbarkeitsbericht-<period>` with the PDF and t
 The Excel file has three sheets with a filter in the header row: **Services** (one row per service with group, target, value for the period, the 12 monthly values and the durations in minutes, so a person can filter by "their" groups), **Outages** (one row per outage with start, end, duration and type) and **Notes** (selection and footnotes). An unknown value is an empty cell, not 0.
 
 The images are drawn on the server from SVG. The image needs a font (`fontconfig` and `font-dejavu` in the `Dockerfile`), otherwise the images show no text.
+
+## Active and ended services
+
+A service is evaluated only between its start and its end. Time before the start or after the end counts neither as available nor as unknown, it is missing from the value.
+
+- Without the switch the report lists the services that are active on the report date. Services that start in the future never appear.
+- Every service shows two circles: **Active in the report period** (the lifetime of the service touches the period, even partly) and **Active today** (on the report date). A filled green circle with a check means yes, an empty ring means no. In images and PDF the filled circle is blue, because the images avoid green (red-green colour blindness).
+- Ended services have a grey row and the text "ended on DD.MM.YYYY". A service that does not touch the period has no value ("–") and enters no mean.
+- The number of services in the report counts only services that were active in the period.
+- The switch is part of the address (`ended=true`) and applies to the files and the email. Excel has three more columns at the end of the sheet **Services**: Active in the report period, Active today, Ended on.
 
 ## Sending by email
 

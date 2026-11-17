@@ -30,8 +30,16 @@ export function computeServiceMetrics(input: {
   start: number
   end: number
   mode: MaintenanceMode
+  /** Beginn des Dienstes: die Zeit davor wird nicht gewertet. */
+  activeFrom?: number
+  /** Ende des Dienstes (`null` oder fehlend: offen): die Zeit danach wird nicht gewertet. */
+  activeTo?: number | null
 }): ServiceMetrics {
-  const { timeline, start, end, mode } = input
+  const { timeline, mode } = input
+  // Gewertet wird nur die Lebenszeit des Dienstes. Davor und danach ist weder verfügbar noch unbekannt, es fehlt im Wert.
+  const start = Math.max(input.start, input.activeFrom ?? Number.NEGATIVE_INFINITY)
+  const end = Math.min(input.end, input.activeTo ?? Number.POSITIVE_INFINITY)
+  if (end <= start) return { knownMs: 0, downMs: 0, degradedMs: 0, maintenanceMs: 0, availability: null, outages: [] }
   const windows = input.windows
     .map((window) => ({ from: Math.max(window.from, start), to: Math.min(window.to, end) }))
     .filter((window) => window.to > window.from)

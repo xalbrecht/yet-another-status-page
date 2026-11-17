@@ -63,6 +63,10 @@ export function ReportControlsForm({ params, periodKey, periodOptions, onChange 
           <option value="C" selected={params.maintenance === 'C'}>{ta('C: excluded from the total time')}</option>
         </select>
       </label>
+      <label className="availability-report__check">
+        <input type="checkbox" name="ended" value="true" defaultChecked={params.ended} />
+        {ta('Include ended services')}
+      </label>
       {/* „Schwächste Dienste“ und „Wartungszeit“ gehören zum Gesamtbericht: in den Gruppenberichten ausgeblendet, Wert bleibt erhalten */}
       {params.view === 'groups' ? (
         <>

@@ -1,12 +1,13 @@
 import { ta } from '@/lib/i18n/admin'
 import { formatAvailability } from '@/lib/availability'
 import type { ReportData } from '@/lib/report/aggregate'
+import { endedLabel } from '@/lib/report/ended-label'
 import { formatDuration, serviceWord } from '@/lib/report/format'
 import type { GroupSheetData } from '@/lib/report/group-sheet'
 import { chunkRows, heatClass } from '@/lib/report/heat'
 import { BLOCK_WIDTH, frame, type ExportBlock } from './blocks-overall'
 import { heatLegend, heatTable, heatTableHeight, trendChart } from './charts'
-import { BAR_COLOR, GRID_COLOR, MUTED_COLOR, SEVERITY_COLOR, TRACK_COLOR } from './palette'
+import { BAR_COLOR, ENDED_ROW_COLOR, GRID_COLOR, MUTED_COLOR, SEVERITY_COLOR, TRACK_COLOR } from './palette'
 import { svgDocument, textEl, truncate } from './svg'
 
 /**
@@ -35,7 +36,7 @@ function trendSection(data: ReportData, locale: string): Section {
   }
 }
 
-function servicesSection(data: ReportData, locale: string): Section {
+function servicesSection(data: ReportData, locale: string, timeZone: string): Section {
   const body = data.ranking
     .map((row, index) => {
       const y = index * ROW_HEIGHT
@@ -44,11 +45,14 @@ function servicesSection(data: ReportData, locale: string): Section {
         row.downMs > 0
           ? `${formatDuration(row.downMs - row.maintenanceDownMs)}${row.maintenanceDownMs > 0 ? ` + ${formatDuration(row.maintenanceDownMs)} ${ta('maintenance')}` : ''}`
           : ta('no outage')
+      const ended = row.endedAt !== null
+      const endedText = ended ? `${endedLabel(row.endedAt as number, locale, timeZone)} · ` : ''
       return (
-        textEl(TRACK_X - 10, y + 17, truncate(row.name, 28), { size: 12, anchor: 'end' }) +
+        (ended ? `<rect x="-6" y="${y}" width="${CONTENT_WIDTH + 12}" height="${ROW_HEIGHT}" fill="${ENDED_ROW_COLOR}" data-ended="true"/>` : '') +
+        textEl(TRACK_X - 10, y + 17, truncate(row.name, 28), { size: 12, anchor: 'end', fill: ended ? MUTED_COLOR : undefined }) +
         `<rect data-row="service" x="${TRACK_X}" y="${y + 3}" width="${TRACK_WIDTH}" height="18" fill="${TRACK_COLOR}"/>` +
         `<rect x="${TRACK_X}" y="${y + 3}" width="${TRACK_WIDTH * share}" height="18" fill="${BAR_COLOR[heatClass(row.availability, row.target)]}"/>` +
-        textEl(TRACK_X + TRACK_WIDTH + 14, y + 17, truncate(`${row.availability === null ? '–' : formatAvailability(row.availability, locale)} · ${duration}`, 40), { size: 12, fill: MUTED_COLOR })
+        textEl(TRACK_X + TRACK_WIDTH + 14, y + 17, truncate(`${endedText}${row.availability === null ? '–' : formatAvailability(row.availability, locale)} · ${duration}`, 56), { size: 12, fill: MUTED_COLOR })
       )
     })
     .join('')
@@ -169,7 +173,7 @@ function sheetImage(name: string, meta: string, sections: Section[]): string {
 }
 
 /** Alle Bilder einer Gruppe in der Reihenfolge der ZIP-Datei. */
-export function groupBlocks(data: ReportData, locale: string, periodLabel: string = ''): ExportBlock[] {
+export function groupBlocks(data: ReportData, locale: string, periodLabel: string = '', timeZone: string = 'UTC'): ExportBlock[] {
   const name = data.scope.groupName ?? ''
   const subtitle = [name, periodLabel].filter(Boolean).join(' · ')
   const meta = [
@@ -181,7 +185,7 @@ export function groupBlocks(data: ReportData, locale: string, periodLabel: strin
     .filter(Boolean)
     .join(' · ')
   const trend = trendSection(data, locale)
-  const services = servicesSection(data, locale)
+  const services = servicesSection(data, locale, timeZone)
   const byService = data.sheet ? byServiceSection(data.sheet) : null
   const byDayAll = data.sheet ? byDaySection(data.sheet, 'all-days') : null
   const byDaySingle = data.sheet ? byDaySection(data.sheet, 'disruption-days') : null

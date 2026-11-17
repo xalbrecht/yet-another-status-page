@@ -5,6 +5,8 @@ import type { RankingRow, ReportData } from '@/lib/report/aggregate'
 import type { ReportParams } from '@/lib/report/params'
 import type { ReportPeriod } from '@/lib/report/period'
 import { formatDuration, outageWord, serviceWord } from '@/lib/report/format'
+import { endedLabel } from '@/lib/report/ended-label'
+import { ActiveMark } from './ActiveMark'
 import { Heatmap } from './Heatmap'
 import { TrendChart } from './TrendChart'
 
@@ -16,6 +18,8 @@ export type ReportViewProps = {
   params: ReportParams
   period: ReportPeriod
   locale: string
+  /** Zeitzone der Installation (für den Tag des Endes beendeter Dienste) */
+  timeZone: string
   /** Auswahlfelder (ReportControls) */
   controls: React.ReactNode
   /** Tabs (ViewTabs), stehen unter den Auswahlfeldern */
@@ -59,8 +63,8 @@ function Sparkline({ history }: { history: Array<number | null> }) {
   )
 }
 
-function RankingTable(props: { rows: RankingRow[]; maxDown: number; showGroup: boolean; locale: string }) {
-  const { rows, maxDown, showGroup, locale } = props
+function RankingTable(props: { rows: RankingRow[]; maxDown: number; showGroup: boolean; locale: string; timeZone: string }) {
+  const { rows, maxDown, showGroup, locale, timeZone } = props
   const nf = new Intl.NumberFormat(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
   return (
     <table>
@@ -70,6 +74,8 @@ function RankingTable(props: { rows: RankingRow[]; maxDown: number; showGroup: b
           {showGroup && <th>{ta('Group')}</th>}
           <th>{ta('Value')}</th>
           <th>{ta('Previous period')}</th>
+          <th>{ta('Active in the report period')}</th>
+          <th>{ta('Active today')}</th>
           <th>{ta('Outage duration')}</th>
           <th>{ta('12 months')}</th>
         </tr>
@@ -78,8 +84,11 @@ function RankingTable(props: { rows: RankingRow[]; maxDown: number; showGroup: b
         {rows.map((row) => {
           const diff = row.availability !== null && row.previousAvailability !== null ? row.availability - row.previousAvailability : null
           return (
-            <tr key={row.serviceId}>
-              <td>{row.name}</td>
+            <tr key={row.serviceId} className={row.endedAt !== null ? 'availability-report__row--ended' : undefined}>
+              <td>
+                {row.name}
+                {row.endedAt !== null && <span className="availability-report__badge">{endedLabel(row.endedAt, locale, timeZone)}</span>}
+              </td>
               {showGroup && <td className="availability-report__muted">{row.groupName}</td>}
               <td>
                 <strong>{row.availability === null ? '–' : formatAvailability(row.availability, locale)}</strong>
@@ -88,8 +97,12 @@ function RankingTable(props: { rows: RankingRow[]; maxDown: number; showGroup: b
               <td className={diff === null || Math.abs(diff) < 0.005 ? 'availability-report__flat' : diff > 0 ? 'availability-report__up' : 'availability-report__down'}>
                 {diff === null ? '–' : Math.abs(diff) < 0.005 ? `= ${nf.format(0)}` : `${diff > 0 ? '▲ +' : '▼ −'}${nf.format(Math.abs(diff))}`}
               </td>
+              <td><ActiveMark active={row.activeInPeriod} label={row.activeInPeriod ? ta('yes') : ta('no')} /></td>
+              <td><ActiveMark active={row.activeToday} label={row.activeToday ? ta('yes') : ta('no')} /></td>
               <td>
-                {row.downMs > 0 ? (
+                {!row.activeInPeriod ? (
+                  <span className="availability-report__muted">{ta('Not active in the period')}</span>
+                ) : row.downMs > 0 ? (
                   <div className="availability-report__dur">
                     <div className="availability-report__bar" style={{ width: `${Math.max(2, Math.round((row.downMs / maxDown) * 100))}%` }} />
                     <small>
@@ -115,7 +128,7 @@ function RankingTable(props: { rows: RankingRow[]; maxDown: number; showGroup: b
   )
 }
 
-export function ReportView({ data, params, period, locale, controls, tabs, children }: ReportViewProps) {
+export function ReportView({ data, params, period, locale, timeZone, controls, tabs, children }: ReportViewProps) {
   const { kpis } = data
   const targetMet = kpis.availability !== null && kpis.availability >= kpis.target
   const scopeText = data.scope.groupName ?? ta('All groups')
@@ -185,8 +198,11 @@ export function ReportView({ data, params, period, locale, controls, tabs, child
             ) : (
               <div className="availability-report__weak">
                 {data.weakest.map((row) => (
-                  <div key={row.serviceId}>
-                    <div className="availability-report__weak-name">{row.name}</div>
+                  <div key={row.serviceId} className={row.endedAt !== null ? 'availability-report__row--ended' : undefined}>
+                    <div className="availability-report__weak-name">
+                      {row.name}
+                      {row.endedAt !== null && <span className="availability-report__badge">{endedLabel(row.endedAt, locale, timeZone)}</span>}
+                    </div>
                     <div className="availability-report__muted">{row.groupName}</div>
                     <div className="availability-report__weak-value">{row.availability === null ? '–' : formatAvailability(row.availability, locale)}</div>
                     <div className="availability-report__muted">
@@ -211,11 +227,11 @@ export function ReportView({ data, params, period, locale, controls, tabs, child
           <section className="availability-report__card" data-testid="report-ranking">
             <h2>{ta('Services, weakest first')}</h2>
             <div className="availability-report__scroll">
-              <RankingTable rows={data.ranking.slice(0, RANKING_VISIBLE)} maxDown={maxDown} showGroup locale={locale} />
+              <RankingTable rows={data.ranking.slice(0, RANKING_VISIBLE)} maxDown={maxDown} showGroup locale={locale} timeZone={timeZone} />
               {data.ranking.length > RANKING_VISIBLE && (
                 <details>
                   <summary>{ta('Show all services')} ({data.ranking.length})</summary>
-                  <RankingTable rows={data.ranking.slice(RANKING_VISIBLE)} maxDown={maxDown} showGroup locale={locale} />
+                  <RankingTable rows={data.ranking.slice(RANKING_VISIBLE)} maxDown={maxDown} showGroup locale={locale} timeZone={timeZone} />
                 </details>
               )}
             </div>

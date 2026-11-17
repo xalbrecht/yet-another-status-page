@@ -15,6 +15,14 @@
   h2 { margin: 0 0 0.75rem; font-size: 1.1rem; }
 
   &__muted { color: var(--theme-elevation-500); font-size: 0.85rem; }
+  /* Optionsfeld „aktiv“: grün gefüllt mit Haken (ja) oder leerer Ring (nein). Die Füllung trägt die Aussage, nicht nur die Farbe. */
+  &__opt { display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box; width: 1.1rem; height: 1.1rem; border-radius: 50%; font-size: 0.75rem; font-weight: 700; line-height: 1; }
+  &__opt--yes { background: var(--ar-up); color: #fff; }
+  &__opt--no { border: 2px solid var(--theme-elevation-400); }
+  /* beendete Dienste: neutrales Grau, nicht die Farben der Zielwert-Ampel */
+  &__row--ended { background: var(--theme-elevation-100); color: var(--theme-elevation-600); }
+  &__row--ended td, &__row--ended strong { color: var(--theme-elevation-600); }
+  &__badge { display: inline-block; margin-left: 0.4rem; padding: 0 0.45rem; border: 1px solid var(--theme-elevation-300); border-radius: 999px; background: var(--theme-bg); color: var(--theme-elevation-600); font-size: 0.72rem; font-weight: 400; white-space: nowrap; }
   &__error { color: var(--theme-error-500); }
   &__up { color: var(--ar-up); }
   &__down { color: var(--ar-down); }

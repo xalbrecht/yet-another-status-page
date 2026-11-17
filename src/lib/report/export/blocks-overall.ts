@@ -1,11 +1,12 @@
 import { ta } from '@/lib/i18n/admin'
 import { formatAvailability } from '@/lib/availability'
 import type { RankingRow, ReportData } from '@/lib/report/aggregate'
+import { endedLabel } from '@/lib/report/ended-label'
 import { formatDuration, outageWord, serviceWord } from '@/lib/report/format'
 import { chunkRows } from '@/lib/report/heat'
 import { heatLegend, heatTable, heatTableHeight, trendChart } from './charts'
-import { GRID_COLOR, MUTED_COLOR, SEVERITY_COLOR, TARGET_COLOR } from './palette'
-import { fitText, svgDocument, textEl, truncate } from './svg'
+import { ENDED_ROW_COLOR, GRID_COLOR, LINE_COLOR, MUTED_COLOR, SEVERITY_COLOR, TARGET_COLOR } from './palette'
+import { activeMark, fitText, svgDocument, textEl, truncate } from './svg'
 
 /**
  * Bilder des Gesamtberichts: Kennzahlen, Entwicklung, schwächste Dienste, Wärmekarte nach Gruppen und
@@ -127,41 +128,53 @@ function changeText(row: RankingRow, locale: string): { text: string; color: str
   return { text: `${diff > 0 ? '▲ +' : '▼ −'}${nf(locale).format(Math.abs(diff))}`, color: diff > 0 ? '#1f5fae' : TARGET_COLOR }
 }
 
-function rankingBlock(data: ReportData, locale: string, subtitle: string): string {
+function rankingBlock(data: ReportData, locale: string, subtitle: string, timeZone: string): string {
   const rows = data.ranking.slice(0, RANKING_ROWS)
   const rowHeight = 30
+  const markX = [640, 725]
   let content =
     textEl(0, 16, ta('Service'), { size: 11, fill: MUTED_COLOR }) +
-    textEl(300, 16, ta('Group'), { size: 11, fill: MUTED_COLOR }) +
-    textEl(600, 16, ta('Value'), { size: 11, fill: MUTED_COLOR, anchor: 'end' }) +
-    textEl(700, 16, ta('Previous period'), { size: 11, fill: MUTED_COLOR, anchor: 'end' }) +
-    textEl(720, 16, ta('Outage duration'), { size: 11, fill: MUTED_COLOR })
+    textEl(240, 16, ta('Group'), { size: 11, fill: MUTED_COLOR }) +
+    textEl(470, 16, ta('Value'), { size: 11, fill: MUTED_COLOR, anchor: 'end' }) +
+    textEl(570, 16, ta('Previous period'), { size: 11, fill: MUTED_COLOR, anchor: 'end' }) +
+    textEl(markX[0], 8, ta('Active in the'), { size: 10, fill: MUTED_COLOR, anchor: 'middle' }) +
+    textEl(markX[0], 20, ta('report period'), { size: 10, fill: MUTED_COLOR, anchor: 'middle' }) +
+    textEl(markX[1], 8, ta('Active'), { size: 10, fill: MUTED_COLOR, anchor: 'middle' }) +
+    textEl(markX[1], 20, ta('today'), { size: 10, fill: MUTED_COLOR, anchor: 'middle' }) +
+    textEl(775, 16, ta('Outage duration'), { size: 11, fill: MUTED_COLOR })
   rows.forEach((row, index) => {
     const y = 24 + index * rowHeight
     const change = changeText(row, locale)
-    const duration =
-      row.downMs > 0
+    const ended = row.endedAt !== null
+    const duration = !row.activeInPeriod
+      ? ta('Not active in the period')
+      : row.downMs > 0
         ? `${formatDuration(row.downMs - row.maintenanceDownMs)} ${ta('in')} ${row.outageCount} ${outageWord(row.outageCount)}${row.maintenanceDownMs > 0 ? ` + ${ta('maintenance')}` : ''}`
         : ta('no outage')
     content +=
+      (ended ? `<rect x="-6" y="${y}" width="${CONTENT_WIDTH + 12}" height="${rowHeight}" fill="${ENDED_ROW_COLOR}" data-ended="true"/>` : '') +
       `<line x1="0" x2="${CONTENT_WIDTH}" y1="${y}" y2="${y}" stroke="${GRID_COLOR}"/>` +
-      textEl(0, y + 19, truncate(row.name, 32), { size: 13 }) +
-      textEl(300, y + 19, truncate(row.groupName, 26), { size: 12, fill: MUTED_COLOR }) +
-      textEl(600, y + 19, row.availability === null ? '–' : formatAvailability(row.availability, locale), { size: 13, weight: 'bold', anchor: 'end', fill: row.belowTarget ? SEVERITY_COLOR.major : undefined }) +
-      textEl(700, y + 19, change.text, { size: 12, anchor: 'end', fill: change.color }) +
-      textEl(720, y + 19, truncate(duration, 38), { size: 12 })
+      (ended
+        ? textEl(0, y + 14, truncate(row.name, 26), { size: 13, fill: MUTED_COLOR }) + textEl(0, y + 26, endedLabel(row.endedAt as number, locale, timeZone), { size: 10, fill: MUTED_COLOR })
+        : textEl(0, y + 19, truncate(row.name, 26), { size: 13 })) +
+      textEl(240, y + 19, truncate(row.groupName, 22), { size: 12, fill: MUTED_COLOR }) +
+      textEl(470, y + 19, row.availability === null ? '–' : formatAvailability(row.availability, locale), { size: 13, weight: 'bold', anchor: 'end', fill: row.belowTarget ? SEVERITY_COLOR.major : ended ? MUTED_COLOR : undefined }) +
+      textEl(570, y + 19, change.text, { size: 12, anchor: 'end', fill: change.color }) +
+      activeMark(markX[0], y + 15, row.activeInPeriod, LINE_COLOR, MUTED_COLOR) +
+      activeMark(markX[1], y + 15, row.activeToday, LINE_COLOR, MUTED_COLOR) +
+      textEl(775, y + 19, truncate(duration, 28), { size: 12, fill: ended ? MUTED_COLOR : undefined })
   })
   return frame(ta('Services, weakest first'), subtitle, 24 + Math.max(1, rows.length) * rowHeight, content)
 }
 
 /** Alle Bilder des Gesamtberichts in der Reihenfolge der ZIP-Datei. `periodLabel` steht im Untertitel jedes Bildes. */
-export function overallBlocks(data: ReportData, locale: string, periodLabel: string = ''): ExportBlock[] {
+export function overallBlocks(data: ReportData, locale: string, periodLabel: string = '', timeZone: string = 'UTC'): ExportBlock[] {
   const subtitle = [periodLabel, `${data.scope.serviceCount} ${serviceWord(data.scope.serviceCount)}`].filter(Boolean).join(' · ')
   return [
     { file: '01-kennzahlen.png', svg: kpiBlock(data, locale, subtitle) },
     { file: '02-entwicklung-12-monate.png', svg: trendBlock(data, locale, subtitle) },
     { file: '03-schwaechste-dienste.png', svg: weakestBlock(data, locale, subtitle) },
     ...heatBlocks(data, locale, subtitle),
-    { file: '05-dienste-schwaechste-zuerst.png', svg: rankingBlock(data, locale, subtitle) },
+    { file: '05-dienste-schwaechste-zuerst.png', svg: rankingBlock(data, locale, subtitle, timeZone) },
   ]
 }

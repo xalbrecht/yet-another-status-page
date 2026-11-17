@@ -22,3 +22,5 @@ export const TARGET_COLOR = '#b3261e'
 /** Balkenfarben je Stufe der Wärmekarte: kräftiger als `HEAT_COLOR`, damit auch 100 % als Balken sichtbar ist. */
 export const BAR_COLOR = ['#1f5fae', '#6f9fd8', '#e6c455', '#e8903a', '#c8402f'] as const
 export const TRACK_COLOR = '#eef1f5'
+/** Hintergrund der Zeile eines beendeten Dienstes: neutrales Grau, nicht die Farben der Zielwerte. */
+export const ENDED_ROW_COLOR = '#eceef1'

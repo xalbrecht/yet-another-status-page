@@ -75,7 +75,7 @@ export async function* exportFiles(context: ReportContext, options: { groupId?: 
     const slug = slugs.get(options.groupId)
     if (slug === undefined) throw new Error(`Gruppe ${options.groupId} nicht gefunden`)
     const built = context.build(String(options.groupId))
-    for (const block of groupBlocks(built.data, context.locale, context.period.label)) {
+    for (const block of groupBlocks(built.data, context.locale, context.period.label, context.timeZone)) {
       yield { path: `${base}/gruppen/${slug}/${block.file}`, data: await svgToPng(block.svg) }
     }
     return
@@ -85,7 +85,7 @@ export async function* exportFiles(context: ReportContext, options: { groupId?: 
   const pdf = await createPdfBuilder(`${ta('Availability report')} ${context.period.label}`)
 
   pdf.addHeading(ta('Overall report'))
-  for (const block of overallBlocks(overall.data, context.locale, context.period.label)) {
+  for (const block of overallBlocks(overall.data, context.locale, context.period.label, context.timeZone)) {
     const png = await svgToPng(block.svg)
     await pdf.addImage(png)
     if (!options.pdfOnly) yield { path: `${base}/gesamt/${block.file}`, data: png }
@@ -93,7 +93,7 @@ export async function* exportFiles(context: ReportContext, options: { groupId?: 
 
   for (const entry of overall.data.groupList) {
     const slug = slugs.get(entry.id) ?? slugify(entry.name)
-    const blocks = groupBlocks(context.build(String(entry.id)).data, context.locale, context.period.label)
+    const blocks = groupBlocks(context.build(String(entry.id)).data, context.locale, context.period.label, context.timeZone)
     const inPdf = new Set(pdfBlockFiles(blocks))
     let captioned = false
     for (const block of blocks) {

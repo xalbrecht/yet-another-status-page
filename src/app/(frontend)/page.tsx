@@ -1,3 +1,4 @@
+import { activeServiceWhereNow } from '@/lib/service-lifecycle'
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { getIncidentStatus } from '@/collections/Incidents'
@@ -77,6 +78,7 @@ async function getStatusData(requestedPeriod: unknown, requestedBar: unknown) {
 
   const services = await payload.find({
     collection: 'services',
+    where: activeServiceWhereNow(),
     depth: 1,
     sort: '_order',
     pagination: false,

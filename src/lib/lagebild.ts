@@ -2,6 +2,7 @@ import type { Payload } from 'payload'
 import { DEFAULT_GROUP_ICON } from '@/lib/group-icons'
 import { formatClockTime, formatDate, formatDateSlug, formatDateTime, formatTime, type DateTimeConfig } from '@/lib/datetime'
 import type { Translate, TranslateFormat } from '@/lib/i18n/core'
+import { activeServiceWhere } from '@/lib/service-lifecycle'
 import {
   computeAvailability,
   formatAvailability,
@@ -284,7 +285,7 @@ export async function loadLagebild(
 
   const [groupsResult, servicesResult] = await Promise.all([
     payload.find({ collection: 'service-groups', sort: '_order', depth: 0, pagination: false }),
-    payload.find({ collection: 'services', depth: 0, pagination: false }),
+    payload.find({ collection: 'services', where: activeServiceWhere(now), depth: 0, pagination: false }),
   ])
 
   const serviceIds = servicesResult.docs.map((service) => service.id)

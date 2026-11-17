@@ -1,5 +1,6 @@
 import type { Where } from 'payload'
 import { getCachedPayload } from '@/lib/payload'
+import { activeServiceWhereNow } from '@/lib/service-lifecycle'
 import type { IncidentListQuery, MaintenanceListQuery } from './schemas'
 
 export const ACTIVE_INCIDENT_WHERE: Where = { status: { not_equals: 'resolved' } }
@@ -83,7 +84,7 @@ export async function findServicesAndGroups() {
   const payload = await getCachedPayload()
   const [groups, services] = await Promise.all([
     payload.find({ collection: 'service-groups', sort: '_order', pagination: false }),
-    payload.find({ collection: 'services', sort: '_order', depth: 1, pagination: false }),
+    payload.find({ collection: 'services', where: activeServiceWhereNow(), sort: '_order', depth: 1, pagination: false }),
   ])
   return { groups: groups.docs, services: services.docs }
 }

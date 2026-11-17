@@ -247,6 +247,14 @@ export interface Service {
    * Current status of the service
    */
   status: 'operational' | 'degraded' | 'partial' | 'major' | 'maintenance';
+  /**
+   * First day the service is operated. Before this day it does not appear on the status page
+   */
+  startsAt: string;
+  /**
+   * Last day the service is operated. The end day still counts. Leave empty while the service is operated
+   */
+  endsAt?: string | null;
   availabilityTarget?: number | null;
   updatedAt: string;
   createdAt: string;
@@ -820,6 +828,8 @@ export interface ServicesSelect<T extends boolean = true> {
   description?: T;
   group?: T;
   status?: T;
+  startsAt?: T;
+  endsAt?: T;
   availabilityTarget?: T;
   updatedAt?: T;
   createdAt?: T;

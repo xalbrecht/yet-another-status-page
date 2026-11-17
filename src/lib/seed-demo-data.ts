@@ -165,6 +165,7 @@ export async function seedDemoData(payload: Payload) {
         description: 'Main REST API endpoint',
         group: apiGroup.id,
         status: 'operational',
+        startsAt: new Date().toISOString(),
       },
     })
 
@@ -176,6 +177,7 @@ export async function seedDemoData(payload: Payload) {
         description: 'GraphQL endpoint for advanced queries',
         group: apiGroup.id,
         status: 'operational',
+        startsAt: new Date().toISOString(),
       },
     })
 
@@ -187,6 +189,7 @@ export async function seedDemoData(payload: Payload) {
         description: 'User authentication and authorization',
         group: apiGroup.id,
         status: 'degraded',
+        startsAt: new Date().toISOString(),
       },
     })
 
@@ -198,6 +201,7 @@ export async function seedDemoData(payload: Payload) {
         description: 'PostgreSQL database cluster',
         group: infraGroup.id,
         status: 'operational',
+        startsAt: new Date().toISOString(),
       },
     })
 
@@ -209,6 +213,7 @@ export async function seedDemoData(payload: Payload) {
         description: 'Content delivery network',
         group: infraGroup.id,
         status: 'operational',
+        startsAt: new Date().toISOString(),
       },
     })
 
@@ -220,6 +225,7 @@ export async function seedDemoData(payload: Payload) {
         description: 'Main web application',
         group: webGroup.id,
         status: 'operational',
+        startsAt: new Date().toISOString(),
       },
     })
 

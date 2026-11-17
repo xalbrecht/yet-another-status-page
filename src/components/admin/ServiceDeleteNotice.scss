@@ -1,0 +1,20 @@
+.service-delete-notice {
+  border: 1px solid;
+  border-radius: 4px;
+  padding: 0.75rem 1rem;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  margin-bottom: 1rem;
+
+  &--info {
+    background: var(--theme-elevation-50);
+    border-color: var(--theme-elevation-200);
+    color: var(--theme-text);
+  }
+
+  &--warn {
+    background: var(--theme-warning-50);
+    border-color: var(--theme-warning-500);
+    color: var(--theme-text);
+  }
+}

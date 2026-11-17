@@ -59,7 +59,9 @@ export const LocalizedDateField: React.FC<DateFieldProps> = ({ field, path, read
       ? hour12
         ? 'MMM d, yyyy h:mm aa'
         : 'MMM d, yyyy HH:mm'
-      : undefined)
+      : pickerAppearance === 'dayOnly'
+        ? 'MMM d, yyyy'
+        : undefined)
   const timeFormat = hour12 ? 'h:mm aa' : 'HH:mm'
 
   const displayedValue = useMemo(

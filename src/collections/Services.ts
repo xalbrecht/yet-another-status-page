@@ -1,7 +1,10 @@
-import type { CollectionConfig } from 'payload'
+import { APIError, type CollectionConfig } from 'payload'
 import { standardAccess } from '@/lib/access'
 import { ta } from '@/lib/i18n/admin'
 import { invalidateLagebild } from '@/lib/lagebild-invalidate'
+import { localizedDateAdmin } from '@/lib/localizedDateAdmin'
+import { resolveDateTimeConfig } from '@/lib/datetime'
+import { canDeleteService, dayBoundary, endsAtBeforeStart } from '@/lib/service-lifecycle'
 
 export const serviceStatusOptions = [
   { label: ta('Operational'), value: 'operational' },
@@ -13,12 +16,21 @@ export const serviceStatusOptions = [
 
 export type ServiceStatus = (typeof serviceStatusOptions)[number]['value']
 
+/** Rundet die Eingabe auf Tagesanfang (Beginn) bzw. Tagesende (Ende) in der Zeitzone der Installation. */
+const toDayBoundary =
+  (edge: 'start' | 'end') =>
+  async ({ value, req }: { value?: unknown; req: { payload: { findGlobal: (args: { slug: 'settings' }) => Promise<unknown> } } }) => {
+    if (typeof value !== 'string' && !(value instanceof Date)) return value
+    const settings = (await req.payload.findGlobal({ slug: 'settings' })) as Parameters<typeof resolveDateTimeConfig>[0]
+    return dayBoundary(new Date(value), edge, resolveDateTimeConfig(settings).timezone).toISOString()
+  }
+
 export const Services: CollectionConfig = {
   slug: 'services',
   labels: { singular: ta('Service'), plural: ta('Services') },
   admin: {
     useAsTitle: 'name',
-    defaultColumns: ['name', 'group', 'status', 'updatedAt'],
+    defaultColumns: ['name', 'group', 'status', 'startsAt', 'endsAt', 'updatedAt'],
     group: ta('Status'),
   },
   orderable: true,
@@ -42,6 +54,17 @@ export const Services: CollectionConfig = {
     // „ON DELETE SET NULL“, die Spalte ist aber NOT NULL. Ein Löschen danach scheitert mit HTTP 500.
     beforeDelete: [
       async ({ id, req }) => {
+        // Löschen nur nach dem Ende (HTTP 409). Die Prüfung gilt für Admin, Sammellöschen und Schnittstelle.
+        const service = await req.payload.findByID({ collection: 'services', id, depth: 0, req })
+        const verdict = canDeleteService(service, Date.now())
+        if (!verdict.ok) {
+          throw new APIError(
+            verdict.reason === 'active'
+              ? ta('The service is active. Set an end date first, then delete it after the end')
+              : ta('The end date of the service has not passed yet. Delete it after the end'),
+            409,
+          )
+        }
         await req.payload.delete({
           collection: 'service-status-events',
           where: { service: { equals: id } },
@@ -56,6 +79,16 @@ export const Services: CollectionConfig = {
     ],
   },
   fields: [
+    {
+      // Hinweis zum Löschen, nur bei bestehenden Diensten
+      name: 'deleteNotice',
+      type: 'ui',
+      admin: {
+        components: {
+          Field: '@/components/admin/ServiceDeleteNotice#ServiceDeleteNotice',
+        },
+      },
+    },
     {
       name: 'name',
       type: 'text',
@@ -112,6 +145,35 @@ export const Services: CollectionConfig = {
       admin: {
         description: ta('Current status of the service'),
       },
+    },
+    {
+      name: 'startsAt',
+      type: 'date',
+      required: true,
+      label: ta('Start'),
+      defaultValue: () => new Date().toISOString(),
+      hooks: { beforeValidate: [toDayBoundary('start')] },
+      admin: localizedDateAdmin({
+        position: 'sidebar',
+        pickerAppearance: 'dayOnly',
+        description: ta('First day the service is operated. Before this day it does not appear on the status page'),
+      }),
+    },
+    {
+      name: 'endsAt',
+      type: 'date',
+      label: ta('End'),
+      hooks: { beforeValidate: [toDayBoundary('end')] },
+      validate: (value: unknown, { data }: { data?: Record<string, unknown> }) => {
+        const startsAt = data?.startsAt as string | undefined
+        if (value && startsAt && endsAtBeforeStart(startsAt, value as string)) return ta('The end must not be before the start')
+        return true
+      },
+      admin: localizedDateAdmin({
+        position: 'sidebar',
+        pickerAppearance: 'dayOnly',
+        description: ta('Last day the service is operated. The end day still counts. Leave empty while the service is operated'),
+      }),
     },
     {
       // Zielwert des Dienstes. Noch ohne Eingabe im Admin, leer = erbt von Gruppe oder Gesamt.

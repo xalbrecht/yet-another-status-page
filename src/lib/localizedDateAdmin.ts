@@ -5,12 +5,14 @@ export function localizedDateAdmin(options?: {
   position?: 'sidebar'
   readOnly?: boolean
   hidden?: boolean
+  pickerAppearance?: 'dayAndTime' | 'dayOnly'
   condition?: (data: unknown, siblingData: unknown) => boolean
 }) {
+  const { pickerAppearance = 'dayAndTime', ...rest } = options ?? {}
   return {
-    ...options,
+    ...rest,
     date: {
-      pickerAppearance: 'dayAndTime' as const,
+      pickerAppearance,
     },
     components: {
       Field: localizedDateField,

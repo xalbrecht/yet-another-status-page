@@ -24,7 +24,7 @@ export const Subscribers: CollectionConfig = {
   labels: { singular: ta('Subscriber'), plural: ta('Subscribers') },
   admin: {
     useAsTitle: 'email',
-    defaultColumns: ['type', 'email', 'phone', 'verified', 'addressConfirmed', 'active', 'createdAt'],
+    defaultColumns: ['type', 'email', 'phone', 'verified', 'addressConfirmed', 'active', 'isTest', 'createdAt'],
     group: ta('Notifications'),
   },
   access: {
@@ -207,6 +207,18 @@ export const Subscribers: CollectionConfig = {
       label: ta('Active'),
       admin: {
         description: ta('Whether the subscription is active'),
+      },
+    },
+    {
+      name: 'isTest',
+      type: 'checkbox',
+      defaultValue: false,
+      label: ta('Test record'),
+      // Public sign-ups never set or read this marker (like the approval flags)
+      access: { read: authenticatedOrTestWriteField, create: authenticatedOrTestWriteField, update: authenticatedOrTestWriteField },
+      admin: {
+        position: 'sidebar',
+        description: ta('Only a marker for takeover and evaluation. Changes no behavior: test subscribers still receive notifications, test users can still sign in'),
       },
     },
     {

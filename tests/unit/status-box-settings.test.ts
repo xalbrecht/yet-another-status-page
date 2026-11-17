@@ -51,8 +51,8 @@ test('die drei Felder sind bei Variante C (off) ausgeblendet', () => {
   }
 })
 
-test('lagebildVariant behält die Werte off, a, b, both und nennt off „Variant C“', () => {
+test('lagebildVariant behält die Werte off, a, b, both und nennt off „List (original)“', () => {
   assert.deepEqual(optionValues('lagebildVariant'), ['off', 'a', 'b', 'both'])
   const off = (field('lagebildVariant').options as Array<{ value: string; label: unknown }>).find((o) => o.value === 'off')
-  assert.match(JSON.stringify(off?.label), /Varian(t|te) C/)
+  assert.match(JSON.stringify(off?.label), /List \(original\)|Liste \(Original\)/)
 })

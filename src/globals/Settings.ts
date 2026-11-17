@@ -170,14 +170,14 @@ export const Settings: GlobalConfig = {
           label: ta('Display'),
           defaultValue: 'off',
           options: [
-            { label: ta('Variant C (simple list)'), value: 'off' },
-            { label: ta('Variant A (tiles, services with bars on click)'), value: 'a' },
-            { label: ta('Variant B (tiles with own bar)'), value: 'b' },
-            { label: ta('Both (for testing)'), value: 'both' },
+            { label: ta('List (original)'), value: 'off' },
+            { label: ta('Situation overview A'), value: 'a' },
+            { label: ta('Situation overview B'), value: 'b' },
+            { label: ta('Situation overview A and B (test)'), value: 'both' },
           ],
           admin: {
             description: ta(
-              'Layout of the start page. Variants A and B show the situation overview on the left and boxes for disruptions and maintenance on the right. Variant A shows tiles, a click shows the services with bars. Variant B shows a small bar in every tile. "Both" displays both variants one after the other to compare them. Variant C is the simple list without situation overview. The three settings below apply to A, B and "Both" only.',
+              'Layout of the start page. "Situation overview A" and "Situation overview B" show the situation overview on the left and boxes for disruptions and maintenance on the right. A shows tiles, a click shows the services with bars. B shows a small bar in every tile. "Situation overview A and B (test)" displays both one after the other to compare them. "List (original)" is the simple list without situation overview. The three settings below apply to the situation overview (A, B and A and B) only.',
             ),
           },
         },

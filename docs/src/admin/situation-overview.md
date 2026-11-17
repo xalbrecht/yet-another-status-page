@@ -8,12 +8,12 @@ Go to **Configuration → Site Settings → Situation overview** (Konfiguration 
 
 | Option | German | Result |
 |--------|--------|--------|
-| Variant C (simple list) | Variante C (einfache Liste) | No situation overview and no boxes. The start page shows the list of services per group, the legend and the incidents of the last days (default) |
-| Variant A | Variante A | Tiles per group. The tile **All** is preselected. A click on a tile opens the services of the group below the tile row |
-| Variant B | Variante B | Tiles per group, each with its own small bar. Nothing is preselected. A click opens the services of the group below the tile row, like in variant A |
-| Both (for testing) | Beide (zum Testen) | Both variants one after the other, to compare them (see [Test mode](#test-mode-both)) |
+| List (original) | Liste (Original) | No situation overview and no boxes. The start page shows the list of services per group, the legend and the incidents of the last days (default) |
+| Situation overview A | Lagebild A | Tiles per group. The tile **All** is preselected. A click on a tile opens the services of the group below the tile row |
+| Situation overview B | Lagebild B | Tiles per group, each with its own small bar. Nothing is preselected. A click opens the services of the group below the tile row, like in variant A |
+| Situation overview A and B (test) | Lagebild A und B (Test) | Both variants one after the other, to compare them (see [Test mode](#test-mode-both)) |
 
-Variants A and B (and "Both") also show the boxes and the three blocks described below. The settings for the boxes apply to these options only.
+The options Situation overview A, B and A and B also show the boxes and the three blocks described below. The settings for the boxes apply to these options only.
 
 ## Layout of the start page
 
@@ -92,7 +92,7 @@ Each incident has the field **Impact on affected services**. Saving an incident 
 
 ## Test mode "Both"
 
-The option **Both (for testing)** shows variant A and variant B one after the other, so that you can compare them. The heading of each is marked with its variant, and the header of the page shows the badge **Test mode** (Testmodus).
+The option **Situation overview A and B (test)** shows variant A and variant B one after the other, so that you can compare them. The heading of each is marked with its variant, and the header of the page shows the badge **Test mode** (Testmodus).
 
 To compare the variants in two browser tabs, add a parameter to the address:
 

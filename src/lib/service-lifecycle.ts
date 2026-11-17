@@ -58,3 +58,12 @@ export function activeServiceWhere(at: number) {
 export function dayBoundary(picked: Date, edge: 'start' | 'end', timeZone: string): Date {
   return edge === 'start' ? startOfZonedDay(picked, timeZone) : endOfZonedDay(picked, timeZone)
 }
+
+/** Löschen ist nur nach dem Ende erlaubt: ein Ende ist gesetzt und überschritten. */
+export function canDeleteService(
+  service: LifecycleFields,
+  at: number,
+): { ok: true } | { ok: false; reason: 'active' | 'ends-in-future' } {
+  if (service.endsAt == null) return { ok: false, reason: 'active' }
+  return isServiceEnded(service, at) ? { ok: true } : { ok: false, reason: 'ends-in-future' }
+}

@@ -1,10 +1,10 @@
-import type { CollectionConfig } from 'payload'
+import { APIError, type CollectionConfig } from 'payload'
 import { standardAccess } from '@/lib/access'
 import { ta } from '@/lib/i18n/admin'
 import { invalidateLagebild } from '@/lib/lagebild-invalidate'
 import { localizedDateAdmin } from '@/lib/localizedDateAdmin'
 import { resolveDateTimeConfig } from '@/lib/datetime'
-import { dayBoundary, endsAtBeforeStart } from '@/lib/service-lifecycle'
+import { canDeleteService, dayBoundary, endsAtBeforeStart } from '@/lib/service-lifecycle'
 
 export const serviceStatusOptions = [
   { label: ta('Operational'), value: 'operational' },
@@ -54,6 +54,17 @@ export const Services: CollectionConfig = {
     // „ON DELETE SET NULL“, die Spalte ist aber NOT NULL. Ein Löschen danach scheitert mit HTTP 500.
     beforeDelete: [
       async ({ id, req }) => {
+        // Löschen nur nach dem Ende (HTTP 409). Die Prüfung gilt für Admin, Sammellöschen und Schnittstelle.
+        const service = await req.payload.findByID({ collection: 'services', id, depth: 0, req })
+        const verdict = canDeleteService(service, Date.now())
+        if (!verdict.ok) {
+          throw new APIError(
+            verdict.reason === 'active'
+              ? ta('The service is active. Set an end date first, then delete it after the end')
+              : ta('The end date of the service has not passed yet. Delete it after the end'),
+            409,
+          )
+        }
         await req.payload.delete({
           collection: 'service-status-events',
           where: { service: { equals: id } },

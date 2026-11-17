@@ -102,6 +102,8 @@ export async function createService(data: {
   slug?: string
   status?: 'operational' | 'degraded' | 'partial' | 'major' | 'maintenance'
   group: number
+  startsAt?: string
+  endsAt?: string
 }): Promise<Service> {
   const response = await fetch(`${API_BASE}/api/services`, {
     method: 'POST',
@@ -111,6 +113,8 @@ export async function createService(data: {
       slug: data.slug || data.name.toLowerCase().replace(/\s+/g, '-'),
       status: data.status || 'operational',
       group: data.group,
+      ...(data.startsAt ? { startsAt: data.startsAt } : {}),
+      ...(data.endsAt ? { endsAt: data.endsAt } : {}),
     }),
   })
   

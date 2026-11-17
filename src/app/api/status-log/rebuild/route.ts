@@ -6,6 +6,7 @@ import { isTestMode } from '@/lib/access'
 import { invalidateLagebild } from '@/lib/lagebild-invalidate'
 import { rebuildStatusLog, type SqlRunner } from '@/lib/status-log-rebuild'
 import { ta } from '@/lib/i18n/admin'
+import { isStatusLogMaintenanceDisabled, STATUS_LOG_MAINTENANCE_DISABLED_CODE } from '@/lib/status-log-maintenance'
 import { normalizeRules } from '@/lib/incident-classification'
 import { parseExpected, previewChangedMessage, PreviewChangedError } from '@/lib/preview-check'
 
@@ -13,8 +14,15 @@ import { parseExpected, previewChangedMessage, PreviewChangedError } from '@/lib
  * Nachrechnung des Statusprotokolls aus den Vorfällen. Standard ist die Vorschau (`dryRun: true`), geschrieben wird
  * nur bei `dryRun: false`. Dann gehört `expect` (das Feld `check` der Vorschau) in den Körper: Der Server rechnet die
  * Vorschau neu und schreibt nichts, wenn sie abweicht (HTTP 409). Nur für angemeldete Nutzer, im Testmodus offen.
+ * Mit `DISABLE_STATUS_LOG_MAINTENANCE=true` antwortet die Route immer mit HTTP 403.
  */
 export async function POST(request: NextRequest) {
+  if (isStatusLogMaintenanceDisabled()) {
+    return NextResponse.json(
+      { error: ta('Maintaining the status log is switched off on this installation.'), code: STATUS_LOG_MAINTENANCE_DISABLED_CODE },
+      { status: 403 },
+    )
+  }
   try {
     const payload = await getPayload({ config })
     const { user } = await payload.auth({ headers: await headers() })

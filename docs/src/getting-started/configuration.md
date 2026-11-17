@@ -43,6 +43,7 @@ When deploying to Vercel, you need to configure Vercel Blob storage for media up
 | `NODE_ENV` | Environment mode | `production` |
 | `PAYLOAD_AUTO_GENERATE` | Set to `false` to stop Payload from rewriting `src/payload-types.ts` and the admin import map in development (the test compose file sets it) | `true` |
 | `LAGEBILD_CACHE_SECONDS` | How long the [situation overview](../admin/situation-overview.md) is cached for all visitors (0 to 3600, `0` switches the cache off) | `60` |
+| `DISABLE_STATUS_LOG_MAINTENANCE` | Set to `true` to switch off [Maintaining the Status Log](../admin/status-log-maintenance.md): the menu entry disappears, the page shows only a notice and `POST /api/status-log/rebuild` and `POST /api/status-log/convert-maintenance` answer with HTTP 403 (also for signed-in users). Reports keep reading the log. Restart the application after changing it | not set (function active) |
 
 ### SSO/OIDC Authentication (Optional)
 

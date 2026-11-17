@@ -6,6 +6,7 @@ import { isTestMode } from '@/lib/access'
 import { invalidateLagebild } from '@/lib/lagebild-invalidate'
 import { convertMaintenanceIncidents } from '@/lib/maintenance-conversion'
 import { ta } from '@/lib/i18n/admin'
+import { isStatusLogMaintenanceDisabled, STATUS_LOG_MAINTENANCE_DISABLED_CODE } from '@/lib/status-log-maintenance'
 import { normalizeRules } from '@/lib/incident-classification'
 import { parseExpected, previewChangedMessage, PreviewChangedError } from '@/lib/preview-check'
 
@@ -13,9 +14,15 @@ import { parseExpected, previewChangedMessage, PreviewChangedError } from '@/lib
  * Wandelt als Störungen übernommene Wartungen in Wartungen um. Standard ist die Vorschau (`dryRun: true`),
  * geschrieben und gelöscht wird nur bei `dryRun: false`. Dann gehört `expect` (das Feld `check` der Vorschau) in den
  * Körper: Der Server rechnet die Vorschau neu und ändert nichts, wenn sie abweicht (HTTP 409). Nur für angemeldete
- * Nutzer, im Testmodus offen.
+ * Nutzer, im Testmodus offen. Mit `DISABLE_STATUS_LOG_MAINTENANCE=true` antwortet die Route immer mit HTTP 403.
  */
 export async function POST(request: NextRequest) {
+  if (isStatusLogMaintenanceDisabled()) {
+    return NextResponse.json(
+      { error: ta('Maintaining the status log is switched off on this installation.'), code: STATUS_LOG_MAINTENANCE_DISABLED_CODE },
+      { status: 403 },
+    )
+  }
   try {
     const payload = await getPayload({ config })
     const { user } = await payload.auth({ headers: await headers() })

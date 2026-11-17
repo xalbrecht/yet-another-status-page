@@ -2,6 +2,16 @@
 
 The status log (Statusprotokoll) lists every change of a service status with its time. The situation overview and the availability report calculate from it. The page **Maintain the status log** (Statusprotokoll pflegen, `/admin/protokoll-pflege`, menu entry below the collections) has two functions. Both show a **preview** first. **Run** becomes available only after a preview and asks for a confirmation.
 
+## Switching the page off
+
+An installation that receives its status log from a checked source (for example from a cleaned-up test installation) or that must not change its figures any more can switch this page off. Set the environment variable `DISABLE_STATUS_LOG_MAINTENANCE=true` and restart the application. The variable has no default: without it the page stays active.
+
+- The menu entry disappears. A direct call of `/admin/protokoll-pflege` shows only a notice.
+- `POST /api/status-log/rebuild` and `POST /api/status-log/convert-maintenance` answer with HTTP 403 and the code `status-log-maintenance-disabled`, also for signed-in users. The block applies on the server, not only in the interface.
+- The situation overview and the availability report read the status log as before. Only changing it is blocked.
+
+To switch the page on again, remove the variable and restart. With Helm, set the variable under `extraEnv` in `values.yaml`.
+
 ## Reconstruction
 
 The status log starts with the first status change that is recorded in operation. For the time before, the history is calculated from the incidents and stored as entries with the source **Reconstructed from incidents**. Entries from operation are never changed.

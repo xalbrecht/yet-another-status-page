@@ -10,7 +10,7 @@ A modern, self-hosted status page built with [Payload CMS](https://payloadcms.co
 - **Service groups** — organize services into logical groups
 - **Situation overview** — tile per group with icon and status, bars of the last 12 hours and the disruptions of the last 14 days, filterable by group; next to it boxes for current incidents and maintenance
 - **Status log** — every status change of a service is recorded; incidents set the status of the affected services
-- **German interface** — status page, emails, feeds and admin panel are German by default (English via build setting)
+- **Interface languages** — status page, emails, feeds and admin panel are English by default; German and your own languages come from language files (`DEFAULT_LANGUAGE`, see [Configuration](getting-started/configuration.md#interface-language))
 - **Modern UI** — responsive status page with dark mode
 - **Self-hosted** — full control over your data and infrastructure
 - **Kubernetes-native** — official Helm chart with bundled Postgres, Ingress, NetworkPolicy, and PDB

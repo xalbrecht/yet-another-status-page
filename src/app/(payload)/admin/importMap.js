@@ -1,3 +1,4 @@
+import { GroupIconField as GroupIconField_b31528e95033385bdd37518aa039fe74 } from '@/components/admin/group-icon-field/GroupIconField'
 import { ServiceDeleteNotice as ServiceDeleteNotice_b44acf9599e0763461dd09edaba54553 } from '@/components/admin/ServiceDeleteNotice'
 import { LocalizedDateField as LocalizedDateField_5565580924a7fcfc6f968cbe9a2ca4e8 } from '@/components/admin/LocalizedDateField'
 import { ServiceStateFilter as ServiceStateFilter_bae5af94238f689413b74e3c586adc4b } from '@/components/admin/ServiceStateFilter'
@@ -29,6 +30,7 @@ import { VercelBlobClientUploadHandler as VercelBlobClientUploadHandler_16c82c5e
 
 /** @type import('payload').ImportMap */
 export const importMap = {
+  "@/components/admin/group-icon-field/GroupIconField#GroupIconField": GroupIconField_b31528e95033385bdd37518aa039fe74,
   "@/components/admin/ServiceDeleteNotice#ServiceDeleteNotice": ServiceDeleteNotice_b44acf9599e0763461dd09edaba54553,
   "@/components/admin/LocalizedDateField#LocalizedDateField": LocalizedDateField_5565580924a7fcfc6f968cbe9a2ca4e8,
   "@/components/admin/ServiceStateFilter#ServiceStateFilter": ServiceStateFilter_bae5af94238f689413b74e3c586adc4b,

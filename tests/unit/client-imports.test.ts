@@ -18,6 +18,9 @@ const CLIENT_ENTRIES = [
   'src/components/admin/incident-wizard/TemplateWizard.tsx',
   'src/lib/maintenance-draft.ts',
   'src/components/admin/update-template/UpdateTemplatePicker.tsx',
+  'src/components/admin/group-icon-field/GroupIconField.tsx',
+  'src/components/admin/group-icon-field/GroupIconGrid.tsx',
+  'src/lib/icon-picker.ts',
   'src/lib/incident-draft.ts',
   'src/lib/update-template.ts',
 ]

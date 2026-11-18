@@ -12,7 +12,7 @@ Service groups organize related services together.
 2. Click **Create New**
 3. Enter a name (e.g., "Core Infrastructure", "API Services")
 4. Optionally add a description
-5. Optionally choose an **Icon** (used in the [Situation Overview](./situation-overview.md)). The list offers 47 icons, for example for networks, specialist applications, construction or schools. On update, existing groups with the default icon get a matching icon by name. A different icon can be chosen at any time.
+5. Optionally choose an **Icon** (used in the [Situation Overview](./situation-overview.md)). The field shows all 47 icons with their names in a grid, for example for networks, specialist applications, construction or schools. Click an icon to choose it, or move between the icons with the arrow keys. The chosen icon is highlighted. On update, existing groups with the default icon get a matching icon by name. A different icon can be chosen at any time.
 6. Click **Save**
 
 ### Ordering Groups

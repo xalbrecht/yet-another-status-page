@@ -1,0 +1,38 @@
+.group-icon-grid {
+  display: grid;
+  gap: 6px;
+  grid-template-columns: repeat(auto-fill, minmax(112px, 1fr));
+  margin: 0.4rem 0 0.2rem;
+  max-height: 320px;
+  overflow: auto;
+  padding: 2px;
+
+  &__tile {
+    align-items: center;
+    background: var(--theme-input-bg, var(--theme-bg));
+    border: 1px solid var(--theme-elevation-150);
+    border-radius: 6px;
+    color: var(--theme-text);
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    font: inherit;
+    font-size: 0.78rem;
+    gap: 4px;
+    line-height: 1.2;
+    padding: 8px 4px;
+    text-align: center;
+
+    &:hover:not(:disabled) { border-color: var(--theme-elevation-400); }
+    &:focus-visible { outline: 2px solid var(--theme-elevation-800); outline-offset: 1px; }
+    &:disabled { cursor: not-allowed; opacity: 0.6; }
+
+    &--on {
+      background: var(--theme-elevation-100);
+      border-color: var(--theme-elevation-800);
+      font-weight: 600;
+    }
+  }
+
+  &__icon { height: 22px; width: 22px; }
+}

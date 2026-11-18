@@ -58,7 +58,7 @@ test('ein Vorfall nach dem Start des Statusprotokolls wird nicht umgewandelt', (
   assert.deepEqual(planMaintenanceFromIncident({ ...base, title, createdAt: '2026-11-11T08:00:00.000Z' }, { cutoffAt, rules }), { skip: 'after-start' })
   const before = planMaintenanceFromIncident({ ...base, title }, { cutoffAt, rules })
   assert.ok('maintenance' in before)
-  const withoutCutoff = planMaintenanceFromIncident({ ...base, title, createdAt: '2026-11-11T08:00:00.000Z' }, { rules })
+  const withoutCutoff = planMaintenanceFromIncident({ ...base, title, createdAt: '2026-11-11T08:00:00.000Z', resolvedAt: '2026-11-11T10:00:00.000Z' }, { rules })
   assert.ok('maintenance' in withoutCutoff)
 })
 
@@ -70,4 +70,14 @@ test('ohne Regeln wird kein Vorfall umgewandelt, auch nicht mit „Wartung“ im
 test('eine Regel auf den Text der Aktualisierungen kann einen Vorfall als Wartung einordnen', () => {
   const byText = [{ field: 'updates', match: 'contains', words: 'wartungsarbeiten', classification: 'maintenance' }] as const
   assert.ok('maintenance' in planMaintenanceFromIncident({ ...base, title: 'Dienst A nicht verfügbar' }, { rules: byText }))
+})
+
+test('ein Vorfall mit Ende vor dem Beginn wird übersprungen', () => {
+  const title = 'Wartung Dienst D'
+  assert.deepEqual(
+    planMaintenanceFromIncident({ ...base, title, createdAt: '2026-10-12T18:00:00.000Z', resolvedAt: '2026-10-12T17:00:00.000Z' }, { rules }),
+    { skip: 'end-before-start' },
+  )
+  // Ende gleich Beginn ist gültig
+  assert.ok('maintenance' in planMaintenanceFromIncident({ ...base, title, createdAt: '2026-10-12T18:00:00.000Z', resolvedAt: '2026-10-12T18:00:00.000Z' }, { rules }))
 })

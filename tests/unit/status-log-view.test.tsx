@@ -104,3 +104,19 @@ test('der Grund „nach dem Start des Statusprotokolls erfasst“ wird lesbar an
   )
   assert.doesNotMatch(markup, />after-start</)
 })
+
+test('die Zeiten der Vorschau stehen in der Zeitzone der Installation, nicht in UTC', () => {
+  const markup = renderToStaticMarkup(<StatusLogView rebuild={null} conversion={conversion} busy={false} timeZone="Europe/Berlin" locale="de-DE" />)
+  assert.match(markup, /12\.10\.2026/)
+  assert.match(markup, /20:00/)
+  assert.doesNotMatch(markup, /18:00 UTC/)
+})
+
+test('der Grund „vor dem Beginn behoben“ wird lesbar angezeigt', () => {
+  const markup = renderToStaticMarkup(
+    <StatusLogView rebuild={null} conversion={{ ...conversion, skipped: [{ incidentId: '9', title: 'Wartung rückwärts', reason: 'end-before-start' }] }} busy={false} />,
+  )
+  assert.match(markup, /Wartung rückwärts/)
+  assert.match(markup, /resolved before it started|vor dem Beginn behoben/)
+  assert.doesNotMatch(markup, />end-before-start</)
+})

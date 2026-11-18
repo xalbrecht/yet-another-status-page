@@ -30,7 +30,7 @@ export type IncidentForConversion = {
   updates: Array<{ status: string; message: string; createdAt: string }>
 }
 
-export type ConversionPlan = { skip: 'open' | 'manual' | 'not-maintenance' | 'after-start' } | { maintenance: MaintenanceDraft }
+export type ConversionPlan = { skip: 'open' | 'manual' | 'not-maintenance' | 'after-start' | 'end-before-start' } | { maintenance: MaintenanceDraft }
 
 /**
  * `cutoffAt`: Zeitpunkt des ersten Betriebseintrags im Statusprotokoll. Vorfälle, die danach in YASP erfasst wurden,
@@ -46,6 +46,8 @@ export function planMaintenanceFromIncident(
   if (incident.availabilityClass && incident.availabilityClass !== 'auto') return { skip: 'manual' }
   if (options.cutoffAt && new Date(incident.createdAt).getTime() >= new Date(options.cutoffAt).getTime()) return { skip: 'after-start' }
   if (!incident.resolvedAt) return { skip: 'open' }
+  // Eine Wartung mit Ende vor dem Beginn wäre ungültig: Vorfall stehen lassen und mit dem Grund melden
+  if (new Date(incident.resolvedAt).getTime() < new Date(incident.createdAt).getTime()) return { skip: 'end-before-start' }
   return {
     maintenance: {
       title: incident.title,

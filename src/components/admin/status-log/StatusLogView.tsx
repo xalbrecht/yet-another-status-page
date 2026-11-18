@@ -2,6 +2,7 @@ import Link from 'next/link'
 import type { RebuildResult } from '@/lib/status-log-rebuild'
 import type { ConversionResult } from '@/lib/maintenance-conversion'
 import { useAdminText, type AdminText } from '@/lib/i18n/admin-client'
+import { formatZonedDateTime } from '@/lib/zoned-format'
 
 /**
  * Darstellung der Seite „Statusprotokoll pflegen“. Reine Komponente ohne Zustand: Die Ergebnisse und die Funktionen
@@ -13,6 +14,9 @@ export type StatusLogViewProps = {
   conversion: ConversionResult | null
   busy: boolean
   error?: string | null
+  /** Zeitzone und Sprache der Installation für die Zeiten der Vorschau (ohne Angabe UTC und Englisch) */
+  timeZone?: string
+  locale?: string
   /** Zahl der gespeicherten Regeln für die automatische Einordnung (Einstellungen) */
   ruleCount?: number
   /** Haken „Die Datenbank wurde gesichert“ */
@@ -24,7 +28,6 @@ export type StatusLogViewProps = {
   onRunConversion?: () => void
 }
 
-const formatTime = (iso: string) => `${new Date(iso).toISOString().slice(0, 16).replace('T', ' ')} UTC`
 
 /** Lesbarer Name für die Schlüssel der Zählung nach Einordnung. */
 function classLabel(key: string, ta: AdminText): string {
@@ -50,12 +53,14 @@ function reasonLabel(reason: string, ta: AdminText): string {
   if (reason === 'open') return ta('open, not resolved')
   if (reason === 'manual') return ta('classified by hand')
   if (reason === 'after-start') return ta('entered after the status log started')
+  if (reason === 'end-before-start') return ta('resolved before it started')
   return reason
 }
 
 export function StatusLogView(props: StatusLogViewProps) {
   const ta = useAdminText()
   const { rebuild, conversion, busy, error } = props
+  const formatTime = (iso: string) => formatZonedDateTime(iso, props.locale ?? 'en', props.timeZone ?? 'UTC')
   const canRunRebuild = !busy && rebuild !== null && rebuild.dryRun
   const canRunConversion = !busy && conversion !== null && conversion.dryRun && props.backupConfirmed === true
 

@@ -67,7 +67,7 @@ Maintenances that were entered as incidents are turned into maintenances. This a
 | Updates | the incident updates with their times, "Resolved" becomes "Completed", all others "In Progress" |
 | Description | "Übernommen aus Störung <short ID> (Vorgängerverfahren)" |
 
-No notification drafts are created. The incident is deleted afterwards and the status log is reconstructed again. Service statuses set by hand stay unchanged. Only incidents created **before the first operation entry of the status log** are converted, so a real incident entered later that matches a maintenance rule is never touched. Open incidents, incidents with a classification set by hand and incidents created after the status log started are skipped and listed with the reason.
+No notification drafts are created. The incident is deleted afterwards and the status log is reconstructed again. Service statuses set by hand stay unchanged. Only incidents created **before the first operation entry of the status log** are converted, so a real incident entered later that matches a maintenance rule is never touched. Open incidents, incidents with a classification set by hand, incidents created after the status log started and incidents resolved before they started (end before start) are skipped and listed with the reason.
 
 If a run is interrupted, run it again: a maintenance with the same title and start that already exists is not created twice. If only the reconstruction fails after the conversion, the page says so. Run the reconstruction again.
 

@@ -5,6 +5,7 @@ import config from '@payload-config'
 import { isTestMode } from '@/lib/access'
 import { checkIncidentInput } from '@/lib/incident-draft'
 import { ta } from '@/lib/i18n/admin'
+import { activeServiceWhereNow } from '@/lib/service-lifecycle'
 import { getServerUrl } from '@/lib/utils'
 
 /**
@@ -27,8 +28,11 @@ export async function POST(request: NextRequest) {
     }
     const { title, message, impact, serviceIds, smsBody, ntfyBody } = check.value
 
-    // Jeder gewählte Dienst muss es geben
-    const found = await payload.count({ collection: 'services', where: { id: { in: serviceIds } } })
+    // Jeder gewählte Dienst muss es geben und aktiv sein (wie im Assistenten: beendete und noch nicht begonnene Dienste bietet er nicht an)
+    const found = await payload.count({
+      collection: 'services',
+      where: { and: [{ id: { in: serviceIds } }, activeServiceWhereNow()] },
+    })
     if (found.totalDocs !== serviceIds.length) {
       return NextResponse.json({ error: ta('The input is incomplete or invalid.'), fields: ['serviceIds'] }, { status: 400 })
     }

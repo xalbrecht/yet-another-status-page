@@ -4,6 +4,8 @@ import { DefaultTemplate } from '@payloadcms/next/templates'
 import { Gutter } from '@payloadcms/ui'
 import { normalizeRules } from '@/lib/incident-classification'
 import { ta } from '@/lib/i18n/admin'
+import { safeLocale, safeTimeZone } from '@/lib/datetime'
+import { translatorsFor } from '@/lib/i18n/translators'
 import { isStatusLogMaintenanceDisabled } from '@/lib/status-log-maintenance'
 import { StatusLogActions } from './StatusLogActions'
 import './status-log.scss'
@@ -15,6 +17,8 @@ export async function StatusLogAdminView({ initPageResult, params, searchParams 
   const disabled = isStatusLogMaintenanceDisabled()
   const settings = disabled ? null : await initPageResult.req.payload.findGlobal({ slug: 'settings' })
   const ruleCount = settings ? normalizeRules(settings.classificationRules).length : 0
+  const timeZone = safeTimeZone(settings?.timezone || 'UTC')
+  const locale = safeLocale(settings?.locale || translatorsFor('').dateLocale)
   return (
     <DefaultTemplate
       i18n={initPageResult.req.i18n}
@@ -38,7 +42,7 @@ export async function StatusLogAdminView({ initPageResult, params, searchParams 
             </div>
           </div>
         ) : (
-          <StatusLogActions ruleCount={ruleCount} />
+          <StatusLogActions ruleCount={ruleCount} timeZone={timeZone} locale={locale} />
         )}
       </Gutter>
     </DefaultTemplate>

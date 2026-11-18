@@ -5,10 +5,11 @@ import type { RebuildResult } from '@/lib/status-log-rebuild'
 import type { ConversionResult } from '@/lib/maintenance-conversion'
 import type { PreviewCheck } from '@/lib/preview-check'
 import { useAdminText } from '@/lib/i18n/admin-client'
+import { failureMessage, parseJsonBody } from '@/lib/response-body'
 import { StatusLogView } from './StatusLogView'
 
 /** Zustand und Aufrufe der Seite „Statusprotokoll pflegen“. Ausführen erst nach Vorschau und Bestätigung, die Umwandlung zusätzlich erst mit dem Haken zur Sicherung. */
-export const StatusLogActions: React.FC<{ ruleCount: number }> = ({ ruleCount }) => {
+export const StatusLogActions: React.FC<{ ruleCount: number; timeZone: string; locale: string }> = ({ ruleCount, timeZone, locale }) => {
   const ta = useAdminText()
   const [rebuild, setRebuild] = useState<RebuildResult | null>(null)
   const [conversion, setConversion] = useState<ConversionResult | null>(null)
@@ -31,11 +32,13 @@ export const StatusLogActions: React.FC<{ ruleCount: number }> = ({ ruleCount })
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(dryRun ? { dryRun } : { dryRun, expect }),
       })
-      const body = await response.json()
+      // Ein Proxy oder Server kann HTML statt JSON liefern: dann den HTTP-Status nennen, nicht „Unexpected token“
+      const body = parseJsonBody(await response.text())
       if (!response.ok) {
         if (response.status === 409) onRejected?.()
-        throw new Error(body?.error || `HTTP ${response.status}`)
+        throw new Error(failureMessage(response.status, body, (status) => ta('The server answered with an error (HTTP {status}).').replace('{status}', String(status))))
       }
+      if (body === null) throw new Error(ta('The answer of the server could not be read.'))
       done(body as T)
     } catch (err) {
       setError(err instanceof Error ? err.message : ta('Unknown error'))
@@ -46,6 +49,8 @@ export const StatusLogActions: React.FC<{ ruleCount: number }> = ({ ruleCount })
 
   return (
     <StatusLogView
+      timeZone={timeZone}
+      locale={locale}
       rebuild={rebuild}
       conversion={conversion}
       busy={busy}

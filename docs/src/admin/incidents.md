@@ -17,7 +17,7 @@ A notification draft is automatically created when you save.
 
 ### Creating an Incident with a Template
 
-If you keep ready-made texts as [templates](./templates.md), use the button **Create new with template** (Neu erstellen mit Vorlage) below the title of the list. It opens a guided page:
+If you keep ready-made texts as [templates](./templates.md), use the button **Create new with template** (Neu erstellen mit Vorlage) below the title of the list. It opens a guided page. At the top you choose the type: **Incident**, or **Maintenance** (see [Creating a Maintenance with a Template](./maintenances.md#creating-a-maintenance-with-a-template)). For an incident:
 
 1. **Group**: choose the service group.
 2. **Affected services**: choose all services of the group or single ones. Services that already have an open incident carry the note "open incident". It does not prevent you from continuing. If you choose all services of a group, you decide whether the text lists them one by one or says "all services of the group ...".

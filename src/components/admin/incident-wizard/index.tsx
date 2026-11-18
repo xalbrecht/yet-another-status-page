@@ -2,9 +2,9 @@ import React from 'react'
 import type { AdminViewServerProps } from 'payload'
 import { DefaultTemplate } from '@payloadcms/next/templates'
 import { Gutter } from '@payloadcms/ui'
-import { safeLocale } from '@/lib/datetime'
+import { safeLocale, safeTimeZone } from '@/lib/datetime'
 import { translatorsFor } from '@/lib/i18n/translators'
-import { IncidentWizard } from './IncidentWizard'
+import { TemplateWizard, type MessageKind } from './TemplateWizard'
 import { activeServiceWhereNow } from '@/lib/service-lifecycle'
 import type { WizardGroup, WizardTemplate, ServiceState } from './IncidentWizardParts'
 
@@ -20,12 +20,19 @@ export async function IncidentFromTemplateView({ initPageResult, params, searchP
   if (!user) return null
   const payload = initPageResult.req.payload
 
-  const [groupsResult, servicesResult, templatesResult, openIncidents, settings] = await Promise.all([
+  const [groupsResult, servicesResult, templatesResult, maintenanceTemplatesResult, openIncidents, settings] = await Promise.all([
     payload.find({ collection: 'service-groups', sort: '_order', pagination: false, depth: 0 }),
     payload.find({ collection: 'services', where: activeServiceWhereNow(), sort: '_order', pagination: false, depth: 0 }),
     payload.find({
       collection: 'message-templates',
       where: { and: [{ kind: { equals: 'incident' } }, { status: { equals: 'investigating' } }] },
+      sort: 'name',
+      pagination: false,
+      depth: 0,
+    }),
+    payload.find({
+      collection: 'message-templates',
+      where: { and: [{ kind: { equals: 'maintenance' } }, { status: { equals: 'upcoming' } }] },
       sort: 'name',
       pagination: false,
       depth: 0,
@@ -54,7 +61,7 @@ export async function IncidentFromTemplateView({ initPageResult, params, searchP
     }))
     .filter((group) => group.services.length > 0)
 
-  const templates: WizardTemplate[] = templatesResult.docs.map((template) => ({
+  const toWizardTemplate = (template: (typeof templatesResult.docs)[number]): WizardTemplate => ({
     id: Number(template.id),
     name: template.name,
     impact: template.impact ?? null,
@@ -62,10 +69,15 @@ export async function IncidentFromTemplateView({ initPageResult, params, searchP
     body: template.body,
     smsBody: template.smsBody ?? null,
     ntfyBody: template.ntfyBody ?? null,
-  }))
+  })
+  const incidentTemplates = templatesResult.docs.map(toWizardTemplate)
+  const maintenanceTemplates = maintenanceTemplatesResult.docs.map(toWizardTemplate)
 
   // Sprache der Aufzählung: die eingestellte Locale, sonst die Datumssprache der Oberfläche
   const locale = safeLocale(settings.locale || translatorsFor('').dateLocale)
+  const timeZone = safeTimeZone(settings.timezone || 'UTC')
+  // Der Knopf in der Liste der Wartungen wählt die Art vor (`?kind=maintenance`)
+  const initialKind: MessageKind = searchParams?.kind === 'maintenance' ? 'maintenance' : 'incident'
 
   return (
     <DefaultTemplate
@@ -79,7 +91,7 @@ export async function IncidentFromTemplateView({ initPageResult, params, searchP
       visibleEntities={initPageResult.visibleEntities}
     >
       <Gutter>
-        <IncidentWizard groups={groups} templates={templates} locale={locale} />
+        <TemplateWizard groups={groups} incidentTemplates={incidentTemplates} maintenanceTemplates={maintenanceTemplates} locale={locale} timeZone={timeZone} initialKind={initialKind} />
       </Gutter>
     </DefaultTemplate>
   )

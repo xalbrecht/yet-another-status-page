@@ -110,7 +110,7 @@ export function ServicesStep({
   )
 }
 
-export function TemplateStep({ templates, choice, onChoose }: { templates: WizardTemplate[]; choice: string | null; onChoose: (choice: string) => void }) {
+export function TemplateStep({ templates, choice, onChoose, kind = 'incident' }: { templates: WizardTemplate[]; choice: string | null; onChoose: (choice: string) => void; kind?: 'incident' | 'maintenance' }) {
   const ta = useAdminText()
   return (
     <>
@@ -128,8 +128,18 @@ export function TemplateStep({ templates, choice, onChoose }: { templates: Wizar
           <span />
         </label>
       </div>
-      {templates.length === 0 && <p className="iw-hint">{ta('There are no templates for a new incident yet. Create them under Status → Templates.')}</p>}
-      <p className="iw-hint">{ta('Templates of the type incident with the status "Investigating" are offered, because this is a new message.')}</p>
+      {templates.length === 0 && (
+        <p className="iw-hint">
+          {kind === 'maintenance'
+            ? ta('There are no templates for a new maintenance yet. Create them under Status → Templates.')
+            : ta('There are no templates for a new incident yet. Create them under Status → Templates.')}
+        </p>
+      )}
+      <p className="iw-hint">
+        {kind === 'maintenance'
+          ? ta('Templates of the type maintenance with the status "Upcoming" are offered, because this is a new message.')
+          : ta('Templates of the type incident with the status "Investigating" are offered, because this is a new message.')}
+      </p>
     </>
   )
 }

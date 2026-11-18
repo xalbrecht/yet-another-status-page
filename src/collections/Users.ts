@@ -82,6 +82,7 @@ export const Users: CollectionConfig = {
     {
       name: 'role',
       type: 'select',
+      label: ta('Role'),
       required: true,
       defaultValue: 'editor',
       options: [

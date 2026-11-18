@@ -100,6 +100,9 @@ export default buildConfig({
   },
   admin: {
     user: Users.slug,
+    // Datum und Uhrzeit in Listen: sprachabhängiges Muster von date-fns. Payloads Vorgabe
+    // 'MMMM do yyyy, h:mm a' mischt englische Reihenfolge mit der Tageszeit der Sprache.
+    dateFormat: 'PPP, p',
     meta: {
       titleSuffix: ' | Status',
     },

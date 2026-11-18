@@ -50,8 +50,8 @@ export const RecipientCountField: React.FC = () => {
   return (
     <div className="recipient-count-field">
       <label className="recipient-count-field__label">
-        Recipients
-        {!isSent && <span className="recipient-count-field__estimate">(estimated)</span>}
+        {ta('Recipients')}
+        {!isSent && <span className="recipient-count-field__estimate">({ta('estimated')})</span>}
       </label>
       <div className="recipient-count-field__value">
         {loading ? (

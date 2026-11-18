@@ -83,6 +83,25 @@ test.describe('Störung aus einer Vorlage (Route)', () => {
     }
   })
 
+  test('beendete und noch nicht begonnene Dienste werden abgelehnt, auch neben einem aktiven', async ({ request }) => {
+    const id = Date.now()
+    const day = 24 * 3600 * 1000
+    const daysFromNow = (days: number) => new Date(Date.now() + days * day).toISOString()
+    const group = await createServiceGroup({ name: `Vorlage Gruppe D ${id}`, icon: 'Server' })
+    const active = await createService({ name: `Vorlage D aktiv ${id}`, group: group.id, startsAt: daysFromNow(-5) })
+    const ended = await createService({ name: `Vorlage D beendet ${id}`, group: group.id, startsAt: daysFromNow(-5), endsAt: daysFromNow(-1) })
+    const future = await createService({ name: `Vorlage D später ${id}`, group: group.id, startsAt: daysFromNow(3) })
+
+    for (const rejected of [[ended.id], [future.id], [active.id, ended.id]]) {
+      const response = await post(request, { title: `Ausfall D ${id}`, message: 'Text', impact: 'major', serviceIds: rejected })
+      expect(response.status()).toBe(400)
+      expect((await response.json()).fields).toEqual(['serviceIds'])
+    }
+    // Abgelehnt heißt: nichts verändert
+    expect((await (await request.get(`/api/services/${ended.id}?depth=0`)).json()).status).toBe('operational')
+    expect((await post(request, { title: `Ausfall D ${id}`, message: 'Text', impact: 'major', serviceIds: [active.id] })).status()).toBe(201)
+  })
+
   test('eine unvollständige oder ungültige Eingabe wird mit den betroffenen Feldern abgelehnt', async ({ request }) => {
     const empty = await post(request, {})
     expect(empty.status()).toBe(400)

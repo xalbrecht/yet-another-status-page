@@ -6,6 +6,7 @@ import { Gutter } from '@payloadcms/ui'
 import { loadReport } from '@/lib/report/load'
 import { periodOptions } from '@/lib/report/period'
 import { resolveDateTimeConfig } from '@/lib/datetime'
+import { reportDisplayOf } from '@/lib/report/display-settings'
 import { ta } from '@/lib/i18n/admin'
 import { parseRecipients } from '@/lib/report/export/recipients'
 import { parseReportParams, reportHref, reportTabHrefs, selectionQuery } from '@/lib/report/params'
@@ -74,7 +75,7 @@ export async function AvailabilityReportView({ initPageResult, params, searchPar
                     locale={dt.locale}
                   />
                   <div className="availability-report__layout-main">
-                    <GroupSheet data={result.data} locale={dt.locale} timeZone={dt.timezone} />
+                    <GroupSheet data={result.data} locale={dt.locale} timeZone={dt.timezone} display={reportDisplayOf(settings)} />
                   </div>
                 </div>
               ))}

@@ -268,6 +268,36 @@ export const Settings: GlobalConfig = {
           },
         },
         {
+          name: 'reportHeatEndedStyle',
+          type: 'select',
+          label: ta('Ended services in the heat map'),
+          defaultValue: 'label',
+          options: [
+            { label: ta('Grey row title with note'), value: 'label' },
+            { label: ta('Hatching only'), value: 'hatch' },
+          ],
+          admin: {
+            description: ta(
+              'Group sheet of the availability report. Months in which a service has no value, before its start or after its end, are always hatched. "Grey row title with note" also greys the row title of an ended service and adds the note "ended on ...".',
+            ),
+          },
+        },
+        {
+          name: 'reportSheetActiveStyle',
+          type: 'select',
+          label: ta('Active marks in the group sheet'),
+          defaultValue: 'marks',
+          options: [
+            { label: ta('Two fields in every row'), value: 'marks' },
+            { label: ta('Note only where it differs'), value: 'hints' },
+          ],
+          admin: {
+            description: ta(
+              'Block "Services of the group, weakest first" of the group sheet. "Two fields in every row" shows "Active in the report period" and "Active today" as in the table of services. "Note only where it differs" shows a note only for services that were not active in the period or have ended.',
+            ),
+          },
+        },
+        {
           name: 'classificationRules',
           type: 'array',
           label: ta('Classify old incidents automatically'),

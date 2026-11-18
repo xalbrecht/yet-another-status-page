@@ -70,6 +70,14 @@ test('Aktiv heute bezieht sich auf das Berichtsdatum, endedAt nennt das Ende bee
   assert.equal(row('C').endedAt, dayEnd(10, 10))
 })
 
+test('Zeilen der Wärmekarte tragen im Gruppenblatt das Ende beendeter Dienste, die Gesamtzeile nicht', () => {
+  const data = buildReport({ ...build(services), params: parseReportParams({ group: '1' }) })
+  const heatRow = (name: string) => data.heat.rows.find((entry) => entry.name.startsWith(name))!
+  assert.equal(heatRow('C').endedAt, dayEnd(10, 10))
+  assert.equal(heatRow('A').endedAt, null)
+  assert.equal(data.heat.rows.find((entry) => entry.total)?.endedAt, undefined)
+})
+
 test('ein Dienst ohne Berührung des Zeitraums hat keinen Wert und geht in keinen Mittelwert ein', () => {
   const data = buildReport(build(services))
   const row = (name: string) => data.ranking.find((entry) => entry.name.startsWith(name))!

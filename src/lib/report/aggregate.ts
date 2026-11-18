@@ -97,7 +97,8 @@ export type ReportData = {
   trend: Array<{ key: string; label: string; availability: number | null }>
   heat: {
     columns: Array<{ key: string; label: string }>
-    rows: Array<{ name: string; values: Array<number | null>; total?: boolean }>
+    /** `endedAt`: Ende des Dienstes, wenn es zum Berichtsdatum überschritten ist (nur Zeilen eines Dienstes im Gruppenblatt). */
+    rows: Array<{ name: string; values: Array<number | null>; total?: boolean; endedAt?: number | null }>
   }
   ranking: RankingRow[]
   /** alle Gruppen mit Diensten, schwächste zuerst, unabhängig von der Gruppenwahl */
@@ -275,7 +276,7 @@ export function buildReport(input: ReportInput): ReportData {
 
   const heatRows: ReportData['heat']['rows'] = []
   if (scopeGroup) {
-    for (const entry of rows) heatRows.push({ name: entry.row.name, values: entry.row.history })
+    for (const entry of rows) heatRows.push({ name: entry.row.name, values: entry.row.history, endedAt: entry.row.endedAt })
   } else {
     for (const group of input.groups) {
       const members = services.filter((service) => service.groupId === group.id)

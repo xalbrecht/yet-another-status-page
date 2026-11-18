@@ -1157,6 +1157,14 @@ export interface Setting {
    */
   availabilityTarget?: number | null;
   /**
+   * Group sheet of the availability report. Months in which a service has no value, before its start or after its end, are always hatched. "Grey row title with note" also greys the row title of an ended service and adds the note "ended on ...".
+   */
+  reportHeatEndedStyle?: ('label' | 'hatch') | null;
+  /**
+   * Block "Services of the group, weakest first" of the group sheet. "Two fields in every row" shows "Active in the report period" and "Active today" as in the table of services. "Note only where it differs" shows a note only for services that were not active in the period or have ended.
+   */
+  reportSheetActiveStyle?: ('marks' | 'hints') | null;
+  /**
    * For the time before the status log, these rules read the title and the text of an old incident and decide how it counts in the availability report. They apply from top to bottom, the first matching rule decides. Upper and lower case do not matter. A classification set by hand on an incident always applies. New incidents are not affected. Changed rules take effect when the reconstruction is started under "Maintain the status log". Without rules every old incident counts as a partial outage that is not clearly classified.
    */
   classificationRules?:
@@ -1376,6 +1384,8 @@ export interface SettingsSelect<T extends boolean = true> {
   statusBoxContent?: T;
   statusBoxesPlacement?: T;
   availabilityTarget?: T;
+  reportHeatEndedStyle?: T;
+  reportSheetActiveStyle?: T;
   classificationRules?:
     | T
     | {

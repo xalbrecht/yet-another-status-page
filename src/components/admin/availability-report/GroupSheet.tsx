@@ -2,6 +2,7 @@ import React from 'react'
 import { ta } from '@/lib/i18n/admin'
 import { serviceWord } from '@/lib/report/format'
 import { formatAvailability } from '@/lib/availability'
+import { DEFAULT_REPORT_DISPLAY, type ReportDisplay } from '@/lib/report/display-settings'
 import type { ReportData } from '@/lib/report/aggregate'
 import { DisruptionsByDay } from './DisruptionsByDay'
 import { DisruptionsByService } from './DisruptionsByService'
@@ -10,7 +11,7 @@ import { Heatmap } from './Heatmap'
 import { TrendChart } from './TrendChart'
 
 /** Gruppenblatt: fünf Blöcke einer Gruppe. Die Daten sind der Bericht für die gewählte Gruppe (`scope.groupName` gesetzt). */
-export function GroupSheet({ data, locale, timeZone }: { data: ReportData; locale: string; timeZone: string }) {
+export function GroupSheet({ data, locale, timeZone, display = DEFAULT_REPORT_DISPLAY }: { data: ReportData; locale: string; timeZone: string; display?: ReportDisplay }) {
   const { kpis, scope, sheet } = data
   return (
     <article className="availability-report__sheet" data-testid="group-sheet">
@@ -24,13 +25,13 @@ export function GroupSheet({ data, locale, timeZone }: { data: ReportData; local
       </section>
       <section className="availability-report__card">
         <h3>{ta('Services of the group, weakest first')}</h3>
-        <GroupBars rows={data.ranking} locale={locale} timeZone={timeZone} />
+        <GroupBars rows={data.ranking} locale={locale} timeZone={timeZone} activeStyle={display.sheetActive} />
       </section>
       {sheet && <DisruptionsByService sheet={sheet} />}
       {sheet && <DisruptionsByDay sheet={sheet} locale={locale} />}
       <section className="availability-report__card">
         <h3>{ta('Heat map of the services')}</h3>
-        <Heatmap heat={data.heat} target={kpis.target} locale={locale} />
+        <Heatmap heat={data.heat} target={kpis.target} locale={locale} timeZone={timeZone} endedStyle={display.heatEnded} />
       </section>
     </article>
   )

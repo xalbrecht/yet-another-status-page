@@ -32,6 +32,9 @@ export const Services: CollectionConfig = {
     useAsTitle: 'name',
     defaultColumns: ['name', 'group', 'status', 'startsAt', 'endsAt', 'updatedAt'],
     group: ta('Status'),
+    components: {
+      beforeListTable: ['@/components/admin/ServiceStateFilter#ServiceStateFilter'],
+    },
   },
   orderable: true,
   access: standardAccess,

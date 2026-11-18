@@ -73,3 +73,80 @@ export function canDeleteService(
 export function activeServiceWhereNow(): Where {
   return activeServiceWhere(Date.now())
 }
+
+/** Zustandsfilter der Dienstliste im Admin. `null` heißt kein Zustandsfilter (alle Dienste). */
+export type ServiceState = 'active' | 'ended' | 'not-started'
+
+type Leaf = { field: string; operator: string }
+type WhereLike = Record<string, unknown>
+
+const isRecord = (value: unknown): value is WhereLike => typeof value === 'object' && value !== null && !Array.isArray(value)
+
+/** Die Bedingungen einer Abfrage als Liste: Einträge von `and`, übrige Felder auf oberster Ebene als ein Eintrag davor. */
+function entriesOf(where: Where | undefined): WhereLike[] {
+  if (!isRecord(where)) return []
+  const { and, ...rest } = where as WhereLike
+  return [...(Object.keys(rest).length > 0 ? [rest] : []), ...(Array.isArray(and) ? and.filter(isRecord) : [])]
+}
+
+/** Blätter eines Eintrags (Feld und Operator), ohne die Werte: nach dem Weg durch die Adresszeile sind Werte Texte. */
+function leavesOf(entry: WhereLike): Leaf[] | null {
+  const leaves: Leaf[] = []
+  const visit = (node: WhereLike): boolean => {
+    for (const [key, value] of Object.entries(node)) {
+      if (key === 'or' || key === 'and') {
+        if (!Array.isArray(value)) return false
+        for (const child of value) if (!isRecord(child) || !visit(child)) return false
+      } else if (isRecord(value)) {
+        for (const operator of Object.keys(value)) leaves.push({ field: key, operator })
+      } else return false
+    }
+    return true
+  }
+  return visit(entry) ? leaves : null
+}
+
+const signatureOf = (entry: WhereLike): string | null => {
+  const leaves = leavesOf(entry)
+  return leaves ? leaves.map((leaf) => `${leaf.field}.${leaf.operator}`).sort().join('|') : null
+}
+
+// Bedingungen im Format des Filters von Payload (`and` aus `or`-Gruppen), damit der eingebaute Filter sie anzeigen kann.
+const START_REACHED = 'startsAt.less_than_equal'
+const END_OPEN_OR_LATER = 'endsAt.exists|endsAt.greater_than_equal'
+const ENDED = 'endsAt.less_than'
+const NOT_STARTED = 'startsAt.greater_than'
+
+/** Bedingungen (Einträge von `and`) für einen Zustand zum Zeitpunkt `at`. Entspricht `isServiceActive`, `isServiceEnded` und `isServiceNotStarted`. */
+export function serviceStateConditions(state: ServiceState, at: number): Where[] {
+  const iso = new Date(at).toISOString()
+  if (state === 'ended') return [{ or: [{ endsAt: { less_than: iso } }] }]
+  if (state === 'not-started') return [{ or: [{ startsAt: { greater_than: iso } }] }]
+  return [
+    { or: [{ startsAt: { less_than_equal: iso } }] },
+    { or: [{ endsAt: { exists: false } }, { endsAt: { greater_than_equal: iso } }] },
+  ]
+}
+
+/** Welcher Zustandsfilter steckt in der Abfrage? Erkannt an Feldern und Operatoren, nicht an den Werten. */
+export function detectServiceState(where: Where | undefined): ServiceState | null {
+  const signatures = new Set(entriesOf(where).map(signatureOf))
+  if (signatures.has(START_REACHED) && signatures.has(END_OPEN_OR_LATER)) return 'active'
+  if (signatures.has(ENDED)) return 'ended'
+  if (signatures.has(NOT_STARTED)) return 'not-started'
+  return null
+}
+
+/**
+ * Setzt den Zustandsfilter in die Abfrage und lässt alle anderen Bedingungen unverändert. Ein vorhandener Zustandsfilter
+ * wird ersetzt, `null` entfernt ihn. Ohne Bedingungen ergibt sich `undefined`.
+ */
+export function applyServiceState(where: Where | undefined, state: ServiceState | null, at: number): Where | undefined {
+  const stateSignatures = new Set([START_REACHED, END_OPEN_OR_LATER, ENDED, NOT_STARTED])
+  const others = entriesOf(where).filter((entry) => {
+    const signature = signatureOf(entry)
+    return signature === null || !stateSignatures.has(signature)
+  })
+  const entries = [...others, ...(state === null ? [] : serviceStateConditions(state, at))]
+  return entries.length === 0 ? undefined : ({ and: entries } as Where)
+}

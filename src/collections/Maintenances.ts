@@ -1,7 +1,9 @@
 import type { CollectionConfig } from 'payload'
 import { translatorsFor } from '@/lib/i18n/translators'
 import { generateShortId } from '@/lib/shortId'
-import { standardAccess } from '@/lib/access'
+import { authenticatedOrTestWriteField, standardAccess } from '@/lib/access'
+import { NTFY_TEXT_MAX_LENGTH, renderTemplate, SMS_TEXT_MAX_LENGTH } from '@/lib/template-text'
+import { getServerUrl } from '@/lib/utils'
 import { localizedDateAdmin } from '@/lib/localizedDateAdmin'
 import { ta } from '@/lib/i18n/admin'
 import { activeServicesFilterOptions, validateActiveServices } from '@/lib/affected-services'
@@ -196,6 +198,10 @@ export const Maintenances: CollectionConfig = {
           required: true,
           admin: {
             description: ta('Update message'),
+            components: {
+              // Auswahl „Vorlage einfügen“ über dem Feld, nur bei neuen Aktualisierungen
+              beforeInput: ['@/components/admin/update-template/UpdateTemplatePicker#UpdateTemplatePicker'],
+            },
           },
         },
         {
@@ -208,6 +214,24 @@ export const Maintenances: CollectionConfig = {
             description: ta('When this update was posted'),
           }),
         },
+        // Texte für den Benachrichtigungsentwurf, aus einer Vorlage gesetzt. Nur Angemeldete lesen und schreiben sie,
+        // sie stehen weder in der öffentlichen API noch im Formular.
+        {
+          name: 'smsBody',
+          label: ta('SMS text'),
+          type: 'textarea',
+          maxLength: SMS_TEXT_MAX_LENGTH,
+          admin: { hidden: true },
+          access: { read: authenticatedOrTestWriteField, create: authenticatedOrTestWriteField, update: authenticatedOrTestWriteField },
+        },
+        {
+          name: 'ntfyBody',
+          label: ta('ntfy text'),
+          type: 'textarea',
+          maxLength: NTFY_TEXT_MAX_LENGTH,
+          admin: { hidden: true },
+          access: { read: authenticatedOrTestWriteField, create: authenticatedOrTestWriteField, update: authenticatedOrTestWriteField },
+        },
       ],
     },
   ],
@@ -218,6 +242,18 @@ export const Maintenances: CollectionConfig = {
 
         if (operation === 'create') {
           data.shortId = generateShortId(8)
+        }
+
+        // `{{link}}` in den Texten der Aktualisierungen (aus einer Vorlage) durch die Adresse der Wartung ersetzen. Die Kennung
+        // besteht erst jetzt, deshalb geschieht es hier und nicht in der Vorlage.
+        const shortIdForLink = (data.shortId as string | undefined) ?? (originalDoc?.shortId as string | undefined)
+        if (shortIdForLink && Array.isArray(data.updates)) {
+          const values = { link: `${getServerUrl()}/m/${shortIdForLink}` }
+          for (const update of data.updates as Array<Record<string, unknown>>) {
+            for (const key of ['message', 'smsBody', 'ntfyBody']) {
+              if (typeof update[key] === 'string') update[key] = renderTemplate(update[key] as string, values)
+            }
+          }
         }
 
         // Sync top-level status from the latest update, except when the schedule
@@ -343,6 +379,8 @@ export const Maintenances: CollectionConfig = {
               endTimeStr,
               duration: doc.duration,
               message: update.message,
+              smsBody: update.smsBody ?? undefined,
+              ntfyBody: update.ntfyBody ?? undefined,
             }
             
             // Defer execution to after transaction commits

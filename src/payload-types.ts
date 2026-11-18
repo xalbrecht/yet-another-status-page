@@ -392,11 +392,11 @@ export interface Maintenance {
    */
   status: 'upcoming' | 'in_progress' | 'completed' | 'cancelled';
   /**
-   * Automatically set to "In Progress" when start time is reached
+   * Sets "In Progress" when the start time is reached and notifies the subscribers right away
    */
   autoStartOnSchedule?: boolean | null;
   /**
-   * Automatically set to "Completed" when end time is reached
+   * Sets "Completed" when the end time is reached and notifies the subscribers right away
    */
   autoCompleteOnSchedule?: boolean | null;
   /**
@@ -416,6 +416,8 @@ export interface Maintenance {
          * When this update was posted
          */
         createdAt: string;
+        smsBody?: string | null;
+        ntfyBody?: string | null;
         id?: string | null;
       }[]
     | null;
@@ -894,6 +896,8 @@ export interface MaintenancesSelect<T extends boolean = true> {
         status?: T;
         message?: T;
         createdAt?: T;
+        smsBody?: T;
+        ntfyBody?: T;
         id?: T;
       };
   updatedAt?: T;

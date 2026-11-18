@@ -23,6 +23,9 @@ export interface DeferredNotification {
   endTimeStr: string | null
   duration: string | undefined
   message?: string
+  /** Eigener SMS- und ntfy-Text der Aktualisierung (aus einer Vorlage), ersetzt den allgemeinen SMS-Text */
+  smsBody?: string
+  ntfyBody?: string
 }
 
 // Helper to interpolate template placeholders
@@ -97,7 +100,8 @@ export async function createMaintenanceNotification(payload: Payload, data: Defe
       status: 'draft',
       subject: data.isUpdate ? `[${t('notif.maintTag')} ${data.statusLabel}] ${data.title}` : `[${t('notif.maintScheduledTag')}] ${data.title}`,
       emailBody,
-      smsBody,
+      smsBody: data.smsBody?.trim() || smsBody,
+      ...(data.ntfyBody?.trim() ? { ntfyBody: data.ntfyBody.trim() } : {}),
     },
   })
   return notification

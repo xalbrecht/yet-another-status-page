@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { fillUpdateTemplate, idsOf, isNewUpdate, siblingPath, templatesForStatus, type UpdateTemplate } from '@/lib/update-template'
+import { fillUpdateTemplate, formatScheduleValue, idsOf, isNewUpdate, siblingPath, templatesForStatus, templateUses, type UpdateTemplate } from '@/lib/update-template'
 
 const template = (over: Partial<UpdateTemplate> = {}): UpdateTemplate => ({
   id: 1,
@@ -45,4 +45,23 @@ test('isNewUpdate: gespeicherte Kennungen gelten nicht als neu', () => {
   assert.equal(isNewUpdate('a1', saved), false)
   assert.equal(isNewUpdate('zz', saved), true)
   assert.equal(isNewUpdate(undefined, saved), true)
+})
+
+test('fillUpdateTemplate ersetzt Beginn und Ende einer Wartung', () => {
+  const maintenance = template({ body: 'Wartung von {{start}} bis {{end}}: {{services}}', smsBody: null })
+  const texts = fillUpdateTemplate(maintenance, { serviceNames: ['Mail'], groupNames: [], start: 'Mi., 25. Nov., 22:00 MEZ', end: '', locale: 'de-DE' })
+  assert.equal(texts.message, 'Wartung von Mi., 25. Nov., 22:00 MEZ bis : Mail')
+})
+
+test('templateUses erkennt einen Platzhalter in allen Texten', () => {
+  assert.equal(templateUses(template({ body: 'Ende: {{end}}' }), 'end'), true)
+  assert.equal(templateUses(template({ body: 'x', smsBody: 'bis {{end}}' }), 'end'), true)
+  assert.equal(templateUses(template({ body: 'x', smsBody: null, ntfyBody: null }), 'end'), false)
+})
+
+test('formatScheduleValue nutzt Zeitzone und Sprache, ungültige Werte ergeben leer', () => {
+  assert.match(formatScheduleValue('2026-11-25T21:00:00.000Z', 'de-DE', 'Europe/Berlin'), /22:00/)
+  assert.equal(formatScheduleValue(null, 'de-DE', 'Europe/Berlin'), '')
+  assert.equal(formatScheduleValue('kein Datum', 'de-DE', 'Europe/Berlin'), '')
+  assert.match(formatScheduleValue('2026-11-25T21:00:00.000Z', 'de-DE', 'Kein/Ort'), /21:00|9:00 PM/)
 })

@@ -21,7 +21,7 @@ export type LockPool = { connect(): Promise<LockClient> }
 export type SendLock = { release(): Promise<void> }
 
 /** `null`, wenn ein anderer Versand die Sperre hält. */
-export async function acquireSendLockWith(pool: LockPool): Promise<SendLock | null> {
+export async function acquireSendLockWith(pool: LockPool, key: number = SEND_LOCK_KEY): Promise<SendLock | null> {
   const client = await pool.connect()
   // Bricht die Verbindung ab (Datenbank neu gestartet, Sitzung beendet), meldet pg das als Fehler am Client. Der Abbruch
   // gibt die Sperre frei; der Versand selbst läuft über andere Verbindungen weiter. Der Handler verhindert den Absturz.
@@ -33,7 +33,7 @@ export async function acquireSendLockWith(pool: LockPool): Promise<SendLock | nu
   }
   let locked = false
   try {
-    const result = await client.query('select pg_try_advisory_lock($1) as locked', [SEND_LOCK_KEY])
+    const result = await client.query('select pg_try_advisory_lock($1) as locked', [key])
     locked = result.rows[0]?.locked === true
   } catch (error) {
     done(true)
@@ -46,7 +46,7 @@ export async function acquireSendLockWith(pool: LockPool): Promise<SendLock | nu
   return {
     async release() {
       try {
-        await client.query('select pg_advisory_unlock($1)', [SEND_LOCK_KEY])
+        await client.query('select pg_advisory_unlock($1)', [key])
         done()
       } catch {
         // Entsperren misslungen: die Verbindung schließen, damit die Datenbank die Sperre löst
@@ -57,8 +57,8 @@ export async function acquireSendLockWith(pool: LockPool): Promise<SendLock | nu
 }
 
 /** Sperre über den Verbindungspool von Payload (PostgreSQL). */
-export async function acquireSendLock(payload: Payload): Promise<SendLock | null> {
+export async function acquireSendLock(payload: Payload, key: number = SEND_LOCK_KEY): Promise<SendLock | null> {
   const pool = (payload.db as unknown as { pool?: LockPool }).pool
   if (!pool) throw new Error('Kein PostgreSQL-Pool am Datenbankadapter gefunden')
-  return acquireSendLockWith(pool)
+  return acquireSendLockWith(pool, key)
 }

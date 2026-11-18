@@ -13,6 +13,7 @@ import { UnderlineFeatureClient as UnderlineFeatureClient_e70f5e05f09f93e00b997e
 import { BoldFeatureClient as BoldFeatureClient_e70f5e05f09f93e00b997edb1ef0c864 } from '@payloadcms/richtext-lexical/client'
 import { ItalicFeatureClient as ItalicFeatureClient_e70f5e05f09f93e00b997edb1ef0c864 } from '@payloadcms/richtext-lexical/client'
 import { ParagraphFeatureClient as ParagraphFeatureClient_e70f5e05f09f93e00b997edb1ef0c864 } from '@payloadcms/richtext-lexical/client'
+import { NewMaintenanceWithTemplateButton as NewMaintenanceWithTemplateButton_06d16fae53404081c552d973d02d1fdc } from '@/components/admin/incident-wizard/NewWithTemplateButton'
 import { SendNotificationCollectionButton as SendNotificationCollectionButton_d01a4935353b96154d106bbf01b3d3d7 } from '@/components/admin/SendNotificationCollectionButton'
 import { RecipientCountField as RecipientCountField_a92dd7a84f1ac5bf2f0c7a2ae42e7fcd } from '@/components/admin/RecipientCountField'
 import { AvailabilityReportNavLink as AvailabilityReportNavLink_a4d90559fc0de3f416b799fd68d772c9 } from '@/components/admin/availability-report/AvailabilityReportNavLink'
@@ -43,6 +44,7 @@ export const importMap = {
   "@payloadcms/richtext-lexical/client#BoldFeatureClient": BoldFeatureClient_e70f5e05f09f93e00b997edb1ef0c864,
   "@payloadcms/richtext-lexical/client#ItalicFeatureClient": ItalicFeatureClient_e70f5e05f09f93e00b997edb1ef0c864,
   "@payloadcms/richtext-lexical/client#ParagraphFeatureClient": ParagraphFeatureClient_e70f5e05f09f93e00b997edb1ef0c864,
+  "@/components/admin/incident-wizard/NewWithTemplateButton#NewMaintenanceWithTemplateButton": NewMaintenanceWithTemplateButton_06d16fae53404081c552d973d02d1fdc,
   "@/components/admin/SendNotificationCollectionButton#SendNotificationCollectionButton": SendNotificationCollectionButton_d01a4935353b96154d106bbf01b3d3d7,
   "@/components/admin/RecipientCountField#RecipientCountField": RecipientCountField_a92dd7a84f1ac5bf2f0c7a2ae42e7fcd,
   "@/components/admin/availability-report/AvailabilityReportNavLink#AvailabilityReportNavLink": AvailabilityReportNavLink_a4d90559fc0de3f416b799fd68d772c9,

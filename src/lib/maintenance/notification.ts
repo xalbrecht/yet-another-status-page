@@ -88,7 +88,10 @@ export async function createMaintenanceNotification(payload: Payload, data: Defe
 
   const emailBody = data.isUpdate
     ? `${t('notif.maintStatus')}: ${data.statusLabel}\n\n${data.message || ''}\n\n${t('notif.viewDetails')}: ${url}`
-    : `${t('notif.maintScheduled')}\n\n${t('notif.maintStart')}: ${data.startTimeStr || t('notif.maintTbd')}\n${data.endTimeStr ? `${t('notif.maintEnd')}: ${data.endTimeStr}\n` : ''}${data.duration ? `${t('notif.maintDuration')}: ${data.duration}\n` : ''}\n${t('notif.maintNotify')}\n\n${t('notif.viewDetails')}: ${url}`
+    : data.message
+      ? // Wartung aus einer Vorlage: der Text der ersten Aktualisierung steht vor den Zeiten
+        `${data.message}\n\n${t('notif.maintStart')}: ${data.startTimeStr || t('notif.maintTbd')}\n${data.endTimeStr ? `${t('notif.maintEnd')}: ${data.endTimeStr}\n` : ''}${data.duration ? `${t('notif.maintDuration')}: ${data.duration}\n` : ''}\n${t('notif.viewDetails')}: ${url}`
+      : `${t('notif.maintScheduled')}\n\n${t('notif.maintStart')}: ${data.startTimeStr || t('notif.maintTbd')}\n${data.endTimeStr ? `${t('notif.maintEnd')}: ${data.endTimeStr}\n` : ''}${data.duration ? `${t('notif.maintDuration')}: ${data.duration}\n` : ''}\n${t('notif.maintNotify')}\n\n${t('notif.viewDetails')}: ${url}`
 
   const notification = await payload.create({
     collection: 'notifications',

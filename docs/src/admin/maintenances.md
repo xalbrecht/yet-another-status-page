@@ -17,6 +17,17 @@ Maintenances represent planned service interruptions or maintenance windows.
 
 A notification draft is automatically created when you save.
 
+### Creating a Maintenance with a Template
+
+If you keep ready-made texts as [templates](./templates.md), use the button **Create new with template** (Neu erstellen mit Vorlage) below the title of the list. It opens the same guided page as for incidents, with the type **Maintenance** preselected (see [Creating an Incident with a Template](./incidents.md#creating-an-incident-with-a-template)). The steps for a maintenance:
+
+1. **Group** and **Affected services**: as for incidents.
+2. **Period**: **Start** and **End** in the time zone of the settings (not the time zone of the browser). The end is optional. Without an end the timer does not complete the maintenance by itself. A start in the past is allowed, the page warns: the maintenance then changes its status right after it is created. If the chosen template uses `{{end}}` and the end is empty, the page says so, and the placeholder stays empty.
+3. **Template**: the templates of the type maintenance with the status Upcoming are offered. You can also choose **Without a template**.
+4. **Check and adjust**: title and text, and optionally the SMS text and the ntfy text, with the placeholders filled in (`{{start}}` and `{{end}}` as in the notifications, in the language and time zone of the installation).
+
+**View preview** shows the maintenance as it appears on the status page and the notification draft. Only **Publish now** creates the maintenance with the status Upcoming. The text becomes the **first update** of the maintenance (status Upcoming), the description stays empty. Automatic start and completion stay switched on, as in the normal form. The notification draft contains the text of the first update, followed by the start and the end, and carries the SMS text and the ntfy text of the template. **Nothing is sent automatically.** The service states do not change.
+
 ## Maintenance Statuses
 
 | Status | Description |

@@ -12,7 +12,7 @@
   .iw-label { display: block; font-size: 0.85rem; font-weight: 600; margin: 0.85rem 0 0.25rem; }
   .iw-ph { margin: 1.5rem 0 0.5rem; font-size: 1.05rem; }
 
-  select, input[type='text'], textarea {
+  select, input[type='text'], input[type='datetime-local'], textarea {
     width: 100%;
     padding: 0.5rem 0.6rem;
     border: 1px solid var(--theme-elevation-150);
@@ -22,6 +22,30 @@
     font: inherit;
   }
   textarea { resize: vertical; }
+
+  .iw-warn {
+    background: var(--theme-warning-100);
+    border: 1px solid var(--theme-warning-500);
+    border-radius: 4px;
+    color: var(--theme-text);
+    font-size: 0.85rem;
+    margin: 0.6rem 0 0;
+    padding: 0.4rem 0.6rem;
+  }
+  .iw-cols { display: grid; gap: 0.9rem; grid-template-columns: 1fr 1fr; }
+  @media (max-width: 640px) { .iw-cols { grid-template-columns: 1fr; } }
+  .iw-seg { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+  .iw-seg label {
+    align-items: center;
+    border: 1px solid var(--theme-elevation-150);
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex;
+    font-weight: 600;
+    gap: 0.5rem;
+    padding: 0.5rem 0.8rem;
+  }
+  .iw-seg label.iw-sel { background: var(--theme-elevation-100); border-color: var(--theme-elevation-400); }
 
   .iw-step {
     border: 1px solid var(--theme-elevation-150);
@@ -123,6 +147,7 @@
     border: 1px solid var(--theme-elevation-150); border-left: 5px solid #f97316; border-radius: 6px; padding: 0.8rem 1rem;
     &.iw-pubcard--degraded { border-left-color: #eab308; }
     &.iw-pubcard--partial { border-left-color: #f97316; }
+    &.iw-pubcard--maintenance { border-left-color: #3b82f6; }
     &.iw-pubcard--major { border-left-color: #ef4444; }
     .iw-top { display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; }
     .iw-ttl { font-weight: 700; font-size: 1.05rem; flex: 1; min-width: 12rem; }

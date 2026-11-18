@@ -22,6 +22,13 @@ export const maintenanceStatusOptions = [
   { label: ta('Cancelled'), value: 'cancelled' },
 ] as const
 
+/** Text, SMS- und ntfy-Text der ersten Aktualisierung (leer, wenn es keine gibt). */
+function firstUpdateTexts(updates: unknown): Pick<DeferredNotification, 'message' | 'smsBody' | 'ntfyBody'> {
+  const first = Array.isArray(updates) ? (updates[0] as { message?: string | null; smsBody?: string | null; ntfyBody?: string | null } | undefined) : undefined
+  if (!first?.message) return {}
+  return { message: first.message, smsBody: first.smsBody ?? undefined, ntfyBody: first.ntfyBody ?? undefined }
+}
+
 // Entwurf nach dem Ende der Transaktion anlegen, auf einer frischen Payload-Instanz
 async function createMaintenanceNotificationDeferred(data: DeferredNotification) {
   try {
@@ -40,6 +47,10 @@ export const Maintenances: CollectionConfig = {
   admin: {
     useAsTitle: 'title',
     defaultColumns: ['title', 'shortId', 'status', 'scheduledStartAt', 'updatedAt'],
+    components: {
+      // Knopf „Neu erstellen mit Vorlage“ im Kopfbereich der Liste, unter dem Titel
+      Description: '@/components/admin/incident-wizard/NewWithTemplateButton#NewMaintenanceWithTemplateButton',
+    },
     group: ta('Status'),
   },
   access: standardAccess,
@@ -349,6 +360,8 @@ export const Maintenances: CollectionConfig = {
             startTimeStr,
             endTimeStr,
             duration: doc.duration,
+            // Eine Wartung aus einer Vorlage trägt ihre Ankündigung als erste Aktualisierung: Text und Kurztexte gehören in den Entwurf
+            ...firstUpdateTexts(doc.updates),
           }
           
           // Defer execution to after transaction commits

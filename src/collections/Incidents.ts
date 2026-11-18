@@ -270,6 +270,10 @@ export const Incidents: CollectionConfig = {
           required: true,
           admin: {
             description: ta('Update message'),
+            components: {
+              // Auswahl „Vorlage einfügen“ über dem Feld, nur bei neuen Aktualisierungen
+              beforeInput: ['@/components/admin/update-template/UpdateTemplatePicker#UpdateTemplatePicker'],
+            },
           },
         },
         {

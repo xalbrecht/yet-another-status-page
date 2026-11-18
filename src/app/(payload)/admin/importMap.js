@@ -1,6 +1,7 @@
 import { ServiceDeleteNotice as ServiceDeleteNotice_b44acf9599e0763461dd09edaba54553 } from '@/components/admin/ServiceDeleteNotice'
 import { LocalizedDateField as LocalizedDateField_5565580924a7fcfc6f968cbe9a2ca4e8 } from '@/components/admin/LocalizedDateField'
 import { ServiceStateFilter as ServiceStateFilter_bae5af94238f689413b74e3c586adc4b } from '@/components/admin/ServiceStateFilter'
+import { UpdateTemplatePicker as UpdateTemplatePicker_85194b4d1de7c3379b0a892b4903ac11 } from '@/components/admin/update-template/UpdateTemplatePicker'
 import { NewWithTemplateButton as NewWithTemplateButton_06d16fae53404081c552d973d02d1fdc } from '@/components/admin/incident-wizard/NewWithTemplateButton'
 import { RscEntryLexicalCell as RscEntryLexicalCell_44fe37237e0ebf4470c9990d8cb7b07e } from '@payloadcms/richtext-lexical/rsc'
 import { RscEntryLexicalField as RscEntryLexicalField_44fe37237e0ebf4470c9990d8cb7b07e } from '@payloadcms/richtext-lexical/rsc'
@@ -30,6 +31,7 @@ export const importMap = {
   "@/components/admin/ServiceDeleteNotice#ServiceDeleteNotice": ServiceDeleteNotice_b44acf9599e0763461dd09edaba54553,
   "@/components/admin/LocalizedDateField#LocalizedDateField": LocalizedDateField_5565580924a7fcfc6f968cbe9a2ca4e8,
   "@/components/admin/ServiceStateFilter#ServiceStateFilter": ServiceStateFilter_bae5af94238f689413b74e3c586adc4b,
+  "@/components/admin/update-template/UpdateTemplatePicker#UpdateTemplatePicker": UpdateTemplatePicker_85194b4d1de7c3379b0a892b4903ac11,
   "@/components/admin/incident-wizard/NewWithTemplateButton#NewWithTemplateButton": NewWithTemplateButton_06d16fae53404081c552d973d02d1fdc,
   "@payloadcms/richtext-lexical/rsc#RscEntryLexicalCell": RscEntryLexicalCell_44fe37237e0ebf4470c9990d8cb7b07e,
   "@payloadcms/richtext-lexical/rsc#RscEntryLexicalField": RscEntryLexicalField_44fe37237e0ebf4470c9990d8cb7b07e,

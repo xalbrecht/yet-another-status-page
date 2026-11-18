@@ -743,6 +743,8 @@
     "The images are in the attached ZIP file.": "Die Bilder liegen in der angehängten ZIP-Datei.",
     "The incident has no affected services. The placeholder for the services stays empty.": "Die Störung hat keine betroffenen Dienste. Der Platzhalter für die Dienste bleibt leer.",
     "The mail server rejected these recipients, they received nothing": "Der Mailserver hat diese Empfänger abgelehnt, sie haben nichts erhalten",
+    "The maintenance has no affected services. The placeholder for the services stays empty.": "Die Wartung hat keine betroffenen Dienste. Der Platzhalter für die Dienste bleibt leer.",
+    "The maintenance has no end. The placeholder for the end stays empty.": "Die Wartung hat kein Ende. Der Platzhalter für das Ende bleibt leer.",
     "The name of your organization/site": "Name der Organisation bzw. der Website",
     "The period is not complete yet.": "Der Zeitraum ist noch nicht abgeschlossen.",
     "The selected group was not found.": "Die gewählte Gruppe wurde nicht gefunden.",

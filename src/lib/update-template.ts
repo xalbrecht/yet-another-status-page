@@ -2,12 +2,13 @@
  * Vorlage bei einer Aktualisierung einer bestehenden Störung (Formular im Admin): welche Vorlagen zum gewählten Status passen
  * und wie die Platzhalter aus den Angaben des Formulars gefüllt werden. Reine Funktionen, laufen auch im Browser.
  */
-import { formatServiceList, renderTemplate } from '@/lib/template-text'
+import { formatServiceList, placeholdersIn, renderTemplate } from '@/lib/template-text'
 
 export type UpdateTemplate = {
   id: number
   name: string
   status: string
+  title?: string
   body: string
   smsBody?: string | null
   ntfyBody?: string | null
@@ -32,20 +33,40 @@ export function templatesForStatus(templates: UpdateTemplate[], status: string |
 
 /**
  * Füllt die Texte einer Vorlage. `{{services}}` sind die Namen der betroffenen Dienste, `{{group}}` die Gruppe(n), `{{impact}}` die
- * Auswirkung der Störung. Ohne Wert bleibt der Platzhalter nicht stehen, sondern wird leer (anders als `{{link}}`, den erst das
- * Speichern ersetzt).
+ * Auswirkung der Störung, `{{start}}` und `{{end}}` Beginn und Ende der Wartung. Ohne Wert wird der Platzhalter leer (anders als
+ * `{{link}}`, den erst das Speichern ersetzt).
  */
 export function fillUpdateTemplate(
   template: UpdateTemplate,
-  values: { serviceNames: string[]; groupNames: string[]; impact: string; locale: string },
+  values: { serviceNames: string[]; groupNames: string[]; impact?: string; start?: string; end?: string; locale: string },
 ): UpdateTexts {
   const map = {
     services: formatServiceList(values.serviceNames, values.locale),
     group: formatServiceList(values.groupNames, values.locale),
-    impact: values.impact,
+    impact: values.impact ?? '',
+    start: values.start ?? '',
+    end: values.end ?? '',
   }
   const fill = (text: string | null | undefined) => renderTemplate(text ?? '', map)
   return { message: fill(template.body), smsBody: fill(template.smsBody), ntfyBody: fill(template.ntfyBody) }
+}
+
+/** Nutzt eine der Texte der Vorlage den Platzhalter? */
+export function templateUses(template: UpdateTemplate, name: string): boolean {
+  return [template.title, template.body, template.smsBody, template.ntfyBody].some((text) => placeholdersIn(text ?? '').includes(name))
+}
+
+/** Zeitpunkt einer Wartung für den Text, in der Zeitzone und Sprache der Installation (wie in den Benachrichtigungen). Ungültig: leer. */
+export function formatScheduleValue(value: unknown, locale: string, timeZone: string): string {
+  if (typeof value !== 'string' || value === '') return ''
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return ''
+  const options: Intl.DateTimeFormatOptions = { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', timeZoneName: 'short' }
+  try {
+    return date.toLocaleString(locale, { ...options, timeZone })
+  } catch {
+    return date.toLocaleString('en', { ...options, timeZone: 'UTC' })
+  }
 }
 
 /** Pfad eines Geschwisterfeldes derselben Zeile: `updates.2.message` → `updates.2.smsBody`. */

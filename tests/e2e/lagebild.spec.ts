@@ -70,15 +70,14 @@ test.describe('Lagebild', () => {
     // Balken aus 144 Strichen zu 5 Minuten, der Tooltip nennt die Uhrzeit und den Zustand
     const bar = panel.locator('[role="img"]').first()
     await expect(bar).toHaveAttribute('data-slots', '144')
-    const box = (await bar.boundingBox())!
-    const x = box.x + (box.width * 100.5) / 144
-    const y = box.y + box.height / 2
-    // Vor der Hydrierung löst die Bewegung nichts aus: wiederholen, bis der Tooltip erscheint
+    // `hover` scrollt den Balken in den sichtbaren Bereich und wartet auf ein stabiles Layout (`mouse.move` mit einmal gelesenen
+    // Koordinaten tut beides nicht). Vor der Hydrierung löst die Bewegung nichts aus: wiederholen, bis der Tooltip erscheint.
     await expect(async () => {
-      await page.mouse.move(x - 8, y)
-      await page.mouse.move(x, y)
+      const box = (await bar.boundingBox())!
+      await bar.hover({ position: { x: Math.max(1, box.width * 0.4), y: box.height / 2 }, timeout: 5_000 })
+      await bar.hover({ position: { x: (box.width * 100.5) / 144, y: box.height / 2 }, timeout: 5_000 })
       await expect(page.getByRole('tooltip')).toBeVisible({ timeout: 1000 })
-    }).toPass({ timeout: 20_000 })
+    }).toPass({ timeout: 30_000 })
     await expect(page.getByRole('tooltip')).toContainText(/\d{2}:\d{2}/)
     await expect(page.getByRole('tooltip')).toContainText(/Schwerer Ausfall|Major Outage|Keine Daten|No data/)
     // Dienst war erst seit dem Anlegen bekannt und seitdem ausgefallen: Verfügbarkeit unter 100 %

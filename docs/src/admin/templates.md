@@ -6,7 +6,7 @@ Templates are kept apart from the real incidents and maintenances. A template st
 
 Go to **Status → Templates** (Status → Vorlagen).
 
-> **Where templates are used.** When you report a new incident, choose a template with the button **Create new with template** in the list of incidents, see [Creating an Incident with a Template](./incidents.md#creating-an-incident-with-a-template). Using templates for maintenances and for further updates of an incident follows in later steps.
+> **Where templates are used.** When you report a new incident, choose a template with the button **Create new with template** in the list of incidents, see [Creating an Incident with a Template](./incidents.md#creating-an-incident-with-a-template). To add a further update to an existing incident, see [Inserting a Template into an Update](#inserting-a-template-into-an-update). Using templates for maintenances follows in a later step.
 
 ## Fields
 
@@ -42,3 +42,17 @@ Word the text so that it fits one service and several. The list stands in one pl
 An incident is open. Affected: {{services}}.
 We are analysing the cause. We will inform you as soon as we know more.
 ```
+
+## Inserting a Template into an Update
+
+An incident gets further updates: "Cause found", "Monitoring", "Resolved". When you add a new update to an existing incident, the field **Insert template** (Vorlage einfügen) appears above the message.
+
+1. Choose the **Status** of the update.
+2. Choose a template under **Insert template**. The list shows the incident templates for that status. Without a template for the status the list is empty and points to Status → Templates.
+3. The message is filled in. `{{services}}` and `{{group}}` come from the affected services of the incident, `{{impact}}` from its impact, as shown in the form. Without affected services the placeholder for the services stays empty, and the form says so.
+4. Change the text if needed. The update is saved only with **Save**.
+
+If the message already has text, you are asked before it is replaced. If you change the inserted text, the SMS and ntfy texts of the template stay unchanged. They are not shown in the form. Together with the update they go into the notification draft. `{{link}}` is replaced by the address of the incident when the update is saved.
+
+Updates that are already saved show no template list: their text is already published.
+

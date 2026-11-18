@@ -13,7 +13,9 @@ const CLIENT_ENTRIES = [
   'src/components/admin/incident-wizard/IncidentWizard.tsx',
   'src/components/admin/incident-wizard/IncidentWizardParts.tsx',
   'src/components/admin/incident-wizard/NewWithTemplateButton.tsx',
+  'src/components/admin/update-template/UpdateTemplatePicker.tsx',
   'src/lib/incident-draft.ts',
+  'src/lib/update-template.ts',
 ]
 const FORBIDDEN = [/^@\/collections/, /^@\/globals/, /^payload($|\/)/, /^@payloadcms\/db-/, /^@payload-config$/, /^node:/, /^fs$/, /^path$/, /^crypto$/]
 

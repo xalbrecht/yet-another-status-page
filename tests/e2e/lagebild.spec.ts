@@ -68,9 +68,10 @@ test.describe('Lagebild', () => {
     await expect(panel.getByText(`Aufklappen Dienst ${id}`)).toBeVisible()
     await expect(panel.locator('[role="img"]').first()).toBeVisible()
     // Balken aus 144 Strichen zu 5 Minuten, der Tooltip nennt die Uhrzeit und den Zustand
-    const strokes = panel.locator('[role="img"]').first().locator('[data-i]')
-    await expect(strokes).toHaveCount(144)
-    await strokes.nth(100).hover()
+    const bar = panel.locator('[role="img"]').first()
+    await expect(bar).toHaveAttribute('data-slots', '144')
+    const box = (await bar.boundingBox())!
+    await page.mouse.move(box.x + (box.width * 100.5) / 144, box.y + box.height / 2)
     await expect(page.getByRole('tooltip')).toContainText(/\d{2}:\d{2}/)
     await expect(page.getByRole('tooltip')).toContainText(/Schwerer Ausfall|Major Outage|Keine Daten|No data/)
     // Dienst war erst seit dem Anlegen bekannt und seitdem ausgefallen: Verfügbarkeit unter 100 %
@@ -149,7 +150,7 @@ test.describe('Lagebild', () => {
     await expect(tile).toHaveAttribute('aria-expanded', 'true')
     await expect(panel).toBeVisible()
     await expect(panel.getByText(`Variante B Dienst ${id}`)).toBeVisible()
-    await expect(panel.locator('[role="img"]').first().locator('[data-i]')).toHaveCount(144)
+    await expect(panel.locator('[role="img"]').first()).toHaveAttribute('data-slots', '144')
     await expect(panel.getByText(/\d+[.,]\d{2} %/)).toBeVisible()
 
     // zweiter Klick schließt den Bereich
@@ -223,7 +224,7 @@ test.describe('Lagebild', () => {
     await page.getByTestId('lagebild-a').locator('button[aria-expanded]', { hasText: `Balken Gruppe ${id}` }).click()
     const panel = page.getByTestId(`lagebild-panel-${group.id}`)
     await expect(page).toHaveURL(new RegExp(`gruppe=${group.id}&balken=24|balken=24&gruppe=${group.id}`))
-    await expect(panel.locator('[data-i]')).toHaveCount(144)
+    await expect(panel.locator('[data-slots]').first()).toHaveAttribute('data-slots', '144')
     await expect(panel).toContainText(/(Letzte|Last) 24 (Stunden|hours) · 10 (Minuten|minutes)/)
 
     // ungültiger Wert fällt auf die Vorgabe zurück

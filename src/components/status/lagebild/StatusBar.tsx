@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, type PointerEvent } from 'react'
 import type { BarRun, BarWindow } from '@/lib/lagebild'
 import { statusLabel } from '@/lib/lagebild'
 import { useTranslation } from '@/lib/i18n/client'
@@ -16,7 +16,7 @@ type Props = {
 }
 
 /**
- * Balken aus einem Strich je Abschnitt (5 Minuten bei 12 Stunden). Der Tooltip nennt das Ende des Abschnitts
+ * Balken aus Strichen zu je einem Abschnitt (5 Minuten bei 12 Stunden), gezeichnet als ein Element je Zustandsfolge. Der Tooltip nennt das Ende des Abschnitts
  * („12:05“) und den Zustand. Er erscheint bei Maus und Antippen und verschwindet beim Scrollen.
  */
 export function StatusBar({ runs, window: bar, heightClass = 'h-6', label }: Props) {
@@ -42,13 +42,15 @@ export function StatusBar({ runs, window: bar, heightClass = 'h-6', label }: Pro
   const slots: Array<BarRun['status']> = []
   for (const run of runs) for (let i = 0; i < run.slots; i++) slots.push(run.status)
 
-  function show(target: EventTarget) {
-    const el = (target as HTMLElement).closest?.('[data-i]') as HTMLElement | null
-    if (!el) return setTip(null)
-    const rect = el.getBoundingClientRect()
+  /** Strich unter dem Zeiger, aus der Position im Balken (nicht aus einem Element je Strich) */
+  function show(event: PointerEvent<HTMLDivElement>) {
+    const rect = event.currentTarget.getBoundingClientRect()
+    if (rect.width <= 0 || slots.length === 0) return setTip(null)
+    const index = Math.min(slots.length - 1, Math.max(0, Math.floor(((event.clientX - rect.left) / rect.width) * slots.length)))
     // Tooltip bleibt innerhalb des Fensters
-    const x = Math.min(Math.max(rect.left + rect.width / 2, 40), globalThis.innerWidth - 40)
-    setTip({ index: Number(el.dataset.i), x, y: rect.top })
+    const center = rect.left + ((index + 0.5) / slots.length) * rect.width
+    const x = Math.min(Math.max(center, 40), globalThis.innerWidth - 40)
+    setTip((old) => (old && old.index === index && old.x === x && old.y === rect.top ? old : { index, x, y: rect.top }))
   }
 
   // Der letzte Abschnitt ist noch nicht zu Ende: sein Tooltip nennt die aktuelle Uhrzeit
@@ -57,20 +59,40 @@ export function StatusBar({ runs, window: bar, heightClass = 'h-6', label }: Pro
 
   return (
     <div
-      className={cn('flex w-full gap-px', heightClass)}
+      className={cn('relative flex w-full', heightClass)}
       role="img"
       aria-label={label}
-      onPointerOver={(event) => show(event.target)}
-      onPointerDown={(event) => show(event.target)}
+      data-slots={slots.length}
+      onPointerMove={show}
+      onPointerDown={show}
       onPointerLeave={() => setTip(null)}
     >
-      {slots.map((status, index) => (
+      {runs.map((run, index) => (
         <span
           key={index}
-          data-i={index}
-          className={cn('min-w-px flex-1 rounded-[1px] hover:opacity-80', status ? statusBg[status] : 'bg-border')}
+          data-run={run.slots}
+          // Ein Element je Zustandsfolge. Die Maske lässt hinter jedem Strich 1 px frei, damit die Striche
+          // wie bisher einzeln erscheinen. Breite über flex-grow, mindestens 2 px je Strich.
+          style={{
+            flexGrow: run.slots,
+            flexBasis: 0,
+            minWidth: run.slots * 2,
+            maskImage: 'linear-gradient(to right, #000 calc(100% - 1px), transparent 0)',
+            maskSize: `${100 / run.slots}% 100%`,
+            WebkitMaskImage: 'linear-gradient(to right, #000 calc(100% - 1px), transparent 0)',
+            WebkitMaskSize: `${100 / run.slots}% 100%`,
+          }}
+          className={run.status ? statusBg[run.status] : 'bg-border'}
         />
       ))}
+      {tip && (
+        <span
+          aria-hidden
+          data-testid="bar-hover"
+          style={{ left: `${(tip.index / slots.length) * 100}%`, width: `${100 / slots.length}%` }}
+          className="pointer-events-none absolute inset-y-0 bg-foreground/20"
+        />
+      )}
       {tip && endOfSlot && (
         <span
           role="tooltip"

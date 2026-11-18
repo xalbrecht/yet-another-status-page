@@ -75,6 +75,10 @@ export const ServiceGroups: CollectionConfig = {
       options: [...groupIconOptions],
       admin: {
         description: ta('Icon for this group in the situation overview on the status page'),
+        components: {
+          // Raster aller Symbole mit Namen statt einer Auswahlliste
+          Field: '@/components/admin/group-icon-field/GroupIconField#GroupIconField',
+        },
       },
     },
     {

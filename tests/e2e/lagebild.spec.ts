@@ -71,7 +71,14 @@ test.describe('Lagebild', () => {
     const bar = panel.locator('[role="img"]').first()
     await expect(bar).toHaveAttribute('data-slots', '144')
     const box = (await bar.boundingBox())!
-    await page.mouse.move(box.x + (box.width * 100.5) / 144, box.y + box.height / 2)
+    const x = box.x + (box.width * 100.5) / 144
+    const y = box.y + box.height / 2
+    // Vor der Hydrierung löst die Bewegung nichts aus: wiederholen, bis der Tooltip erscheint
+    await expect(async () => {
+      await page.mouse.move(x - 8, y)
+      await page.mouse.move(x, y)
+      await expect(page.getByRole('tooltip')).toBeVisible({ timeout: 1000 })
+    }).toPass({ timeout: 20_000 })
     await expect(page.getByRole('tooltip')).toContainText(/\d{2}:\d{2}/)
     await expect(page.getByRole('tooltip')).toContainText(/Schwerer Ausfall|Major Outage|Keine Daten|No data/)
     // Dienst war erst seit dem Anlegen bekannt und seitdem ausgefallen: Verfügbarkeit unter 100 %

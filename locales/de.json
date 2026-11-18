@@ -561,6 +561,7 @@
     "Off": "Aus",
     "One address per line or separated by commas. Leave empty to send none": "Eine Adresse je Zeile oder durch Komma getrennt. Leer: kein Versand",
     "One value for the period": "Ein Wert für den Zeitraum",
+    "Only services that are active today can be affected. Services that have ended or not yet started cannot be chosen": "Nur Dienste, die heute aktiv sind, können betroffen sein. Beendete und noch nicht begonnene Dienste lassen sich nicht wählen",
     "Only a marker for takeover and evaluation. Changes no behavior: test subscribers still receive notifications, test users can still sign in": "Nur eine Markierung für Übernahme und Auswertung. Ändert kein Verhalten: Testabonnenten bekommen weiter Meldungen, Testbenutzer können sich anmelden.",
     "Only the reconstructed entries. They are deleted and created again.": "Nur die nachgerechneten Einträge. Sie werden gelöscht und neu erzeugt.",
     "Open the email settings": "E-Mail-Einstellungen öffnen",

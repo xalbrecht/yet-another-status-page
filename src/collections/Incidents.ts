@@ -7,6 +7,7 @@ import { getServerUrl } from '@/lib/utils'
 import { localizedDateAdmin } from '@/lib/localizedDateAdmin'
 import { invalidateLagebild } from '@/lib/lagebild-invalidate'
 import { ta } from '@/lib/i18n/admin'
+import { activeServicesFilterOptions, validateActiveServices } from '@/lib/affected-services'
 import { syncServiceStatusesFromIncidents, uniqueServiceIds } from '@/lib/service-status-sync'
 
 export const incidentStatusOptions = [
@@ -199,6 +200,8 @@ export const Incidents: CollectionConfig = {
       type: 'relationship',
       relationTo: 'services',
       hasMany: true,
+      filterOptions: activeServicesFilterOptions,
+      validate: validateActiveServices('incidents'),
       label: ta('Affected Services'),
       admin: {
         description: ta('Services affected by this incident'),

@@ -4,6 +4,7 @@ import { generateShortId } from '@/lib/shortId'
 import { standardAccess } from '@/lib/access'
 import { localizedDateAdmin } from '@/lib/localizedDateAdmin'
 import { ta } from '@/lib/i18n/admin'
+import { activeServicesFilterOptions, validateActiveServices } from '@/lib/affected-services'
 import { invalidateLagebild } from '@/lib/lagebild-invalidate'
 import { resolveScheduledStatus } from '@/lib/maintenance/schedule'
 import { triggerDueProcessing } from '@/lib/maintenance/trigger'
@@ -98,6 +99,8 @@ export const Maintenances: CollectionConfig = {
       type: 'relationship',
       relationTo: 'services',
       hasMany: true,
+      filterOptions: activeServicesFilterOptions,
+      validate: validateActiveServices('maintenances'),
       label: ta('Affected Services'),
       admin: {
         description: ta('Services that will be affected by this maintenance'),

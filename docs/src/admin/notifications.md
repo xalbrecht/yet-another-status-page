@@ -99,7 +99,7 @@ Configure Twilio in **Configuration → SMS Settings** (Konfiguration → SMS-Ei
 
 ### SMS Templates
 
-The default texts of notification emails and the default SMS templates are in the interface language of the build (German by default, see [Configuration](../getting-started/configuration.md#interface-language)). Existing templates saved in **Configuration → SMS Settings** keep their text.
+The default texts of notification emails and the default SMS templates are in the interface language of the installation (`DEFAULT_LANGUAGE`, English by default, see [Configuration](../getting-started/configuration.md#interface-language)). Existing templates saved in **Configuration → SMS Settings** keep their text.
 
 You can customize SMS message templates in **Configuration → SMS Settings** (Konfiguration → SMS-Einstellungen) under the "SMS Templates" section. Available placeholders:
 

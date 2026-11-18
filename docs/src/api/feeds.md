@@ -2,7 +2,7 @@
 
 Both feeds are public, read-only and linked from the status page `<head>` via `<link rel="alternate">`, so feed readers and browsers can discover them automatically.
 
-The texts of both feeds (entry titles, labels such as "Scheduled" or "Affected services", status names, calendar name) follow the interface language of the build, German by default. See [Configuration](../getting-started/configuration.md#interface-language).
+The texts of both feeds (entry titles, labels such as "Scheduled" or "Affected services", status names, calendar name) follow the interface language of the installation (`DEFAULT_LANGUAGE`, English by default). See [Configuration](../getting-started/configuration.md#interface-language).
 
 ## Atom feed
 

@@ -12,6 +12,8 @@
     "maintenance.in_progress": "In Progress",
     "maintenance.completed": "Completed",
     "maintenance.cancelled": "Cancelled",
+    "maintenance.autoStarted": "The maintenance has started.",
+    "maintenance.autoCompleted": "The maintenance is completed.",
     "banner.operational": "All systems are operational",
     "banner.degraded": "Some systems are experiencing degraded performance",
     "banner.partial": "Some systems are experiencing partial outages",

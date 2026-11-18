@@ -33,7 +33,19 @@ Enable automatic status transitions:
 - **Auto-start on schedule** - Automatically changes to "In Progress" when the scheduled start time is reached
 - **Auto-complete on schedule** - Automatically changes to "Completed" when the scheduled end time is reached
 
-These can be enabled/disabled per maintenance.
+These can be enabled/disabled per maintenance. Both are on by default.
+
+**What happens at the switch.** A timer in the server checks every minute for maintenances whose start or end has been reached. It does not depend on anyone opening the page. For each switch it
+
+1. sets the new status (and stamps **Completed At** at the end),
+2. adds an entry to the **Updates** of the maintenance ("The maintenance has started." or "The maintenance is completed."), which also shows in the history on the status page,
+3. creates a notification draft for that entry and **sends it to the subscribers right away**, without a review.
+
+A maintenance you set to "In Progress" or "Completed" yourself, or one with the checkbox switched off, is not switched and sends nothing. Each switch happens once, even with several server processes (they take a lock in the database). If the draft or the sending fails, the new status stays and the log shows `[Maintenances] Meldung zur Wartung ... fehlgeschlagen`; a draft that was created is left under **Notifications** for you to send.
+
+A maintenance that is saved with a start or end time already in the past is switched at once while saving, without an entry and without a notification (the notification for the new maintenance is created as before).
+
+Reading a maintenance whose schedule has passed also triggers the switch, at most every 30 seconds per process, as a safety net if the timer does not run. To switch off the timer, see `DISABLE_MAINTENANCE_TIMER` in [Configuration](../getting-started/configuration.md). `POST /api/maintenances/process-due` runs the switch immediately (signed-in users only).
 
 ## Adding Updates
 

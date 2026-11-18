@@ -2,11 +2,15 @@ import type { CollectionConfig } from 'payload'
 import { translatorsFor } from '@/lib/i18n/translators'
 import { generateShortId } from '@/lib/shortId'
 import { standardAccess } from '@/lib/access'
-import { getServerUrl } from '@/lib/utils'
-import { formatNotificationDateTime, resolveDateTimeConfig } from '@/lib/datetime'
 import { localizedDateAdmin } from '@/lib/localizedDateAdmin'
 import { ta } from '@/lib/i18n/admin'
 import { invalidateLagebild } from '@/lib/lagebild-invalidate'
+import { resolveScheduledStatus } from '@/lib/maintenance/schedule'
+import { triggerDueProcessing } from '@/lib/maintenance/trigger'
+import { createMaintenanceNotification, formatScheduleTime, type DeferredNotification } from '@/lib/maintenance/notification'
+
+import type { MaintenanceStatus } from '@/lib/maintenance/schedule'
+export type { MaintenanceStatus }
 
 export const maintenanceStatusOptions = [
   { label: ta('Upcoming'), value: 'upcoming' },
@@ -15,178 +19,13 @@ export const maintenanceStatusOptions = [
   { label: ta('Cancelled'), value: 'cancelled' },
 ] as const
 
-export type MaintenanceStatus = (typeof maintenanceStatusOptions)[number]['value']
-
-// Valid status transitions for auto-update
-const validTransitions: Record<MaintenanceStatus, MaintenanceStatus[]> = {
-  upcoming: ['in_progress', 'completed'],
-  in_progress: ['completed'],
-  completed: [], // Terminal state
-  cancelled: [], // Terminal state
-}
-
-function canTransition(from: MaintenanceStatus, to: MaintenanceStatus): boolean {
-  return validTransitions[from]?.includes(to) ?? false
-}
-
-interface ScheduleFields {
-  status?: MaintenanceStatus | string | null
-  scheduledStartAt?: string | null
-  scheduledEndAt?: string | null
-  autoStartOnSchedule?: boolean | null
-  autoCompleteOnSchedule?: boolean | null
-}
-
-/** The status the schedule dictates right now, or null when no transition applies. */
-function resolveScheduledStatus(doc: ScheduleFields, now = new Date()): MaintenanceStatus | null {
-  const current = doc.status as MaintenanceStatus
-  const startTime = doc.scheduledStartAt ? new Date(doc.scheduledStartAt) : null
-  const endTime = doc.scheduledEndAt ? new Date(doc.scheduledEndAt) : null
-
-  // Auto-complete takes priority over auto-start
-  if (doc.autoCompleteOnSchedule && endTime && now >= endTime && canTransition(current, 'completed')) {
-    return 'completed'
-  }
-  if (doc.autoStartOnSchedule && startTime && now >= startTime && canTransition(current, 'in_progress')) {
-    return 'in_progress'
-  }
-  return null
-}
-
-const pendingScheduleWrites = new Set<number | string>()
-
-/**
- * Persists a schedule transition detected while reading. The write is deferred onto a
- * separate Payload instance because the reading request may still hold an open transaction
- * that has not committed the row yet (e.g. the read that Payload performs during `create`).
- */
-function persistScheduledStatus(id: number | string, status: MaintenanceStatus) {
-  if (pendingScheduleWrites.has(id)) return
-  pendingScheduleWrites.add(id)
-
-  setImmediate(async () => {
-    try {
-      const { getPayload } = await import('payload')
-      const config = (await import('@payload-config')).default
-      const payload = await getPayload({ config })
-      await payload.update({
-        collection: 'maintenances',
-        id,
-        data: { status },
-        context: { skipAutoStatusUpdate: true },
-      })
-    } catch (error) {
-      console.error('[Maintenances] Failed to persist scheduled status:', error)
-    } finally {
-      pendingScheduleWrites.delete(id)
-    }
-  })
-}
-
-function formatScheduleTime(
-  date: string | null | undefined,
-  settings: { timezone?: string | null; locale?: string | null; weekStartsOn?: string | null } | null,
-): string | null {
-  if (!date) return null
-  return formatNotificationDateTime(new Date(date), resolveDateTimeConfig(settings))
-}
-
-// Deferred notification creation data
-interface DeferredNotification {
-  docId: number | string
-  title: string
-  shortId: string
-  statusLabel: string
-  isUpdate: boolean
-  updateIndex: number
-  startTimeStr: string | null
-  endTimeStr: string | null
-  duration: string | undefined
-  message?: string
-}
-
-// Helper to interpolate template placeholders
-function interpolateTemplate(template: string, vars: Record<string, string>): string {
-  return template.replace(/\{\{(\w+)\}\}/g, (_, key) => vars[key] || '')
-}
-
-// Helper to create notification drafts for maintenances (deferred execution)
+// Entwurf nach dem Ende der Transaktion anlegen, auf einer frischen Payload-Instanz
 async function createMaintenanceNotificationDeferred(data: DeferredNotification) {
   try {
-    // Import payload dynamically to get a fresh instance outside the transaction
     const { getPayload } = await import('payload')
     const config = (await import('@payload-config')).default
     const payload = await getPayload({ config })
-    
-    // Fetch settings
-    const settings = await payload.findGlobal({ slug: 'settings' })
-    const smsSettings = await payload.findGlobal({ slug: 'sms-settings' })
-    const { t } = translatorsFor()
-    const siteName = settings.siteName || 'Status'
-    const siteUrl = getServerUrl()
-    
-    // Get max lengths from SMS settings
-    const titleMaxLength = smsSettings.templateTitleMaxLength || 50
-    const messageMaxLength = smsSettings.templateMessageMaxLength || 100
-    
-    // Build schedule string for SMS (no newlines)
-    let scheduleStr = ''
-    if (data.startTimeStr && data.endTimeStr) {
-      scheduleStr = `📅 ${data.startTimeStr} - ${data.endTimeStr}`
-    } else if (data.startTimeStr) {
-      scheduleStr = `📅 ${data.startTimeStr}`
-      if (data.duration) {
-        scheduleStr += ` (${data.duration})`
-      }
-    }
-    
-    // Truncate title and message for SMS
-    const truncatedTitle = data.title.length > titleMaxLength
-      ? data.title.substring(0, titleMaxLength - 3) + '...'
-      : data.title
-    
-    const truncatedMessage = data.message 
-      ? (data.message.length > messageMaxLength ? data.message.substring(0, messageMaxLength - 3) + '...' : data.message)
-      : ''
-    
-    const url = `${siteUrl}/m/${data.shortId}`
-    
-    const templateVars = {
-      siteName,
-      title: truncatedTitle,
-      status: data.statusLabel,
-      schedule: scheduleStr,
-      message: truncatedMessage,
-      url,
-    }
-    
-    let smsBody: string
-    if (data.isUpdate) {
-      const template = smsSettings.templateMaintenanceUpdate || t('notif.smsMaintUpdate')
-      smsBody = interpolateTemplate(template, templateVars)
-    } else {
-      const template = smsSettings.templateMaintenanceNew || t('notif.smsMaintNew')
-      smsBody = interpolateTemplate(template, templateVars)
-    }
-    
-    const emailBody = data.isUpdate
-      ? `${t('notif.maintStatus')}: ${data.statusLabel}\n\n${data.message || ''}\n\n${t('notif.viewDetails')}: ${url}`
-      : `${t('notif.maintScheduled')}\n\n${t('notif.maintStart')}: ${data.startTimeStr || t('notif.maintTbd')}\n${data.endTimeStr ? `${t('notif.maintEnd')}: ${data.endTimeStr}\n` : ''}${data.duration ? `${t('notif.maintDuration')}: ${data.duration}\n` : ''}\n${t('notif.maintNotify')}\n\n${t('notif.viewDetails')}: ${url}`
-    
-    const notification = await payload.create({
-      collection: 'notifications',
-      data: {
-        title: data.isUpdate ? `[${t('notif.maintTag')} ${data.statusLabel}] ${data.title}` : `[${t('notif.maintScheduledTag')}] ${data.title}`,
-        relatedMaintenance: typeof data.docId === 'string' ? parseInt(data.docId, 10) : data.docId,
-        updateIndex: data.updateIndex,
-        channel: 'both',
-        status: 'draft',
-        subject: data.isUpdate ? `[${t('notif.maintTag')} ${data.statusLabel}] ${data.title}` : `[${t('notif.maintScheduledTag')}] ${data.title}`,
-        emailBody,
-        smsBody,
-      },
-    })
-    return notification
+    return await createMaintenanceNotification(payload, data)
   } catch (error) {
     console.error('[Maintenances] Failed to create notification:', error)
   }
@@ -312,7 +151,7 @@ export const Maintenances: CollectionConfig = {
           defaultValue: true,
           label: ta('Auto-start on schedule'),
           admin: {
-            description: ta('Automatically set to "In Progress" when start time is reached'),
+            description: ta('Sets "In Progress" when the start time is reached and notifies the subscribers right away'),
             width: '50%',
           },
         },
@@ -322,7 +161,7 @@ export const Maintenances: CollectionConfig = {
           defaultValue: true,
           label: ta('Auto-complete on schedule'),
           admin: {
-            description: ta('Automatically set to "Completed" when end time is reached'),
+            description: ta('Sets "Completed" when the end time is reached and notifies the subscribers right away'),
             width: '50%',
           },
         },
@@ -411,15 +250,17 @@ export const Maintenances: CollectionConfig = {
       },
     ],
     afterRead: [
-      ({ doc }) => {
+      ({ doc, req }) => {
         if (!doc?.id) return doc
+        // Die Umstellung selbst liest den gespeicherten Status
+        if (req?.context?.skipScheduleOverlay) return doc
 
-        // Catches schedules that elapsed since the last write. The reader always sees the
-        // transitioned status; persisting it happens out of band.
+        // Zeigt den Zeitplan, der seit dem letzten Schreiben abgelaufen ist: Der Leser sieht den umgestellten Status.
+        // Gespeichert wird die Umstellung vom Zeitgeber (src/lib/maintenance/timer.ts), hier nur als Auffangnetz angestoßen.
         const newStatus = resolveScheduledStatus(doc)
         if (!newStatus) return doc
 
-        persistScheduledStatus(doc.id, newStatus)
+        triggerDueProcessing()
         return { ...doc, status: newStatus }
       },
     ],

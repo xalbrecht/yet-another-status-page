@@ -1,7 +1,13 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { Maintenances } from '@/collections/Maintenances'
-import { countMaintenanceServices, maintenanceNoticeFor, type NoticeMaintenance } from '@/lib/maintenance-notice'
+import {
+  MAINTENANCE_NOTICE_LEAD_MS,
+  countMaintenanceServices,
+  maintenanceNoticeFor,
+  noticeMaintenanceWhere,
+  type NoticeMaintenance,
+} from '@/lib/maintenance-notice'
 
 const NOW = new Date('2026-11-19T12:00:00Z').getTime()
 
@@ -71,4 +77,14 @@ test('Zählung: Dienste, die es nicht mehr gibt, zählen nicht', () => {
 test('Zählung: laufende Wartung ohne betroffene Dienste ergibt keine Zahlen', () => {
   const list = [maintenance({ serviceIds: [] })]
   assert.deepEqual(countMaintenanceServices(list, ['1', '2']), { unaffected: 0, limited: 0 })
+})
+
+test('Abfrage: laufende Wartungen unabhängig vom Beginn, bevorstehende nur innerhalb der Vorlaufzeit', () => {
+  const limit = new Date(NOW + MAINTENANCE_NOTICE_LEAD_MS).toISOString()
+  assert.deepEqual(noticeMaintenanceWhere(NOW), {
+    or: [
+      { status: { equals: 'in_progress' } },
+      { and: [{ status: { equals: 'upcoming' } }, { scheduledStartAt: { less_than_equal: limit } }] },
+    ],
+  })
 })

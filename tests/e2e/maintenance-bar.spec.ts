@@ -66,6 +66,22 @@ test.describe('Wartungsleiste', { tag: ['@public', '@wartungen'] }, () => {
     await expect(row.getByTestId('service-maintenance')).not.toContainText('restricted availability')
   })
 
+  test('vorzeitig auf „In Arbeit“ gesetzte Wartung mit Beginn in drei Tagen erscheint trotzdem', async ({ page }) => {
+    const { service } = await setup('vorgezogen')
+    await createMaintenance({
+      title: `Vorgezogen ${Date.now()}`,
+      status: 'in_progress',
+      scheduledStartAt: iso(72 * HOUR),
+      scheduledEndAt: iso(76 * HOUR),
+      affectedServices: [service.id],
+    })
+
+    await page.goto('/')
+    const row = page.getByTestId('service-row').filter({ hasText: service.name })
+    await expect(row.getByTestId('service-maintenance')).toContainText(/Maintenance until/)
+    await expect(page.getByTestId('maintenance-bar')).toBeVisible()
+  })
+
   test('Wartung mit Auswirkung und Störung: Dienst behält seinen Zustand, Leiste bleibt sichtbar', async ({ page }) => {
     const { service } = await setup('stoerung')
     await updateService(service.id, { status: 'partial' })

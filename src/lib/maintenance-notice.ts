@@ -3,6 +3,7 @@
  * Reine Funktion. Die Anzeige kommt aus den erfassten Wartungen, nicht aus dem Zustand „Wartung“ am Dienst.
  */
 
+import type { Where } from 'payload'
 import type { TranslateFormat } from '@/lib/i18n/core'
 
 /** Eine bevorstehende Wartung erscheint ab dieser Zeit vor ihrem Beginn. */
@@ -23,6 +24,24 @@ export type NoticeMaintenance = {
   scheduledEndAt?: string | null
   serviceIds: string[]
   affectsService?: boolean
+}
+
+/**
+ * Abfrage der Wartungen für die Anzeige: laufende unabhängig von ihrem geplanten Beginn (auch von Hand vorgezogene),
+ * bevorstehende nur innerhalb der Vorlaufzeit. Abgeschlossene und abgesagte entfallen.
+ */
+export function noticeMaintenanceWhere(now: number): Where {
+  return {
+    or: [
+      { status: { equals: 'in_progress' } },
+      {
+        and: [
+          { status: { equals: 'upcoming' } },
+          { scheduledStartAt: { less_than_equal: new Date(now + MAINTENANCE_NOTICE_LEAD_MS).toISOString() } },
+        ],
+      },
+    ],
+  }
 }
 
 /** Laufende Wartung vor bevorstehender, innerhalb der Art zuerst die mit Auswirkung, dann die früheste. Abgeschlossene und abgesagte zählen nicht. */

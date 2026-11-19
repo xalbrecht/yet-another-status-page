@@ -8,7 +8,7 @@ import { cn, getMediaUrl } from '@/lib/utils'
 import { Header } from '@/components/status/Header'
 import { Footer } from '@/components/status/Footer'
 import { translatorsFor } from '@/lib/i18n/server'
-import { MAINTENANCE_NOTICE_LEAD_MS, countMaintenanceServices, maintenanceBarText, maintenanceNoticeFor } from '@/lib/maintenance-notice'
+import { countMaintenanceServices, maintenanceBarText, maintenanceNoticeFor, noticeMaintenanceWhere } from '@/lib/maintenance-notice'
 import { Subscribe } from '@/components/status/SubscribeDialog'
 import { LoginButton } from '@/components/status/LoginButton'
 import { StatusBanner } from '@/components/status/StatusBanner'
@@ -97,12 +97,7 @@ async function getStatusData(requestedPeriod: unknown, requestedBar: unknown) {
   const nowMs = Date.now()
   const noticeMaintenances = await payload.find({
     collection: 'maintenances',
-    where: {
-      and: [
-        { status: { not_in: ['completed', 'cancelled'] } },
-        { scheduledStartAt: { less_than_equal: new Date(nowMs + MAINTENANCE_NOTICE_LEAD_MS).toISOString() } },
-      ],
-    },
+    where: noticeMaintenanceWhere(nowMs),
     depth: 0,
     pagination: false,
   })

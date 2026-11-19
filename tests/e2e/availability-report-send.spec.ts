@@ -11,7 +11,7 @@ test.setTimeout(120_000)
 const currentMonth = () => new Date().toISOString().slice(0, 7)
 const send = (request: APIRequestContext, query: string) => request.post(`/api/availability-report/send?${query}`, { timeout: 100_000 })
 
-test.describe('Verfügbarkeitsbericht (Mailversand)', () => {
+test.describe('Verfügbarkeitsbericht (Mailversand)', { tag: ['@admin', '@bericht'] }, () => {
   test('GET ist nicht erlaubt (405)', async ({ request }) => {
     expect((await request.get(`/api/availability-report/send?period=${currentMonth()}`)).status()).toBe(405)
   })

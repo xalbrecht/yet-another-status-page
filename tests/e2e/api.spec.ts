@@ -5,7 +5,7 @@ import { test, expect } from '@playwright/test'
  * 
  * Tests for the REST API endpoints using Playwright's request context.
  */
-test.describe('Health API', () => {
+test.describe('Health API', { tag: ['@api', '@schnittstelle'] }, () => {
   test('returns ok status', async ({ request }) => {
     const response = await request.get('/api/health')
     
@@ -16,7 +16,7 @@ test.describe('Health API', () => {
   })
 })
 
-test.describe('Subscribe API', () => {
+test.describe('Subscribe API', { tag: ['@api', '@schnittstelle', '@abonnenten'] }, () => {
   test('returns availability status', async ({ request }) => {
     const response = await request.get('/api/subscribe')
     
@@ -59,7 +59,7 @@ test.describe('Subscribe API', () => {
   })
 })
 
-test.describe('Unsubscribe API', () => {
+test.describe('Unsubscribe API', { tag: ['@api', '@schnittstelle', '@abonnenten'] }, () => {
   test('returns error for missing token', async ({ request }) => {
     const response = await request.post('/api/unsubscribe', {
       data: {},

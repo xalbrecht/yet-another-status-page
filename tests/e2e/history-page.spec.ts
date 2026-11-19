@@ -30,7 +30,7 @@ function getPreviousWeekDate(): Date {
   return addZonedDays(weekStart, 3, DEFAULT_TIMEZONE)
 }
 
-test.describe('History Page', () => {
+test.describe('History Page', { tag: ['@public', '@statusseite'] }, () => {
   test('week page loads correctly', async ({ page }) => {
     const weekSlug = getPreviousWeekSlug()
     await page.goto(`/history/${weekSlug}`)
@@ -73,7 +73,7 @@ test.describe('History Page', () => {
   })
 })
 
-test.describe('History Week Page', () => {
+test.describe('History Week Page', { tag: ['@public', '@statusseite'] }, () => {
   test('displays incidents for the week', async ({ page }) => {
     const uniqueId = Date.now()
     const previousWeekDate = getPreviousWeekDate()

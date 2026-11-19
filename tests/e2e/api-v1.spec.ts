@@ -37,7 +37,7 @@ async function seed() {
   return { uid, group, service, incident, maintenance }
 }
 
-test.describe('GET /api/v1/status', () => {
+test.describe('GET /api/v1/status', { tag: ['@api', '@schnittstelle'] }, () => {
   test('returns aggregated status with CORS and caching headers', async ({ request }) => {
     const { service, incident, maintenance } = await seed()
 
@@ -72,7 +72,7 @@ test.describe('GET /api/v1/status', () => {
   })
 })
 
-test.describe('GET /api/v1/incidents', () => {
+test.describe('GET /api/v1/incidents', { tag: ['@api', '@schnittstelle'] }, () => {
   test('lists and filters incidents', async ({ request }) => {
     const { service, incident } = await seed()
 
@@ -119,7 +119,7 @@ test.describe('GET /api/v1/incidents', () => {
   })
 })
 
-test.describe('GET /api/v1/maintenances', () => {
+test.describe('GET /api/v1/maintenances', { tag: ['@api', '@schnittstelle'] }, () => {
   test('lists active maintenances with schedule, description and services', async ({ request }) => {
     const { service, maintenance } = await seed()
 
@@ -158,7 +158,7 @@ test.describe('GET /api/v1/maintenances', () => {
   })
 })
 
-test.describe('GET /api/v1/services', () => {
+test.describe('GET /api/v1/services', { tag: ['@api', '@schnittstelle'] }, () => {
   test('lists services keyed by slug with group', async ({ request }) => {
     const { group, service } = await seed()
     const response = await request.get('/api/v1/services')
@@ -170,7 +170,7 @@ test.describe('GET /api/v1/services', () => {
   })
 })
 
-test.describe('OpenAPI', () => {
+test.describe('OpenAPI', { tag: ['@api', '@schnittstelle'] }, () => {
   test('serves a valid-looking OpenAPI 3.1 document', async ({ request }) => {
     const response = await request.get('/api/v1/openapi.json')
     expect(response.status()).toBe(200)
@@ -185,7 +185,7 @@ test.describe('OpenAPI', () => {
   })
 })
 
-test.describe('Feeds', () => {
+test.describe('Feeds', { tag: ['@api', '@schnittstelle'] }, () => {
   test('Atom feed contains incidents and maintenances', async ({ request }) => {
     const { incident, maintenance } = await seed()
     const response = await request.get('/feed.atom')

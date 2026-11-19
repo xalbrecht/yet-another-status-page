@@ -5,7 +5,7 @@ import { test, expect } from '@playwright/test'
  * 
  * Tests for dark/light mode switching and persistence.
  */
-test.describe('Theme Toggle', () => {
+test.describe('Theme Toggle', { tag: ['@public', '@statusseite'] }, () => {
   test('toggles between light and dark mode', async ({ page }) => {
     await page.goto('/')
     
@@ -90,7 +90,7 @@ test.describe('Theme Toggle', () => {
   })
 })
 
-test.describe('Theme Toggle - 404 page', () => {
+test.describe('Theme Toggle - 404 page', { tag: ['@public', '@statusseite'] }, () => {
   test('toggles theme on unmatched routes', async ({ page }) => {
     await page.goto('/this-page-does-not-exist')
 
@@ -109,7 +109,7 @@ test.describe('Theme Toggle - 404 page', () => {
   })
 })
 
-test.describe('Theme Toggle - System Preference', () => {
+test.describe('Theme Toggle - System Preference', { tag: ['@public', '@statusseite'] }, () => {
   test('respects system dark mode preference', async ({ page }) => {
     // Emulate dark color scheme
     await page.emulateMedia({ colorScheme: 'dark' })

@@ -22,7 +22,7 @@ async function draftFor(request: APIRequestContext, maintenanceId: number) {
   return found!
 }
 
-test.describe('Wartung aus einer Vorlage (Route)', () => {
+test.describe('Wartung aus einer Vorlage (Route)', { tag: ['@admin', '@wartungen', '@vorlagen'] }, () => {
   test('legt die Wartung mit der Ankündigung als erster Aktualisierung an und füllt den Entwurf', async ({ request }) => {
     const id = Date.now()
     const group = await createServiceGroup({ name: `Wartung Vorlage Gruppe ${id}`, icon: 'Server' })

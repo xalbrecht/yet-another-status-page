@@ -13,7 +13,7 @@ import {
  * Lagebild: Kacheln, Dienste je Gruppe, Rückschau und Zustand bei der Meldung.
  * Die Tests setzen die Anzeige nach jedem Lauf auf „off“ zurück.
  */
-test.describe('Lagebild', () => {
+test.describe('Lagebild', { tag: ['@public', '@lagebild'] }, () => {
   test.describe.configure({ mode: 'serial' })
 
   test.afterAll(async () => {

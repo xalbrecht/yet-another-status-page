@@ -4,7 +4,7 @@ import { test, expect } from '@playwright/test'
  * Angaben zum laufenden Stand über die JSON-Route. Die Admin-Seite selbst wird in der E2E-Umgebung nicht getestet.
  * Die Testumgebung baut ohne Build-Argumente, deshalb gilt sie als „kein YASP-Image“.
  */
-test.describe('Systemangaben (Route)', () => {
+test.describe('Systemangaben (Route)', { tag: ['@admin', '@system'] }, () => {
   test('liefert Version, Node, Startzeit, Container und die letzte Migration', async ({ request }) => {
     const response = await request.get('/api/system-info')
     expect(response.status()).toBe(200)

@@ -50,7 +50,7 @@ async function setRules(request: APIRequestContext, rules: Array<Record<string, 
 
 const MAINTENANCE_RULE = { field: 'title', match: 'contains', words: 'wartung', classification: 'maintenance' }
 
-test.describe('Umwandlung der Wartungsvorfälle', () => {
+test.describe('Umwandlung der Wartungsvorfälle', { tag: ['@admin', '@wartungen', '@statusprotokoll'] }, () => {
   test.describe.configure({ mode: 'serial' })
 
   test('ohne Regel wird nichts umgewandelt, mit der Regel „Titel enthält wartung“ schon', async ({ request }) => {

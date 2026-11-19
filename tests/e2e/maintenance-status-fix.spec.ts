@@ -30,7 +30,7 @@ test.beforeAll(async () => {
   await updateSettings({ maintenanceTerminalRetentionHours: 24 })
 })
 
-test.describe('Maintenance status sync', () => {
+test.describe('Maintenance status sync', { tag: ['@public', '@wartungen'] }, () => {
 
   test('appending an update syncs parent status and stamps cancelledAt', async () => {
     const tomorrow = new Date(Date.now() + 24 * 3600 * 1000).toISOString()
@@ -77,7 +77,7 @@ test.describe('Maintenance status sync', () => {
   })
 })
 
-test.describe('Maintenance home page rendering', () => {
+test.describe('Maintenance home page rendering', { tag: ['@public', '@wartungen'] }, () => {
   test('renders the Cancelled badge and the update message inline', async ({ page }) => {
     const uniqueId = Date.now()
     const tomorrow = new Date(Date.now() + 24 * 3600 * 1000).toISOString()
@@ -135,7 +135,7 @@ test.describe('Maintenance home page rendering', () => {
   })
 })
 
-test.describe('Maintenance retention window', () => {
+test.describe('Maintenance retention window', { tag: ['@public', '@wartungen'] }, () => {
   test('cancelled maintenance disappears from home once retention is zero', async ({ page }) => {
     const uniqueId = Date.now() + 2
     const tomorrow = new Date(Date.now() + 24 * 3600 * 1000).toISOString()
@@ -172,7 +172,7 @@ test.describe('Maintenance retention window', () => {
 
 // Runs last so the maintenances it creates don't crowd out the home page cards
 // asserted above (that query has limit: 10).
-test.describe('Maintenance schedule auto-transition', () => {
+test.describe('Maintenance schedule auto-transition', { tag: ['@public', '@wartungen'] }, () => {
   test('a start time already in the past is stored as in_progress on create', async () => {
     const maintenance = await createMaintenance({
       title: `Past Start ${Date.now()}`,

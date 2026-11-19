@@ -10,7 +10,7 @@ import {
  * 
  * Tests for maintenance detail pages and status displays.
  */
-test.describe('Maintenance Detail Page', () => {
+test.describe('Maintenance Detail Page', { tag: ['@public', '@wartungen'] }, () => {
   test('displays maintenance details correctly', async ({ page }) => {
     const uniqueId = Date.now()
     const group = await createServiceGroup({ 

@@ -40,7 +40,7 @@ const open = (title: string, affectedServices: number[] = []) =>
     updates: [{ status: 'investigating', message: `Stand zu ${title}` }],
   })
 
-test.describe('Statusseite mit Boxen', () => {
+test.describe('Statusseite mit Boxen', { tag: ['@public', '@statusseite'] }, () => {
   test.describe.configure({ mode: 'serial' })
 
   let serviceId: number
@@ -226,7 +226,7 @@ test.describe('Statusseite mit Boxen', () => {
  * Tooltip an der Kachel einer Gruppe: Hover, Tastatur und Touch.
  * Die Gruppe hat zwei Dienste, einer davon im Zustand „partial“.
  */
-test.describe('Tooltip an der Gruppe', () => {
+test.describe('Tooltip an der Gruppe', { tag: ['@public', '@statusseite'] }, () => {
   test.describe.configure({ mode: 'serial' })
 
   let groupId: number
@@ -347,7 +347,7 @@ test.describe('Tooltip an der Gruppe', () => {
 /**
  * Kachel „Alle“: Vorauswahl je Variante, Zeile wählt die Gruppe, die Adresse bleibt für „Alle“ ohne `gruppe`.
  */
-test.describe('Kachel „Alle“', () => {
+test.describe('Kachel „Alle“', { tag: ['@public', '@statusseite'] }, () => {
   test.describe.configure({ mode: 'serial' })
 
   let groupId: number
@@ -407,7 +407,7 @@ test.describe('Kachel „Alle“', () => {
 /**
  * Schmale Fenster: Die geschlossenen Tooltips dürfen die Seite nicht verbreitern (Prüfliste G2, D1).
  */
-test.describe('Seite ohne seitliches Scrollen', () => {
+test.describe('Seite ohne seitliches Scrollen', { tag: ['@public', '@statusseite'] }, () => {
   test.describe.configure({ mode: 'serial' })
 
   test.beforeAll(async () => {
@@ -435,7 +435,7 @@ test.describe('Seite ohne seitliches Scrollen', () => {
 /**
  * Testmodus „Beide“: Variante per Adresse (`?lagebild=a|b`) und Hinweis „Testmodus“ in der Kopfzeile.
  */
-test.describe('Testmodus per Adresse', () => {
+test.describe('Testmodus per Adresse', { tag: ['@public', '@statusseite'] }, () => {
   test.describe.configure({ mode: 'serial' })
 
   let groupId: number

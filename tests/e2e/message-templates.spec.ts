@@ -22,7 +22,7 @@ async function errorFields(response: Awaited<ReturnType<typeof create>>): Promis
   return (body.errors?.[0]?.data?.errors ?? []).map((error: { path: string }) => error.path)
 }
 
-test.describe('Vorlagen (Route)', () => {
+test.describe('Vorlagen (Route)', { tag: ['@admin', '@vorlagen'] }, () => {
   test('legt eine Vorlage an und liefert sie wieder aus, SMS- und ntfy-Text sind optional', async ({ request }) => {
     const response = await create(request, { smsBody: 'Störung: {{services}} {{link}}', ntfyBody: '{{services}}: Analyse' })
     expect(response.status()).toBe(201)

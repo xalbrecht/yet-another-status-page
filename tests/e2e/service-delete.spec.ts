@@ -13,7 +13,7 @@ const remove = (serviceId: number) => fetch(`${API_BASE}/api/services/${serviceI
  * Löschen eines Dienstes: nur nach dem Ende, die Einträge im Statusprotokoll entfallen mit dem Dienst.
  * Vorher antwortete die Schnittstelle mit HTTP 500 (NOT NULL am Fremdschlüssel).
  */
-test.describe('Dienst löschen', () => {
+test.describe('Dienst löschen', { tag: ['@admin', '@dienste'] }, () => {
   test('löscht einen beendeten Dienst samt Statusprotokoll', async () => {
     const id = Date.now()
     const group = await createServiceGroup({ name: `Löschen Gruppe ${id}` })

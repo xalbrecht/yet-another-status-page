@@ -22,7 +22,7 @@ async function draftFor(request: APIRequestContext, incidentId: number) {
   return found!
 }
 
-test.describe('Störung aus einer Vorlage (Route)', () => {
+test.describe('Störung aus einer Vorlage (Route)', { tag: ['@admin', '@stoerungen', '@vorlagen'] }, () => {
   test('legt die Störung an, setzt den Dienstzustand und füllt den Benachrichtigungsentwurf', async ({ request }) => {
     const id = Date.now()
     const group = await createServiceGroup({ name: `Vorlage Gruppe ${id}`, icon: 'Server' })

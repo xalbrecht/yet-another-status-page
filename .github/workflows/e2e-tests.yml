@@ -157,12 +157,49 @@ jobs:
             echo '```'
           } | tee -a "$GITHUB_STEP_SUMMARY"
 
+      # Der Testserver oben läuft mit offenen Schreibrechten, damit die Tests Daten anlegen können. Damit sind die
+      # Routen des Admin-Bereichs ohne Anmeldung erreichbar. Die Tests „anonyme Anfrage wird mit Status 401 abgewiesen“
+      # überspringen sich dort. Hier läuft der Server wie im Betrieb (PAYLOAD_PUBLIC_ALLOW_WRITES=false), nur diese
+      # Tests laufen. Eigene Ausgabe und kein HTML-/JSON-Bericht, damit der Bericht des Hauptlaufs erhalten bleibt.
+      - name: Check access protection (server without open writes)
+        if: always()
+        run: |
+          fuser -k -TERM 3001/tcp || true
+          for i in {1..30}; do
+            if ! ss -ltn | grep -q ':3001 '; then break; fi
+            sleep 1
+          done
+          if ss -ltn | grep -q ':3001 '; then echo "Port 3001 is still in use"; exit 1; fi
+
+          nohup npm run dev -- --port 3001 < /dev/null > app-locked.log 2>&1 &
+          echo "Waiting for application to be ready..."
+          for i in {1..60}; do
+            if curl -s http://localhost:3001/api/health > /dev/null 2>&1; then
+              echo "Application is ready!"
+              break
+            fi
+            sleep 2
+          done
+
+          PLAYWRIGHT_BASE_URL=http://localhost:3001 E2E_ACCESS_LOCKED=1 npx playwright test --project=chromium --workers=1 --timeout=120000 \
+            --reporter=list --output=test-results-locked --grep "anonyme Anfrage wird mit Status 401"
+        env:
+          CI: ""
+          DATABASE_URI: postgresql://postgres:postgres@localhost:5432/hostzero_status_test
+          PAYLOAD_SECRET: e2e-test-secret-key-32-characters
+          SERVER_URL: http://localhost:3001
+          PAYLOAD_PUBLIC_ALLOW_WRITES: "false"
+          DEFAULT_LANGUAGE: en
+          PAYLOAD_AUTO_GENERATE: "false"
+
       - name: Upload app log
         uses: actions/upload-artifact@v7
         if: failure()
         with:
           name: app-log
-          path: app.log
+          path: |
+            app.log
+            app-locked.log
           retention-days: 7
 
       - name: Upload test results

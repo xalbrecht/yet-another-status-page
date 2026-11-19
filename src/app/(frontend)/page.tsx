@@ -355,7 +355,7 @@ export default async function StatusPage({
         {/* Status Banner */}
         <section className="mb-8 animate-fade-in">
           <StatusBanner status={overallStatus} message={settings.customStatusMessage ?? undefined} />
-          {maintenanceBar && <MaintenanceBar text={maintenanceBar} />}
+          {maintenanceBar && <MaintenanceBar text={maintenanceBar} outlined={overallStatus === 'maintenance'} />}
         </section>
 
         {boxes ? (

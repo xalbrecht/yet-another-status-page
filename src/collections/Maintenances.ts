@@ -137,6 +137,21 @@ export const Maintenances: CollectionConfig = {
       }),
     },
     {
+      // Ohne Vorgabe: eine Wartung ohne Entscheidung ist nicht „im Fenster“. Das Pflichtfeld verhindert, dass der Bericht raten muss.
+      name: 'maintenanceKind',
+      type: 'select',
+      required: true,
+      label: ta('Maintenance type'),
+      options: [
+        { label: ta('Within the maintenance window (SLA)'), value: 'sla' },
+        { label: ta('Additional maintenance'), value: 'additional' },
+      ],
+      index: true,
+      admin: {
+        description: ta('Decides how the availability report counts this maintenance.'),
+      },
+    },
+    {
       name: 'duration',
       type: 'text',
       label: ta('Duration'),
@@ -222,7 +237,7 @@ export const Maintenances: CollectionConfig = {
           required: true,
           defaultValue: () => new Date().toISOString(),
           admin: localizedDateAdmin({
-            description: ta('When this update was posted'),
+            description: ta('When this update was posted. The availability report reads the start and end of a maintenance from the updates "In Progress" and "Completed". When adding them later, enter the actual times.'),
           }),
         },
         // Texte für den Benachrichtigungsentwurf, aus einer Vorlage gesetzt. Nur Angemeldete lesen und schreiben sie,

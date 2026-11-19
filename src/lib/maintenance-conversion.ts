@@ -16,6 +16,8 @@ export type MaintenanceDraft = {
   scheduledEndAt: string
   completedAt: string
   status: 'completed'
+  /** Alte Störungen waren Wartungen im vereinbarten Fenster. */
+  maintenanceKind: 'sla'
   updates: Array<{ status: 'in_progress' | 'completed'; message: string; createdAt: string }>
 }
 
@@ -59,6 +61,7 @@ export function planMaintenanceFromIncident(
       scheduledEndAt: incident.resolvedAt,
       completedAt: incident.resolvedAt,
       status: 'completed',
+      maintenanceKind: 'sla',
       updates: incident.updates.map((update) => ({
         status: update.status === 'resolved' ? 'completed' : 'in_progress',
         message: update.message,

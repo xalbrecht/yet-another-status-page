@@ -23,7 +23,7 @@ async function convertRun(request: APIRequestContext) {
 async function findMaintenances(request: APIRequestContext, title: string) {
   const response = await request.get(`/api/maintenances?where[title][equals]=${encodeURIComponent(title)}&depth=0`)
   expect(response.ok()).toBe(true)
-  return (await response.json()).docs as Array<{ id: number; status: string; completedAt: string | null; scheduledStartAt: string }>
+  return (await response.json()).docs as Array<{ id: number; status: string; maintenanceKind: string; completedAt: string | null; scheduledStartAt: string }>
 }
 
 async function createMaintenanceIncident(title: string, serviceId: number, extra: Record<string, unknown> = {}) {
@@ -90,6 +90,7 @@ test.describe('Umwandlung der Wartungsvorfälle', { tag: ['@admin', '@wartungen'
     const maintenances = await findMaintenances(request, title)
     expect(maintenances).toHaveLength(1)
     expect(maintenances[0].status).toBe('completed')
+    expect(maintenances[0].maintenanceKind).toBe('sla')
     expect(new Date(maintenances[0].completedAt as string).getTime()).toBe(new Date(end).getTime())
     expect((await request.get(`/api/incidents/${incident.id}`)).status()).toBe(404)
     const notifications = await request.get(`/api/notifications?where[relatedMaintenance][equals]=${maintenances[0].id}&limit=1`)

@@ -17,6 +17,7 @@ const incident = (affectedServices: number[], title = 'Ausfall') => ({
 
 const maintenance = (affectedServices: number[], title = 'Wartung') => ({
   title,
+  maintenanceKind: 'sla',
   scheduledStartAt: daysFromNow(2),
   scheduledEndAt: daysFromNow(3),
   affectedServices,

@@ -26,6 +26,7 @@ test('fillMaintenanceTemplate ersetzt Dienste, Gruppe, Beginn und Ende, lässt {
 
 const draft = {
   groupId: '1',
+  maintenanceKind: 'sla' as string | null,
   serviceIds: ['1'],
   startUtc: '2026-11-25T21:00:00.000Z',
   endUtc: null as string | null,
@@ -47,6 +48,11 @@ test('missingMaintenanceFields nennt Gruppe, Dienste, Beginn, Vorlage und Texte'
   assert.deepEqual(missingMaintenanceFields({ ...draft, texts: { ...draft.texts, title: ' ', body: '' } }), ['title', 'body'])
 })
 
+test('missingMaintenanceFields: ohne Art der Wartung fehlt die Angabe, es gibt keine Vorgabe', () => {
+  assert.deepEqual(missingMaintenanceFields({ ...draft, maintenanceKind: null }), ['maintenance-kind'])
+  assert.deepEqual(missingMaintenanceFields({ ...draft, maintenanceKind: 'additional' }), [])
+})
+
 test('startIsInPast', () => {
   assert.equal(startIsInPast('2026-11-25T21:00:00.000Z', Date.parse('2026-11-26T00:00:00Z')), true)
   assert.equal(startIsInPast('2026-11-25T21:00:00.000Z', Date.parse('2026-11-25T00:00:00Z')), false)
@@ -54,15 +60,23 @@ test('startIsInPast', () => {
 })
 
 test('checkMaintenanceInput nimmt eine vollständige Eingabe an, Ende ist optional', () => {
-  const ok = checkMaintenanceInput({ title: 'T', message: 'M', serviceIds: [1, 1, 2], start: '2026-11-25T21:00:00.000Z', smsBody: 'S' })
-  assert.deepEqual(ok, { ok: true, value: { title: 'T', message: 'M', serviceIds: [1, 2], start: '2026-11-25T21:00:00.000Z', smsBody: 'S' } })
-  const withEnd = checkMaintenanceInput({ title: 'T', message: 'M', serviceIds: [1], start: '2026-11-25T21:00:00.000Z', end: '2026-11-26T01:00:00.000Z' })
+  const ok = checkMaintenanceInput({ title: 'T', message: 'M', maintenanceKind: 'sla', serviceIds: [1, 1, 2], start: '2026-11-25T21:00:00.000Z', smsBody: 'S' })
+  assert.deepEqual(ok, { ok: true, value: { title: 'T', message: 'M', maintenanceKind: 'sla', serviceIds: [1, 2], start: '2026-11-25T21:00:00.000Z', smsBody: 'S' } })
+  const withEnd = checkMaintenanceInput({ title: 'T', message: 'M', maintenanceKind: 'additional', serviceIds: [1], start: '2026-11-25T21:00:00.000Z', end: '2026-11-26T01:00:00.000Z' })
   assert.equal(withEnd.ok && withEnd.value.end, '2026-11-26T01:00:00.000Z')
 })
 
 test('checkMaintenanceInput nennt die fehlerhaften Felder', () => {
-  assert.deepEqual(checkMaintenanceInput({}), { ok: false, errors: ['title', 'message', 'start', 'serviceIds'] })
-  const bad = checkMaintenanceInput({ title: 'T', message: 'M', serviceIds: [1], start: '2026-11-25T21:00:00.000Z', end: '2026-11-25T20:00:00.000Z' })
+  assert.deepEqual(checkMaintenanceInput({}), { ok: false, errors: ['title', 'message', 'maintenanceKind', 'start', 'serviceIds'] })
+  const bad = checkMaintenanceInput({ title: 'T', message: 'M', maintenanceKind: 'sla', serviceIds: [1], start: '2026-11-25T21:00:00.000Z', end: '2026-11-25T20:00:00.000Z' })
   assert.deepEqual(bad, { ok: false, errors: ['end'] })
-  assert.deepEqual(checkMaintenanceInput({ title: 'T', message: 'M', serviceIds: [0], start: 'kein Datum' }), { ok: false, errors: ['start', 'serviceIds'] })
+  assert.deepEqual(checkMaintenanceInput({ title: 'T', message: 'M', maintenanceKind: 'sla', serviceIds: [0], start: 'kein Datum' }), { ok: false, errors: ['start', 'serviceIds'] })
+})
+
+test('checkMaintenanceInput lehnt fehlende und unbekannte Art der Wartung ab (HTTP 400 der Schnittstelle)', () => {
+  const base = { title: 'T', message: 'M', serviceIds: [1], start: '2026-11-25T21:00:00.000Z' }
+  assert.deepEqual(checkMaintenanceInput(base), { ok: false, errors: ['maintenanceKind'] })
+  assert.deepEqual(checkMaintenanceInput({ ...base, maintenanceKind: '' }), { ok: false, errors: ['maintenanceKind'] })
+  assert.deepEqual(checkMaintenanceInput({ ...base, maintenanceKind: 'SLA' }), { ok: false, errors: ['maintenanceKind'] })
+  assert.deepEqual(checkMaintenanceInput({ ...base, maintenanceKind: true }), { ok: false, errors: ['maintenanceKind'] })
 })

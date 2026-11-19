@@ -4,6 +4,7 @@
  * Datenbankzugriff und ohne Texte der Oberfläche. Läuft auch im Browser, deshalb nur `template-text.ts` und `incident-draft.ts`.
  */
 import { NTFY_TEXT_MAX_LENGTH, renderTemplate, SMS_TEXT_MAX_LENGTH } from '@/lib/template-text'
+import { isMaintenanceKind, type MaintenanceKind } from '@/lib/maintenance-kind'
 import { MESSAGE_MAX_LENGTH, SERVICES_MAX, TITLE_MAX_LENGTH, type DraftTexts, type TemplateTexts } from '@/lib/incident-draft'
 
 const LOCAL_PATTERN = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})$/
@@ -55,10 +56,12 @@ export function fillMaintenanceTemplate(
   return { title: fill(template.title), body: fill(template.body), smsBody: fill(template.smsBody), ntfyBody: fill(template.ntfyBody) }
 }
 
-export type MissingMaintenanceField = 'group' | 'services' | 'start' | 'end-before-start' | 'template' | 'title' | 'body' | 'sms-too-long' | 'ntfy-too-long'
+export type MissingMaintenanceField = 'maintenance-kind' | 'group' | 'services' | 'start' | 'end-before-start' | 'template' | 'title' | 'body' | 'sms-too-long' | 'ntfy-too-long'
 
 /** Was noch fehlt, bevor die Vorschau möglich ist. Leer: alles da. Das Ende ist optional, es darf nur nicht vor dem Beginn liegen. */
 export function missingMaintenanceFields(draft: {
+  /** Art der Wartung, `null`: nicht gewählt. Es gibt keine Vorgabe. */
+  maintenanceKind: string | null
   groupId: string
   serviceIds: string[]
   startUtc: string | null
@@ -68,6 +71,7 @@ export function missingMaintenanceFields(draft: {
   texts: DraftTexts
 }): MissingMaintenanceField[] {
   const missing: MissingMaintenanceField[] = []
+  if (!isMaintenanceKind(draft.maintenanceKind)) missing.push('maintenance-kind')
   if (!draft.groupId) missing.push('group')
   else if (draft.serviceIds.length === 0) missing.push('services')
   if (!draft.startUtc) missing.push('start')
@@ -90,6 +94,7 @@ export function startIsInPast(startUtc: string | null, nowMs: number): boolean {
 export type MaintenanceFromTemplateInput = {
   title: string
   message: string
+  maintenanceKind: MaintenanceKind
   serviceIds: number[]
   start: string
   end?: string
@@ -131,6 +136,8 @@ export function checkMaintenanceInput(raw: unknown): MaintenanceInputCheck {
   const message = text('message', MESSAGE_MAX_LENGTH, true)
   const smsBody = text('smsBody', SMS_TEXT_MAX_LENGTH, false)
   const ntfyBody = text('ntfyBody', NTFY_TEXT_MAX_LENGTH, false)
+  const maintenanceKind = body.maintenanceKind
+  if (!isMaintenanceKind(maintenanceKind)) errors.push('maintenanceKind')
   const start = time('start', true)
   const end = time('end', false)
   if (start && end && new Date(end).getTime() < new Date(start).getTime()) errors.push('end')
@@ -140,9 +147,9 @@ export function checkMaintenanceInput(raw: unknown): MaintenanceInputCheck {
       ? Array.from(new Set(ids as number[]))
       : null
   if (!serviceIds) errors.push('serviceIds')
-  if (errors.length > 0 || !title || !message || !start || !serviceIds) return { ok: false, errors }
+  if (errors.length > 0 || !title || !message || !isMaintenanceKind(maintenanceKind) || !start || !serviceIds) return { ok: false, errors }
   return {
     ok: true,
-    value: { title, message, serviceIds, start, ...(end ? { end } : {}), ...(smsBody ? { smsBody } : {}), ...(ntfyBody ? { ntfyBody } : {}) },
+    value: { title, message, maintenanceKind, serviceIds, start, ...(end ? { end } : {}), ...(smsBody ? { smsBody } : {}), ...(ntfyBody ? { ntfyBody } : {}) },
   }
 }

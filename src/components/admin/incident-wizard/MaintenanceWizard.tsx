@@ -37,6 +37,8 @@ export const MaintenanceWizard: React.FC<{ groups: WizardGroup[]; templates: Wiz
   const [groupId, setGroupId] = useState('')
   const [serviceIds, setServiceIds] = useState<number[]>([])
   const [naming, setNaming] = useState<ServiceNaming>('list')
+  // Keine Vorgabe: Die Art der Wartung wählt der Nutzer immer selbst
+  const [maintenanceKind, setMaintenanceKind] = useState('')
   const [start, setStart] = useState('')
   const [end, setEnd] = useState('')
   // Zeitpunkt der Eingabe, nicht des Rendern: `Date.now()` gehört in den Ereignis-Handler
@@ -128,7 +130,7 @@ export const MaintenanceWizard: React.FC<{ groups: WizardGroup[]; templates: Wiz
     else setTexts(EMPTY_TEXTS)
   }
 
-  const missing = missingMaintenanceFields({ groupId, serviceIds: serviceIds.map(String), startUtc, endUtc, endGiven, templateChoice, texts })
+  const missing = missingMaintenanceFields({ maintenanceKind: maintenanceKind || null, groupId, serviceIds: serviceIds.map(String), startUtc, endUtc, endGiven, templateChoice, texts })
   const missingText = missing.map((field) => maintenanceMissingLabel(field, ta)).join(', ')
 
   function go(next: 'edit' | 'preview' | 'done') {
@@ -148,6 +150,7 @@ export const MaintenanceWizard: React.FC<{ groups: WizardGroup[]; templates: Wiz
         body: JSON.stringify({
           title: texts.title,
           message: texts.body,
+          maintenanceKind,
           serviceIds,
           start: startUtc,
           ...(endUtc ? { end: endUtc } : {}),
@@ -168,6 +171,7 @@ export const MaintenanceWizard: React.FC<{ groups: WizardGroup[]; templates: Wiz
 
   function reset() {
     selectGroup('')
+    setMaintenanceKind('')
     setStart('')
     setEnd('')
     setPastStart(false)
@@ -202,7 +206,7 @@ export const MaintenanceWizard: React.FC<{ groups: WizardGroup[]; templates: Wiz
 
   const hasGroup = group !== null
   const hasServices = serviceIds.length > 0
-  const hasPeriod = startUtc !== null && !endBeforeStart
+  const hasPeriod = startUtc !== null && !endBeforeStart && maintenanceKind !== ''
   const hasTemplate = templateChoice !== null
   return (
     <div className="iw" data-testid="wizard-maintenance">
@@ -235,7 +239,7 @@ export const MaintenanceWizard: React.FC<{ groups: WizardGroup[]; templates: Wiz
 
       <Step number={3} title={ta('Period')} summary={startLabel ? `${startLabel}${endLabel ? ` – ${endLabel}` : ''}` : undefined} done={hasPeriod} locked={!hasServices}>
         {hasServices ? (
-          <PeriodStep timeZone={timeZone} start={start} end={end} onStart={changeStart} onEnd={changeEnd} startInPast={pastStart} endBeforeStart={endBeforeStart} templateNeedsEnd={templateNeedsEnd} />
+          <PeriodStep timeZone={timeZone} maintenanceKind={maintenanceKind} onMaintenanceKind={setMaintenanceKind} start={start} end={end} onStart={changeStart} onEnd={changeEnd} startInPast={pastStart} endBeforeStart={endBeforeStart} templateNeedsEnd={templateNeedsEnd} />
         ) : (
           <p className="iw-hint">{ta('Choose the services first.')}</p>
         )}

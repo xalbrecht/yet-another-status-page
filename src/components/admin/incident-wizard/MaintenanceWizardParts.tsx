@@ -10,6 +10,8 @@ import type { WizardService } from './IncidentWizardParts'
  */
 export function PeriodStep({
   timeZone,
+  maintenanceKind,
+  onMaintenanceKind,
   start,
   end,
   onStart,
@@ -19,6 +21,9 @@ export function PeriodStep({
   templateNeedsEnd,
 }: {
   timeZone: string
+  /** Gewählte Art der Wartung, leer: noch nicht gewählt (keine Vorgabe) */
+  maintenanceKind: string
+  onMaintenanceKind: (value: string) => void
   start: string
   end: string
   onStart: (value: string) => void
@@ -31,6 +36,14 @@ export function PeriodStep({
   const ta = useAdminText()
   return (
     <>
+      <div>
+        <label className="iw-label" htmlFor="iw-kind">{ta('Maintenance type')}</label>
+        <select id="iw-kind" data-testid="maintenance-kind" value={maintenanceKind} onChange={(event) => onMaintenanceKind(event.target.value)}>
+          <option value="">{ta('Please choose')}</option>
+          <option value="sla">{ta('Within the maintenance window (SLA)')}</option>
+          <option value="additional">{ta('Additional maintenance')}</option>
+        </select>
+      </div>
       <div className="iw-cols">
         <div>
           <label className="iw-label" htmlFor="iw-start">{ta('Start')}</label>
@@ -51,6 +64,8 @@ export function PeriodStep({
 
 export function maintenanceMissingLabel(field: MissingMaintenanceField, ta: AdminText): string {
   switch (field) {
+    case 'maintenance-kind':
+      return ta('maintenance type')
     case 'group':
       return ta('group')
     case 'services':

@@ -28,6 +28,7 @@ test('ein gelöster Wartungsvorfall wird zu einer abgeschlossenen Wartung mit ü
     scheduledEndAt: '2026-10-12T20:10:00.000Z',
     completedAt: '2026-10-12T20:10:00.000Z',
     status: 'completed',
+    maintenanceKind: 'sla',
     updates: [
       { status: 'in_progress', message: 'Der Service ist wegen Wartungsarbeiten nicht verfügbar', createdAt: '2026-10-12T18:00:00.000Z' },
       { status: 'completed', message: 'Die Wartung ist abgeschlossen', createdAt: '2026-10-12T20:10:00.000Z' },

@@ -8,7 +8,7 @@ import { cn, getMediaUrl } from '@/lib/utils'
 import { Header } from '@/components/status/Header'
 import { Footer } from '@/components/status/Footer'
 import { translatorsFor } from '@/lib/i18n/server'
-import { countMaintenanceServices, maintenanceBarText, maintenanceNoticeFor, noticeMaintenanceWhere } from '@/lib/maintenance-notice'
+import { countMaintenanceServices, maintenanceBarText, maintenanceNoticeFor, noticeMaintenanceWhere, toNoticeMaintenance } from '@/lib/maintenance-notice'
 import { Subscribe } from '@/components/status/SubscribeDialog'
 import { LoginButton } from '@/components/status/LoginButton'
 import { StatusBanner } from '@/components/status/StatusBanner'
@@ -101,13 +101,7 @@ async function getStatusData(requestedPeriod: unknown, requestedBar: unknown) {
     depth: 0,
     pagination: false,
   })
-  const noticeInput = noticeMaintenances.docs.map((m) => ({
-    status: m.status,
-    scheduledStartAt: m.scheduledStartAt,
-    scheduledEndAt: m.scheduledEndAt,
-    affectsService: m.affectsService === true,
-    serviceIds: (m.affectedServices || []).map((s) => String(typeof s === 'object' && s !== null ? s.id : s)),
-  }))
+  const noticeInput = noticeMaintenances.docs.map(toNoticeMaintenance)
   const noticeText = (serviceId: string): string | undefined => {
     const notice = maintenanceNoticeFor(noticeInput, serviceId, nowMs)
     if (!notice) return undefined

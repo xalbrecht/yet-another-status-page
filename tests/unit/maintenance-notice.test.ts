@@ -6,6 +6,8 @@ import {
   countMaintenanceServices,
   maintenanceNoticeFor,
   noticeMaintenanceWhere,
+  runningMaintenanceServiceIds,
+  toNoticeMaintenance,
   type NoticeMaintenance,
 } from '@/lib/maintenance-notice'
 
@@ -87,4 +89,35 @@ test('Abfrage: laufende Wartungen unabhängig vom Beginn, bevorstehende nur inne
       { and: [{ status: { equals: 'upcoming' } }, { scheduledStartAt: { less_than_equal: limit } }] },
     ],
   })
+})
+
+test('Dienste in laufender Wartung: nur der gelesene Status „In Arbeit“ zählt, alle Wartungen zusammen', () => {
+  const list = [
+    maintenance({ serviceIds: ['1', '2'] }),
+    maintenance({ serviceIds: ['2', '3'], affectsService: true }),
+    maintenance({ serviceIds: ['4'], status: 'upcoming' }),
+    maintenance({ serviceIds: ['5'], status: 'completed' }),
+    maintenance({ serviceIds: ['6'], status: 'cancelled' }),
+  ]
+  assert.deepEqual([...runningMaintenanceServiceIds(list)].sort(), ['1', '2', '3'])
+  assert.equal(runningMaintenanceServiceIds([]).size, 0)
+})
+
+test('Umwandlung einer Wartung: Dienste als Ids, fehlende Auswirkung und fehlendes Ende', () => {
+  const notice = toNoticeMaintenance({
+    status: 'in_progress',
+    scheduledStartAt: '2026-11-19T10:00:00Z',
+    scheduledEndAt: null,
+    affectsService: null,
+    affectedServices: [7, { id: 8 }],
+  })
+  assert.deepEqual(notice, {
+    status: 'in_progress',
+    scheduledStartAt: '2026-11-19T10:00:00Z',
+    scheduledEndAt: null,
+    affectsService: false,
+    serviceIds: ['7', '8'],
+  })
+  assert.equal(toNoticeMaintenance({ status: 'upcoming', scheduledStartAt: 'x', affectsService: true }).affectsService, true)
+  assert.deepEqual(toNoticeMaintenance({ status: 'upcoming', scheduledStartAt: 'x' }).serviceIds, [])
 })

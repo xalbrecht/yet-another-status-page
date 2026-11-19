@@ -61,25 +61,30 @@ export function serializeMaintenance(doc: Maintenance): PublicMaintenance {
   }
 }
 
-function serviceBase(doc: Service): Omit<PublicService, 'group'> {
+function serviceBase(doc: Service, inMaintenance: boolean): Omit<PublicService, 'group'> {
   return {
     slug: doc.slug,
     name: doc.name,
     description: doc.description ?? null,
     status: doc.status,
+    maintenance: inMaintenance,
     updatedAt: doc.updatedAt,
   }
 }
 
-export function serializeService(doc: Service): PublicService {
+export function serializeService(doc: Service, inMaintenance: boolean): PublicService {
   const group = typeof doc.group === 'object' && doc.group !== null ? doc.group : null
   return {
-    ...serviceBase(doc),
+    ...serviceBase(doc, inMaintenance),
     group: { slug: group?.slug ?? '', name: group?.name ?? '' },
   }
 }
 
-export function serializeServiceGroups(groups: ServiceGroup[], services: Service[]): PublicServiceGroup[] {
+export function serializeServiceGroups(
+  groups: ServiceGroup[],
+  services: Service[],
+  maintenanceServiceIds: Set<string>,
+): PublicServiceGroup[] {
   return groups
     .map((group) => {
       const members = services.filter((s) => {
@@ -91,7 +96,7 @@ export function serializeServiceGroups(groups: ServiceGroup[], services: Service
         name: group.name,
         description: group.description ?? null,
         status: computeOverallStatus(members, {}),
-        services: members.map(serviceBase),
+        services: members.map((member) => serviceBase(member, maintenanceServiceIds.has(String(member.id)))),
       }
     })
     .filter((group) => group.services.length > 0)

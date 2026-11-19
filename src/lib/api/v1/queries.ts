@@ -1,6 +1,7 @@
 import type { Where } from 'payload'
 import { getCachedPayload } from '@/lib/payload'
 import { activeServiceWhereNow } from '@/lib/service-lifecycle'
+import { noticeMaintenanceWhere, runningMaintenanceServiceIds, toNoticeMaintenance } from '@/lib/maintenance-notice'
 import type { IncidentListQuery, MaintenanceListQuery } from './schemas'
 
 export const ACTIVE_INCIDENT_WHERE: Where = { status: { not_equals: 'resolved' } }
@@ -78,6 +79,21 @@ export async function findMaintenance(shortId: string) {
     limit: 1,
   })
   return result.docs[0] ?? null
+}
+
+/**
+ * Ids der Dienste in einer laufenden Wartung. Der Status wird beim Lesen nach Zeitplan umgestellt, deshalb liest die
+ * Abfrage wie die Statusseite auch bevorstehende Wartungen im Vorlauf und prüft den gelesenen Status.
+ */
+export async function findMaintenanceServiceIds(): Promise<Set<string>> {
+  const payload = await getCachedPayload()
+  const result = await payload.find({
+    collection: 'maintenances',
+    where: noticeMaintenanceWhere(Date.now()),
+    depth: 0,
+    pagination: false,
+  })
+  return runningMaintenanceServiceIds(result.docs.map(toNoticeMaintenance))
 }
 
 export async function findServicesAndGroups() {

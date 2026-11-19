@@ -219,6 +219,8 @@ export async function createMaintenance(data: {
   title: string
   /** Art der Wartung (Pflichtfeld der Sammlung), Vorgabe der Helfer: im Wartungsfenster */
   maintenanceKind?: 'sla' | 'additional'
+  /** Auswirkung auf den Dienst (Kontrollkästchen), Vorgabe der Sammlung: nein */
+  affectsService?: boolean
   status?: 'upcoming' | 'in_progress' | 'completed' | 'cancelled'
   scheduledStartAt: string
   scheduledEndAt?: string
@@ -233,6 +235,7 @@ export async function createMaintenance(data: {
     body: JSON.stringify({
       title: data.title,
       maintenanceKind: data.maintenanceKind || 'sla',
+      affectsService: data.affectsService,
       status: data.status || 'upcoming',
       scheduledStartAt: data.scheduledStartAt,
       scheduledEndAt: data.scheduledEndAt,

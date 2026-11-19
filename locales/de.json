@@ -655,6 +655,8 @@
     "Scheduled End": "Geplantes Ende",
     "Scheduled Start": "Geplanter Beginn",
     "Maintenance type": "Art der Wartung",
+    "Affects the service": "Auswirkung auf den Dienst",
+    "Select if the service is expected to be restricted during the maintenance. The status page then shows \"restricted availability\".": "Ankreuzen, wenn der Dienst während der Wartung voraussichtlich eingeschränkt ist. Die Statusseite zeigt dann „eingeschränkt verfügbar“ und die Wartungsleiste zählt den Dienst als „mit erwarteten Einschränkungen“.",
     "maintenance type": "Art der Wartung",
     "Please choose": "Bitte wählen",
     "Within the maintenance window (SLA)": "Im Wartungsfenster (SLA)",

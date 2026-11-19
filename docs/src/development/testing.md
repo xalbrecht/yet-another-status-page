@@ -22,7 +22,7 @@ This page describes how the tests of this fork are run, what they cover and whic
   npm run check:migrations
   docker rm -f migration-check
   ```
-- The tests run against **`next dev`** in a Docker container, not against the production image. Behavior that differs in the production build (compile times, memory) is not covered.
+- The tests run against **`next dev`**, not against the production image. Locally `scripts/run-e2e-tests.sh` starts it in a Docker container (`docker-compose.test.yml`). In CI the job `e2e-tests` runs `npm run dev` directly on the runner with PostgreSQL as a service container, because a second `npm install` in a container cost about 55 seconds per run. Both use the same environment variables. Behavior that differs in the production build (compile times, memory) is not covered.
 - Most tests create their own data through the Payload REST API (`tests/utils/payload-helpers.ts`) and use unique names (`Date.now()`), so they do not depend on the seed data.
 
 ### Situation overview (`tests/e2e/lagebild.spec.ts`)

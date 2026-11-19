@@ -14,6 +14,7 @@
     "demo:seed": "tsx scripts/seed-demo-data.ts",
     "demo:reset": "tsx scripts/reset-demo.ts",
     "check:locales": "tsx scripts/check-locales.ts",
+    "check:migrations": "tsx scripts/check-migrations.mts",
     "generate:admin-client-keys": "tsx scripts/admin-client-keys.ts",
     "test:unit": "tsx --import ./tests/unit/setup-language.ts --test tests/unit/*.test.ts tests/unit/*.test.tsx",
     "test:e2e": "./scripts/run-e2e-tests.sh",

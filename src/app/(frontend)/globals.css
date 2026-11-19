@@ -51,6 +51,9 @@
   --status-banner-partial: 25 95% 53%;
   --status-banner-major: 0 72% 51%;
   --status-banner-maintenance: 217 91% 60%;
+  /* Wartungsleiste: dunkler als das Banner, weiße Schrift 14 px braucht 4,5 zu 1 */
+  --status-bar-maintenance: 217 80% 45%;
+  --status-bar-maintenance-text: 217 80% 38%;
 }
 
 .dark {
@@ -97,6 +100,8 @@
   --status-banner-partial: 25 85% 42%;
   --status-banner-major: 0 65% 40%;
   --status-banner-maintenance: 217 80% 45%;
+  --status-bar-maintenance: 217 80% 45%;
+  --status-bar-maintenance-text: 217 91% 72%;
 }
 
 @theme inline {
@@ -143,6 +148,8 @@
   --color-status-banner-partial: hsl(var(--status-banner-partial));
   --color-status-banner-major: hsl(var(--status-banner-major));
   --color-status-banner-maintenance: hsl(var(--status-banner-maintenance));
+  --color-status-bar-maintenance: hsl(var(--status-bar-maintenance));
+  --color-status-bar-maintenance-text: hsl(var(--status-bar-maintenance-text));
 
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);

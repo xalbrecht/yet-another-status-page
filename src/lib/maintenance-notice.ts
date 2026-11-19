@@ -3,6 +3,9 @@
  * Reine Funktion. Die Anzeige kommt aus den erfassten Wartungen, nicht aus dem Zustand „Wartung“ am Dienst.
  */
 
+import type { Where } from 'payload'
+import type { TranslateFormat } from '@/lib/i18n/core'
+
 /** Eine bevorstehende Wartung erscheint ab dieser Zeit vor ihrem Beginn. */
 export const MAINTENANCE_NOTICE_LEAD_MS = 24 * 3600_000
 
@@ -12,6 +15,7 @@ export type MaintenanceNotice = {
   start: number
   /** `null`: kein Ende geplant */
   end: number | null
+  affectsService: boolean
 }
 
 export type NoticeMaintenance = {
@@ -19,9 +23,28 @@ export type NoticeMaintenance = {
   scheduledStartAt: string
   scheduledEndAt?: string | null
   serviceIds: string[]
+  affectsService?: boolean
 }
 
-/** Laufende Wartung vor bevorstehender, innerhalb der Art die früheste. Abgeschlossene und abgesagte zählen nicht. */
+/**
+ * Abfrage der Wartungen für die Anzeige: laufende unabhängig von ihrem geplanten Beginn (auch von Hand vorgezogene),
+ * bevorstehende nur innerhalb der Vorlaufzeit. Abgeschlossene und abgesagte entfallen.
+ */
+export function noticeMaintenanceWhere(now: number): Where {
+  return {
+    or: [
+      { status: { equals: 'in_progress' } },
+      {
+        and: [
+          { status: { equals: 'upcoming' } },
+          { scheduledStartAt: { less_than_equal: new Date(now + MAINTENANCE_NOTICE_LEAD_MS).toISOString() } },
+        ],
+      },
+    ],
+  }
+}
+
+/** Laufende Wartung vor bevorstehender, innerhalb der Art zuerst die mit Auswirkung, dann die früheste. Abgeschlossene und abgesagte zählen nicht. */
 export function maintenanceNoticeFor(
   maintenances: NoticeMaintenance[],
   serviceId: string,
@@ -32,11 +55,50 @@ export function maintenanceNoticeFor(
     if (!maintenance.serviceIds.includes(serviceId)) continue
     const start = new Date(maintenance.scheduledStartAt).getTime()
     const end = maintenance.scheduledEndAt ? new Date(maintenance.scheduledEndAt).getTime() : null
-    if (maintenance.status === 'in_progress') candidates.push({ kind: 'running', start, end })
-    else if (maintenance.status === 'upcoming' && start - now <= MAINTENANCE_NOTICE_LEAD_MS) {
-      candidates.push({ kind: 'soon', start, end })
+    if (maintenance.status === 'in_progress') {
+      candidates.push({ kind: 'running', start, end, affectsService: maintenance.affectsService === true })
+    } else if (maintenance.status === 'upcoming' && start - now <= MAINTENANCE_NOTICE_LEAD_MS) {
+      candidates.push({ kind: 'soon', start, end, affectsService: false })
     }
   }
-  candidates.sort((a, b) => (a.kind === b.kind ? a.start - b.start : a.kind === 'running' ? -1 : 1))
+  candidates.sort((a, b) => {
+    if (a.kind !== b.kind) return a.kind === 'running' ? -1 : 1
+    if (a.affectsService !== b.affectsService) return a.affectsService ? -1 : 1
+    return a.start - b.start
+  })
   return candidates[0] ?? null
+}
+
+/**
+ * Zählt für die Wartungsleiste die Dienste in laufenden Wartungen. Ein Dienst zählt einmal, gilt in einer seiner
+ * Wartungen die Auswirkung „ja“, zählt er als `limited`. Nur Dienste aus `serviceIds` (die angezeigten) zählen.
+ */
+export function countMaintenanceServices(
+  maintenances: NoticeMaintenance[],
+  serviceIds: string[],
+): { unaffected: number; limited: number } {
+  const shown = new Set(serviceIds)
+  const limited = new Set<string>()
+  const running = new Set<string>()
+  for (const maintenance of maintenances) {
+    if (maintenance.status !== 'in_progress') continue
+    for (const id of maintenance.serviceIds) {
+      if (!shown.has(id)) continue
+      running.add(id)
+      if (maintenance.affectsService === true) limited.add(id)
+    }
+  }
+  return { unaffected: running.size - limited.size, limited: limited.size }
+}
+
+/** Text der Wartungsleiste, `null` ohne laufende Wartung an einem angezeigten Dienst. Einzahl bei genau 1. */
+export function maintenanceBarText(counts: { unaffected: number; limited: number }, tf: TranslateFormat): string | null {
+  const parts: string[] = []
+  if (counts.unaffected > 0) {
+    parts.push(tf(counts.unaffected === 1 ? 'maintenance.barUnaffectedOne' : 'maintenance.barUnaffectedMany', { n: counts.unaffected }))
+  }
+  if (counts.limited > 0) {
+    parts.push(tf(counts.limited === 1 ? 'maintenance.barLimitedOne' : 'maintenance.barLimitedMany', { n: counts.limited }))
+  }
+  return parts.length === 0 ? null : tf('maintenance.barLead', { parts: parts.join(', ') })
 }

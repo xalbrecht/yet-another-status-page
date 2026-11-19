@@ -80,3 +80,15 @@ test('checkMaintenanceInput lehnt fehlende und unbekannte Art der Wartung ab (HT
   assert.deepEqual(checkMaintenanceInput({ ...base, maintenanceKind: 'SLA' }), { ok: false, errors: ['maintenanceKind'] })
   assert.deepEqual(checkMaintenanceInput({ ...base, maintenanceKind: true }), { ok: false, errors: ['maintenanceKind'] })
 })
+
+test('checkMaintenanceInput: Auswirkung auf den Dienst ist optional, nur ein Wahrheitswert gilt', () => {
+  const base = { title: 'T', message: 'M', maintenanceKind: 'sla', serviceIds: [1], start: '2026-11-25T21:00:00.000Z' }
+  const yes = checkMaintenanceInput({ ...base, affectsService: true })
+  assert.equal(yes.ok && yes.value.affectsService, true)
+  const no = checkMaintenanceInput({ ...base, affectsService: false })
+  assert.equal(no.ok && no.value.affectsService, undefined, 'false entspricht der Vorgabe und wird nicht mitgeführt')
+  const without = checkMaintenanceInput(base)
+  assert.equal(without.ok && without.value.affectsService, undefined)
+  assert.deepEqual(checkMaintenanceInput({ ...base, affectsService: 'ja' }), { ok: false, errors: ['affectsService'] })
+  assert.deepEqual(checkMaintenanceInput({ ...base, affectsService: 1 }), { ok: false, errors: ['affectsService'] })
+})

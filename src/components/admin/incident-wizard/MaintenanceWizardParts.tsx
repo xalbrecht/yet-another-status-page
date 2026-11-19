@@ -12,6 +12,8 @@ export function PeriodStep({
   timeZone,
   maintenanceKind,
   onMaintenanceKind,
+  affectsService,
+  onAffectsService,
   start,
   end,
   onStart,
@@ -24,6 +26,9 @@ export function PeriodStep({
   /** Gewählte Art der Wartung, leer: noch nicht gewählt (keine Vorgabe) */
   maintenanceKind: string
   onMaintenanceKind: (value: string) => void
+  /** Die Wartung schränkt den Dienst voraussichtlich ein */
+  affectsService: boolean
+  onAffectsService: (value: boolean) => void
   start: string
   end: string
   onStart: (value: string) => void
@@ -43,6 +48,13 @@ export function PeriodStep({
           <option value="sla">{ta('Within the maintenance window (SLA)')}</option>
           <option value="additional">{ta('Additional maintenance')}</option>
         </select>
+      </div>
+      <div>
+        <label className="iw-label" htmlFor="iw-affects">
+          <input type="checkbox" id="iw-affects" data-testid="affects-service" checked={affectsService} onChange={(event) => onAffectsService(event.target.checked)} />
+          {' '}{ta('Affects the service')}
+        </label>
+        <p className="iw-hint">{ta('Select if the service is expected to be restricted during the maintenance. The status page then shows "restricted availability" and the maintenance bar counts the service under "with expected restrictions".')}</p>
       </div>
       <div className="iw-cols">
         <div>

@@ -388,6 +388,10 @@ export interface Maintenance {
    */
   maintenanceKind: 'sla' | 'additional';
   /**
+   * Select if the service is expected to be restricted during the maintenance. The status page then shows "restricted availability".
+   */
+  affectsService?: boolean | null;
+  /**
    * Human-readable duration (e.g., "~2 hours")
    */
   duration?: string | null;
@@ -891,6 +895,7 @@ export interface MaintenancesSelect<T extends boolean = true> {
   scheduledStartAt?: T;
   scheduledEndAt?: T;
   maintenanceKind?: T;
+  affectsService?: T;
   duration?: T;
   status?: T;
   autoStartOnSchedule?: T;

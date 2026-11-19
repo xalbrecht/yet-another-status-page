@@ -8,10 +8,11 @@ import { cn, getMediaUrl } from '@/lib/utils'
 import { Header } from '@/components/status/Header'
 import { Footer } from '@/components/status/Footer'
 import { translatorsFor } from '@/lib/i18n/server'
-import { MAINTENANCE_NOTICE_LEAD_MS, maintenanceNoticeFor } from '@/lib/maintenance-notice'
+import { countMaintenanceServices, maintenanceBarText, maintenanceNoticeFor, noticeMaintenanceWhere } from '@/lib/maintenance-notice'
 import { Subscribe } from '@/components/status/SubscribeDialog'
 import { LoginButton } from '@/components/status/LoginButton'
 import { StatusBanner } from '@/components/status/StatusBanner'
+import { MaintenanceBar } from '@/components/status/MaintenanceBar'
 import { ServiceGroup } from '@/components/status/ServiceGroup'
 import { MaintenanceCard } from '@/components/status/MaintenanceCard'
 import { IncidentTimelineWithLinks } from '@/components/status/IncidentTimeline'
@@ -96,12 +97,7 @@ async function getStatusData(requestedPeriod: unknown, requestedBar: unknown) {
   const nowMs = Date.now()
   const noticeMaintenances = await payload.find({
     collection: 'maintenances',
-    where: {
-      and: [
-        { status: { not_in: ['completed', 'cancelled'] } },
-        { scheduledStartAt: { less_than_equal: new Date(nowMs + MAINTENANCE_NOTICE_LEAD_MS).toISOString() } },
-      ],
-    },
+    where: noticeMaintenanceWhere(nowMs),
     depth: 0,
     pagination: false,
   })
@@ -109,6 +105,7 @@ async function getStatusData(requestedPeriod: unknown, requestedBar: unknown) {
     status: m.status,
     scheduledStartAt: m.scheduledStartAt,
     scheduledEndAt: m.scheduledEndAt,
+    affectsService: m.affectsService === true,
     serviceIds: (m.affectedServices || []).map((s) => String(typeof s === 'object' && s !== null ? s.id : s)),
   }))
   const noticeText = (serviceId: string): string | undefined => {
@@ -117,6 +114,9 @@ async function getStatusData(requestedPeriod: unknown, requestedBar: unknown) {
     const start = formatDateTime(new Date(notice.start), dt)
     const end = notice.end === null ? null : formatDateTime(new Date(notice.end), dt)
     if (notice.kind === 'running') {
+      if (notice.affectsService) {
+        return end === null ? t('maintenance.noticeRunningOpenLimited') : tf('maintenance.noticeRunningLimited', { end })
+      }
       return end === null ? t('maintenance.noticeRunningOpen') : tf('maintenance.noticeRunning', { end })
     }
     return end === null ? tf('maintenance.noticeSoonOpen', { start }) : tf('maintenance.noticeSoon', { start, end })
@@ -129,6 +129,7 @@ async function getStatusData(requestedPeriod: unknown, requestedBar: unknown) {
   })
 
   // Group services by service group
+  const shownServiceIds: string[] = []
   const groupedServices = serviceGroups.docs.map((group) => {
     const groupServices = services.docs.filter((service) => {
       const serviceGroup = service.group
@@ -137,6 +138,8 @@ async function getStatusData(requestedPeriod: unknown, requestedBar: unknown) {
       }
       return serviceGroup === group.id
     })
+
+    for (const service of groupServices) shownServiceIds.push(String(service.id))
 
     return {
       name: group.name,
@@ -148,6 +151,9 @@ async function getStatusData(requestedPeriod: unknown, requestedBar: unknown) {
       })),
     }
   }).filter((group) => group.services.length > 0)
+
+  // Wartungsleiste: zählt nur Dienste, die auf der Seite stehen (in einer Gruppe).
+  const maintenanceBar = maintenanceBarText(countMaintenanceServices(noticeInput, shownServiceIds), tf)
 
   // Format maintenances
   const formattedMaintenances = maintenances.docs.map((m) => {
@@ -288,6 +294,7 @@ async function getStatusData(requestedPeriod: unknown, requestedBar: unknown) {
     defaultBarHours,
     settings,
     overallStatus,
+    maintenanceBar,
     serviceGroups: groupedServices,
     maintenances: formattedMaintenances,
     pastIncidents,
@@ -309,6 +316,7 @@ export default async function StatusPage({
     boxes,
     settings,
     overallStatus,
+    maintenanceBar,
     serviceGroups,
     maintenances,
     pastIncidents,
@@ -347,6 +355,7 @@ export default async function StatusPage({
         {/* Status Banner */}
         <section className="mb-8 animate-fade-in">
           <StatusBanner status={overallStatus} message={settings.customStatusMessage ?? undefined} />
+          {maintenanceBar && <MaintenanceBar text={maintenanceBar} outlined={overallStatus === 'maintenance'} />}
         </section>
 
         {boxes ? (

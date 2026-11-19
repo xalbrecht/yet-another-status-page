@@ -152,6 +152,17 @@ export const Maintenances: CollectionConfig = {
       },
     },
     {
+      // Nur die Anzeige: Die Wartung ändert den Dienstzustand nie. Bei „ja“ nennt die Marke den Dienst „eingeschränkt verfügbar“
+      // und die Wartungsleiste zählt ihn als „mit erwarteten Einschränkungen“.
+      name: 'affectsService',
+      type: 'checkbox',
+      label: ta('Affects the service'),
+      defaultValue: false,
+      admin: {
+        description: ta('Select if the service is expected to be restricted during the maintenance. The status page then shows "restricted availability" and the maintenance bar counts the service under "with expected restrictions".'),
+      },
+    },
+    {
       name: 'duration',
       type: 'text',
       label: ta('Duration'),

@@ -160,10 +160,10 @@ export function MaintenancePreview({
       </ul>
 
       <label className="iw-label" htmlFor="iw-create-draft">
-        <input type="checkbox" id="iw-create-draft" data-testid="create-draft" checked={createDraft} disabled={busy} onChange={(event) => onCreateDraft(event.target.checked)} />
+        <input type="checkbox" id="iw-create-draft" data-testid="create-draft" aria-describedby="iw-create-draft-hint" checked={createDraft} disabled={busy} onChange={(event) => onCreateDraft(event.target.checked)} />
         {' '}{ta('Create notification draft')}
       </label>
-      <p className="iw-hint">{ta('Clear it when entering an event afterwards, so that no draft is created and nobody is notified by mistake.')}</p>
+      <p className="iw-hint" id="iw-create-draft-hint">{ta('Clear it when entering an event afterwards, so that no draft is created.')}</p>
 
       {createDraft && <h3 className="iw-ph">{ta('3. Notification draft (not sent)')}</h3>}
       {createDraft && <div className="iw-draft" data-testid="draft">

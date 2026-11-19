@@ -57,14 +57,19 @@ async function createIncidentRest(request: APIRequestContext, serviceId: number,
 test.describe('Haken „Meldungsentwurf anlegen“', { tag: ['@admin', '@wartungen', '@stoerungen'] }, () => {
   test('Wartung anlegen: ohne Angabe und angehakt entsteht ein Entwurf, abgewählt keiner', async ({ request }) => {
     const service = await newService(request, 'Wartung anlegen')
-    const withDefault = await createMaintenanceRest(request, service.id, {})
+    // Die abgewählten Fälle entstehen zuerst: Ihr Entwurf würde vor dem der Vergleichsfälle entstehen und wäre beim Zählen schon da
     const unchecked = await createMaintenanceRest(request, service.id, { createNotificationDraft: false })
+    const firstUpdateUnchecked = await createMaintenanceRest(request, service.id, {
+      updates: [{ status: 'upcoming', message: 'Nachgetragen.', createdAt: new Date().toISOString(), createNotificationDraft: false }],
+    })
+    const withDefault = await createMaintenanceRest(request, service.id, {})
     const checked = await createMaintenanceRest(request, service.id, { createNotificationDraft: true })
 
     await waitForDrafts(request, 'relatedMaintenance', withDefault.id, 1)
     await waitForDrafts(request, 'relatedMaintenance', checked.id, 1)
-    // Die Vergleichsfälle haben ihren Entwurf schon, der abgewählte Fall bleibt ohne
     expect(await draftCount(request, 'relatedMaintenance', unchecked.id)).toBe(0)
+    // Auch der Haken der ersten Aktualisierung wirkt beim Anlegen: Ihr Text gelangt sonst in einen Entwurf, den niemand wollte
+    expect(await draftCount(request, 'relatedMaintenance', firstUpdateUnchecked.id)).toBe(0)
   })
 
   test('Aktualisierung einer Wartung: nur die angehakte Aktualisierung erzeugt einen Entwurf', async ({ request }) => {
@@ -88,8 +93,8 @@ test.describe('Haken „Meldungsentwurf anlegen“', { tag: ['@admin', '@wartung
 
   test('Störung anlegen: die erste Aktualisierung steuert den Entwurf', async ({ request }) => {
     const service = await newService(request, 'Störung anlegen')
-    const withDefault = await createIncidentRest(request, service.id, {})
     const unchecked = await createIncidentRest(request, service.id, { createNotificationDraft: false })
+    const withDefault = await createIncidentRest(request, service.id, {})
 
     await waitForDrafts(request, 'relatedIncident', withDefault.id, 1)
     expect(await draftCount(request, 'relatedIncident', unchecked.id)).toBe(0)
@@ -115,10 +120,10 @@ test.describe('Haken „Meldungsentwurf anlegen“', { tag: ['@admin', '@wartung
     const maintenance = { title: 'Haken Vorlage Wartung', message: 'Arbeiten.', maintenanceKind: 'sla', serviceIds: [service.id], start: daysFromNow(2) }
     const incident = { title: 'Haken Vorlage Störung', message: 'Wir untersuchen.', impact: 'degraded', serviceIds: [service.id] }
 
-    const maintenanceDefault = await (await request.post('/api/maintenances/from-template', { data: maintenance })).json()
     const maintenanceQuiet = await (await request.post('/api/maintenances/from-template', { data: { ...maintenance, createNotificationDraft: false } })).json()
-    const incidentDefault = await (await request.post('/api/incidents/from-template', { data: incident })).json()
     const incidentQuiet = await (await request.post('/api/incidents/from-template', { data: { ...incident, createNotificationDraft: false } })).json()
+    const maintenanceDefault = await (await request.post('/api/maintenances/from-template', { data: maintenance })).json()
+    const incidentDefault = await (await request.post('/api/incidents/from-template', { data: incident })).json()
 
     await waitForDrafts(request, 'relatedMaintenance', maintenanceDefault.id, 1)
     await waitForDrafts(request, 'relatedIncident', incidentDefault.id, 1)

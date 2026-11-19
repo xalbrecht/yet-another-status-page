@@ -292,6 +292,7 @@ export const Incidents: CollectionConfig = {
           type: 'checkbox',
           label: ta('Create notification draft'),
           defaultValue: true,
+          access: { read: authenticatedOrTestWriteField, create: authenticatedOrTestWriteField, update: authenticatedOrTestWriteField },
           admin: {
             description: ta('Select to create a notification draft for this update. Clear it when entering an update afterwards.'),
           },

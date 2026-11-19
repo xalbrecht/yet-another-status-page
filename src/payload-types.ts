@@ -396,7 +396,7 @@ export interface Maintenance {
    */
   affectsService?: boolean | null;
   /**
-   * Select to create a notification draft when saving. Clear it when entering a maintenance afterwards, so that the subscribers are not notified.
+   * Select to create a notification draft when saving. Clear it when entering a maintenance afterwards, so that no draft is created.
    */
   createNotificationDraft?: boolean | null;
   /**

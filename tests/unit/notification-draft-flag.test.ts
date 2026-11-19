@@ -34,6 +34,16 @@ test('Wartung selbst: Kontrollkästchen für den Entwurf beim Anlegen, Vorgabe a
   assert.equal(visible({ id: 7 }), false, 'gespeicherte Wartung')
 })
 
+test('Haken-Felder: nur Angemeldete lesen und schreiben sie (wie die SMS- und ntfy-Texte), die Wartung dupliziert den Haken nicht', () => {
+  const fields = [inUpdates(Maintenances.fields), inUpdates(Incidents.fields), top(Maintenances.fields, 'createNotificationDraft')] as Array<Field & { access?: Record<string, unknown>; hooks?: { beforeDuplicate?: Array<() => unknown> } }>
+  for (const field of fields) {
+    assert.ok(field.access?.read && field.access?.create && field.access?.update, 'Zugriffsregeln fehlen')
+  }
+  const duplicate = fields[2].hooks?.beforeDuplicate?.[0]
+  assert.ok(duplicate, 'beforeDuplicate fehlt an der Wartung')
+  assert.equal(duplicate(), true, 'ein Duplikat beginnt wieder angehakt')
+})
+
 test('Störung selbst hat kein eigenes Feld: die erste Aktualisierung steuert den Entwurf', () => {
   assert.equal(top(Incidents.fields, 'createNotificationDraft'), undefined)
 })

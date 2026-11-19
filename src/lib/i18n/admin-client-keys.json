@@ -42,7 +42,7 @@
   "Choose group, services, template and impact. Title and text come from the template and stay editable. Before anything is published, a preview shows what happens.",
   "Choose the group first.",
   "Choose the services first.",
-  "Clear it when entering an event afterwards, so that no draft is created and nobody is notified by mistake.",
+  "Clear it when entering an event afterwards, so that no draft is created.",
   "Commit",
   "Container",
   "Convert these incidents into maintenances and delete the incidents? This cannot be undone. Did you create a backup?",

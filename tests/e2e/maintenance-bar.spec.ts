@@ -66,13 +66,17 @@ test.describe('Wartungsleiste', { tag: ['@public', '@wartungen'] }, () => {
     await expect(row.getByTestId('service-maintenance')).not.toContainText('restricted availability')
   })
 
-  test('Wartung mit Auswirkung und Störung: Banner zeigt die Störung, Leiste bleibt sichtbar', async ({ page }) => {
+  test('Wartung mit Auswirkung und Störung: Dienst behält seinen Zustand, Leiste bleibt sichtbar', async ({ page }) => {
     const { service } = await setup('stoerung')
     await updateService(service.id, { status: 'partial' })
     await running(service.id, true)
 
     await page.goto('/')
+    // Der Text des Banners hängt von allen Diensten der geteilten Testdaten ab (andere Tests lassen „major“ zurück),
+    // deshalb zählt hier der Zustand des eigenen Dienstes: Die Wartung ändert ihn nicht.
     await expect(page.getByTestId('maintenance-bar')).toBeVisible()
-    await expect(page.getByText('Some systems are experiencing partial outages')).toBeVisible()
+    const row = page.getByTestId('service-row').filter({ hasText: service.name })
+    await expect(row).toContainText('Partial Outage')
+    await expect(row.getByTestId('service-maintenance')).toContainText(/restricted availability/)
   })
 })

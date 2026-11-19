@@ -286,6 +286,16 @@ export const Incidents: CollectionConfig = {
             description: ta('When this update was posted'),
           }),
         },
+        {
+          // Nur eine neue Aktualisierung mit Haken erzeugt einen Entwurf. Ältere Einträge ohne Wert gelten als angehakt.
+          name: 'createNotificationDraft',
+          type: 'checkbox',
+          label: ta('Create notification draft'),
+          defaultValue: true,
+          admin: {
+            description: ta('Select to create a notification draft for this update. Clear it when entering an update afterwards.'),
+          },
+        },
         // Texte für den Benachrichtigungsentwurf, aus einer Vorlage gesetzt. Nur Angemeldete lesen und schreiben sie,
         // sie stehen weder in der öffentlichen API noch im Formular.
         {
@@ -400,6 +410,8 @@ export const Incidents: CollectionConfig = {
         // On create, use the first update for the initial notification
         if (operation === 'create' && currentUpdates.length > 0) {
           const firstUpdate = currentUpdates[0]
+          // Die erste Aktualisierung steuert den Entwurf beim Anlegen (die Störung selbst hat kein eigenes Feld)
+          if (firstUpdate.createNotificationDraft === false) return doc
           const statusLabel = statusLabels[firstUpdate.status] || firstUpdate.status || t('incident.investigating')
           
           const notificationData: DeferredNotification = {
@@ -426,7 +438,7 @@ export const Incidents: CollectionConfig = {
           const update = currentUpdates[index]
           const isNewUpdate = index >= previousUpdates.length
 
-          if (isNewUpdate && update.message) {
+          if (isNewUpdate && update.message && update.createNotificationDraft !== false) {
             const updateStatusLabel = statusLabels[update.status] || update.status || 'Update'
             const notificationData: DeferredNotification = {
               docId: doc.id,

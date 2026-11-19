@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
     if (!check.ok) {
       return NextResponse.json({ error: ta('The input is incomplete or invalid.'), fields: check.errors }, { status: 400 })
     }
-    const { title, message, impact, serviceIds, smsBody, ntfyBody } = check.value
+    const { title, message, impact, createNotificationDraft, serviceIds, smsBody, ntfyBody } = check.value
 
     // Jeder gewählte Dienst muss es geben und aktiv sein (wie im Assistenten: beendete und noch nicht begonnene Dienste bietet er nicht an)
     const found = await payload.count({
@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
         impact,
         status: 'investigating',
         affectedServices: serviceIds,
-        updates: [{ status: 'investigating', message, createdAt: new Date().toISOString(), ...(smsBody ? { smsBody } : {}), ...(ntfyBody ? { ntfyBody } : {}) }],
+        updates: [{ status: 'investigating', message, createdAt: new Date().toISOString(), ...(createNotificationDraft === false ? { createNotificationDraft } : {}), ...(smsBody ? { smsBody } : {}), ...(ntfyBody ? { ntfyBody } : {}) }],
       },
       user: user ?? undefined,
       overrideAccess: false,

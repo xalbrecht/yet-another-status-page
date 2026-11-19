@@ -324,6 +324,10 @@ export interface Incident {
      * When this update was posted
      */
     createdAt: string;
+    /**
+     * Select to create a notification draft for this update. Clear it when entering an update afterwards.
+     */
+    createNotificationDraft?: boolean | null;
     smsBody?: string | null;
     ntfyBody?: string | null;
     id?: string | null;
@@ -388,9 +392,13 @@ export interface Maintenance {
    */
   maintenanceKind: 'sla' | 'additional';
   /**
-   * Select if the service is expected to be restricted during the maintenance. The status page then shows "restricted availability".
+   * Select if the service is expected to be restricted during the maintenance. The status page then shows "restricted availability" and the maintenance bar counts the service under "with expected restrictions".
    */
   affectsService?: boolean | null;
+  /**
+   * Select to create a notification draft when saving. Clear it when entering a maintenance afterwards, so that the subscribers are not notified.
+   */
+  createNotificationDraft?: boolean | null;
   /**
    * Human-readable duration (e.g., "~2 hours")
    */
@@ -424,6 +432,10 @@ export interface Maintenance {
          * When this update was posted. The availability report reads the start and end of a maintenance from the updates "In Progress" and "Completed". When adding them later, enter the actual times.
          */
         createdAt: string;
+        /**
+         * Select to create a notification draft for this update. Clear it when entering an update afterwards.
+         */
+        createNotificationDraft?: boolean | null;
         smsBody?: string | null;
         ntfyBody?: string | null;
         id?: string | null;
@@ -874,6 +886,7 @@ export interface IncidentsSelect<T extends boolean = true> {
         status?: T;
         message?: T;
         createdAt?: T;
+        createNotificationDraft?: T;
         smsBody?: T;
         ntfyBody?: T;
         id?: T;
@@ -896,6 +909,7 @@ export interface MaintenancesSelect<T extends boolean = true> {
   scheduledEndAt?: T;
   maintenanceKind?: T;
   affectsService?: T;
+  createNotificationDraft?: T;
   duration?: T;
   status?: T;
   autoStartOnSchedule?: T;
@@ -906,6 +920,7 @@ export interface MaintenancesSelect<T extends boolean = true> {
         status?: T;
         message?: T;
         createdAt?: T;
+        createNotificationDraft?: T;
         smsBody?: T;
         ntfyBody?: T;
         id?: T;

@@ -69,6 +69,23 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
 
+    # Die Anwendung läuft direkt auf dem Runner (`next dev`), nur PostgreSQL ist ein Dienst-Container.
+    # Ein zweites `npm install` in einem Container entfällt (rund 55 s je Lauf, gemessen in PR #208).
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: hostzero_status_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d hostzero_status_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7
@@ -88,15 +105,13 @@ jobs:
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
 
-      - name: Build Docker image
-        run: docker compose -f docker-compose.test.yml build
-
+      # Gleiche Einstellungen wie `app` in docker-compose.test.yml (lokaler Lauf über scripts/run-e2e-tests.sh)
       - name: Start test environment
         run: |
           START=$(date +%s)
-          docker compose -f docker-compose.test.yml up -d
-          
-          # Wait for app to be healthy
+          nohup npm run dev -- --port 3001 < /dev/null 2>&1 \
+            | while IFS= read -r line; do echo "$(date -u +%H:%M:%S) $line"; done > app.log &
+
           echo "Waiting for application to be ready..."
           for i in {1..60}; do
             if curl -s http://localhost:3001/api/health > /dev/null 2>&1; then
@@ -107,6 +122,13 @@ jobs:
             echo "Attempt $i: Waiting..."
             sleep 2
           done
+        env:
+          DATABASE_URI: postgresql://postgres:postgres@localhost:5432/hostzero_status_test
+          PAYLOAD_SECRET: e2e-test-secret-key-32-characters
+          SERVER_URL: http://localhost:3001
+          PAYLOAD_PUBLIC_ALLOW_WRITES: "true"
+          DEFAULT_LANGUAGE: en
+          PAYLOAD_AUTO_GENERATE: "false"
 
       - name: Seed test data
         run: |
@@ -126,17 +148,19 @@ jobs:
         if: always()
         run: |
           {
-            echo "### Startup of the test environment (app container log)"
+            echo "### Startup of the test environment (app log, UTC)"
             echo '```'
-            docker compose -f docker-compose.test.yml logs -t app 2>&1 \
-              | grep -E "added [0-9]+ packages|up to date|Ready in|Compiling|Pulling schema|GET /api/health 200|GET / 200" \
-              | cut -c1-160 | head -40
+            grep -E "Ready in|Compiling|Pulling schema|GET /api/health 200|GET / 200" app.log | cut -c1-160 | head -40
             echo '```'
           } | tee -a "$GITHUB_STEP_SUMMARY"
 
-      - name: Stop test environment
-        if: always()
-        run: docker compose -f docker-compose.test.yml down -v
+      - name: Upload app log
+        uses: actions/upload-artifact@v7
+        if: failure()
+        with:
+          name: app-log
+          path: app.log
+          retention-days: 7
 
       - name: Upload test results
         uses: actions/upload-artifact@v7

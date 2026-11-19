@@ -15,6 +15,13 @@ This page describes how the tests of this fork are run, what they cover and whic
   ```
 
   Wait until `docker exec lock-test pg_isready -U postgres` succeeds before the second command. The test is not part of the CI run (the workflow does not run the unit tests).
+- **Migration check** (`npm run check:migrations`, script `scripts/check-migrations.mts`). The E2E tests run in development mode, where Payload creates the schema from the configuration and the migrations do not run. In production only the migrations apply, so a column missing from a migration shows up only in the container. The check creates two empty databases, runs all migrations in the first (`payload migrate`), lets development mode create the schema in the second, and compares tables, columns, indexes, constraints and enums. It exits with 1 on any difference that is not on the short `ALLOWED` list in the script. It needs a PostgreSQL server whose user may create databases (`CHECK_MIGRATIONS_DATABASE_URL`, default `postgres://postgres:test@localhost:5432/postgres`) and takes about 20 seconds. The CI job `checks` runs it:
+
+  ```bash
+  docker run -d --rm --name migration-check -e POSTGRES_PASSWORD=test -p 5432:5432 postgres:16-alpine
+  npm run check:migrations
+  docker rm -f migration-check
+  ```
 - The tests run against **`next dev`** in a Docker container, not against the production image. Behavior that differs in the production build (compile times, memory) is not covered.
 - Most tests create their own data through the Payload REST API (`tests/utils/payload-helpers.ts`) and use unique names (`Date.now()`), so they do not depend on the seed data.
 

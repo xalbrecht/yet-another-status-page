@@ -16,7 +16,7 @@ async function load(data = makeReportData()) {
 }
 
 const ranking = [
-  rankingRow(1, 'Haus & Hof', 98.12, 2 * HOUR, { degradedMs: 30 * 60_000, maintenanceMs: 10 * 60_000, longestOutageMs: 2 * HOUR }),
+  rankingRow(1, 'Haus & Hof', 98.12, 2 * HOUR, { degradedMs: 30 * 60_000, maintenanceMs: 15 * 60_000, maintenanceByKind: { sla: 10 * 60_000, additional: 5 * 60_000 }, longestOutageMs: 2 * HOUR }),
   rankingRow(2, 'Neu', null, 0),
 ]
 
@@ -52,6 +52,25 @@ test('Blatt Dienste: Dauern in Minuten, Anzahl der Ausfälle und längster Ausfa
   assert.equal(row.getCell(base + 3).value, 120)
   assert.equal(row.getCell(base + 4).value, 30)
   assert.equal(row.getCell(base + 5).value, 10)
+  assert.equal(row.getCell(base + 6).value, 5)
+})
+
+test('Blatt Dienste: Wartungszeit in zwei Spalten, getrennt nach Art der Wartung', async () => {
+  const header = (await load(makeReportData({ ranking }))).worksheets[0].getRow(1).values as unknown[]
+  const text = header.join('|')
+  assert.match(text, /(Im Wartungsfenster|Within the maintenance window)[^|]*\((min|Min\.)\)/)
+  assert.match(text, /(Zusätzliche Wartung|Additional maintenance)[^|]*\((min|Min\.)\)/)
+})
+
+test('Blatt Hinweise nennt die Rechenart je Art der Wartung', async () => {
+  const text = (sheet: ExcelJS.Worksheet) => sheet.getSheetValues().flat().join('\n')
+  const buffer = await buildWorkbook({ data: makeReportData({ ranking }), params: parseReportParams({ maintenance: 'A', maintenanceAdditional: 'C' }), period, timeZone: 'Europe/Berlin' })
+  const workbook = new ExcelJS.Workbook()
+  await workbook.xlsx.load(buffer as unknown as ArrayBuffer)
+  const notes = text(workbook.worksheets[2])
+  assert.match(notes, /(Im Wartungsfenster|Within the maintenance window)/)
+  assert.match(notes, /(Zusätzliche Wartung|Additional maintenance)/)
+  assert.match(notes, /(C: aus der Gesamtzeit|C: excluded from the total time)/)
 })
 
 test('Blätter Dienste und Ausfälle haben Filter und fixierte Kopfzeile', async () => {
@@ -103,4 +122,9 @@ test('Wartungsart B: Blatt Hinweise erklärt, dass die Ausfalldauer die Wartung 
   await withB.xlsx.load(b as unknown as ArrayBuffer)
   assert.match(text(withB.worksheets[2]), /Wartungsart B|Maintenance type B/)
   assert.doesNotMatch(text((await load(makeReportData({ ranking }))).worksheets[2]), /Wartungsart B|Maintenance type B/)
+  // B nur für die zusätzliche Wartung genügt für den Hinweis
+  const additional = await buildWorkbook({ data: makeReportData({ ranking }), params: parseReportParams({ maintenanceAdditional: 'B' }), period, timeZone: 'Europe/Berlin' })
+  const withAdditionalB = new ExcelJS.Workbook()
+  await withAdditionalB.xlsx.load(additional as unknown as ArrayBuffer)
+  assert.match(text(withAdditionalB.worksheets[2]), /Wartungsart B|Maintenance type B/)
 })

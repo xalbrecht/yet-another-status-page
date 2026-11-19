@@ -99,6 +99,24 @@ test('Wartungszeile nur bei eingeschalteter Anzeige', () => {
   assert.doesNotMatch(hidden, /data-testid="report-maintenance"/)
 })
 
+test('Wartungszeit steht getrennt nach Art der Wartung (im Fenster, zusätzlich)', () => {
+  const split = { ...data, kpis: { ...data.kpis, maintenanceMs: 720 * MIN, maintenanceByKind: { sla: 600 * MIN, additional: 120 * MIN } } }
+  const markup = render({ data: split })
+  const line = markup.slice(markup.indexOf('data-testid="report-maintenance"'))
+  assert.match(line, /(Im Wartungsfenster|Within the maintenance window)[^<]*(\(SLA\))?:\s*<b>10 (Std\.|h)/)
+  assert.match(line, /(Zusätzliche Wartung|Additional maintenance):\s*<b>2 (Std\.|h)/)
+})
+
+test('Auswahl der Rechenart gibt es je Art der Wartung, mit den gewählten Werten', () => {
+  const markup = renderToStaticMarkup(
+    <ReportControlsForm params={parseReportParams({ maintenance: 'A', maintenanceAdditional: 'B' })} periodKey="2026-10" periodOptions={[{ value: '2026-10', label: 'Oktober 2026' }]} />,
+  )
+  assert.match(markup, /name="maintenance"/)
+  const additional = markup.slice(markup.indexOf('name="maintenanceAdditional"'))
+  assert.match(additional, /<option value="B" selected/)
+  assert.doesNotMatch(additional.slice(0, additional.indexOf('</select>')), /<option value="A" selected/)
+})
+
 test('Wärmekarte mit Gesamtzeile und ohne Rot-Grün-Paar in den Farbangaben', () => {
   const markup = render()
   assert.match(markup, /data-testid="report-heat"/)

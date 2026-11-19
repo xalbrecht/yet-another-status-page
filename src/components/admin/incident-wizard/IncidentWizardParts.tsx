@@ -247,6 +247,8 @@ export function PreviewView({
   texts,
   impact,
   services,
+  createDraft,
+  onCreateDraft,
   onBack,
   onPublish,
   busy,
@@ -255,6 +257,8 @@ export function PreviewView({
   texts: DraftTexts
   impact: Impact
   services: WizardService[]
+  createDraft: boolean
+  onCreateDraft: (value: boolean) => void
   onBack: () => void
   onPublish: () => void
   busy: boolean
@@ -298,11 +302,17 @@ export function PreviewView({
           </ul>
         </li>
         <li>{ta('One entry per service is written to the status log.')}</li>
-        <li>{ta('A notification draft is created. Nothing is sent automatically: you review and send it under Notifications.')}</li>
+        <li>{createDraft ? ta('A notification draft is created. Nothing is sent automatically: you review and send it under Notifications.') : ta('No notification draft is created.')}</li>
       </ul>
 
-      <h3 className="iw-ph">{ta('3. Notification draft (not sent)')}</h3>
-      <div className="iw-draft" data-testid="draft">
+      <label className="iw-label" htmlFor="iw-create-draft">
+        <input type="checkbox" id="iw-create-draft" data-testid="create-draft" checked={createDraft} disabled={busy} onChange={(event) => onCreateDraft(event.target.checked)} />
+        {' '}{ta('Create notification draft')}
+      </label>
+      <p className="iw-hint">{ta('Clear it when entering an event afterwards, so that no draft is created and nobody is notified by mistake.')}</p>
+
+      {createDraft && <h3 className="iw-ph">{ta('3. Notification draft (not sent)')}</h3>}
+      {createDraft && <div className="iw-draft" data-testid="draft">
         <details open>
           <summary>{ta('Email')}</summary>
           <pre>{`${ta('Subject')}: [${ta('Investigating')}] ${texts.title}\n\n${texts.body}\n\n${ta('Link')}: ${ta('(inserted when published)')}`}</pre>
@@ -315,7 +325,7 @@ export function PreviewView({
           <summary>{ta('ntfy')} ({texts.ntfyBody.length})</summary>
           <pre>{texts.ntfyBody || ta('(none)')}</pre>
         </details>
-      </div>
+      </div>}
 
       {error && <p className="iw-error" role="alert">{error}</p>}
       <div className="iw-actions">
@@ -326,7 +336,7 @@ export function PreviewView({
   )
 }
 
-export function DoneView({ title, impact, services, incidentUrl, draftsUrl, listUrl, onAgain }: { title: string; impact: Impact; services: WizardService[]; incidentUrl: string; draftsUrl: string; listUrl: string; onAgain: () => void }) {
+export function DoneView({ title, impact, services, incidentUrl, createDraft, draftsUrl, listUrl, onAgain }: { title: string; impact: Impact; services: WizardService[]; incidentUrl: string; createDraft: boolean; draftsUrl: string; listUrl: string; onAgain: () => void }) {
   const ta = useAdminText()
   return (
     <div className="iw-done" data-testid="done">
@@ -335,11 +345,11 @@ export function DoneView({ title, impact, services, incidentUrl, draftsUrl, list
       <ul>
         <li>{ta('Service state set: {services} → {impact}').replace('{services}', services.map((s) => s.name).join(', ')).replace('{impact}', impactLabel(impact, ta))}</li>
         <li>{ta('Entry in the status log')}</li>
-        <li>{ta('Notification draft created (not sent)')}</li>
+        <li>{createDraft ? ta('Notification draft created (not sent)') : ta('No notification draft created')}</li>
       </ul>
       <div className="iw-actions">
         <a className="iw-btn" href={incidentUrl}>{ta('View incident')}</a>
-        <a className="iw-btn iw-btn--primary" href={draftsUrl}>{ta('Review and send the notification')}</a>
+        {createDraft && <a className="iw-btn iw-btn--primary" href={draftsUrl}>{ta('Review and send the notification')}</a>}
         <a className="iw-btn" href={listUrl}>{ta('Back to the list')}</a>
         <button type="button" className="iw-btn" onClick={onAgain}>{ta('Report another incident')}</button>
       </div>

@@ -24,7 +24,7 @@ const LIST_URL = '/admin/collections/maintenances'
 const currentTime = () => Date.now()
 const EMPTY_TEXTS: DraftTexts = { title: '', body: '', smsBody: '', ntfyBody: '' }
 
-type Done = { id: number; title: string; services: WizardGroup['services'] }
+type Done = { id: number; title: string; services: WizardGroup['services']; createDraft: boolean }
 
 /**
  * Teil der Seite „Neu erstellen mit Vorlage“ für die Art „Wartung“: Gruppe, Dienste, Zeitraum, Vorlage, Texte, Vorschau.
@@ -40,6 +40,7 @@ export const MaintenanceWizard: React.FC<{ groups: WizardGroup[]; templates: Wiz
   // Keine Vorgabe: Die Art der Wartung wählt der Nutzer immer selbst
   const [maintenanceKind, setMaintenanceKind] = useState('')
   const [affectsService, setAffectsService] = useState(false)
+  const [createDraft, setCreateDraft] = useState(true)
   const [start, setStart] = useState('')
   const [end, setEnd] = useState('')
   // Zeitpunkt der Eingabe, nicht des Rendern: `Date.now()` gehört in den Ereignis-Handler
@@ -153,6 +154,7 @@ export const MaintenanceWizard: React.FC<{ groups: WizardGroup[]; templates: Wiz
           message: texts.body,
           maintenanceKind,
           ...(affectsService ? { affectsService: true } : {}),
+          ...(createDraft ? {} : { createNotificationDraft: false }),
           serviceIds,
           start: startUtc,
           ...(endUtc ? { end: endUtc } : {}),
@@ -162,7 +164,7 @@ export const MaintenanceWizard: React.FC<{ groups: WizardGroup[]; templates: Wiz
       })
       const body = await response.json()
       if (!response.ok) throw new Error(body?.error || `HTTP ${response.status}`)
-      setDone({ id: body.id, title: texts.title, services: selected })
+      setDone({ id: body.id, title: texts.title, services: selected, createDraft })
       go('done')
     } catch (err) {
       setError(err instanceof Error ? err.message : ta('Unknown error'))
@@ -174,6 +176,7 @@ export const MaintenanceWizard: React.FC<{ groups: WizardGroup[]; templates: Wiz
   function reset() {
     selectGroup('')
     setMaintenanceKind('')
+    setCreateDraft(true)
     setStart('')
     setEnd('')
     setPastStart(false)
@@ -190,6 +193,7 @@ export const MaintenanceWizard: React.FC<{ groups: WizardGroup[]; templates: Wiz
           title={done.title}
           services={done.services}
           maintenanceUrl={`${LIST_URL}/${done.id}`}
+          createDraft={done.createDraft}
           draftsUrl={`/admin/collections/notifications?where[relatedMaintenance][equals]=${done.id}`}
           listUrl={LIST_URL}
           onAgain={reset}
@@ -201,7 +205,7 @@ export const MaintenanceWizard: React.FC<{ groups: WizardGroup[]; templates: Wiz
   if (view === 'preview' && startUtc) {
     return (
       <div className="iw">
-        <MaintenancePreview texts={texts} services={selected} startLabel={startLabel} endLabel={endLabel} startInPast={pastStart} onBack={() => go('edit')} onPublish={publish} busy={busy} error={error} />
+        <MaintenancePreview texts={texts} services={selected} startLabel={startLabel} endLabel={endLabel} startInPast={pastStart} createDraft={createDraft} onCreateDraft={setCreateDraft} onBack={() => go('edit')} onPublish={publish} busy={busy} error={error} />
       </div>
     )
   }

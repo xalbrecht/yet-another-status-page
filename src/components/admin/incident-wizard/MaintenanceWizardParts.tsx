@@ -105,6 +105,8 @@ export function MaintenancePreview({
   startLabel,
   endLabel,
   startInPast,
+  createDraft,
+  onCreateDraft,
   onBack,
   onPublish,
   busy,
@@ -115,6 +117,8 @@ export function MaintenancePreview({
   startLabel: string
   endLabel: string
   startInPast: boolean
+  createDraft: boolean
+  onCreateDraft: (value: boolean) => void
   onBack: () => void
   onPublish: () => void
   busy: boolean
@@ -150,13 +154,19 @@ export function MaintenancePreview({
       <ul className="iw-eff" data-testid="effects">
         <li>{ta('The maintenance appears on the status page immediately, with the start, the end and the announcement as the first update.')}</li>
         {startInPast && <li>{ta('The start is in the past: the maintenance changes its status right away.')}</li>}
-        <li>{ta('A notification draft is created. Nothing is sent automatically: you review and send it under Notifications.')}</li>
+        <li>{createDraft ? ta('A notification draft is created. Nothing is sent automatically: you review and send it under Notifications.') : ta('No notification draft is created.')}</li>
         <li>{ta('At the start the timer sets "In Progress" and notifies the subscribers right away, at the end "Completed" (automatic start and completion stay switched on, as in the form).')}</li>
         <li>{ta('The state of the services does not change.')}</li>
       </ul>
 
-      <h3 className="iw-ph">{ta('3. Notification draft (not sent)')}</h3>
-      <div className="iw-draft" data-testid="draft">
+      <label className="iw-label" htmlFor="iw-create-draft">
+        <input type="checkbox" id="iw-create-draft" data-testid="create-draft" checked={createDraft} disabled={busy} onChange={(event) => onCreateDraft(event.target.checked)} />
+        {' '}{ta('Create notification draft')}
+      </label>
+      <p className="iw-hint">{ta('Clear it when entering an event afterwards, so that no draft is created and nobody is notified by mistake.')}</p>
+
+      {createDraft && <h3 className="iw-ph">{ta('3. Notification draft (not sent)')}</h3>}
+      {createDraft && <div className="iw-draft" data-testid="draft">
         <details open>
           <summary>{ta('Email')}</summary>
           <pre>{`${ta('Subject')}: [${ta('Maintenance scheduled')}] ${texts.title}\n\n${texts.body}\n\n${ta('Start')}: ${startLabel}${endLabel ? `\n${ta('End')}: ${endLabel}` : ''}\n\n${ta('Link')}: ${ta('(inserted when published)')}`}</pre>
@@ -169,7 +179,7 @@ export function MaintenancePreview({
           <summary>{ta('ntfy')} ({texts.ntfyBody.length})</summary>
           <pre>{texts.ntfyBody || ta('(none)')}</pre>
         </details>
-      </div>
+      </div>}
 
       {error && <p className="iw-error" role="alert">{error}</p>}
       <div className="iw-actions">
@@ -186,11 +196,13 @@ export function MaintenanceDone({
   maintenanceUrl,
   draftsUrl,
   listUrl,
+  createDraft,
   onAgain,
 }: {
   title: string
   services: WizardService[]
   maintenanceUrl: string
+  createDraft: boolean
   draftsUrl: string
   listUrl: string
   onAgain: () => void
@@ -202,11 +214,11 @@ export function MaintenanceDone({
       <p>{ta('"{title}" was published.').replace('{title}', title)}</p>
       <ul>
         <li>{ta('Affected services: {services}').replace('{services}', services.map((service) => service.name).join(', '))}</li>
-        <li>{ta('Notification draft created (not sent)')}</li>
+        <li>{createDraft ? ta('Notification draft created (not sent)') : ta('No notification draft created')}</li>
       </ul>
       <div className="iw-actions">
         <a className="iw-btn" href={maintenanceUrl}>{ta('View maintenance')}</a>
-        <a className="iw-btn iw-btn--primary" href={draftsUrl}>{ta('Review and send the notification')}</a>
+        {createDraft && <a className="iw-btn iw-btn--primary" href={draftsUrl}>{ta('Review and send the notification')}</a>}
         <a className="iw-btn" href={listUrl}>{ta('Back to the list')}</a>
         <button type="button" className="iw-btn" onClick={onAgain}>{ta('Report another maintenance')}</button>
       </div>

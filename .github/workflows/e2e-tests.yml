@@ -59,8 +59,8 @@ jobs:
         env:
           TEST_DATABASE_URL: postgres://postgres:test@localhost:5432/postgres
 
+  # Läuft parallel zu `checks`: die Gesamtzeit ist die des längeren Jobs, nicht die Summe.
   e2e-tests:
-    needs: checks
     runs-on: ubuntu-latest
     timeout-minutes: 30
 
@@ -88,6 +88,7 @@ jobs:
 
       - name: Start test environment
         run: |
+          START=$(date +%s)
           docker compose -f docker-compose.test.yml up -d
           
           # Wait for app to be healthy
@@ -95,6 +96,7 @@ jobs:
           for i in {1..60}; do
             if curl -s http://localhost:3001/api/health > /dev/null 2>&1; then
               echo "Application is ready!"
+              echo "Health check answered after $(( $(date +%s) - START )) s"
               break
             fi
             echo "Attempt $i: Waiting..."
@@ -114,6 +116,18 @@ jobs:
       - name: Summarize test durations
         if: always()
         run: node scripts/e2e-timing.mjs test-results/results.json | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - name: Summarize startup timing
+        if: always()
+        run: |
+          {
+            echo "### Startup of the test environment (app container log)"
+            echo '```'
+            docker compose -f docker-compose.test.yml logs -t app 2>&1 \
+              | grep -E "added [0-9]+ packages|up to date|Ready in|Compiling|Pulling schema|GET /api/health 200|GET / 200" \
+              | cut -c1-160 | head -40
+            echo '```'
+          } | tee -a "$GITHUB_STEP_SUMMARY"
 
       - name: Stop test environment
         if: always()

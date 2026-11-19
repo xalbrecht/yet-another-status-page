@@ -15,7 +15,7 @@ import { decideSelection, type SelectionTable } from './test-selection'
 
 const table = JSON.parse(readFileSync('tests/test-selection.json', 'utf8')) as SelectionTable
 const event = process.env.E2E_EVENT || 'pull_request'
-const labels = JSON.parse(process.env.E2E_LABELS || '[]') as string[]
+const labels = (JSON.parse(process.env.E2E_LABELS || '[]') as string[] | null) ?? []  // bei einem Push liefert der Workflow „null“
 const base = process.env.E2E_BASE_REF || 'origin/main'
 
 const changed =

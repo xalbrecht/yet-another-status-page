@@ -21,7 +21,7 @@ const base = process.env.E2E_BASE_REF || 'origin/main'
 const changed =
   event === 'push'
     ? []
-    : execFileSync('git', ['diff', '--name-only', '--no-renames', `${base}...HEAD`], { encoding: 'utf8' })
+    : execFileSync('git', ['-c', 'core.quotePath=false', 'diff', '--name-only', '--no-renames', `${base}...HEAD`], { encoding: 'utf8' })
         .split('\n')
         .filter(Boolean)
 

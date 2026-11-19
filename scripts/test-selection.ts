@@ -88,6 +88,14 @@ export const FULL_SUITE_PATTERNS = [
   'tests/e2e/global-setup.ts',
   'next.config.*',
   'tsconfig.json',
+  'postcss.config.*',
+  'globals.d.ts',
+  'public/**',
+  // Die Auswahl selbst: eine Änderung an Tabelle oder Logik soll nie nur einen Teil der Tests laufen lassen
+  'tests/test-selection.json',
+  'scripts/select-e2e.mts',
+  'scripts/test-selection.ts',
+  'scripts/e2e-list.mts',
   'Dockerfile*',
   'docker-compose*.yml',
   '.github/workflows/**',
@@ -112,6 +120,7 @@ export function decideSelection(input: {
 }): Selection {
   const { event, labels, changed, tests, table } = input
   if (event === 'push') return { mode: 'all', reason: 'Push auf main' }
+  if (event !== 'pull_request') return { mode: 'all', reason: `Auslöser ${event} (Auswahl nur für Pull Requests)` }
   if (labels.includes('e2e:alles')) return { mode: 'all', reason: 'Label e2e:alles' }
 
   const full = changed.find((f) => FULL_SUITE_PATTERNS.some((p) => matchesGlob(f, p)))

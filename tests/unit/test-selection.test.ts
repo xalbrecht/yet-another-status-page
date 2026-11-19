@@ -72,7 +72,7 @@ test('decideSelection: Push auf main und Label e2e:alles ergeben die volle Suite
 })
 
 test('decideSelection: Dateien, die alle Tests betreffen, ergeben die volle Suite', () => {
-  for (const f of ['package.json', 'package-lock.json', 'playwright.config.ts', 'tests/utils/helper.ts', '.github/workflows/x.yml', 'tests/seed/seed-test-data.mjs']) {
+  for (const f of ['package.json', 'package-lock.json', 'playwright.config.ts', 'tests/utils/helper.ts', '.github/workflows/x.yml', 'tests/seed/seed-test-data.mjs', 'postcss.config.mjs', 'public/logo.svg', 'globals.d.ts', 'tests/test-selection.json', 'scripts/select-e2e.mts', 'scripts/test-selection.ts', 'scripts/e2e-list.mts']) {
     const r = pr([f])
     assert.equal(r.mode, 'all', f)
     assert.match(r.reason, new RegExp(f.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')))
@@ -107,4 +107,10 @@ test('decideSelection: geänderte Testdateien laufen immer mit', () => {
 test('decideSelection: Tags ohne passende Testdatei ergeben die volle Suite (Fail-Safe)', () => {
   const r = decideSelection({ event: 'pull_request', labels: [], changed: ['src/lib/maintenance/timer.ts'], tests: tests.slice(1), table })
   assert.equal(r.mode, 'all')
+})
+
+test('decideSelection: ein anderer Auslöser als pull_request ergibt die volle Suite', () => {
+  for (const event of ['workflow_dispatch', 'merge_group', 'schedule']) {
+    assert.equal(decideSelection({ event, labels: [], changed: [], tests, table }).mode, 'all', event)
+  }
 })

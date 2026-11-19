@@ -12,6 +12,7 @@ export type MaintenanceNotice = {
   start: number
   /** `null`: kein Ende geplant */
   end: number | null
+  affectsService: boolean
 }
 
 export type NoticeMaintenance = {
@@ -19,9 +20,10 @@ export type NoticeMaintenance = {
   scheduledStartAt: string
   scheduledEndAt?: string | null
   serviceIds: string[]
+  affectsService?: boolean
 }
 
-/** Laufende Wartung vor bevorstehender, innerhalb der Art die früheste. Abgeschlossene und abgesagte zählen nicht. */
+/** Laufende Wartung vor bevorstehender, innerhalb der Art zuerst die mit Auswirkung, dann die früheste. Abgeschlossene und abgesagte zählen nicht. */
 export function maintenanceNoticeFor(
   maintenances: NoticeMaintenance[],
   serviceId: string,
@@ -32,11 +34,38 @@ export function maintenanceNoticeFor(
     if (!maintenance.serviceIds.includes(serviceId)) continue
     const start = new Date(maintenance.scheduledStartAt).getTime()
     const end = maintenance.scheduledEndAt ? new Date(maintenance.scheduledEndAt).getTime() : null
-    if (maintenance.status === 'in_progress') candidates.push({ kind: 'running', start, end })
-    else if (maintenance.status === 'upcoming' && start - now <= MAINTENANCE_NOTICE_LEAD_MS) {
-      candidates.push({ kind: 'soon', start, end })
+    if (maintenance.status === 'in_progress') {
+      candidates.push({ kind: 'running', start, end, affectsService: maintenance.affectsService === true })
+    } else if (maintenance.status === 'upcoming' && start - now <= MAINTENANCE_NOTICE_LEAD_MS) {
+      candidates.push({ kind: 'soon', start, end, affectsService: false })
     }
   }
-  candidates.sort((a, b) => (a.kind === b.kind ? a.start - b.start : a.kind === 'running' ? -1 : 1))
+  candidates.sort((a, b) => {
+    if (a.kind !== b.kind) return a.kind === 'running' ? -1 : 1
+    if (a.affectsService !== b.affectsService) return a.affectsService ? -1 : 1
+    return a.start - b.start
+  })
   return candidates[0] ?? null
+}
+
+/**
+ * Zählt für die Wartungsleiste die Dienste in laufenden Wartungen. Ein Dienst zählt einmal, gilt in einer seiner
+ * Wartungen die Auswirkung „ja“, zählt er als `limited`. Nur Dienste aus `serviceIds` (die angezeigten) zählen.
+ */
+export function countMaintenanceServices(
+  maintenances: NoticeMaintenance[],
+  serviceIds: string[],
+): { unaffected: number; limited: number } {
+  const shown = new Set(serviceIds)
+  const limited = new Set<string>()
+  const running = new Set<string>()
+  for (const maintenance of maintenances) {
+    if (maintenance.status !== 'in_progress') continue
+    for (const id of maintenance.serviceIds) {
+      if (!shown.has(id)) continue
+      running.add(id)
+      if (maintenance.affectsService === true) limited.add(id)
+    }
+  }
+  return { unaffected: running.size - limited.size, limited: limited.size }
 }

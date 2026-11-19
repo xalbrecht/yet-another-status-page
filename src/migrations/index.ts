@@ -30,6 +30,7 @@ import * as migration_20261117_100000_add_is_test from './20261117_100000_add_is
 import * as migration_20261118_100000_add_service_lifecycle from './20261118_100000_add_service_lifecycle';
 import * as migration_20261118_200000_add_report_display from './20261118_200000_add_report_display';
 import * as migration_20261118_300000_add_maintenance_update_texts from './20261118_300000_add_maintenance_update_texts';
+import * as migration_20261119_100000_add_maintenance_kind from './20261119_100000_add_maintenance_kind';
 
 export const migrations = [
   {
@@ -191,5 +192,10 @@ export const migrations = [
     up: migration_20261118_300000_add_maintenance_update_texts.up,
     down: migration_20261118_300000_add_maintenance_update_texts.down,
     name: '20261118_300000_add_maintenance_update_texts',
+  },
+  {
+    up: migration_20261119_100000_add_maintenance_kind.up,
+    down: migration_20261119_100000_add_maintenance_kind.down,
+    name: '20261119_100000_add_maintenance_kind',
   },
 ];

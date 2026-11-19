@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
     if (!check.ok) {
       return NextResponse.json({ error: ta('The input is incomplete or invalid.'), fields: check.errors }, { status: 400 })
     }
-    const { title, message, serviceIds, start, end, smsBody, ntfyBody } = check.value
+    const { title, message, maintenanceKind, serviceIds, start, end, smsBody, ntfyBody } = check.value
 
     // Jeder gewählte Dienst muss es geben und aktiv sein (beendete und noch nicht begonnene Dienste bietet die Seite nicht an)
     const found = await payload.count({
@@ -42,6 +42,7 @@ export async function POST(request: NextRequest) {
       draft: false,
       data: {
         title,
+        maintenanceKind,
         status: 'upcoming',
         scheduledStartAt: start,
         ...(end ? { scheduledEndAt: end } : {}),

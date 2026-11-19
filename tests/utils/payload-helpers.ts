@@ -217,6 +217,8 @@ export async function updateIncident(id: number, data: Record<string, unknown>):
  */
 export async function createMaintenance(data: {
   title: string
+  /** Art der Wartung (Pflichtfeld der Sammlung), Vorgabe der Helfer: im Wartungsfenster */
+  maintenanceKind?: 'sla' | 'additional'
   status?: 'upcoming' | 'in_progress' | 'completed' | 'cancelled'
   scheduledStartAt: string
   scheduledEndAt?: string
@@ -230,6 +232,7 @@ export async function createMaintenance(data: {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       title: data.title,
+      maintenanceKind: data.maintenanceKind || 'sla',
       status: data.status || 'upcoming',
       scheduledStartAt: data.scheduledStartAt,
       scheduledEndAt: data.scheduledEndAt,

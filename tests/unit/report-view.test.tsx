@@ -27,6 +27,7 @@ const row = (name: string, availability: number | null, belowTarget: boolean): R
   maintenanceDownMs: 0,
   degradedMs: 0,
   maintenanceMs: 0,
+  maintenanceByKind: { sla: 0, additional: 0 },
   outages: [],
   target: 99,
   belowTarget,
@@ -48,6 +49,7 @@ const data: ReportData = {
     longestOutage: { ms: 2793 * MIN, serviceName: 'Infoma' },
     degradedMs: 180 * MIN,
     maintenanceMs: 600 * MIN,
+    maintenanceByKind: { sla: 600 * MIN, additional: 0 },
     monthsMet: 1,
     monthsTotal: 1,
     target: 99,
@@ -95,6 +97,24 @@ test('Wartungszeile nur bei eingeschalteter Anzeige', () => {
   assert.match(render(), /data-testid="report-maintenance"/)
   const hidden = render({ params: parseReportParams({ showMaintenance: 'false' }) })
   assert.doesNotMatch(hidden, /data-testid="report-maintenance"/)
+})
+
+test('Wartungszeit steht getrennt nach Art der Wartung (im Fenster, zusätzlich)', () => {
+  const split = { ...data, kpis: { ...data.kpis, maintenanceMs: 720 * MIN, maintenanceByKind: { sla: 600 * MIN, additional: 120 * MIN } } }
+  const markup = render({ data: split })
+  const line = markup.slice(markup.indexOf('data-testid="report-maintenance"'))
+  assert.match(line, /(Im Wartungsfenster|Within the maintenance window)[^<]*(\(SLA\))?:\s*<b>10 (Std\.|h)/)
+  assert.match(line, /(Zusätzliche Wartung|Additional maintenance):\s*<b>2 (Std\.|h)/)
+})
+
+test('Auswahl der Rechenart gibt es je Art der Wartung, mit den gewählten Werten', () => {
+  const markup = renderToStaticMarkup(
+    <ReportControlsForm params={parseReportParams({ maintenance: 'A', maintenanceAdditional: 'B' })} periodKey="2026-10" periodOptions={[{ value: '2026-10', label: 'Oktober 2026' }]} />,
+  )
+  assert.match(markup, /name="maintenance"/)
+  const additional = markup.slice(markup.indexOf('name="maintenanceAdditional"'))
+  assert.match(additional, /<option value="B" selected/)
+  assert.doesNotMatch(additional.slice(0, additional.indexOf('</select>')), /<option value="A" selected/)
 })
 
 test('Wärmekarte mit Gesamtzeile und ohne Rot-Grün-Paar in den Farbangaben', () => {

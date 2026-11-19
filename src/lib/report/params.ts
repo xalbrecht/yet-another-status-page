@@ -1,4 +1,4 @@
-import type { MaintenanceMode } from '@/lib/report/metrics'
+import type { MaintenanceMode, MaintenanceModes } from '@/lib/report/metrics'
 
 /**
  * Auswahl der Berichtsseite aus der Adresse. Ungültige Werte fallen auf den Standard zurück.
@@ -12,7 +12,10 @@ export type ReportParams = {
   view: 'overall' | 'groups'
   /** `whole`: ein Wert für den ganzen Zeitraum (Standard), `monthly`: Mittel der Monatswerte */
   calc: 'whole' | 'monthly'
+  /** Rechenart der Wartungen im Wartungsfenster (SLA). Der Name bleibt, damit bestehende Adressen weiter gelten. */
   maintenance: MaintenanceMode
+  /** Rechenart der zusätzlichen Wartungen */
+  maintenanceAdditional: MaintenanceMode
   showMaintenance: boolean
   topN: number
   /** Beendete Dienste in den Bericht aufnehmen (Vorgabe: aus) */
@@ -23,10 +26,20 @@ export const TOP_N_MIN = 3
 export const TOP_N_MAX = 10
 export const TOP_N_DEFAULT = 5
 
+/** Rechenart je Art der Wartung aus der Auswahl. */
+export const maintenanceModesOf = (params: Pick<ReportParams, 'maintenance' | 'maintenanceAdditional'>): MaintenanceModes => ({
+  sla: params.maintenance,
+  additional: params.maintenanceAdditional,
+})
+
+const mode = (value: string | undefined): MaintenanceMode => {
+  const upper = value?.toUpperCase()
+  return upper === 'B' || upper === 'C' ? upper : 'A'
+}
+
 const first = (value: string | string[] | undefined): string | undefined => (Array.isArray(value) ? value[0] : value)
 
 export function parseReportParams(search: Record<string, string | string[] | undefined>): ReportParams {
-  const maintenance = first(search.maintenance)?.toUpperCase()
   const topN = Number.parseInt(first(search.topN) ?? '', 10)
   const clean = (value: string | undefined) => (value && value.trim() ? value.trim() : undefined)
   return {
@@ -36,7 +49,8 @@ export function parseReportParams(search: Record<string, string | string[] | und
     group: clean(first(search.group)),
     view: first(search.view) === 'groups' ? 'groups' : 'overall',
     calc: first(search.calc) === 'monthly' ? 'monthly' : 'whole',
-    maintenance: maintenance === 'B' || maintenance === 'C' ? maintenance : 'A',
+    maintenance: mode(first(search.maintenance)),
+    maintenanceAdditional: mode(first(search.maintenanceAdditional)),
     showMaintenance: !['false', '0', 'off'].includes((first(search.showMaintenance) ?? '').toLowerCase()),
     topN: Number.isNaN(topN) ? TOP_N_DEFAULT : Math.min(TOP_N_MAX, Math.max(TOP_N_MIN, topN)),
     ended: first(search.ended)?.toLowerCase() === 'true',
@@ -79,7 +93,7 @@ export function reportTabHrefs(
   }
 }
 
-const SELECTION_KEYS = ['calc', 'ended', 'from', 'maintenance', 'period', 'to'] as const
+const SELECTION_KEYS = ['calc', 'ended', 'from', 'maintenance', 'maintenanceAdditional', 'period', 'to'] as const
 
 /** Auswahl der Seite (Zeitraum, Rechenart, Wartungsart, beendete Dienste) als Query-String für Export und Versand, ohne Ansicht und Gruppe. */
 export function selectionQuery(search: Record<string, string | string[] | undefined>): string {

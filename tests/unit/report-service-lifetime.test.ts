@@ -38,8 +38,8 @@ test('Ende mitten im Zeitraum: die Zeit danach zählt weder als verfügbar noch 
 })
 
 test('Lebenszeit vollständig außerhalb des Zeitraums: kein Wert', () => {
-  assert.deepEqual(run({ activeFrom: END + DAY }), { knownMs: 0, downMs: 0, degradedMs: 0, maintenanceMs: 0, availability: null, outages: [] })
-  assert.deepEqual(run({ activeTo: START - DAY }), { knownMs: 0, downMs: 0, degradedMs: 0, maintenanceMs: 0, availability: null, outages: [] })
+  assert.deepEqual(run({ activeFrom: END + DAY }), { knownMs: 0, downMs: 0, degradedMs: 0, maintenanceMs: 0, maintenanceByKind: { sla: 0, additional: 0 }, availability: null, outages: [] })
+  assert.deepEqual(run({ activeTo: START - DAY }), { knownMs: 0, downMs: 0, degradedMs: 0, maintenanceMs: 0, maintenanceByKind: { sla: 0, additional: 0 }, availability: null, outages: [] })
 })
 
 test('Ende leer (null) begrenzt nicht', () => {

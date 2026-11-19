@@ -186,7 +186,11 @@ export function ReportView({ data, params, period, locale, timeZone, controls, t
             <div className="availability-report__status">
               <span>{ta('Degraded Performance')}: <b>{formatDuration(kpis.degradedMs)}</b></span>
               {params.showMaintenance && (
-                <span data-testid="report-maintenance">{ta('Maintenance')}: <b>{formatDuration(kpis.maintenanceMs)}</b></span>
+                <span data-testid="report-maintenance">
+                  {ta('Within the maintenance window (SLA)')}: <b>{formatDuration(kpis.maintenanceByKind.sla)}</b>
+                  {' · '}
+                  {ta('Additional maintenance')}: <b>{formatDuration(kpis.maintenanceByKind.additional)}</b>
+                </span>
               )}
             </div>
           </section>

@@ -130,3 +130,76 @@ test('der Zustand „Wartung“ im Protokoll ohne Wartungsfenster zählt nicht a
   assert.equal(metrics.maintenanceMs, 0)
   assert.equal(metrics.availability, 100)
 })
+
+// Prüfbeispiel aus Issue #216: Woche mit 168 Stunden, 4 Stunden Wartung im Fenster (darin 1 Stunde Teilausfall), 2 Stunden zusätzlich
+const HOUR = 60 * MIN
+const weekStart = Date.parse('2026-10-05T00:00:00Z')
+const weekEnd = weekStart + 168 * HOUR
+const hour = (n: number) => weekStart + n * HOUR
+const weekTimeline: Timeline = [
+  { at: weekStart, status: 'operational' },
+  { at: hour(21), status: 'partial' },
+  { at: hour(22), status: 'operational' },
+]
+const kindWindows = [
+  { from: hour(20), to: hour(24), kind: 'sla' as const },
+  { from: hour(100), to: hour(102), kind: 'additional' as const },
+]
+const week = (sla: 'A' | 'B' | 'C', additional: 'A' | 'B' | 'C') =>
+  computeServiceMetrics({ timeline: weekTimeline, windows: kindWindows, start: weekStart, end: weekEnd, mode: { sla, additional } })
+
+test('Wartungsarten: Woche mit 4 h im Fenster und 2 h zusätzlich, A/A 100,00 %', () => {
+  const metrics = week('A', 'A')
+  assert.equal(formatAvailability(metrics.availability, 'de-DE'), '100,00 %')
+  assert.equal(metrics.downMs, 0)
+})
+
+test('Wartungsarten: A im Fenster, B zusätzlich: 2 h Ausfall, 98,81 % (gerundet)', () => {
+  const metrics = week('A', 'B')
+  // 98,8095 %: kaufmännisch 98,81 %. Die Anzeige rundet ab (formatAvailability) und zeigt 98,80 %.
+  near(metrics.availability, 98.8095)
+  assert.equal(metrics.downMs, 2 * HOUR)
+})
+
+test('Wartungsarten: B für beide: 6 h Ausfall, 96,43 % (gerundet), die Störung im Fenster zählt nicht doppelt', () => {
+  const metrics = week('B', 'B')
+  // 96,4286 %: kaufmännisch 96,43 %. Die Anzeige rundet ab und zeigt 96,42 %.
+  near(metrics.availability, 96.4286)
+  assert.equal(metrics.downMs, 6 * HOUR)
+})
+
+test('Wartungsarten: die Wartungszeit wird je Art getrennt ausgewiesen', () => {
+  const metrics = week('A', 'A')
+  assert.equal(metrics.maintenanceMs, 6 * HOUR)
+  assert.deepEqual(metrics.maintenanceByKind, { sla: 4 * HOUR, additional: 2 * HOUR })
+})
+
+test('Wartungsarten: C je Art nimmt nur die Zeit dieser Art aus der Gesamtzeit', () => {
+  const metrics = week('C', 'A')
+  assert.equal(metrics.knownMs, 164 * HOUR)
+  assert.equal(metrics.downMs, 0)
+})
+
+test('Wartungsarten: überlappen sich die Fenster, gilt die zusätzliche Wartung', () => {
+  // zusätzlich 22:00 bis 26:00 überlappt das Fenster 20:00 bis 24:00 um 2 Stunden
+  const metrics = computeServiceMetrics({
+    timeline: [{ at: weekStart, status: 'operational' }],
+    windows: [
+      { from: hour(20), to: hour(24), kind: 'sla' },
+      { from: hour(22), to: hour(26), kind: 'additional' },
+    ],
+    start: weekStart,
+    end: weekEnd,
+    mode: { sla: 'A', additional: 'B' },
+  })
+  assert.deepEqual(metrics.maintenanceByKind, { sla: 2 * HOUR, additional: 4 * HOUR })
+  assert.equal(metrics.maintenanceMs, 6 * HOUR)
+  assert.equal(metrics.downMs, 4 * HOUR)
+})
+
+test('Wartungsarten: ein einzelner Modus gilt für beide Arten, Fenster ohne Art zählen als Fenster (SLA)', () => {
+  const single = computeServiceMetrics({ timeline: weekTimeline, windows: kindWindows, start: weekStart, end: weekEnd, mode: 'B' })
+  assert.equal(single.downMs, 6 * HOUR)
+  const untyped = computeServiceMetrics({ timeline, windows, start, end, mode: 'A' })
+  assert.deepEqual(untyped.maintenanceByKind, { sla: 600 * MIN, additional: 0 })
+})

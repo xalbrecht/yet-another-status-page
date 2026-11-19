@@ -7,6 +7,7 @@ import { buildGroupList, buildReport, type ReportData } from '@/lib/report/aggre
 import { countFootnotes } from '@/lib/report/footnotes'
 import { normalizeRules } from '@/lib/incident-classification'
 import { maintenanceWindow } from '@/lib/report/maintenance-time'
+import type { MaintenanceWindow } from '@/lib/report/metrics'
 import { parseReportParams, type ReportParams } from '@/lib/report/params'
 import { reportDataEnd, resolvePeriod, type ReportPeriod } from '@/lib/report/period'
 
@@ -74,7 +75,7 @@ export async function loadReportContext(
     if (event.source === 'operation' && (firstOperationAt === null || at < firstOperationAt)) firstOperationAt = at
   }
 
-  const windows = new Map<number, Array<{ from: number; to: number }>>()
+  const windows = new Map<number, MaintenanceWindow[]>()
   for (const maintenance of maintenanceDocs.docs) {
     const window = maintenanceWindow(
       {
@@ -91,7 +92,7 @@ export async function loadReportContext(
     if (!window) continue
     for (const serviceId of (maintenance.affectedServices || []).map(idOf)) {
       const list = windows.get(serviceId) ?? []
-      list.push(window)
+      list.push({ ...window, kind: maintenance.maintenanceKind })
       windows.set(serviceId, list)
     }
   }

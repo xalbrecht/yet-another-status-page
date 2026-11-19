@@ -17,6 +17,8 @@ export type ExportBlock = { file: string; svg: string }
 export const BLOCK_WIDTH = 1000
 const CONTENT_WIDTH = 960
 const TOP = 70
+/** Höhe einer Kennzahlenkachel: Platz für Wert und drei Zeilen darunter */
+const KPI_TILE_HEIGHT = 128
 const WEAKEST_COLUMNS = 5
 const RANKING_ROWS = 12
 
@@ -61,21 +63,25 @@ function kpiBlock(data: ReportData, locale: string, subtitle: string): string {
     {
       label: ta('Months with target met'),
       value: `${kpis.monthsMet} ${ta('of')} ${kpis.monthsTotal}`,
-      lines: [],
+      lines: [
+        ta('Maintenance time'),
+        `${ta('In window')}: ${formatDuration(kpis.maintenanceByKind.sla)}`,
+        `${ta('Additional')}: ${formatDuration(kpis.maintenanceByKind.additional)}`,
+      ],
     },
   ]
   const content = tiles
     .map((tile, index) => {
       const x = index * (width + gap)
       return (
-        `<rect x="${x}" y="0" width="${width}" height="112" rx="6" fill="#fff" stroke="${GRID_COLOR}"/>` +
+        `<rect x="${x}" y="0" width="${width}" height="${KPI_TILE_HEIGHT}" rx="6" fill="#fff" stroke="${GRID_COLOR}"/>` +
         fitText(x + 12, 22, tile.label, width - 24, { size: 11, fill: MUTED_COLOR }) +
         textEl(x + 12, 56, tile.value, { size: Math.min(26, Math.floor((width - 24) / (tile.value.length * 0.66))), weight: 'bold' }) +
         tile.lines.filter(Boolean).map((line, row) => fitText(x + 12, 78 + row * 16, line, width - 24, { size: 11, fill: MUTED_COLOR })).join('')
       )
     })
     .join('')
-  return frame(ta('Key figures'), subtitle, 112, content)
+  return frame(ta('Key figures'), subtitle, KPI_TILE_HEIGHT, content)
 }
 
 function trendBlock(data: ReportData, locale: string, subtitle: string): string {

@@ -1,7 +1,7 @@
 import type { Timeline } from '@/lib/availability'
 import { addZonedDays, formatDateSlug, startOfZonedDay } from '@/lib/datetime'
 import { ta } from '@/lib/i18n/admin'
-import { computeServiceMetrics, type MaintenanceMode } from '@/lib/report/metrics'
+import { computeServiceMetrics, type MaintenanceMode, type MaintenanceModes, type MaintenanceWindow } from '@/lib/report/metrics'
 import type { ReportPeriod } from '@/lib/report/period'
 
 /**
@@ -61,8 +61,8 @@ function monthLabel(label: string, days: GroupSheetData['perDay']): string {
 
 export function buildGroupSheet(input: {
   month: ReportPeriod
-  services: Array<{ id: number; name: string; timeline: Timeline; windows: Array<{ from: number; to: number }>; startsAt?: number; endsAt?: number | null }>
-  mode: MaintenanceMode
+  services: Array<{ id: number; name: string; timeline: Timeline; windows: MaintenanceWindow[]; startsAt?: number; endsAt?: number | null }>
+  mode: MaintenanceMode | MaintenanceModes
   timeZone: string
   /** Sprache für die Reihenfolge gleich langer Ausfälle (BCP 47, z. B. `de-DE`) */
   locale: string

@@ -171,6 +171,7 @@ async function seedData() {
 
   const maintenance = await createMaintenance({
     title: 'Database Migration',
+    maintenanceKind: 'sla',
     status: 'upcoming',
     scheduledStartAt: tomorrow.toISOString(),
     scheduledEndAt: tomorrowEnd.toISOString(),

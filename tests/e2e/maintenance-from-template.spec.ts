@@ -31,6 +31,7 @@ test.describe('Wartung aus einer Vorlage (Route)', { tag: ['@admin', '@wartungen
     const response = await post(request, {
       title: `Wartung: Wartung Vorlage Dienst ${id}`,
       message: 'Wir führen Arbeiten durch.\nMehr: {{link}}',
+      maintenanceKind: 'additional',
       serviceIds: [service.id],
       start: daysFromNow(2),
       end: daysFromNow(3),
@@ -44,6 +45,7 @@ test.describe('Wartung aus einer Vorlage (Route)', { tag: ['@admin', '@wartungen
 
     const maintenance = await (await request.get(`/api/maintenances/${created.id}?depth=0`)).json()
     expect(maintenance.status).toBe('upcoming')
+    expect(maintenance.maintenanceKind).toBe('additional')
     expect(maintenance.affectedServices).toEqual([service.id])
     expect(maintenance.scheduledEndAt).toBeTruthy()
     expect(maintenance.updates).toHaveLength(1)
@@ -62,7 +64,7 @@ test.describe('Wartung aus einer Vorlage (Route)', { tag: ['@admin', '@wartungen
     const id = Date.now()
     const group = await createServiceGroup({ name: `Wartung Vorlage Gruppe B ${id}`, icon: 'Server' })
     const service = await createService({ name: `Wartung Vorlage Dienst B ${id}`, group: group.id })
-    const response = await post(request, { title: `Wartung ohne Ende ${id}`, message: 'Text', serviceIds: [service.id], start: daysFromNow(2) })
+    const response = await post(request, { title: `Wartung ohne Ende ${id}`, message: 'Text', maintenanceKind: 'sla', serviceIds: [service.id], start: daysFromNow(2) })
     expect(response.status()).toBe(201)
     const maintenance = await (await request.get(`/api/maintenances/${(await response.json()).id}?depth=0`)).json()
     expect(maintenance.scheduledEndAt ?? null).toBeNull()
@@ -73,7 +75,7 @@ test.describe('Wartung aus einer Vorlage (Route)', { tag: ['@admin', '@wartungen
     const id = Date.now()
     const group = await createServiceGroup({ name: `Wartung Vorlage Gruppe C ${id}`, icon: 'Server' })
     const service = await createService({ name: `Wartung Vorlage Dienst C ${id}`, group: group.id })
-    const created = await (await post(request, { title: `Wartung C ${id}`, message: 'Text C', serviceIds: [service.id], start: daysFromNow(2) })).json()
+    const created = await (await post(request, { title: `Wartung C ${id}`, message: 'Text C', maintenanceKind: 'sla', serviceIds: [service.id], start: daysFromNow(2) })).json()
     const draft = await draftFor(request, created.id)
     expect(draft.smsBody).toContain('MAINTENANCE')
     expect(draft.ntfyBody ?? null).toBeNull()
@@ -82,18 +84,22 @@ test.describe('Wartung aus einer Vorlage (Route)', { tag: ['@admin', '@wartungen
   test('unvollständige oder ungültige Eingaben und beendete Dienste werden abgelehnt', async ({ request }) => {
     const empty = await post(request, {})
     expect(empty.status()).toBe(400)
-    expect((await empty.json()).fields).toEqual(['title', 'message', 'start', 'serviceIds'])
+    expect((await empty.json()).fields).toEqual(['title', 'message', 'maintenanceKind', 'start', 'serviceIds'])
 
     const id = Date.now()
     const group = await createServiceGroup({ name: `Wartung Vorlage Gruppe D ${id}`, icon: 'Server' })
     const active = await createService({ name: `Wartung D aktiv ${id}`, group: group.id, startsAt: daysFromNow(-5) })
     const ended = await createService({ name: `Wartung D beendet ${id}`, group: group.id, startsAt: daysFromNow(-5), endsAt: daysFromNow(-1) })
 
-    const endBeforeStart = await post(request, { title: 'T', message: 'M', serviceIds: [active.id], start: daysFromNow(3), end: daysFromNow(2) })
+    const endBeforeStart = await post(request, { title: 'T', message: 'M', maintenanceKind: 'sla', serviceIds: [active.id], start: daysFromNow(3), end: daysFromNow(2) })
     expect(endBeforeStart.status()).toBe(400)
     expect((await endBeforeStart.json()).fields).toEqual(['end'])
 
-    const rejected = await post(request, { title: 'T', message: 'M', serviceIds: [active.id, ended.id], start: daysFromNow(2) })
+    const withoutKind = await post(request, { title: 'T', message: 'M', serviceIds: [active.id], start: daysFromNow(2) })
+    expect(withoutKind.status()).toBe(400)
+    expect((await withoutKind.json()).fields).toEqual(['maintenanceKind'])
+
+    const rejected = await post(request, { title: 'T', message: 'M', maintenanceKind: 'sla', serviceIds: [active.id, ended.id], start: daysFromNow(2) })
     expect(rejected.status()).toBe(400)
     expect((await rejected.json()).fields).toEqual(['serviceIds'])
   })

@@ -58,7 +58,8 @@ export async function buildWorkbook(input: { data: ReportData; params: ReportPar
     ta('Number of outages'),
     ta('Longest outage (min)'),
     ta('Degraded Performance (min)'),
-    ta('Maintenance (min)'),
+    ta('Within the maintenance window (SLA) (min)'),
+    ta('Additional maintenance (min)'),
     ta('Active in the report period'),
     ta('Active today'),
     ta('Ended on'),
@@ -75,7 +76,8 @@ export async function buildWorkbook(input: { data: ReportData; params: ReportPar
       row.outageCount,
       minutes(row.longestOutageMs),
       minutes(row.degradedMs),
-      minutes(row.maintenanceMs),
+      minutes(row.maintenanceByKind.sla),
+      minutes(row.maintenanceByKind.additional),
       row.activeInPeriod ? ta('yes') : ta('no'),
       row.activeToday ? ta('yes') : ta('no'),
       row.endedAt === null ? null : localStamp(row.endedAt, timeZone).slice(0, 10),
@@ -91,9 +93,9 @@ export async function buildWorkbook(input: { data: ReportData; params: ReportPar
   const percentColumns = [3, 4, ...monthColumns.map((_, index) => 5 + index)]
   for (const column of percentColumns) services.getColumn(column).numFmt = '0.00'
   const firstMinuteColumn = 5 + monthColumns.length
-  for (const column of [firstMinuteColumn, firstMinuteColumn + 2, firstMinuteColumn + 3, firstMinuteColumn + 4]) services.getColumn(column).numFmt = '0.0'
+  for (const column of [firstMinuteColumn, firstMinuteColumn + 2, firstMinuteColumn + 3, firstMinuteColumn + 4, firstMinuteColumn + 5]) services.getColumn(column).numFmt = '0.0'
   styleHeader(services, serviceHeader.length)
-  widths(services, [30, 26, 12, 16, ...monthColumns.map(() => 12), 14, 12, 14, 16, 14, 16, 12, 12])
+  widths(services, [30, 26, 12, 16, ...monthColumns.map(() => 12), 14, 12, 14, 16, 16, 16, 16, 12, 12])
 
   // Blatt 2: ein Ausfall je Zeile
   const outages = workbook.addWorksheet(ta('Outages'))
@@ -117,19 +119,16 @@ export async function buildWorkbook(input: { data: ReportData; params: ReportPar
 
   // Blatt 3: Auswahl und Fußnoten
   const notes = workbook.addWorksheet(ta('Notes'))
-  const maintenanceText = {
-    A: ta('A: counts as available'),
-    B: ta('B: counts as outage'),
-    C: ta('C: excluded from the total time'),
-  }[params.maintenance]
+  const modeText = (mode: 'A' | 'B' | 'C') => ({ A: ta('A: counts as available'), B: ta('B: counts as outage'), C: ta('C: excluded from the total time') })[mode]
   const noteRows: Array<[string, string | number]> = [
     [ta('Period'), period.label],
     [ta('Calculation'), params.calc === 'monthly' ? ta('Mean of the monthly values') : ta('One value for the period')],
-    [ta('Maintenance'), maintenanceText],
+    [ta('Within the maintenance window (SLA)'), modeText(params.maintenance)],
+    [ta('Additional maintenance'), modeText(params.maintenanceAdditional)],
     [ta('Incidents not clearly classified, counted as Partial Outage'), data.footnotes.unsure],
     [ta('Incidents without a service, not considered'), data.footnotes.withoutService],
   ]
-  if (params.maintenance === 'B') {
+  if (params.maintenance === 'B' || params.maintenanceAdditional === 'B') {
     noteRows.push([
       ta('Maintenance type B'),
       ta('The outage duration on the sheet Services includes the maintenance time. The sheet Outages lists only the outages, so its durations add up to less.'),

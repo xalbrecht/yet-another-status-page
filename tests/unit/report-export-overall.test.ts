@@ -37,6 +37,17 @@ test('die Kennzahlen nennen Verfügbarkeit und Monate mit erreichtem Ziel', () =
   assert.match(kpi, />1 (von|of) 1</)
 })
 
+test('die Kennzahlen weisen die Wartungszeit getrennt aus', () => {
+  const data = makeReportData()
+  const kpi = overallBlocks({ ...data, kpis: { ...data.kpis, maintenanceMs: 6 * HOUR, maintenanceByKind: { sla: 4 * HOUR, additional: 2 * HOUR } } }, 'de-DE')[0].svg
+  assert.match(kpi, /(Im Fenster|In window): 4 (Std\.|h)</)
+  assert.match(kpi, /(Zusätzlich|Additional): 2 (Std\.|h)</)
+  assert.doesNotMatch(kpi, /…/, 'die Zeilen der Kachel dürfen nicht gekürzt sein')
+  // auch lange Dauern passen in die Kachel
+  const long = overallBlocks({ ...data, kpis: { ...data.kpis, maintenanceMs: 25 * HOUR, maintenanceByKind: { sla: 12.5 * HOUR, additional: 12.5 * HOUR } } }, 'de-DE')[0].svg
+  assert.doesNotMatch(long, /…/, 'lange Dauern dürfen nicht gekürzt sein')
+})
+
 test('Dienstnamen mit Sonderzeichen sind maskiert und lange Namen gekürzt', () => {
   const longName = 'X'.repeat(120)
   const ranking = [rankingRow(1, 'Haus & Hof <1>', 97, 4 * HOUR), rankingRow(2, longName, 98, HOUR)]

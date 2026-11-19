@@ -56,11 +56,19 @@ export function ReportControlsForm({ params, periodKey, periodOptions, onChange 
         </select>
       </label>
       <label>
-        {ta('Maintenance')}
+        {ta('Within the maintenance window (SLA)')}
         <select name="maintenance" defaultValue={params.maintenance}>
           <option value="A" selected={params.maintenance === 'A'}>{ta('A: counts as available')}</option>
           <option value="B" selected={params.maintenance === 'B'}>{ta('B: counts as outage')}</option>
           <option value="C" selected={params.maintenance === 'C'}>{ta('C: excluded from the total time')}</option>
+        </select>
+      </label>
+      <label>
+        {ta('Additional maintenance')}
+        <select name="maintenanceAdditional" defaultValue={params.maintenanceAdditional}>
+          <option value="A" selected={params.maintenanceAdditional === 'A'}>{ta('A: counts as available')}</option>
+          <option value="B" selected={params.maintenanceAdditional === 'B'}>{ta('B: counts as outage')}</option>
+          <option value="C" selected={params.maintenanceAdditional === 'C'}>{ta('C: excluded from the total time')}</option>
         </select>
       </label>
       <label className="availability-report__check">

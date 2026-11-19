@@ -384,6 +384,10 @@ export interface Maintenance {
    */
   scheduledEndAt?: string | null;
   /**
+   * Decides how the availability report counts this maintenance.
+   */
+  maintenanceKind: 'sla' | 'additional';
+  /**
    * Human-readable duration (e.g., "~2 hours")
    */
   duration?: string | null;
@@ -413,7 +417,7 @@ export interface Maintenance {
          */
         message: string;
         /**
-         * When this update was posted
+         * When this update was posted. The availability report reads the start and end of a maintenance from the updates "In Progress" and "Completed". When adding them later, enter the actual times.
          */
         createdAt: string;
         smsBody?: string | null;
@@ -886,6 +890,7 @@ export interface MaintenancesSelect<T extends boolean = true> {
   affectedServices?: T;
   scheduledStartAt?: T;
   scheduledEndAt?: T;
+  maintenanceKind?: T;
   duration?: T;
   status?: T;
   autoStartOnSchedule?: T;

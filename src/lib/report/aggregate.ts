@@ -2,8 +2,9 @@ import { resolveAvailabilityTarget, type Timeline } from '@/lib/availability'
 import { isServiceActive } from '@/lib/service-lifecycle'
 import { buildGroupSheet, type GroupSheetData } from '@/lib/report/group-sheet'
 import { heatClass, type HeatLevel } from '@/lib/report/heat'
-import { computeServiceMetrics, type ServiceMetrics } from '@/lib/report/metrics'
-import type { ReportParams } from '@/lib/report/params'
+import type { MaintenanceKind } from '@/lib/maintenance-kind'
+import { computeServiceMetrics, type MaintenanceWindow, type ServiceMetrics } from '@/lib/report/metrics'
+import { maintenanceModesOf, type ReportParams } from '@/lib/report/params'
 import { periodMonths, type ReportPeriod } from '@/lib/report/period'
 
 /**
@@ -24,7 +25,7 @@ export type ReportInput = {
     groupId: number
     target?: number | null
     timeline: Timeline
-    windows: Array<{ from: number; to: number }>
+    windows: MaintenanceWindow[]
     /** Beginn des Dienstes (Beginn des Tages). Fehlt er, gilt der Dienst als immer aktiv. */
     startsAt?: number
     /** Ende des Dienstes (Ende des Tages, der Endtag zählt mit). Fehlt es, ist der Dienst offen. */
@@ -46,8 +47,10 @@ export type RankingRow = {
   downMs: number
   outageCount: number
   longestOutageMs: number
-  /** Anteil der Wartung an `downMs`, nur bei Wartungsart B */
+  /** Anteil der Wartung an `downMs`: die Zeit der Wartungsarten mit Rechenart B */
   maintenanceDownMs: number
+  /** Wartungszeit je Art der Wartung */
+  maintenanceByKind: Record<MaintenanceKind, number>
   /** Dauer „Eingeschränkt“ und Wartungszeit im Zeitraum (für den Export) */
   degradedMs: number
   maintenanceMs: number
@@ -89,6 +92,7 @@ export type ReportData = {
     longestOutage: { ms: number; serviceName: string } | null
     degradedMs: number
     maintenanceMs: number
+    maintenanceByKind: Record<MaintenanceKind, number>
     monthsMet: number
     monthsTotal: number
     target: number
@@ -139,6 +143,7 @@ const emptyData = (input: ReportInput, error: string): ReportData => ({
     longestOutage: null,
     degradedMs: 0,
     maintenanceMs: 0,
+    maintenanceByKind: { sla: 0, additional: 0 },
     monthsMet: 0,
     monthsTotal: 0,
     target: input.globalTarget,
@@ -180,7 +185,7 @@ export function buildGroupList(input: Omit<ReportInput, 'footnotes'>): GroupList
   const { params, period, now, locale, timeZone } = input
   const parts = periodMonths(period, now, locale, timeZone)
   const value = (service: ReportInput['services'][number]): number | null => {
-    const metricsIn = (range: ReportPeriod) => computeServiceMetrics({ timeline: service.timeline, windows: service.windows, start: range.start, end: range.end, mode: params.maintenance, ...lifetimeOf(service) })
+    const metricsIn = (range: ReportPeriod) => computeServiceMetrics({ timeline: service.timeline, windows: service.windows, start: range.start, end: range.end, mode: maintenanceModesOf(params), ...lifetimeOf(service) })
     if (params.calc === 'monthly' && parts.length > 0) return mean(parts.map((part) => metricsIn(part).availability))
     return metricsIn(period).availability
   }
@@ -199,7 +204,7 @@ export function buildReport(input: ReportInput): ReportData {
   const services = input.services.filter((service) => !scopeGroup || service.groupId === scopeGroup.id)
 
   const metricsFor = (service: ReportInput['services'][number], range: ReportPeriod): ServiceMetrics =>
-    computeServiceMetrics({ timeline: service.timeline, windows: service.windows, start: range.start, end: range.end, mode: params.maintenance, ...lifetimeOf(service) })
+    computeServiceMetrics({ timeline: service.timeline, windows: service.windows, start: range.start, end: range.end, mode: maintenanceModesOf(params), ...lifetimeOf(service) })
 
   // Die Zerlegung in Monate ist teuer und gilt für alle Dienste: einmal je Zeitraum berechnen
   const periodParts = periodMonths(period, now, locale, timeZone)
@@ -222,6 +227,7 @@ export function buildReport(input: ReportInput): ReportData {
 
   const target = scopeGroup ? resolveAvailabilityTarget({ group: scopeGroup.target, global: input.globalTarget }) : input.globalTarget
 
+  const modes = maintenanceModesOf(params)
   const rows = services.map((service) => {
     const group = groupById.get(service.groupId)
     const whole = metricsFor(service, period)
@@ -236,7 +242,8 @@ export function buildReport(input: ReportInput): ReportData {
       downMs: whole.downMs,
       outageCount: whole.outages.length,
       longestOutageMs: Math.max(0, ...whole.outages.map((outage) => outage.to - outage.from)),
-      maintenanceDownMs: params.maintenance === 'B' ? whole.maintenanceMs : 0,
+      maintenanceDownMs: (modes.sla === 'B' ? whole.maintenanceByKind.sla : 0) + (modes.additional === 'B' ? whole.maintenanceByKind.additional : 0),
+      maintenanceByKind: whole.maintenanceByKind,
       degradedMs: whole.degradedMs,
       maintenanceMs: whole.maintenanceMs,
       outages: whole.outages,
@@ -295,7 +302,7 @@ export function buildReport(input: ReportInput): ReportData {
       ? buildGroupSheet({
           month: lastMonth,
           services: services.map(({ id, name, timeline, windows, startsAt, endsAt }) => ({ id, name, timeline, windows, startsAt, endsAt })),
-          mode: params.maintenance,
+          mode: modes,
           timeZone,
           locale,
         })
@@ -314,6 +321,10 @@ export function buildReport(input: ReportInput): ReportData {
       longestOutage,
       degradedMs: rows.reduce((sum, entry) => sum + entry.whole.degradedMs, 0),
       maintenanceMs: rows.reduce((sum, entry) => sum + entry.whole.maintenanceMs, 0),
+      maintenanceByKind: {
+        sla: rows.reduce((sum, entry) => sum + entry.whole.maintenanceByKind.sla, 0),
+        additional: rows.reduce((sum, entry) => sum + entry.whole.maintenanceByKind.additional, 0),
+      },
       monthsMet,
       monthsTotal,
       target,

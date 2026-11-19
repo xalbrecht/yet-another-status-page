@@ -8,7 +8,8 @@ import { resolveScheduledStatus, type MaintenanceStatus } from './schedule'
 /**
  * Stellt fällige Wartungen um: Beginn oder Ende nach dem Zeitplan erreicht, Haken „automatisch“ gesetzt, Status noch alt.
  * Je Umstellung entsteht ein Eintrag im Verlauf der Wartung („Die Wartung hat begonnen.“), ein Benachrichtigungsentwurf, und
- * der Entwurf geht sofort an die Abonnenten. Die Umstellung läuft unter einer Sperre der Datenbank (nur ein Prozess zugleich).
+ * der Entwurf geht sofort an die Abonnenten. Ist der Haken „Meldungsentwurf anlegen“ an der Wartung abgewählt, entfallen
+ * Entwurf und Versand, die Umstellung und der Eintrag im Verlauf bleiben. Die Umstellung läuft unter einer Sperre der Datenbank (nur ein Prozess zugleich).
  */
 
 /** Kennung der Sperre (nur für diese Funktion vergeben, siehe SEND_LOCK_KEY). */
@@ -86,6 +87,9 @@ export async function processDueMaintenances(
         continue
       }
       result.transitioned.push({ id: doc.id, status })
+
+      // Haken „Meldungsentwurf anlegen“ abgewählt (z. B. nachgetragene Wartung): umstellen, aber nichts melden. Ohne Wert gilt er als angehakt.
+      if (doc.createNotificationDraft === false) continue
 
       try {
         const notification = await deps.createNotification(payload, {

@@ -170,6 +170,39 @@ test.describe('GET /api/v1/services', { tag: ['@api', '@schnittstelle'] }, () =>
   })
 })
 
+test.describe('Feld maintenance an den Diensten', { tag: ['@api', '@schnittstelle', '@wartungen'] }, () => {
+  test('wahr, solange eine Wartung „In Arbeit“ den Dienst nennt, sonst falsch (/services und /status)', async ({ request }) => {
+    const id = Date.now()
+    const group = await createServiceGroup({ name: `Schnittstelle Wartung ${id}`, icon: 'Server' })
+    const gewartet = await createService({ name: `Gewartet ${id}`, group: group.id })
+    const bevorstehend = await createService({ name: `Bevorstehend ${id}`, group: group.id })
+    const frei = await createService({ name: `Frei ${id}`, group: group.id })
+    await createMaintenance({
+      title: `Läuft ${id}`,
+      status: 'in_progress',
+      scheduledStartAt: new Date(Date.now() - 3600_000).toISOString(),
+      scheduledEndAt: new Date(Date.now() + 3600_000).toISOString(),
+      affectedServices: [gewartet.id],
+    })
+    await createMaintenance({
+      title: `Bald ${id}`,
+      status: 'upcoming',
+      scheduledStartAt: new Date(Date.now() + 2 * 3600_000).toISOString(),
+      scheduledEndAt: new Date(Date.now() + 4 * 3600_000).toISOString(),
+      affectedServices: [bevorstehend.id],
+    })
+
+    const { data } = await (await request.get('/api/v1/services')).json()
+    const flag = (slug: string) => data.find((s: { slug: string }) => s.slug === slug).maintenance
+    expect([flag(gewartet.slug), flag(bevorstehend.slug), flag(frei.slug)]).toEqual([true, false, false])
+
+    const status = (await (await request.get('/api/v1/status')).json()).data
+    const grouped = status.serviceGroups.flatMap((g: { services: Array<{ slug: string; maintenance: boolean }> }) => g.services)
+    const inStatus = (slug: string) => grouped.find((s: { slug: string }) => s.slug === slug).maintenance
+    expect([inStatus(gewartet.slug), inStatus(bevorstehend.slug), inStatus(frei.slug)]).toEqual([true, false, false])
+  })
+})
+
 test.describe('OpenAPI', { tag: ['@api', '@schnittstelle'] }, () => {
   test('serves a valid-looking OpenAPI 3.1 document', async ({ request }) => {
     const response = await request.get('/api/v1/openapi.json')

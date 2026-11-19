@@ -69,6 +69,32 @@ export function maintenanceNoticeFor(
   return candidates[0] ?? null
 }
 
+/** Wartung als Eingabe der Anzeige. Die Dienste kommen als Ids, auch wenn Payload sie schon als Objekte liefert. */
+export function toNoticeMaintenance(doc: {
+  status: string
+  scheduledStartAt: string
+  scheduledEndAt?: string | null
+  affectsService?: boolean | null
+  affectedServices?: Array<number | { id: number }> | null
+}): NoticeMaintenance {
+  return {
+    status: doc.status,
+    scheduledStartAt: doc.scheduledStartAt,
+    scheduledEndAt: doc.scheduledEndAt,
+    affectsService: doc.affectsService === true,
+    serviceIds: (doc.affectedServices ?? []).map((s) => String(typeof s === 'object' && s !== null ? s.id : s)),
+  }
+}
+
+/** Ids der Dienste, die eine Wartung mit dem gelesenen Status „In Arbeit“ nennt. */
+export function runningMaintenanceServiceIds(maintenances: NoticeMaintenance[]): Set<string> {
+  const ids = new Set<string>()
+  for (const maintenance of maintenances) {
+    if (maintenance.status === 'in_progress') for (const id of maintenance.serviceIds) ids.add(id)
+  }
+  return ids
+}
+
 /**
  * Zählt für die Wartungsleiste die Dienste in laufenden Wartungen. Ein Dienst zählt einmal, gilt in einer seiner
  * Wartungen die Auswirkung „ja“, zählt er als `limited`. Nur Dienste aus `serviceIds` (die angezeigten) zählen.

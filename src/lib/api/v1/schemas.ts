@@ -26,6 +26,9 @@ export const serviceSchema = z
     description: z.string().nullable(),
     status: serviceStatusSchema,
     group: z.object({ slug: z.string(), name: z.string() }),
+    maintenance: z
+      .boolean()
+      .describe('True while a maintenance with status "in_progress" names this service. The service status does not change because of it'),
     updatedAt: dateTime,
   })
   .meta({ id: 'Service' })

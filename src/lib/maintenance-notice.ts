@@ -3,6 +3,8 @@
  * Reine Funktion. Die Anzeige kommt aus den erfassten Wartungen, nicht aus dem Zustand „Wartung“ am Dienst.
  */
 
+import type { TranslateFormat } from '@/lib/i18n/core'
+
 /** Eine bevorstehende Wartung erscheint ab dieser Zeit vor ihrem Beginn. */
 export const MAINTENANCE_NOTICE_LEAD_MS = 24 * 3600_000
 
@@ -68,4 +70,16 @@ export function countMaintenanceServices(
     }
   }
   return { unaffected: running.size - limited.size, limited: limited.size }
+}
+
+/** Text der Wartungsleiste, `null` ohne laufende Wartung an einem angezeigten Dienst. Einzahl bei genau 1. */
+export function maintenanceBarText(counts: { unaffected: number; limited: number }, tf: TranslateFormat): string | null {
+  const parts: string[] = []
+  if (counts.unaffected > 0) {
+    parts.push(tf(counts.unaffected === 1 ? 'maintenance.barUnaffectedOne' : 'maintenance.barUnaffectedMany', { n: counts.unaffected }))
+  }
+  if (counts.limited > 0) {
+    parts.push(tf(counts.limited === 1 ? 'maintenance.barLimitedOne' : 'maintenance.barLimitedMany', { n: counts.limited }))
+  }
+  return parts.length === 0 ? null : tf('maintenance.barLead', { parts: parts.join(', ') })
 }

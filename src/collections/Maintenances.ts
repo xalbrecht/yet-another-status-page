@@ -159,7 +159,7 @@ export const Maintenances: CollectionConfig = {
       label: ta('Affects the service'),
       defaultValue: false,
       admin: {
-        description: ta('Select if the service is expected to be restricted during the maintenance. The status page then shows "restricted availability".'),
+        description: ta('Select if the service is expected to be restricted during the maintenance. The status page then shows "restricted availability" and the maintenance bar counts the service under "with expected restrictions".'),
       },
     },
     {

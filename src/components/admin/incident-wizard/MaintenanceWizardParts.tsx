@@ -54,7 +54,7 @@ export function PeriodStep({
           <input type="checkbox" id="iw-affects" data-testid="affects-service" checked={affectsService} onChange={(event) => onAffectsService(event.target.checked)} />
           {' '}{ta('Affects the service')}
         </label>
-        <p className="iw-hint">{ta('Select if the service is expected to be restricted during the maintenance. The status page then shows "restricted availability".')}</p>
+        <p className="iw-hint">{ta('Select if the service is expected to be restricted during the maintenance. The status page then shows "restricted availability" and the maintenance bar counts the service under "with expected restrictions".')}</p>
       </div>
       <div className="iw-cols">
         <div>

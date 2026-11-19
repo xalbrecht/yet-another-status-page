@@ -150,7 +150,7 @@
   "SMS text (optional)",
   "Save the notification first before sending.",
   "Scheduled",
-  "Select if the service is expected to be restricted during the maintenance. The status page then shows \"restricted availability\".",
+  "Select if the service is expected to be restricted during the maintenance. The status page then shows \"restricted availability\" and the maintenance bar counts the service under \"with expected restrictions\".",
   "Send Notification Now",
   "Send again",
   "Send again from the start",

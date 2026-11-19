@@ -63,6 +63,8 @@ test.describe('Wartungsleiste', { tag: ['@public', '@wartungen'] }, () => {
 
     await page.goto('/')
     const row = page.getByTestId('service-row').filter({ hasText: service.name })
+    // Die Marke ist da (bevorstehend: „Maintenance <Beginn> – <Ende>“), aber ohne den Zusatz einer laufenden Wartung
+    await expect(row.getByTestId('service-maintenance')).toContainText(/^\s*Maintenance /)
     await expect(row.getByTestId('service-maintenance')).not.toContainText('restricted availability')
   })
 

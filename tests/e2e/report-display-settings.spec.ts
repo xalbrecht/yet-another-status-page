@@ -6,7 +6,7 @@ import { updateSettings } from '../utils/payload-helpers'
  * Die Admin-Seite selbst wird in der E2E-Umgebung nicht getestet: hier zählt, dass die Spalten der Migration
  * existieren, die Vorgaben stimmen und nur gültige Werte gespeichert werden.
  */
-test.describe('Einstellungen: beendete Dienste im Bericht', () => {
+test.describe('Einstellungen: beendete Dienste im Bericht', { tag: ['@admin', '@bericht'] }, () => {
   test.describe.configure({ mode: 'serial' })
   test.afterAll(async () => {
     await updateSettings({ reportHeatEndedStyle: 'label', reportSheetActiveStyle: 'marks' })

@@ -16,7 +16,7 @@ async function setup(label: string) {
   return { service }
 }
 
-test.describe('Wartung am Dienst', () => {
+test.describe('Wartung am Dienst', { tag: ['@public', '@wartungen'] }, () => {
   test('laufende Wartung zeigt „Wartung bis“ neben dem Zustand einer Störung', async ({ page }) => {
     const { service } = await setup('läuft')
     await updateService(service.id, { status: 'partial' })

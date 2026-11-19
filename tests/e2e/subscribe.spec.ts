@@ -6,7 +6,7 @@ import { createSubscriber } from '../utils/payload-helpers'
  * 
  * Tests the subscription dialog and email/SMS subscription flows.
  */
-test.describe('Subscribe Flow', () => {
+test.describe('Subscribe Flow', { tag: ['@public', '@abonnenten'] }, () => {
   test('opens subscribe dialog when clicking subscribe button', async ({ page }) => {
     await page.goto('/')
     
@@ -137,7 +137,7 @@ test.describe('Subscribe Flow', () => {
   })
 })
 
-test.describe('Unsubscribe Flow', () => {
+test.describe('Unsubscribe Flow', { tag: ['@public', '@abonnenten'] }, () => {
   test('shows unsubscribe page with valid token', async ({ page }) => {
     // Create a subscriber with known token
     const subscriber = await createSubscriber({ 

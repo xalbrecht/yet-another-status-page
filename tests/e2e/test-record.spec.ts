@@ -23,7 +23,7 @@ async function count(request: APIRequestContext) {
   return (await response.json()).count as number
 }
 
-test.describe('Kennzeichen Testdatensatz', () => {
+test.describe('Kennzeichen Testdatensatz', { tag: ['@admin', '@system'] }, () => {
   test('ohne Angabe steht es auf „aus“, mit Angabe auf „an“, und es filtert', async ({ request }) => {
     const plain = await create(request, 'ohne-kennzeichen')
     const marked = await create(request, 'testadresse', { isTest: true })

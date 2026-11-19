@@ -22,6 +22,11 @@ This page describes how the tests of this fork are run, what they cover and whic
   npm run check:migrations
   docker rm -f migration-check
   ```
+- **Test tags** (`tests/e2e/`). Every E2E test carries exactly one *level* tag and at least one *area* tag, set on the `test.describe` block: `test.describe('…', { tag: ['@admin', '@wartungen'] }, () => { … })`.
+  - Level: `@admin` (functions of the admin area; the tests call their routes and data over HTTP, none of them operates the admin panel in the browser), `@public` (public pages in the browser), `@api` (public REST interfaces and feeds).
+  - Area: `@statusseite`, `@lagebild`, `@stoerungen`, `@wartungen`, `@vorlagen`, `@dienste`, `@bericht`, `@statusprotokoll`, `@abonnenten`, `@schnittstelle`, `@system`. A test may carry several.
+  - Run a selection: `npx playwright test --project=chromium --grep @wartungen`. `--grep` takes a regular expression. Either tag: `--grep "@lagebild|@bericht"`. Both tags on the same test: `--grep "(?=.*@public)(?=.*@wartungen)"`. Everything except one tag: `--grep-invert @public`.
+  - `tests/test-selection.json` maps source paths to tags (first matching entry wins, `*` means the full suite). `npm run check:test-selection` fails for a test without level or area, for a file under `src/` without an entry, and for an outdated entry. It only lists tests, it runs nothing. The CI job `checks` runs it. A new file under `src/` needs an entry in the table, a new test needs tags.
 - The tests run against **`next dev`**, not against the production image. Locally `scripts/run-e2e-tests.sh` starts it in a Docker container (`docker-compose.test.yml`). In CI the job `e2e-tests` runs `npm run dev` directly on the runner with PostgreSQL as a service container, because a second `npm install` in a container cost about 55 seconds per run. Both use the same environment variables. Behavior that differs in the production build (compile times, memory) is not covered.
 - Most tests create their own data through the Payload REST API (`tests/utils/payload-helpers.ts`) and use unique names (`Date.now()`), so they do not depend on the seed data.
 

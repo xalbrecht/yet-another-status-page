@@ -20,7 +20,7 @@ async function groupWithServices() {
   return { id, group }
 }
 
-test.describe('Verfügbarkeitsbericht (Export)', () => {
+test.describe('Verfügbarkeitsbericht (Export)', { tag: ['@admin', '@bericht'] }, () => {
   test('format=xlsx liefert eine Excel-Datei', async ({ request }) => {
     const response = await exportOf(request, `format=xlsx&period=${currentMonth()}`)
     expect(response.status()).toBe(200)

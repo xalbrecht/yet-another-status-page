@@ -8,7 +8,7 @@ const daysFromNow = (days: number) => new Date(Date.now() + days * DAY).toISOStr
  * Beendete Dienste und Dienste, die noch nicht begonnen haben, erscheinen weder auf der Statusseite
  * noch im Lagebild noch in der Schnittstelle. Eine Gruppe nur mit solchen Diensten erscheint nicht.
  */
-test.describe('Sichtbarkeit nach Beginn und Ende', () => {
+test.describe('Sichtbarkeit nach Beginn und Ende', { tag: ['@public', '@dienste'] }, () => {
   test.describe.configure({ mode: 'serial' })
 
   const id = Date.now()

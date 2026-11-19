@@ -10,7 +10,7 @@ async function report(request: APIRequestContext, query: string) {
   return request.get(`/api/availability-report?${query}`)
 }
 
-test.describe('Verfügbarkeitsbericht (Route)', () => {
+test.describe('Verfügbarkeitsbericht (Route)', { tag: ['@admin', '@bericht'] }, () => {
   test('liefert Kennzahlen und Rangliste für eine Gruppe', async ({ request }) => {
     const id = Date.now()
     const group = await createServiceGroup({ name: `Bericht ${id}`, icon: 'Server' })
@@ -91,7 +91,7 @@ test.describe('Verfügbarkeitsbericht (Route)', () => {
   })
 })
 
-test.describe('Verfügbarkeitsbericht: beendete Dienste (Route)', () => {
+test.describe('Verfügbarkeitsbericht: beendete Dienste (Route)', { tag: ['@admin', '@bericht'] }, () => {
   const DAY = 24 * 3600 * 1000
   const daysFromNow = (days: number) => new Date(Date.now() + days * DAY).toISOString()
 

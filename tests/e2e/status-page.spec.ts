@@ -10,7 +10,7 @@ import {
  * 
  * Tests for the main status page functionality.
  */
-test.describe('Status Page', () => {
+test.describe('Status Page', { tag: ['@public', '@statusseite'] }, () => {
   test('displays status banner', async ({ page }) => {
     await page.goto('/')
     
@@ -89,7 +89,7 @@ test.describe('Status Page', () => {
   })
 })
 
-test.describe('Status Page - Different Status Levels', () => {
+test.describe('Status Page - Different Status Levels', { tag: ['@public', '@statusseite'] }, () => {
   // Note: These tests create services that persist between tests
   // Major outage takes precedence over partial outage
   // So we only test the higher priority status
@@ -115,7 +115,7 @@ test.describe('Status Page - Different Status Levels', () => {
   })
 })
 
-test.describe('Status Page - Active Incidents', () => {
+test.describe('Status Page - Active Incidents', { tag: ['@public', '@statusseite'] }, () => {
   test('displays active incident with investigating status', async ({ page }) => {
     const uniqueId = Date.now()
     const group = await createServiceGroup({ 
@@ -163,7 +163,7 @@ test.describe('Status Page - Active Incidents', () => {
   })
 })
 
-test.describe('Status Page - Responsive Design', () => {
+test.describe('Status Page - Responsive Design', { tag: ['@public', '@statusseite'] }, () => {
   test('displays correctly on mobile viewport', async ({ page }) => {
     // Set mobile viewport
     await page.setViewportSize({ width: 375, height: 667 })

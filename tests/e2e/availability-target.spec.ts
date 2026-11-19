@@ -5,7 +5,7 @@ import { updateSettings } from '../utils/payload-helpers'
  * Gesamtzielwert der Verfügbarkeit: Standard 99, im Admin änderbar.
  * Die Tests ändern die globalen Einstellungen und setzen den Wert danach zurück.
  */
-test.describe('Zielwert der Verfügbarkeit', () => {
+test.describe('Zielwert der Verfügbarkeit', { tag: ['@admin', '@bericht'] }, () => {
   test.describe.configure({ mode: 'serial' })
 
   test.afterAll(async () => {

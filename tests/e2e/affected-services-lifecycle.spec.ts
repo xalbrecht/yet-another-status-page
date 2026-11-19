@@ -33,7 +33,7 @@ for (const [collection, build] of [
   ['incidents', incident],
   ['maintenances', maintenance],
 ] as const) {
-  test.describe(`Betroffene Dienste: ${collection}`, () => {
+  test.describe(`Betroffene Dienste: ${collection}`, { tag: ['@admin', '@dienste', '@stoerungen', '@wartungen'] }, () => {
     test('beendete und noch nicht begonnene Dienste werden beim Anlegen abgelehnt', async ({ request }) => {
       const id = Date.now()
       const group = await createServiceGroup({ name: `Auswahl Gruppe ${collection} ${id}`, icon: 'Server' })

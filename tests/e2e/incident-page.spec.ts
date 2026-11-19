@@ -10,7 +10,7 @@ import {
  * 
  * Tests for incident detail pages, timelines, and navigation.
  */
-test.describe('Incident Detail Page', () => {
+test.describe('Incident Detail Page', { tag: ['@public', '@stoerungen'] }, () => {
   test('displays incident details correctly', async ({ page }) => {
     const uniqueId = Date.now()
     const group = await createServiceGroup({ 

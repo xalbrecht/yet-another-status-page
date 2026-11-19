@@ -6,7 +6,7 @@ import { test, expect } from '@playwright/test'
  * The Payload CMS admin panel is slow to compile on first load in dev mode.
  * These tests are skipped in CI but can be run locally with longer timeouts.
  */
-test.describe('Admin Panel', () => {
+test.describe('Admin Panel', { tag: ['@admin', '@system'] }, () => {
   // Skip these tests - the admin panel is too slow to compile in test environment
   // The admin panel is a separate Payload CMS system that doesn't need E2E testing
   test.skip('loads admin page', async ({ page }) => {

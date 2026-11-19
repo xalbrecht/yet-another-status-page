@@ -19,7 +19,7 @@ async function rebuild(request: APIRequestContext, body: Record<string, unknown>
   return response.json()
 }
 
-test.describe('Nachrechnung des Statusprotokolls', () => {
+test.describe('Nachrechnung des Statusprotokolls', { tag: ['@admin', '@statusprotokoll'] }, () => {
   test.describe.configure({ mode: 'serial' })
 
   test('Vorschau schreibt nichts, Ausführen ersetzt nur nachgerechnete Zeilen und lässt sich wiederholen', async ({ request }) => {

@@ -33,7 +33,7 @@ async function recipientCount(request: APIRequestContext) {
   return (await response.json()).count as number
 }
 
-test.describe('Subscriber approval and confirmation', () => {
+test.describe('Subscriber approval and confirmation', { tag: ['@admin', '@abonnenten'] }, () => {
   let baseline: number
 
   test.beforeAll(async ({ request }) => {

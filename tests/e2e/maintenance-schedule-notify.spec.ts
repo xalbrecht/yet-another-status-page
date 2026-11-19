@@ -32,7 +32,7 @@ async function notificationsFor(request: APIRequestContext, id: number) {
   return (await response.json()).docs as Array<{ status: string; title: string; updateIndex?: number }>
 }
 
-test.describe('Wartung nach Zeitplan umstellen', () => {
+test.describe('Wartung nach Zeitplan umstellen', { tag: ['@admin', '@wartungen'] }, () => {
   test('Beginn: Status, Eintrag im Verlauf und eine versandte Meldung', async ({ request }) => {
     test.setTimeout(90_000)
     const created = await createMaintenance({ title: `Zeitplan Beginn ${Date.now()}`, scheduledStartAt: inSeconds(3), scheduledEndAt: inSeconds(3600) })

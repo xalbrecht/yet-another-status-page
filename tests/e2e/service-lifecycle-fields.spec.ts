@@ -8,7 +8,7 @@ const create = (body: Record<string, unknown>) =>
   fetch(`${API_BASE}/api/services`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
 
 /** Beginn und Ende werden als Tag gespeichert: Tagesanfang bzw. Tagesende. */
-test.describe('Beginn und Ende von Diensten', () => {
+test.describe('Beginn und Ende von Diensten', { tag: ['@admin', '@dienste'] }, () => {
   test('Beginn wird auf den Tagesanfang, Ende auf das Tagesende gerundet', async () => {
     const id = Date.now()
     const group = await createServiceGroup({ name: `Lebenszyklus Gruppe ${id}` })

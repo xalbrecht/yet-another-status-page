@@ -9,12 +9,19 @@ on:
     paths-ignore:
       - 'docs/**'
       - '**/*.md'
+  # `labeled`/`unlabeled`: das Label `e2e:alles` erzwingt die volle Suite. Jede Label-Änderung startet einen vollständigen
+  # Lauf (kein übersprungener Job, der ein rotes Ergebnis überdecken könnte); `concurrency` bricht den älteren Lauf ab.
   pull_request:
+    types: [opened, synchronize, reopened, labeled, unlabeled]
     branches:
       - main
     paths-ignore:
       - 'docs/**'
       - '**/*.md'
+
+concurrency:
+  group: e2e-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   checks:
@@ -92,6 +99,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7
+        with:
+          fetch-depth: 0  # Diff gegen origin/main für die Testauswahl
 
       - name: Setup Node.js
         uses: actions/setup-node@v7
@@ -105,11 +114,21 @@ jobs:
       - name: Check language files
         run: npm run check:locales
 
+      # Welche Tests laufen: s. scripts/test-selection.ts (decideSelection). Ausgaben: mode (all|some|none), lock, files.
+      - name: Select tests
+        id: select
+        run: npm run select:e2e
+        env:
+          E2E_EVENT: ${{ github.event_name }}
+          E2E_LABELS: ${{ toJSON(github.event.pull_request.labels.*.name) }}
+
       - name: Install Playwright browsers
+        if: steps.select.outputs.mode != 'none'
         run: npx playwright install --with-deps chromium
 
       # Gleiche Einstellungen wie `app` in docker-compose.test.yml (lokaler Lauf über scripts/run-e2e-tests.sh)
       - name: Start test environment
+        if: steps.select.outputs.mode != 'none'
         run: |
           START=$(date +%s)
           nohup npm run dev -- --port 3001 < /dev/null 2>&1 \
@@ -134,21 +153,28 @@ jobs:
           PAYLOAD_AUTO_GENERATE: "false"
 
       - name: Seed test data
+        if: steps.select.outputs.mode != 'none'
         run: |
           API_BASE=http://localhost:3001 node tests/seed/seed-test-data.mjs
 
       - name: Run E2E tests
+        if: steps.select.outputs.mode != 'none'
         run: |
-          PLAYWRIGHT_BASE_URL=http://localhost:3001 npx playwright test --project=chromium --workers=1 --timeout=120000
+          # Bei mode=some nur die gewählten Testdateien (eine je Zeile), sonst alle
+          FILES=()
+          if [ "$E2E_MODE" = "some" ]; then mapfile -t FILES <<< "$E2E_FILES"; fi
+          PLAYWRIGHT_BASE_URL=http://localhost:3001 npx playwright test --project=chromium --workers=1 --timeout=120000 "${FILES[@]}"
         env:
           CI: ""  # Unset CI to allow local config options
+          E2E_MODE: ${{ steps.select.outputs.mode }}
+          E2E_FILES: ${{ steps.select.outputs.files }}
 
       - name: Summarize test durations
-        if: always()
+        if: always() && steps.select.outcome == 'success' && steps.select.outputs.mode != 'none'
         run: node scripts/e2e-timing.mjs test-results/results.json | tee -a "$GITHUB_STEP_SUMMARY"
 
       - name: Summarize startup timing
-        if: always()
+        if: always() && steps.select.outcome == 'success' && steps.select.outputs.mode != 'none'
         run: |
           {
             echo "### Startup of the test environment (app log, UTC)"
@@ -162,7 +188,7 @@ jobs:
       # überspringen sich dort. Hier läuft der Server wie im Betrieb (PAYLOAD_PUBLIC_ALLOW_WRITES=false), nur diese
       # Tests laufen. Eigene Ausgabe und kein HTML-/JSON-Bericht, damit der Bericht des Hauptlaufs erhalten bleibt.
       - name: Check access protection (server without open writes)
-        if: always()
+        if: always() && steps.select.outputs.lock == 'true'
         run: |
           fuser -k -TERM 3001/tcp || true
           for i in {1..30}; do
@@ -208,6 +234,7 @@ jobs:
         with:
           name: playwright-report
           path: playwright-report/
+          if-no-files-found: ignore
           retention-days: 7
 
       - name: Upload test screenshots

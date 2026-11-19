@@ -71,3 +71,77 @@ export function tagsForFiles(files: string[], table: SelectionTable): string[] |
   }
   return [...tags].sort()
 }
+
+/** Verzeichnis der E2E-Tests. `ListedTest.file` ist relativ dazu. */
+export const TEST_DIR = 'tests/e2e/'
+
+/**
+ * Pfade, deren Änderung jeden Test betreffen kann: Abhängigkeiten, Konfiguration, Testhilfen, Startdaten, Workflows.
+ * Eine Änderung hier ergibt immer die volle Suite (Issue #212).
+ */
+export const FULL_SUITE_PATTERNS = [
+  'package.json',
+  'package-lock.json',
+  'playwright.config.*',
+  'tests/utils/**',
+  'tests/seed/**',
+  'tests/e2e/global-setup.ts',
+  'next.config.*',
+  'tsconfig.json',
+  'postcss.config.*',
+  'globals.d.ts',
+  'public/**',
+  // Die Auswahl selbst: eine Änderung an Tabelle oder Logik soll nie nur einen Teil der Tests laufen lassen
+  'tests/test-selection.json',
+  'scripts/select-e2e.mts',
+  'scripts/test-selection.ts',
+  'scripts/e2e-list.mts',
+  'Dockerfile*',
+  'docker-compose*.yml',
+  '.github/workflows/**',
+]
+
+export type Selection =
+  | { mode: 'all' | 'none'; reason: string }
+  | { mode: 'some'; files: string[]; tags: string[]; needsLockCheck: boolean; reason: string }
+
+const withAt = (t: string) => (t.startsWith('@') ? t : `@${t}`)
+
+/**
+ * Entscheidet, welche E2E-Tests ein Lauf braucht.
+ * `all`: volle Suite. `none`: kein Test. `some`: Testdateien (Pfade ab Repo-Wurzel), die ganz laufen.
+ */
+export function decideSelection(input: {
+  event: string
+  labels: string[]
+  changed: string[]
+  tests: ListedTest[]
+  table: SelectionTable
+}): Selection {
+  const { event, labels, changed, tests, table } = input
+  if (event === 'push') return { mode: 'all', reason: 'Push auf main' }
+  if (event !== 'pull_request') return { mode: 'all', reason: `Auslöser ${event} (Auswahl nur für Pull Requests)` }
+  if (labels.includes('e2e:alles')) return { mode: 'all', reason: 'Label e2e:alles' }
+
+  const full = changed.find((f) => FULL_SUITE_PATTERNS.some((p) => matchesGlob(f, p)))
+  if (full) return { mode: 'all', reason: `Änderung an ${full} betrifft alle Tests` }
+
+  const tags = tagsForFiles(changed, table)
+  if (tags === null) return { mode: 'all', reason: 'Pfad ohne Eintrag in der Tabelle oder mit „*“' }
+
+  const files = new Set<string>()
+  if (tags.length > 0) {
+    const wanted = new Set(tags)
+    for (const t of tests) if (t.tags.some((x) => wanted.has(withAt(x)))) files.add(TEST_DIR + t.file)
+    if (files.size === 0) return { mode: 'all', reason: `Kein Test trägt die Tags ${tags.join(', ')}` }
+  }
+  const known = new Set(tests.map((t) => TEST_DIR + t.file))
+  const changedTests = changed.filter((f) => known.has(f))
+  changedTests.forEach((f) => files.add(f))
+
+  if (files.size === 0) return { mode: 'none', reason: 'Keine Änderung, die ein E2E-Test abdeckt' }
+  const list = [...files].sort()
+  const lock = tests.some((t) => list.includes(TEST_DIR + t.file) && t.tags.some((x) => ['@api', '@admin'].includes(withAt(x))))
+  const parts = [tags.length ? `Tags ${tags.join(', ')}` : '', changedTests.length ? 'geänderte Testdateien' : ''].filter(Boolean)
+  return { mode: 'some', files: list, tags, needsLockCheck: lock, reason: parts.join(' und ') }
+}

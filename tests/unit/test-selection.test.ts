@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { checkTable, checkTests, lookup, tagsForFiles, type SelectionTable } from '../../scripts/test-selection'
+import { checkTable, checkTests, decideSelection, lookup, tagsForFiles, type ListedTest, type SelectionTable } from '../../scripts/test-selection'
 
 const table: SelectionTable = {
   geprueftePfade: ['src/**'],
@@ -54,4 +54,63 @@ test('tagsForFiles: vereinigt die Tags, „*“ oder unbekannte Pfade ergeben di
   assert.equal(tagsForFiles(['src/lib/maintenance/timer.ts', 'src/lib/utils.ts'], table), null)
   assert.equal(tagsForFiles(['src/neu/x.ts'], table), null)
   assert.deepEqual(tagsForFiles(['docs/a.md'], table), [], 'nur Dateien außerhalb der geprüften Pfade: keine Tags nötig')
+})
+
+const tests: ListedTest[] = [
+  { file: 'a.spec.ts', title: 'a1', tags: ['@admin', '@wartungen'] },
+  { file: 'b.spec.ts', title: 'b1', tags: ['@public', '@lagebild'] },
+  { file: 'c.spec.ts', title: 'c1', tags: ['@api', '@lagebild'] },
+]
+const pr = (changed: string[], labels: string[] = []) =>
+  decideSelection({ event: 'pull_request', labels, changed, tests, table })
+
+test('decideSelection: Push auf main und Label e2e:alles ergeben die volle Suite', () => {
+  const push = decideSelection({ event: 'push', labels: [], changed: ['src/lib/maintenance/timer.ts'], tests, table })
+  assert.equal(push.mode, 'all')
+  assert.match(push.reason, /main/)
+  assert.equal(pr(['src/lib/maintenance/timer.ts'], ['e2e:alles']).mode, 'all')
+})
+
+test('decideSelection: Dateien, die alle Tests betreffen, ergeben die volle Suite', () => {
+  for (const f of ['package.json', 'package-lock.json', 'playwright.config.ts', 'tests/utils/helper.ts', '.github/workflows/x.yml', 'tests/seed/seed-test-data.mjs', 'postcss.config.mjs', 'public/logo.svg', 'globals.d.ts', 'tests/test-selection.json', 'scripts/select-e2e.mts', 'scripts/test-selection.ts', 'scripts/e2e-list.mts']) {
+    const r = pr([f])
+    assert.equal(r.mode, 'all', f)
+    assert.match(r.reason, new RegExp(f.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')))
+  }
+})
+
+test('decideSelection: Pfad mit „*“ oder ohne Eintrag ergibt die volle Suite, auch in Mischung', () => {
+  assert.equal(pr(['src/lib/utils.ts']).mode, 'all')
+  assert.equal(pr(['src/neu/x.ts']).mode, 'all')
+  assert.equal(pr(['src/lib/maintenance/timer.ts', 'src/lib/utils.ts']).mode, 'all')
+})
+
+test('decideSelection: gezielte Pfade wählen die Testdateien mit den Tags', () => {
+  const a = pr(['src/lib/maintenance/timer.ts'])
+  assert.deepEqual(a.mode === 'some' && a.files, ['tests/e2e/a.spec.ts'])
+  assert.equal(a.mode === 'some' && a.needsLockCheck, true)
+  const b = pr(['src/lib/lagebild.ts'])
+  assert.deepEqual(b.mode === 'some' && b.files, ['tests/e2e/b.spec.ts', 'tests/e2e/c.spec.ts'])
+})
+
+test('decideSelection: ohne passende Tags und ohne geänderte Testdatei läuft nichts', () => {
+  assert.equal(pr(['scripts/x.ts']).mode, 'none')
+  assert.equal(pr(['tests/e2e/gone.spec.ts']).mode, 'none', 'gelöschte Testdatei kommt in der Liste nicht vor')
+})
+
+test('decideSelection: geänderte Testdateien laufen immer mit', () => {
+  const r = pr(['scripts/x.ts', 'tests/e2e/b.spec.ts'])
+  assert.deepEqual(r.mode === 'some' && r.files, ['tests/e2e/b.spec.ts'])
+  assert.equal(r.mode === 'some' && r.needsLockCheck, false)
+})
+
+test('decideSelection: Tags ohne passende Testdatei ergeben die volle Suite (Fail-Safe)', () => {
+  const r = decideSelection({ event: 'pull_request', labels: [], changed: ['src/lib/maintenance/timer.ts'], tests: tests.slice(1), table })
+  assert.equal(r.mode, 'all')
+})
+
+test('decideSelection: ein anderer Auslöser als pull_request ergibt die volle Suite', () => {
+  for (const event of ['workflow_dispatch', 'merge_group', 'schedule']) {
+    assert.equal(decideSelection({ event, labels: [], changed: [], tests, table }).mode, 'all', event)
+  }
 })

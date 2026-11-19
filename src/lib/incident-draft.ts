@@ -68,6 +68,8 @@ export type IncidentFromTemplateInput = {
   title: string
   message: string
   impact: Impact
+  /** Nur gesetzt, wenn kein Meldungsentwurf entstehen soll (Vorgabe: Entwurf anlegen) */
+  createNotificationDraft?: false
   serviceIds: number[]
   smsBody?: string
   ntfyBody?: string
@@ -97,6 +99,8 @@ export function checkIncidentInput(raw: unknown): InputCheck {
   const ntfyBody = text('ntfyBody', NTFY_TEXT_MAX_LENGTH, false)
   const impact = IMPACTS.find((candidate) => candidate === body.impact)
   if (!impact) errors.push('impact')
+  const createNotificationDraft = body.createNotificationDraft
+  if (createNotificationDraft !== undefined && createNotificationDraft !== null && typeof createNotificationDraft !== 'boolean') errors.push('createNotificationDraft')
   const ids = body.serviceIds
   const serviceIds =
     Array.isArray(ids) && ids.length >= 1 && ids.length <= SERVICES_MAX && ids.every((id) => Number.isInteger(id) && (id as number) > 0)
@@ -104,5 +108,5 @@ export function checkIncidentInput(raw: unknown): InputCheck {
       : null
   if (!serviceIds) errors.push('serviceIds')
   if (errors.length > 0 || !title || !message || !impact || !serviceIds) return { ok: false, errors }
-  return { ok: true, value: { title, message, impact, serviceIds, ...(smsBody ? { smsBody } : {}), ...(ntfyBody ? { ntfyBody } : {}) } }
+  return { ok: true, value: { title, message, impact, ...(createNotificationDraft === false ? { createNotificationDraft: false as const } : {}), serviceIds, ...(smsBody ? { smsBody } : {}), ...(ntfyBody ? { ntfyBody } : {}) } }
 }

@@ -97,6 +97,8 @@ export type MaintenanceFromTemplateInput = {
   maintenanceKind: MaintenanceKind
   /** Nur gesetzt, wenn die Wartung den Dienst voraussichtlich einschränkt (Vorgabe der Sammlung: nein) */
   affectsService?: true
+  /** Nur gesetzt, wenn kein Meldungsentwurf entstehen soll (Vorgabe: Entwurf anlegen) */
+  createNotificationDraft?: false
   serviceIds: number[]
   start: string
   end?: string
@@ -142,6 +144,8 @@ export function checkMaintenanceInput(raw: unknown): MaintenanceInputCheck {
   if (!isMaintenanceKind(maintenanceKind)) errors.push('maintenanceKind')
   const affectsService = body.affectsService
   if (affectsService !== undefined && affectsService !== null && typeof affectsService !== 'boolean') errors.push('affectsService')
+  const createNotificationDraft = body.createNotificationDraft
+  if (createNotificationDraft !== undefined && createNotificationDraft !== null && typeof createNotificationDraft !== 'boolean') errors.push('createNotificationDraft')
   const start = time('start', true)
   const end = time('end', false)
   if (start && end && new Date(end).getTime() < new Date(start).getTime()) errors.push('end')
@@ -154,6 +158,6 @@ export function checkMaintenanceInput(raw: unknown): MaintenanceInputCheck {
   if (errors.length > 0 || !title || !message || !isMaintenanceKind(maintenanceKind) || !start || !serviceIds) return { ok: false, errors }
   return {
     ok: true,
-    value: { title, message, maintenanceKind, ...(affectsService === true ? { affectsService: true as const } : {}), serviceIds, start, ...(end ? { end } : {}), ...(smsBody ? { smsBody } : {}), ...(ntfyBody ? { ntfyBody } : {}) },
+    value: { title, message, maintenanceKind, ...(affectsService === true ? { affectsService: true as const } : {}), ...(createNotificationDraft === false ? { createNotificationDraft: false as const } : {}), serviceIds, start, ...(end ? { end } : {}), ...(smsBody ? { smsBody } : {}), ...(ntfyBody ? { ntfyBody } : {}) },
   }
 }

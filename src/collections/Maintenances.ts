@@ -163,6 +163,21 @@ export const Maintenances: CollectionConfig = {
       },
     },
     {
+      // Steuert nur den Entwurf beim Anlegen (Hook afterChange, Vorgang „create“). Bestehende Wartungen und Aufrufe ohne Angabe: angehakt.
+      name: 'createNotificationDraft',
+      type: 'checkbox',
+      label: ta('Create notification draft'),
+      defaultValue: true,
+      // Ein Duplikat beginnt wieder angehakt: Ein abgewählter Haken einer nachgetragenen Wartung gehört nicht zur Kopie
+      hooks: { beforeDuplicate: [() => true] },
+      // Wie die SMS- und ntfy-Texte nur für Angemeldete: Öffentlich soll nicht sichtbar sein, welche Einträge nachgetragen wurden
+      access: { read: authenticatedOrTestWriteField, create: authenticatedOrTestWriteField, update: authenticatedOrTestWriteField },
+      admin: {
+        description: ta('Select to create a notification draft when saving. Clear it when entering a maintenance afterwards, so that no draft is created.'),
+        condition: (data) => !data?.id,
+      },
+    },
+    {
       name: 'duration',
       type: 'text',
       label: ta('Duration'),
@@ -250,6 +265,17 @@ export const Maintenances: CollectionConfig = {
           admin: localizedDateAdmin({
             description: ta('When this update was posted. The availability report reads the start and end of a maintenance from the updates "In Progress" and "Completed". When adding them later, enter the actual times.'),
           }),
+        },
+        {
+          // Nur eine neue Aktualisierung mit Haken erzeugt einen Entwurf. Ältere Einträge ohne Wert gelten als angehakt.
+          name: 'createNotificationDraft',
+          type: 'checkbox',
+          label: ta('Create notification draft'),
+          defaultValue: true,
+          access: { read: authenticatedOrTestWriteField, create: authenticatedOrTestWriteField, update: authenticatedOrTestWriteField },
+          admin: {
+            description: ta('Select to create a notification draft for this update. Clear it when entering an update afterwards.'),
+          },
         },
         // Texte für den Benachrichtigungsentwurf, aus einer Vorlage gesetzt. Nur Angemeldete lesen und schreiben sie,
         // sie stehen weder in der öffentlichen API noch im Formular.
@@ -376,6 +402,9 @@ export const Maintenances: CollectionConfig = {
         // Auto-create notification on new maintenance creation
         // Use setImmediate to defer until after the current transaction commits
         if (operation === 'create') {
+          // Beim Anlegen zählt auch der Haken der ersten Aktualisierung: Ihr Text gelangt sonst in einen Entwurf, den niemand wollte
+          const firstUpdate = Array.isArray(doc.updates) ? (doc.updates[0] as { createNotificationDraft?: boolean | null } | undefined) : undefined
+          if (doc.createNotificationDraft === false || firstUpdate?.createNotificationDraft === false) return doc
           const notificationData: DeferredNotification = {
             docId: doc.id,
             title,
@@ -405,7 +434,7 @@ export const Maintenances: CollectionConfig = {
           const update = currentUpdates[index]
           const isNewUpdate = index >= previousUpdates.length
 
-          if (isNewUpdate && update.message) {
+          if (isNewUpdate && update.message && update.createNotificationDraft !== false) {
             const updateStatusLabel = statusLabels[update.status] || update.status || 'Update'
             const notificationData: DeferredNotification = {
               docId: doc.id,

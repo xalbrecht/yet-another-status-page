@@ -101,6 +101,8 @@ test('PreviewView: Karte mit Titel, Text und Diensten, Folgen mit bisherigem und
       texts={{ title: 'Teilweiser Ausfall: E-Mail und Webmail', body: 'Zeile 1\nZeile 2 {{link}}', smsBody: 'SMS {{link}}', ntfyBody: 'ntfy' }}
       impact="partial"
       services={services([11, 12])}
+      createDraft
+      onCreateDraft={noop}
       onBack={noop}
       onPublish={noop}
       busy={false}
@@ -118,7 +120,7 @@ test('PreviewView: Karte mit Titel, Text und Diensten, Folgen mit bisherigem und
 
 test('PreviewView: Titel und Texte werden maskiert, ein Fehler und die Sperre bei laufender Anfrage erscheinen', () => {
   const markup = render(
-    <PreviewView texts={{ title: '<script>alert(1)</script>', body: '<b>x</b>', smsBody: '', ntfyBody: '' }} impact="major" services={services([11])} onBack={noop} onPublish={noop} busy error="Fehlertext" />,
+    <PreviewView texts={{ title: '<script>alert(1)</script>', body: '<b>x</b>', smsBody: '', ntfyBody: '' }} impact="major" services={services([11])} createDraft onCreateDraft={noop} onBack={noop} onPublish={noop} busy error="Fehlertext" />,
   )
   assert.ok(!markup.includes('<script>'))
   assert.ok(markup.includes('&lt;script&gt;'))
@@ -128,11 +130,29 @@ test('PreviewView: Titel und Texte werden maskiert, ein Fehler und die Sperre be
 })
 
 test('DoneView: Verweise auf die Störung, den Entwurf und die Liste', () => {
-  const markup = render(<DoneView title="Titel" impact="partial" services={services([11, 12])} incidentUrl="/admin/collections/incidents/5" draftsUrl="/admin/collections/notifications?where[relatedIncident][equals]=5" listUrl="/admin/collections/incidents" onAgain={noop} />)
+  const markup = render(<DoneView title="Titel" impact="partial" services={services([11, 12])} incidentUrl="/admin/collections/incidents/5" createDraft draftsUrl="/admin/collections/notifications?where[relatedIncident][equals]=5" listUrl="/admin/collections/incidents" onAgain={noop} />)
   assert.ok(markup.includes('href="/admin/collections/incidents/5"'))
   assert.ok(markup.includes('relatedIncident'))
   assert.ok(markup.includes('href="/admin/collections/incidents"'))
   assert.ok(markup.includes('E-Mail, Webmail'))
+})
+
+test('PreviewView: Haken „Meldungsentwurf anlegen“ angehakt zeigt den Entwurf, abgewählt blendet ihn aus und nennt die Folge', () => {
+  const props = { texts: { title: 'T', body: 'B', smsBody: '', ntfyBody: '' }, impact: 'partial' as const, services: services([11]), onCreateDraft: noop, onBack: noop, onPublish: noop, busy: false, error: null }
+  const on = render(<PreviewView {...props} createDraft />)
+  assert.match(on, /data-testid="create-draft"[^>]*checked/)
+  assert.ok(on.includes('data-testid="draft"'))
+  const off = render(<PreviewView {...props} createDraft={false} />)
+  assert.match(off, /data-testid="create-draft"/)
+  assert.doesNotMatch(off, /data-testid="create-draft"[^>]*checked/)
+  assert.ok(!off.includes('data-testid="draft"'), 'ohne Entwurf keine Entwurfsvorschau')
+  assert.ok(/Es wird kein Meldungsentwurf angelegt|No notification draft is created/.test(off))
+})
+
+test('DoneView: ohne Entwurf fehlt der Verweis auf die Benachrichtigung', () => {
+  const markup = render(<DoneView title="Titel" impact="partial" services={services([11])} incidentUrl="/i/5" createDraft={false} draftsUrl="/admin/collections/notifications?where[relatedIncident][equals]=5" listUrl="/l" onAgain={noop} />)
+  assert.ok(!markup.includes('relatedIncident'))
+  assert.ok(/Kein Meldungsentwurf angelegt|No notification draft created/.test(markup))
 })
 
 test('Step: ein gesperrter Schritt trägt die Klasse, ein erledigter ebenfalls', () => {

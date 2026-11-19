@@ -26,7 +26,7 @@ import './incident-wizard.scss'
 const LIST_URL = '/admin/collections/incidents'
 const EMPTY_TEXTS: DraftTexts = { title: '', body: '', smsBody: '', ntfyBody: '' }
 
-type Done = { id: number; title: string; impact: Impact; services: WizardService[] }
+type Done = { id: number; title: string; impact: Impact; services: WizardService[]; createDraft: boolean }
 
 /** Seite „Neu erstellen mit Vorlage“: Gruppe, Dienste, Vorlage, Auswirkung, Prüfen, Vorschau mit Bestätigung. Legt die Störung erst nach der Bestätigung an. */
 export const IncidentWizard: React.FC<{ groups: WizardGroup[]; templates: WizardTemplate[]; locale: string }> = ({ groups, templates, locale }) => {
@@ -42,6 +42,7 @@ export const IncidentWizard: React.FC<{ groups: WizardGroup[]; templates: Wizard
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [done, setDone] = useState<Done | null>(null)
+  const [createDraft, setCreateDraft] = useState(true)
 
   const group = groups.find((candidate) => String(candidate.id) === groupId) ?? null
   const selected = useMemo(() => (group ? group.services.filter((service) => serviceIds.includes(service.id)) : []), [group, serviceIds])
@@ -131,6 +132,7 @@ export const IncidentWizard: React.FC<{ groups: WizardGroup[]; templates: Wizard
           title: texts.title,
           message: texts.body,
           impact,
+          ...(createDraft ? {} : { createNotificationDraft: false }),
           serviceIds,
           ...(texts.smsBody.trim() ? { smsBody: texts.smsBody } : {}),
           ...(texts.ntfyBody.trim() ? { ntfyBody: texts.ntfyBody } : {}),
@@ -138,7 +140,7 @@ export const IncidentWizard: React.FC<{ groups: WizardGroup[]; templates: Wizard
       })
       const body = await response.json()
       if (!response.ok) throw new Error(body?.error || `HTTP ${response.status}`)
-      setDone({ id: body.id, title: texts.title, impact, services: selected })
+      setDone({ id: body.id, title: texts.title, impact, services: selected, createDraft })
       go('done')
     } catch (err) {
       setError(err instanceof Error ? err.message : ta('Unknown error'))
@@ -149,6 +151,7 @@ export const IncidentWizard: React.FC<{ groups: WizardGroup[]; templates: Wizard
 
   function reset() {
     selectGroup('')
+    setCreateDraft(true)
     setError(null)
     setDone(null)
     setTab('page')
@@ -163,6 +166,7 @@ export const IncidentWizard: React.FC<{ groups: WizardGroup[]; templates: Wizard
           impact={done.impact}
           services={done.services}
           incidentUrl={`${LIST_URL}/${done.id}`}
+          createDraft={done.createDraft}
           draftsUrl={`/admin/collections/notifications?where[relatedIncident][equals]=${done.id}`}
           listUrl={LIST_URL}
           onAgain={reset}
@@ -177,7 +181,7 @@ export const IncidentWizard: React.FC<{ groups: WizardGroup[]; templates: Wizard
         <div className="iw-crumb">
           <Link href="/admin">{ta('Dashboard')}</Link> / <Link href={LIST_URL}>{ta('Incidents')}</Link> / {ta('New with template')} / {ta('Preview')}
         </div>
-        <PreviewView texts={texts} impact={impact} services={selected} onBack={() => go('edit')} onPublish={publish} busy={busy} error={error} />
+        <PreviewView texts={texts} impact={impact} services={selected} createDraft={createDraft} onCreateDraft={setCreateDraft} onBack={() => go('edit')} onPublish={publish} busy={busy} error={error} />
       </div>
     )
   }

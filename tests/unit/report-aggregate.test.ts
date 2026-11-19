@@ -285,3 +285,25 @@ test('Gruppen mit gleichem Wert stehen in der Reihenfolge der eingestellten Spra
   assert.deepEqual(buildReport(german).heat.rows.slice(1).map((row) => row.name), ['Ärzte', 'Zebra'])
   assert.deepEqual(buildReport(swedish).heat.rows.slice(1).map((row) => row.name), ['Zebra', 'Ärzte'])
 })
+
+test('Wartungsarten: Rechenart je Art, Wartungszeit und Ausfallanteil der Wartung getrennt', () => {
+  const sla = { from: octoberLength.start, to: octoberLength.start + octoberLength.ms * 0.1, kind: 'sla' as const }
+  const additional = { from: octoberLength.start + octoberLength.ms * 0.5, to: octoberLength.start + octoberLength.ms * 0.6, kind: 'additional' as const }
+  const services = [service(1, 'A', timelineWith([]), { windows: [sla, additional] })]
+  const mixed = buildReport(input('2026-10', services, { params: { maintenance: 'A', maintenanceAdditional: 'B' } }))
+  near(mixed.kpis.availability, 90)
+  near(mixed.kpis.maintenanceMs / octoberLength.ms, 0.2)
+  near(mixed.kpis.maintenanceByKind.sla / octoberLength.ms, 0.1)
+  near(mixed.kpis.maintenanceByKind.additional / octoberLength.ms, 0.1)
+  near(mixed.ranking[0].maintenanceDownMs / octoberLength.ms, 0.1)
+  assert.deepEqual(
+    [mixed.ranking[0].maintenanceByKind.sla, mixed.ranking[0].maintenanceByKind.additional].map((ms) => Math.round(ms / octoberLength.ms * 10)),
+    [1, 1],
+  )
+  const both = buildReport(input('2026-10', services, { params: { maintenance: 'B', maintenanceAdditional: 'B' } }))
+  near(both.kpis.availability, 80)
+  near(both.ranking[0].maintenanceDownMs / octoberLength.ms, 0.2)
+  const none = buildReport(input('2026-10', services))
+  near(none.kpis.availability, 100)
+  assert.equal(none.ranking[0].maintenanceDownMs, 0)
+})

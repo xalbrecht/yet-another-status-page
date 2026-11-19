@@ -1,4 +1,5 @@
 import { statusAt, type Timeline } from '@/lib/availability'
+import type { MaintenanceKind } from '@/lib/maintenance-kind'
 
 /**
  * Kennzahlen eines Dienstes in einem Zeitraum. Reine Funktion.
@@ -8,8 +9,16 @@ import { statusAt, type Timeline } from '@/lib/availability'
  * Wartungsart A: Wartung zählt als verfügbar, Störungen in der Wartung zählen nicht.
  * Wartungsart B: Wartung zählt als Ausfall.
  * Wartungsart C: Wartung ist aus der Gesamtzeit herausgenommen.
+ *
+ * Die Rechenart gilt je Art der Wartung (im Wartungsfenster „sla“, „additional“ zusätzlich). Überlappen sich Fenster beider
+ * Arten, gilt in der Überlappung die zusätzliche Wartung.
  */
 export type MaintenanceMode = 'A' | 'B' | 'C'
+
+/** Rechenart je Art der Wartung. */
+export type MaintenanceModes = Record<MaintenanceKind, MaintenanceMode>
+
+export type MaintenanceWindow = { from: number; to: number; /** fehlt die Art, gilt „im Wartungsfenster (SLA)“ */ kind?: MaintenanceKind }
 
 export type Outage = { from: number; to: number; status: 'partial' | 'major' }
 
@@ -17,7 +26,10 @@ export type ServiceMetrics = {
   knownMs: number
   downMs: number
   degradedMs: number
+  /** Wartungszeit insgesamt, Summe von `maintenanceByKind` */
   maintenanceMs: number
+  /** Wartungszeit je Art, ohne Doppelzählung: In der Überlappung zählt die zusätzliche Wartung */
+  maintenanceByKind: Record<MaintenanceKind, number>
   /** Prozent, `null`: im Zeitraum ist kein Zustand bekannt */
   availability: number | null
   /** Ausfälle (Teilausfall, Schwerer Ausfall) außerhalb von Wartungen, aneinandergrenzende zusammengefasst */
@@ -26,22 +38,24 @@ export type ServiceMetrics = {
 
 export function computeServiceMetrics(input: {
   timeline: Timeline
-  windows: Array<{ from: number; to: number }>
+  windows: MaintenanceWindow[]
   start: number
   end: number
-  mode: MaintenanceMode
+  /** eine Rechenart für beide Arten oder je Art eine */
+  mode: MaintenanceMode | MaintenanceModes
   /** Beginn des Dienstes: die Zeit davor wird nicht gewertet. */
   activeFrom?: number
   /** Ende des Dienstes (`null` oder fehlend: offen): die Zeit danach wird nicht gewertet. */
   activeTo?: number | null
 }): ServiceMetrics {
-  const { timeline, mode } = input
+  const { timeline } = input
+  const modes: MaintenanceModes = typeof input.mode === 'string' ? { sla: input.mode, additional: input.mode } : input.mode
   // Gewertet wird nur die Lebenszeit des Dienstes. Davor und danach ist weder verfügbar noch unbekannt, es fehlt im Wert.
   const start = Math.max(input.start, input.activeFrom ?? Number.NEGATIVE_INFINITY)
   const end = Math.min(input.end, input.activeTo ?? Number.POSITIVE_INFINITY)
-  if (end <= start) return { knownMs: 0, downMs: 0, degradedMs: 0, maintenanceMs: 0, availability: null, outages: [] }
+  if (end <= start) return { knownMs: 0, downMs: 0, degradedMs: 0, maintenanceMs: 0, maintenanceByKind: { sla: 0, additional: 0 }, availability: null, outages: [] }
   const windows = input.windows
-    .map((window) => ({ from: Math.max(window.from, start), to: Math.min(window.to, end) }))
+    .map((window) => ({ from: Math.max(window.from, start), to: Math.min(window.to, end), kind: window.kind ?? ('sla' as MaintenanceKind) }))
     .filter((window) => window.to > window.from)
 
   const boundaries = new Set<number>([start, end])
@@ -56,6 +70,7 @@ export function computeServiceMetrics(input: {
   let downMs = 0
   let degradedMs = 0
   let maintenanceMs = 0
+  const maintenanceByKind: Record<MaintenanceKind, number> = { sla: 0, additional: 0 }
   const outages: Outage[] = []
 
   for (let i = 0; i < points.length - 1; i++) {
@@ -64,15 +79,22 @@ export function computeServiceMetrics(input: {
     const length = to - from
     const status = statusAt(timeline, from)
     if (status === null) continue
-    const inWindow = windows.some((window) => window.from <= from && from < window.to)
+    const covering = windows.filter((window) => window.from <= from && from < window.to)
+    // Überlappung: die zusätzliche Wartung gilt
+    const kind: MaintenanceKind | null = covering.some((window) => window.kind === 'additional') ? 'additional' : covering.length > 0 ? 'sla' : null
+    const inWindow = kind !== null
     const effective = status === 'maintenance' ? 'operational' : status
     const isOutage = effective === 'partial' || effective === 'major'
 
-    if (inWindow) maintenanceMs += length
-    if (!(mode === 'C' && inWindow)) knownMs += length
+    const mode = kind ? modes[kind] : null
+    if (kind) {
+      maintenanceMs += length
+      maintenanceByKind[kind] += length
+    }
+    if (mode !== 'C') knownMs += length
     if (effective === 'degraded' && !inWindow) degradedMs += length
 
-    const counted = mode === 'B' ? inWindow || isOutage : isOutage && !inWindow
+    const counted = mode === 'B' ? true : isOutage && !inWindow
     if (counted) downMs += length
 
     if (isOutage && !inWindow) {
@@ -91,6 +113,7 @@ export function computeServiceMetrics(input: {
     downMs,
     degradedMs,
     maintenanceMs,
+    maintenanceByKind,
     availability: knownMs === 0 ? null : ((knownMs - downMs) / knownMs) * 100,
     outages,
   }

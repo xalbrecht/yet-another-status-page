@@ -11,6 +11,7 @@ test('ohne Angaben gelten die Standardwerte', () => {
     view: 'overall',
     calc: 'whole',
     maintenance: 'A',
+    maintenanceAdditional: 'A',
     showMaintenance: true,
     topN: 5,
     ended: false,
@@ -81,4 +82,17 @@ test('Schalter „Beendete Dienste einbeziehen“: nur ended=true schaltet ein, 
 test('selectionQuery gibt den Schalter an Export und Versand weiter', () => {
   assert.match(selectionQuery({ ended: 'true', period: '2026-10' }), /(^|&)ended=true(&|$)/)
   assert.doesNotMatch(selectionQuery({ period: '2026-10' }), /ended/)
+})
+
+test('Rechenart der zusätzlichen Wartung: Vorgabe A, unabhängig von der Rechenart im Wartungsfenster', () => {
+  assert.equal(parseReportParams({}).maintenanceAdditional, 'A')
+  assert.equal(parseReportParams({ maintenanceAdditional: 'X' }).maintenanceAdditional, 'A')
+  assert.equal(parseReportParams({ maintenanceAdditional: 'b' }).maintenanceAdditional, 'B')
+  assert.equal(parseReportParams({ maintenanceAdditional: 'C' }).maintenanceAdditional, 'C')
+  const both = parseReportParams({ maintenance: 'A', maintenanceAdditional: 'B' })
+  assert.deepEqual([both.maintenance, both.maintenanceAdditional], ['A', 'B'])
+})
+
+test('selectionQuery gibt die Rechenart der zusätzlichen Wartung an Export und Versand weiter', () => {
+  assert.match(selectionQuery({ maintenanceAdditional: 'B' }), /(^|&)maintenanceAdditional=B(&|$)/)
 })

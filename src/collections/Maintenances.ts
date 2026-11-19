@@ -163,7 +163,7 @@ export const Maintenances: CollectionConfig = {
       },
     },
     {
-      // Steuert nur den Entwurf beim Anlegen (Hook afterChange, Vorgang „create“). Bestehende Wartungen und Aufrufe ohne Angabe: angehakt.
+      // Steuert den Entwurf beim Anlegen (Hook afterChange, Vorgang „create“) und die Meldung bei Beginn und Ende nach dem Zeitplan (process-due.ts). Bestehende Wartungen und Aufrufe ohne Angabe: angehakt.
       name: 'createNotificationDraft',
       type: 'checkbox',
       label: ta('Create notification draft'),
@@ -173,7 +173,7 @@ export const Maintenances: CollectionConfig = {
       // Wie die SMS- und ntfy-Texte nur für Angemeldete: Öffentlich soll nicht sichtbar sein, welche Einträge nachgetragen wurden
       access: { read: authenticatedOrTestWriteField, create: authenticatedOrTestWriteField, update: authenticatedOrTestWriteField },
       admin: {
-        description: ta('Select to create a notification draft when saving. Clear it when entering a maintenance afterwards, so that no draft is created.'),
+        description: ta('Select to create a notification draft when saving and when the schedule starts or completes the maintenance. Clear it when entering a maintenance afterwards, so that nothing is announced.'),
         condition: (data) => !data?.id,
       },
     },

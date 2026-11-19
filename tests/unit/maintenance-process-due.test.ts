@@ -150,3 +150,24 @@ test('die Abfrage nimmt nur offene Wartungen, deren Beginn oder Ende erreicht is
     ],
   })
 })
+
+test('Haken „Meldungsentwurf anlegen“ abgewählt: Beginn und Ende stellen um, aber kein Entwurf und kein Versand (#228)', async () => {
+  for (const [hours, status] of [[-1, 'in_progress'], [-3, 'completed']] as const) {
+    const t = setup([doc({ createNotificationDraft: false, scheduledStartAt: iso(hours - 1), scheduledEndAt: iso(hours === -3 ? -0.5 : 2) })])
+    const result = await processDueMaintenances(t.payload, NOW, t.deps)
+    assert.deepEqual(result, { skipped: null, transitioned: [{ id: 1, status }], notificationFailed: [] })
+    assert.equal(t.updates.length, 1)
+    assert.equal((t.updates[0].data as { updates: unknown[] }).updates.length, 1, 'Eintrag im Verlauf bleibt')
+    assert.equal(t.notifications.length, 0)
+    assert.deepEqual(t.sent, [])
+  }
+})
+
+test('Haken „Meldungsentwurf anlegen“ angehakt oder ohne Wert (ältere Wartung): Entwurf und Versand wie bisher (#228)', async () => {
+  for (const flag of [true, null, undefined]) {
+    const t = setup([doc({ createNotificationDraft: flag })])
+    await processDueMaintenances(t.payload, NOW, t.deps)
+    assert.equal(t.notifications.length, 1)
+    assert.deepEqual(t.sent, [901])
+  }
+})

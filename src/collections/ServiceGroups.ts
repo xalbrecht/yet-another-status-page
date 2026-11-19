@@ -40,6 +40,7 @@ export const ServiceGroups: CollectionConfig = {
     {
       name: 'slug',
       type: 'text',
+      label: ta('Slug'),
       required: true,
       unique: true,
       admin: {

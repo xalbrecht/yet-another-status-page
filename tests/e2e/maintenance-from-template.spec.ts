@@ -23,6 +23,23 @@ async function draftFor(request: APIRequestContext, maintenanceId: number) {
 }
 
 test.describe('Wartung aus einer Vorlage (Route)', { tag: ['@admin', '@wartungen', '@vorlagen'] }, () => {
+  test('Auswirkung auf den Dienst: ohne Angabe „nein“, mit true gesetzt, ein Text wird abgewiesen', async ({ request }) => {
+    const id = Date.now()
+    const group = await createServiceGroup({ name: `Wartung Auswirkung Gruppe ${id}`, icon: 'Server' })
+    const service = await createService({ name: `Wartung Auswirkung Dienst ${id}`, group: group.id })
+    const body = { title: `Auswirkung ${id}`, message: 'Arbeiten.', maintenanceKind: 'sla', serviceIds: [service.id], start: daysFromNow(2) }
+
+    const plain = await (await post(request, body)).json()
+    expect((await (await request.get(`/api/maintenances/${plain.id}?depth=0`)).json()).affectsService).toBe(false)
+
+    const limited = await (await post(request, { ...body, affectsService: true })).json()
+    expect((await (await request.get(`/api/maintenances/${limited.id}?depth=0`)).json()).affectsService).toBe(true)
+
+    const bad = await post(request, { ...body, affectsService: 'ja' })
+    expect(bad.status()).toBe(400)
+    expect((await bad.json()).fields).toEqual(['affectsService'])
+  })
+
   test('legt die Wartung mit der Ankündigung als erster Aktualisierung an und füllt den Entwurf', async ({ request }) => {
     const id = Date.now()
     const group = await createServiceGroup({ name: `Wartung Vorlage Gruppe ${id}`, icon: 'Server' })

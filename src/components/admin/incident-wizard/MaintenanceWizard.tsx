@@ -39,6 +39,7 @@ export const MaintenanceWizard: React.FC<{ groups: WizardGroup[]; templates: Wiz
   const [naming, setNaming] = useState<ServiceNaming>('list')
   // Keine Vorgabe: Die Art der Wartung wählt der Nutzer immer selbst
   const [maintenanceKind, setMaintenanceKind] = useState('')
+  const [affectsService, setAffectsService] = useState(false)
   const [start, setStart] = useState('')
   const [end, setEnd] = useState('')
   // Zeitpunkt der Eingabe, nicht des Rendern: `Date.now()` gehört in den Ereignis-Handler
@@ -151,6 +152,7 @@ export const MaintenanceWizard: React.FC<{ groups: WizardGroup[]; templates: Wiz
           title: texts.title,
           message: texts.body,
           maintenanceKind,
+          ...(affectsService ? { affectsService: true } : {}),
           serviceIds,
           start: startUtc,
           ...(endUtc ? { end: endUtc } : {}),
@@ -239,7 +241,7 @@ export const MaintenanceWizard: React.FC<{ groups: WizardGroup[]; templates: Wiz
 
       <Step number={3} title={ta('Period')} summary={startLabel ? `${startLabel}${endLabel ? ` – ${endLabel}` : ''}` : undefined} done={hasPeriod} locked={!hasServices}>
         {hasServices ? (
-          <PeriodStep timeZone={timeZone} maintenanceKind={maintenanceKind} onMaintenanceKind={setMaintenanceKind} start={start} end={end} onStart={changeStart} onEnd={changeEnd} startInPast={pastStart} endBeforeStart={endBeforeStart} templateNeedsEnd={templateNeedsEnd} />
+          <PeriodStep timeZone={timeZone} maintenanceKind={maintenanceKind} onMaintenanceKind={setMaintenanceKind} affectsService={affectsService} onAffectsService={setAffectsService} start={start} end={end} onStart={changeStart} onEnd={changeEnd} startInPast={pastStart} endBeforeStart={endBeforeStart} templateNeedsEnd={templateNeedsEnd} />
         ) : (
           <p className="iw-hint">{ta('Choose the services first.')}</p>
         )}

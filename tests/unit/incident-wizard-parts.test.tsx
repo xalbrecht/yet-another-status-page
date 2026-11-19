@@ -14,6 +14,7 @@ import {
   type WizardGroup,
   type WizardTemplate,
 } from '@/components/admin/incident-wizard/IncidentWizardParts'
+import { PeriodStep } from '@/components/admin/incident-wizard/MaintenanceWizardParts'
 
 const render = (node: ReactElement) => renderPlain(withAdminText(node))
 const noop = () => {}
@@ -137,4 +138,16 @@ test('DoneView: Verweise auf die Störung, den Entwurf und die Liste', () => {
 test('Step: ein gesperrter Schritt trägt die Klasse, ein erledigter ebenfalls', () => {
   assert.ok(render(<Step number={3} title="T" locked>x</Step>).includes('iw-step--locked'))
   assert.ok(render(<Step number={3} title="T" done>x</Step>).includes('iw-step--done'))
+})
+
+test('PeriodStep: Kontrollkästchen „Auswirkung auf den Dienst“ zeigt den Zustand an', () => {
+  const props = {
+    timeZone: 'Europe/Berlin', maintenanceKind: 'sla', onMaintenanceKind: noop, start: '', end: '', onStart: noop, onEnd: noop,
+    startInPast: false, endBeforeStart: false, templateNeedsEnd: false, onAffectsService: noop,
+  }
+  const off = render(<PeriodStep {...props} affectsService={false} />)
+  assert.match(off, /data-testid="affects-service"/)
+  assert.doesNotMatch(off, /data-testid="affects-service"[^>]*checked/)
+  const on = render(<PeriodStep {...props} affectsService />)
+  assert.match(on, /data-testid="affects-service"[^>]*checked/)
 })

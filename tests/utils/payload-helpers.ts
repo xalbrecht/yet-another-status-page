@@ -26,6 +26,7 @@ interface Service {
   name: string
   slug: string
   status: string
+  statusBeforeIncident?: string | null
   group: number
 }
 

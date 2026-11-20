@@ -213,7 +213,7 @@ export const Incidents: CollectionConfig = {
         { label: ta('Major Outage'), value: 'major' },
       ],
       admin: {
-        description: ta('Status set on the affected services while the incident is open. Once resolved, the services return to Operational.'),
+        description: ta('Status set on the affected services while the incident is open. Once resolved, the services return to Operational or, if chosen, to their previous status.'),
       },
     },
     {

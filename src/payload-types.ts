@@ -305,7 +305,7 @@ export interface Incident {
    */
   affectedServices?: (number | Service)[] | null;
   /**
-   * Status set on the affected services while the incident is open. Once resolved, the services return to Operational.
+   * Status set on the affected services while the incident is open. Once resolved, the services return to Operational or, if chosen, to their previous status.
    */
   impact: 'degraded' | 'partial' | 'major';
   /**

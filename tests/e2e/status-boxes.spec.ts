@@ -440,9 +440,15 @@ test.describe('Kachel „Alle“', { tag: ['@public', '@statusseite'] }, () => {
       await page.setViewportSize({ width, height: 900 })
       await updateSettings({ lagebildVariant: 'b' })
       await load(page)
-      await allButton(page).hover()
+      // Bei langer Seite hydriert React noch, wenn der Knopf schon `__reactProps` trägt: Die einzelne Mausbewegung von
+      // `hover()` geht dann verloren (Bewegungsereignisse werden nicht nachgeholt). Bewegung wiederholen.
       const tip = allTile(page).getByRole('tooltip')
-      await expect(tip).toBeVisible()
+      await expect(async () => {
+        await allButton(page).evaluate((element) => element.scrollIntoView({ block: 'center' }))
+        await page.mouse.move(1, 1)
+        await allButton(page).hover()
+        await expect(tip).toBeVisible({ timeout: 1_000 })
+      }).toPass({ timeout: 30_000 })
       const box = (await tip.boundingBox())!
       expect(box.x).toBeGreaterThanOrEqual(0)
       expect(box.x + box.width).toBeLessThanOrEqual(width)

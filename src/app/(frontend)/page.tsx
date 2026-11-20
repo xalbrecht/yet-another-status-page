@@ -102,12 +102,10 @@ async function getStatusData(requestedPeriod: unknown, requestedBar: unknown) {
     pagination: false,
   })
   const noticeInput = noticeMaintenances.docs.map(toNoticeMaintenance)
-  const noticeText = (serviceId: string): string | undefined =>
-    maintenanceNoticeTextFor(noticeInput, serviceId, nowMs, dt, { t, tf })
   // Das Lagebild kommt aus dem Zwischenspeicher, der Hinweis nicht: Er wird je Aufruf berechnet und als Zuordnung übergeben.
   const maintenanceNotices: Record<string, string> = {}
   for (const service of services.docs) {
-    const text = noticeText(String(service.id))
+    const text = maintenanceNoticeTextFor(noticeInput, String(service.id), nowMs, dt, { t, tf })
     if (text) maintenanceNotices[String(service.id)] = text
   }
 
@@ -136,7 +134,7 @@ async function getStatusData(requestedPeriod: unknown, requestedBar: unknown) {
         name: service.name,
         status: (service.status || 'operational') as ServiceStatus,
         description: service.description || undefined,
-        maintenanceNotice: noticeText(String(service.id)),
+        maintenanceNotice: maintenanceNotices[String(service.id)],
       })),
     }
   }).filter((group) => group.services.length > 0)

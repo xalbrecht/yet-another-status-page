@@ -248,6 +248,10 @@ export interface Service {
    */
   status: 'operational' | 'degraded' | 'partial' | 'major' | 'maintenance';
   /**
+   * Remembered when an incident first covers the service. The service can return to it when the last open incident ends
+   */
+  statusBeforeIncident?: ('operational' | 'degraded' | 'partial' | 'major') | null;
+  /**
    * First day the service is operated. Before this day it does not appear on the status page
    */
   startsAt: string;
@@ -301,7 +305,7 @@ export interface Incident {
    */
   affectedServices?: (number | Service)[] | null;
   /**
-   * Status set on the affected services while the incident is open. Once resolved, the services return to Operational.
+   * Status set on the affected services while the incident is open. Once resolved, the services return to Operational or, if chosen, to their previous status.
    */
   impact: 'degraded' | 'partial' | 'major';
   /**
@@ -332,6 +336,13 @@ export interface Incident {
     ntfyBody?: string | null;
     id?: string | null;
   }[];
+  serviceChoices?:
+    | {
+        service?: (number | null) | Service;
+        restore?: boolean | null;
+        id?: string | null;
+      }[]
+    | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -850,6 +861,7 @@ export interface ServicesSelect<T extends boolean = true> {
   description?: T;
   group?: T;
   status?: T;
+  statusBeforeIncident?: T;
   startsAt?: T;
   endsAt?: T;
   availabilityTarget?: T;
@@ -889,6 +901,13 @@ export interface IncidentsSelect<T extends boolean = true> {
         createNotificationDraft?: T;
         smsBody?: T;
         ntfyBody?: T;
+        id?: T;
+      };
+  serviceChoices?:
+    | T
+    | {
+        service?: T;
+        restore?: T;
         id?: T;
       };
   updatedAt?: T;

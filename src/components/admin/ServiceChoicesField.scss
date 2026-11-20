@@ -1,0 +1,51 @@
+.service-choices {
+  display: grid;
+  gap: 0.625rem;
+  margin-block: 1rem;
+  min-width: 0;
+
+  &__title {
+    margin: 0;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--theme-elevation-800);
+  }
+
+  &__choice {
+    display: flex;
+    gap: 0.625rem;
+    align-items: flex-start;
+    padding: 0.625rem 0.75rem;
+    border: 1px solid var(--theme-elevation-150);
+    border-radius: 4px;
+    background: var(--theme-input-bg);
+    cursor: pointer;
+
+    input {
+      margin-top: 0.25rem;
+      flex: none;
+    }
+
+    &:has(input:focus-visible) {
+      outline: 2px solid var(--theme-success-500);
+      outline-offset: 2px;
+    }
+  }
+
+  &__name {
+    display: block;
+    color: var(--theme-elevation-900);
+  }
+
+  &__text {
+    display: block;
+    font-size: 0.8125rem;
+    color: var(--theme-elevation-600);
+  }
+
+  &__hint {
+    margin: 0;
+    font-size: 0.75rem;
+    color: var(--theme-elevation-500);
+  }
+}

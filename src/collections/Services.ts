@@ -1,5 +1,5 @@
 import { APIError, type CollectionConfig } from 'payload'
-import { standardAccess } from '@/lib/access'
+import { authenticatedOrTestWriteField, standardAccess } from '@/lib/access'
 import { ta } from '@/lib/i18n/admin'
 import { invalidateLagebild } from '@/lib/lagebild-invalidate'
 import { localizedDateAdmin } from '@/lib/localizedDateAdmin'
@@ -148,6 +148,19 @@ export const Services: CollectionConfig = {
       options: [...serviceStatusOptions],
       admin: {
         description: ta('Current status of the service'),
+      },
+    },
+    {
+      // Zustand, den der Dienst hatte, als ihn der erste offene Vorfall erfasste (nie „Wartung“). Die Behebung des letzten
+      // Vorfalls kann dorthin zurückkehren (Issue #210). Nur die Berechnung der Dienstzustände schreibt das Feld.
+      name: 'statusBeforeIncident',
+      label: ta('Status before the incident'),
+      type: 'select',
+      options: serviceStatusOptions.filter((option) => option.value !== 'maintenance'),
+      access: { read: authenticatedOrTestWriteField, create: authenticatedOrTestWriteField, update: authenticatedOrTestWriteField },
+      admin: {
+        readOnly: true,
+        description: ta('Remembered when an incident first covers the service. The service can return to it when the last open incident ends'),
       },
     },
     {

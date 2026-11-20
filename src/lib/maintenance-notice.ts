@@ -4,7 +4,8 @@
  */
 
 import type { Where } from 'payload'
-import type { TranslateFormat } from '@/lib/i18n/core'
+import type { Translate, TranslateFormat } from '@/lib/i18n/core'
+import { formatDateTime, type DateTimeConfig } from '@/lib/datetime'
 
 /** Eine bevorstehende Wartung erscheint ab dieser Zeit vor ihrem Beginn. */
 export const MAINTENANCE_NOTICE_LEAD_MS = 24 * 3600_000
@@ -67,6 +68,30 @@ export function maintenanceNoticeFor(
     return a.start - b.start
   })
   return candidates[0] ?? null
+}
+
+/**
+ * Hinweistext zum Dienst („Wartung bis …“, „Wartung, eingeschränkt verfügbar“), `undefined` ohne Wartung.
+ * Klassische Dienstliste und Lagebild nutzen dieselbe Funktion.
+ */
+export function maintenanceNoticeTextFor(
+  maintenances: NoticeMaintenance[],
+  serviceId: string,
+  now: number,
+  dt: DateTimeConfig,
+  { t, tf }: { t: Translate; tf: TranslateFormat },
+): string | undefined {
+  const notice = maintenanceNoticeFor(maintenances, serviceId, now)
+  if (!notice) return undefined
+  const start = formatDateTime(new Date(notice.start), dt)
+  const end = notice.end === null ? null : formatDateTime(new Date(notice.end), dt)
+  if (notice.kind === 'running') {
+    if (notice.affectsService) {
+      return end === null ? t('maintenance.noticeRunningOpenLimited') : tf('maintenance.noticeRunningLimited', { end })
+    }
+    return end === null ? t('maintenance.noticeRunningOpen') : tf('maintenance.noticeRunning', { end })
+  }
+  return end === null ? tf('maintenance.noticeSoonOpen', { start }) : tf('maintenance.noticeSoon', { start, end })
 }
 
 /** Wartung als Eingabe der Anzeige. Die Dienste kommen als Ids, auch wenn Payload sie schon als Objekte liefert. */

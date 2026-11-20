@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test'
 import {
   createIncident,
+  createMaintenance,
   createService,
   createServiceGroup,
   getService,
@@ -321,4 +322,48 @@ test.describe('Lagebild', { tag: ['@public', '@lagebild'] }, () => {
     })
     expect((await getService(service.id)).status).toBe('operational')
   })
+  // Laufende Wartung in der Dienstzeile (Issue #229), beide Darstellungen, hell und dunkel.
+  // Die Testumgebung läuft auf Englisch („Maintenance until …“).
+  for (const variant of ['a', 'b'] as const) {
+    for (const scheme of ['light', 'dark'] as const) {
+      test(`Variante ${variant}, ${scheme}: laufende Wartung steht in der Dienstzeile, mit und ohne Auswirkung`, async ({ page }) => {
+        const id = Date.now()
+        const hour = 3600_000
+        const group = await createServiceGroup({ name: `Wartung Lagebild ${variant} ${scheme} ${id}`, icon: 'Server' })
+        const plain = await createService({ name: `Ohne Auswirkung ${id}`, group: group.id })
+        const limited = await createService({ name: `Mit Auswirkung ${id}`, group: group.id })
+        const quiet = await createService({ name: `Ohne Wartung ${id}`, group: group.id })
+        for (const [service, affectsService] of [[plain, false], [limited, true]] as const) {
+          await createMaintenance({
+            title: `Lagebild-Wartung ${service.name}`,
+            status: 'in_progress',
+            affectsService,
+            scheduledStartAt: new Date(Date.now() - hour).toISOString(),
+            scheduledEndAt: new Date(Date.now() + hour).toISOString(),
+            affectedServices: [service.id],
+          })
+        }
+        await page.emulateMedia({ colorScheme: scheme })
+        await updateSettings({ lagebildVariant: variant })
+
+        await page.goto('/')
+        const view = page.getByTestId(`lagebild-${variant}`)
+        const tile = view.locator('button[aria-expanded]', { hasText: group.name })
+        await expect(tile).toBeVisible()
+        // erst nach der Hydrierung klicken
+        await expect.poll(() => tile.evaluate((el) => Object.keys(el).some((key) => key.startsWith('__reactProps')))).toBe(true)
+        await tile.click()
+        const panel = page.getByTestId(`lagebild-panel-${group.id}`)
+        await expect(panel).toBeVisible()
+
+        const row = (name: string) => panel.locator('li').filter({ hasText: name })
+        await expect(row(plain.name).getByTestId('service-maintenance')).toContainText(/^Maintenance until /)
+        await expect(row(plain.name).getByTestId('service-maintenance')).not.toContainText('restricted')
+        await expect(row(limited.name).getByTestId('service-maintenance')).toContainText(/Maintenance until .+, restricted availability/)
+        await expect(row(quiet.name).getByTestId('service-maintenance')).toHaveCount(0)
+        // der Zustand bleibt unverändert
+        await expect(row(limited.name)).toContainText(/Operational|Betriebsbereit/)
+      })
+    }
+  }
 })

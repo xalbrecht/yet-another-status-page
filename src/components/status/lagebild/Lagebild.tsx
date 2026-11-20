@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { ChevronDown, LayoutGrid } from 'lucide-react'
+import { ChevronDown, LayoutGrid, Wrench } from 'lucide-react'
 import { Fragment, useEffect, useId, useLayoutEffect, useRef, useState, useTransition, type ReactNode } from 'react'
 import {
   BAR_HOURS_OPTIONS,
@@ -56,18 +56,20 @@ type Props = {
   defaultPeriodDays: PeriodDays
   /** Vorgabe des Admins für den Zeitraum des Balkens */
   defaultBarHours: BarHours
+  /** Hinweis zu laufender oder bevorstehender Wartung je Dienst-Id. Kommt nicht aus dem Zwischenspeicher, sondern je Aufruf. */
+  maintenanceNotices?: Record<string, string>
 }
 
 /** Lagebild je Dienstgruppe: Kacheln mit aufklappbaren Diensten, Einschränkungen der gewählten Rückschau. */
-export function Lagebild({ variant, data, initialGroup, defaultPeriodDays, defaultBarHours }: Props) {
+export function Lagebild({ variant, data, initialGroup, defaultPeriodDays, defaultBarHours, maintenanceNotices = {} }: Props) {
   const { t } = useTranslation()
   if (data.groups.length === 0) return null
 
   if (variant === 'both') {
     return (
       <div className="space-y-12">
-        <LagebildView variant="a" data={data} initialGroup={initialGroup} defaultPeriodDays={defaultPeriodDays} defaultBarHours={defaultBarHours} syncUrl={false} caption={t('lagebild.variantA')} />
-        <LagebildView variant="b" data={data} initialGroup={initialGroup} defaultPeriodDays={defaultPeriodDays} defaultBarHours={defaultBarHours} syncUrl={false} caption={t('lagebild.variantB')} />
+        <LagebildView variant="a" data={data} initialGroup={initialGroup} defaultPeriodDays={defaultPeriodDays} defaultBarHours={defaultBarHours} maintenanceNotices={maintenanceNotices} syncUrl={false} caption={t('lagebild.variantA')} />
+        <LagebildView variant="b" data={data} initialGroup={initialGroup} defaultPeriodDays={defaultPeriodDays} defaultBarHours={defaultBarHours} maintenanceNotices={maintenanceNotices} syncUrl={false} caption={t('lagebild.variantB')} />
       </div>
     )
   }
@@ -79,6 +81,7 @@ export function Lagebild({ variant, data, initialGroup, defaultPeriodDays, defau
       initialGroup={initialGroup}
       defaultPeriodDays={defaultPeriodDays}
       defaultBarHours={defaultBarHours}
+      maintenanceNotices={maintenanceNotices}
       syncUrl
     />
   )
@@ -90,6 +93,7 @@ function LagebildView({
   initialGroup,
   defaultPeriodDays,
   defaultBarHours,
+  maintenanceNotices,
   syncUrl,
   caption,
 }: {
@@ -98,6 +102,7 @@ function LagebildView({
   initialGroup: string | null
   defaultPeriodDays: PeriodDays
   defaultBarHours: BarHours
+  maintenanceNotices: Record<string, string>
   syncUrl: boolean
   caption?: string
 }) {
@@ -229,6 +234,7 @@ function LagebildView({
               {panelGroup && (
                 <ServicePanel
                   group={panelGroup}
+                  maintenanceNotices={maintenanceNotices}
                   periodDays={data.periodDays}
                   caretPercent={caretPosition(selectedIndex, columns)}
                   bar={data.bar}
@@ -451,6 +457,7 @@ function TileA({ tile, active, onSelect, wide = false }: { tile: TileModel; acti
 /** Dienste einer Gruppe: Balken der letzten 12 Stunden und Verfügbarkeit im gewählten Zeitraum. */
 function ServicePanel({
   group,
+  maintenanceNotices,
   periodDays,
   caretPercent,
   bar,
@@ -459,6 +466,7 @@ function ServicePanel({
   onClose,
 }: {
   group: LagebildGroup
+  maintenanceNotices: Record<string, string>
   periodDays: PeriodDays
   caretPercent: number
   bar: LagebildData['bar']
@@ -527,6 +535,15 @@ function ServicePanel({
                 <span className={cn('block text-xs font-semibold', statusText[service.status])}>
                   {statusLabel(service.status, t)}
                 </span>
+                {maintenanceNotices[service.id] && (
+                  <span
+                    data-testid="service-maintenance"
+                    className="mt-0.5 flex items-start gap-1 text-xs text-status-maintenance"
+                  >
+                    <Wrench className="mt-0.5 h-3 w-3 shrink-0" aria-hidden="true" />
+                    <span className="min-w-0 break-words">{maintenanceNotices[service.id]}</span>
+                  </span>
+                )}
               </span>
               <span className="order-last col-span-2 sm:order-none sm:col-span-1">
                 <StatusBar

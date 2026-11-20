@@ -29,18 +29,6 @@ function firstUpdateTexts(updates: unknown): Pick<DeferredNotification, 'message
   return { message: first.message, smsBody: first.smsBody ?? undefined, ntfyBody: first.ntfyBody ?? undefined }
 }
 
-// Entwurf nach dem Ende der Transaktion anlegen, auf einer frischen Payload-Instanz
-async function createMaintenanceNotificationDeferred(data: DeferredNotification) {
-  try {
-    const { getPayload } = await import('payload')
-    const config = (await import('@payload-config')).default
-    const payload = await getPayload({ config })
-    return await createMaintenanceNotification(payload, data)
-  } catch (error) {
-    console.error('[Maintenances] Failed to create notification:', error)
-  }
-}
-
 export const Maintenances: CollectionConfig = {
   slug: 'maintenances',
   labels: { singular: ta('Maintenance'), plural: ta('Maintenances') },
@@ -400,7 +388,7 @@ export const Maintenances: CollectionConfig = {
         const endTimeStr = formatScheduleTime(doc.scheduledEndAt, settings)
 
         // Auto-create notification on new maintenance creation
-        // Use setImmediate to defer until after the current transaction commits
+        // Der Entwurf entsteht in derselben Transaktion (req): Payload kennt keinen Hook nach dem Commit (#231)
         if (operation === 'create') {
           // Beim Anlegen zählt auch der Haken der ersten Aktualisierung: Ihr Text gelangt sonst in einen Entwurf, den niemand wollte
           const firstUpdate = Array.isArray(doc.updates) ? (doc.updates[0] as { createNotificationDraft?: boolean | null } | undefined) : undefined
@@ -419,10 +407,8 @@ export const Maintenances: CollectionConfig = {
             ...firstUpdateTexts(doc.updates),
           }
           
-          // Defer execution to after transaction commits
-          setImmediate(() => {
-            createMaintenanceNotificationDeferred(notificationData).catch(console.error)
-          })
+          // In derselben Transaktion anlegen (#231)
+          await createMaintenanceNotification(req.payload, notificationData, req)
           return doc
         }
 
@@ -451,10 +437,8 @@ export const Maintenances: CollectionConfig = {
               ntfyBody: update.ntfyBody ?? undefined,
             }
             
-            // Defer execution to after transaction commits
-            setImmediate(() => {
-              createMaintenanceNotificationDeferred(notificationData).catch(console.error)
-            })
+            // In derselben Transaktion anlegen (#231)
+            await createMaintenanceNotification(req.payload, notificationData, req)
           }
         }
 

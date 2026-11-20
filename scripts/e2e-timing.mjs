@@ -1,3 +1,4 @@
+// Probe für #212 (Testauswahl ohne passenden Test), nicht mergen
 // Fasst die Laufzeit einer E2E-Suite aus dem JSON-Bericht von Playwright zusammen (Markdown auf stdout).
 // Aufruf: node scripts/e2e-timing.mjs [test-results/results.json] [Anzahl der langsamsten Tests]
 import { readFileSync } from 'node:fs'

@@ -248,6 +248,10 @@ export interface Service {
    */
   status: 'operational' | 'degraded' | 'partial' | 'major' | 'maintenance';
   /**
+   * Remembered when an incident first covers the service. The service can return to it when the last open incident ends
+   */
+  statusBeforeIncident?: ('operational' | 'degraded' | 'partial' | 'major') | null;
+  /**
    * First day the service is operated. Before this day it does not appear on the status page
    */
   startsAt: string;
@@ -850,6 +854,7 @@ export interface ServicesSelect<T extends boolean = true> {
   description?: T;
   group?: T;
   status?: T;
+  statusBeforeIncident?: T;
   startsAt?: T;
   endsAt?: T;
   availabilityTarget?: T;

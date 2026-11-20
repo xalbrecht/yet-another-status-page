@@ -664,6 +664,8 @@
     "Maintenance type": "Art der Wartung",
     "Affects the service": "Auswirkung auf den Dienst",
     "Create notification draft": "Meldungsentwurf anlegen",
+    "Status before the incident": "Zustand vor dem Vorfall",
+    "Remembered when an incident first covers the service. The service can return to it when the last open incident ends": "Wird gemerkt, wenn ein Vorfall den Dienst erstmals erfasst. Der Dienst kann dorthin zurückkehren, wenn der letzte offene Vorfall endet.",
     "Select to create a notification draft when saving and when the schedule starts or completes the maintenance. Clear it when entering a maintenance afterwards, so that nothing is announced.": "Anhaken, damit beim Speichern und beim automatischen Beginn und Ende nach dem Zeitplan ein Meldungsentwurf entsteht. Abwählen, wenn eine Wartung nachträglich eingetragen wird, damit nichts gemeldet wird.",
     "Select to create a notification draft for this update. Clear it when entering an update afterwards.": "Anhaken, damit für diese Aktualisierung ein Meldungsentwurf entsteht. Abwählen, wenn eine Aktualisierung nachträglich eingetragen wird.",
     "Clear it when entering an event afterwards, so that no draft is created.": "Abwählen, wenn ein Ereignis nachträglich eingetragen wird: Dann entsteht kein Entwurf.",

@@ -41,6 +41,13 @@ test('merkt „Wartung“ nie und lässt sie nach dem Vorfall bestehen', () => {
   })
 })
 
+test('Rückkehr überschreibt eine von Hand gesetzte „Wartung“ nicht (Review-Befund)', () => {
+  assert.deepEqual(decideServiceState({ ...base, current: 'maintenance', remembered: 'degraded', restore: true }), {
+    target: 'maintenance',
+    remember: null,
+  })
+})
+
 test('zweiter offener Vorfall behält das Merkfeld und überschreibt es nicht', () => {
   assert.deepEqual(
     decideServiceState({ ...base, current: 'partial', remembered: 'degraded', worstOpenImpact: 'major', otherOpenIncidentsCoverService: true }),

@@ -65,8 +65,10 @@ export function decideServiceState(input: {
       current !== 'maintenance'
     return { target: worstOpenImpact, remember: mayRemember ? current : (remembered ?? null) }
   }
+  // „Wartung“ bleibt Wartung, auch wenn die Rückkehr gewählt ist (der Dienst wurde während des Vorfalls auf Wartung gesetzt)
+  if (current === 'maintenance') return { target: 'maintenance', remember: null }
   if (input.restore && remembered) return { target: remembered, remember: null }
-  return { target: current === 'maintenance' ? 'maintenance' : 'operational', remember: null }
+  return { target: 'operational', remember: null }
 }
 
 /**

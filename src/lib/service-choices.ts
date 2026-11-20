@@ -34,3 +34,20 @@ export function buildChoiceRows(
   }
   return rows
 }
+
+/**
+ * Gilt die Auswahl in diesem Formular? Nur bei einer neuen Behebung: Die letzte Aktualisierung ist „Behoben“ und war es beim
+ * Laden nicht (neue Zeile oder geänderter Status). Ein alter, behobener Vorfall, den man nur öffnet, bleibt unberührt, sonst
+ * gälte das Formular als geändert und die gespeicherte Wahl ginge beim Speichern verloren.
+ */
+export function choicesApply(lastStatus: string | undefined, lastInitialStatus: string | undefined): boolean {
+  return lastStatus === 'resolved' && lastInitialStatus !== 'resolved'
+}
+
+/** Dienste, die ein weiterer offener Vorfall erfasst, erhalten keine Zeile: Die Wahl wirkt erst beim Ende des letzten Vorfalls. */
+export function withoutBlocked(
+  remembered: Record<string, RememberableStatus | null | undefined>,
+  blocked: Set<string>,
+): Record<string, RememberableStatus | null | undefined> {
+  return Object.fromEntries(Object.entries(remembered).map(([id, status]) => [id, blocked.has(id) ? null : status]))
+}

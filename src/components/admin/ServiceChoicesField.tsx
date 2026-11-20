@@ -1,14 +1,14 @@
 'use client'
 
 import React, { useEffect, useMemo, useState } from 'react'
-import { useAllFormFields, useForm } from '@payloadcms/ui'
+import { useAllFormFields, useDocumentInfo, useForm } from '@payloadcms/ui'
 import type { ArrayFieldClientComponent } from 'payload'
-import { buildChoiceRows } from '@/lib/service-choices'
+import { buildChoiceRows, choicesApply, withoutBlocked } from '@/lib/service-choices'
 import type { RememberableStatus } from '@/lib/service-status-sync'
 import { ServiceChoicesView, type ServiceChoiceItem } from './ServiceChoicesView'
 import './ServiceChoicesField.scss'
 
-type Known = { name: string; remembered: RememberableStatus | null }
+type Known = { name: string; remembered: RememberableStatus | null; blocked: boolean }
 
 const idOf = (value: unknown): number | string | null => {
   if (value === null || value === undefined) return null
@@ -24,6 +24,7 @@ const idOf = (value: unknown): number | string | null => {
 export const ServiceChoicesField: ArrayFieldClientComponent = ({ path, schemaPath }) => {
   const [fields] = useAllFormFields()
   const { addFieldRow, removeFieldRow, dispatchFields } = useForm()
+  const { id: incidentId } = useDocumentInfo()
   const [known, setKnown] = useState<Record<string, Known> | null>(null)
 
   const affectedValue = fields.affectedServices?.value
@@ -37,13 +38,25 @@ export const ServiceChoicesField: ArrayFieldClientComponent = ({ path, schemaPat
       return
     }
     let cancelled = false
-    const query = `where[id][in]=${affected.map(encodeURIComponent).join(',')}&depth=0&limit=${affected.length}`
-    fetch(`/api/services?${query}`, { credentials: 'include' })
+    const ids = affected.map(encodeURIComponent).join(',')
+    const services = fetch(`/api/services?where[id][in]=${ids}&depth=0&limit=${affected.length}`, { credentials: 'include' })
       .then((response) => (response.ok ? response.json() : { docs: [] }))
-      .then((body: { docs?: Array<{ id: number | string; name: string; statusBeforeIncident?: RememberableStatus | null }> }) => {
+    // Weitere offene Vorfälle an denselben Diensten: Die Wahl wirkt erst beim Ende des letzten
+    const others = fetch(
+      `/api/incidents?where[status][not_equals]=resolved&where[affectedServices][in]=${ids}${incidentId ? `&where[id][not_equals]=${incidentId}` : ''}&depth=0&limit=200`,
+      { credentials: 'include' },
+    ).then((response) => (response.ok ? response.json() : { docs: [] }))
+    Promise.all([services, others])
+      .then(([serviceBody, incidentBody]: [
+        { docs?: Array<{ id: number | string; name: string; statusBeforeIncident?: RememberableStatus | null }> },
+        { docs?: Array<{ affectedServices?: unknown[] }> },
+      ]) => {
         if (cancelled) return
+        const blocked = new Set<string>()
+        for (const incident of incidentBody.docs ?? []) for (const entry of incident.affectedServices ?? []) blocked.add(String(idOf(entry)))
         const next: Record<string, Known> = {}
-        for (const doc of body.docs ?? []) next[String(doc.id)] = { name: doc.name, remembered: doc.statusBeforeIncident ?? null }
+        for (const doc of serviceBody.docs ?? [])
+          next[String(doc.id)] = { name: doc.name, remembered: doc.statusBeforeIncident ?? null, blocked: blocked.has(String(doc.id)) }
         setKnown(next)
       })
       .catch(() => !cancelled && setKnown({}))
@@ -52,7 +65,13 @@ export const ServiceChoicesField: ArrayFieldClientComponent = ({ path, schemaPat
     }
     // affectedKey bildet die Liste der IDs ab
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [affectedKey])
+  }, [affectedKey, incidentId])
+
+  // Nur bei einer neuen Behebung gilt die Auswahl (siehe choicesApply)
+  const updateRows = fields.updates?.rows?.length ?? 0
+  const lastStatus = updateRows > 0 ? (fields[`updates.${updateRows - 1}.status`]?.value as string | undefined) : undefined
+  const lastInitialStatus = updateRows > 0 ? (fields[`updates.${updateRows - 1}.status`]?.initialValue as string | undefined) : undefined
+  const applies = choicesApply(lastStatus, lastInitialStatus)
 
   const rowCount = fields[path]?.rows?.length ?? 0
   const existing = Array.from({ length: rowCount }, (_, index) => ({
@@ -63,8 +82,11 @@ export const ServiceChoicesField: ArrayFieldClientComponent = ({ path, schemaPat
 
   // Zeilen mit den Diensten abgleichen: überzählige entfernen, fehlende vorbelegt anlegen
   useEffect(() => {
-    if (!known) return
-    const remembered = Object.fromEntries(Object.entries(known).map(([id, value]) => [id, value.remembered]))
+    if (!known || !applies) return
+    const remembered = withoutBlocked(
+      Object.fromEntries(Object.entries(known).map(([id, value]) => [id, value.remembered])),
+      new Set(Object.entries(known).filter(([, value]) => value.blocked).map(([id]) => id)),
+    )
     const desired = buildChoiceRows(affected, remembered, existing)
     const desiredIds = desired.map((row) => String(row.service))
     const keep = new Set<string>()
@@ -91,12 +113,12 @@ export const ServiceChoicesField: ArrayFieldClientComponent = ({ path, schemaPat
     }
     // existingKey und affectedKey bilden die Eingaben ab
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [known, existingKey, affectedKey])
+  }, [known, applies, existingKey, affectedKey])
 
   const items: ServiceChoiceItem[] = existing.flatMap((row) => {
     const id = idOf(row.service)
     const info = id === null ? undefined : known?.[String(id)]
-    return id !== null && info?.remembered ? [{ id, name: info.name, remembered: info.remembered, restore: row.restore !== false }] : []
+    return applies && id !== null && info?.remembered && !info.blocked ? [{ id, name: info.name, remembered: info.remembered, restore: row.restore !== false }] : []
   })
 
   return (

@@ -311,6 +311,37 @@ export const Incidents: CollectionConfig = {
         },
       ],
     },
+    {
+      // Auswahl je Dienst beim Beenden des letzten offenen Vorfalls (Issue #210): zurück in den Zustand vor dem Vorfall oder
+      // „Betriebsbereit“. Die Admin-Komponente legt die Zeilen vorbelegt an. Ohne Zeile gilt „Betriebsbereit“.
+      name: 'serviceChoices',
+      type: 'array',
+      label: ta('Services after the resolution'),
+      labels: { singular: ta('Service'), plural: ta('Services') },
+      access: { read: authenticatedOrTestWriteField, create: authenticatedOrTestWriteField, update: authenticatedOrTestWriteField },
+      admin: {
+        condition: (data) => {
+          const updates = (data?.updates ?? []) as Array<{ status?: string }>
+          return updates[updates.length - 1]?.status === 'resolved'
+        },
+        components: { Field: '@/components/admin/ServiceChoicesField#ServiceChoicesField' },
+      },
+      fields: [
+        {
+          name: 'service',
+          type: 'relationship',
+          relationTo: 'services',
+          // Nicht Pflicht: Der Fremdschlüssel steht auf „ON DELETE SET NULL“ und eine Pflichtspalte würde das Löschen des Dienstes scheitern lassen
+          label: ta('Service'),
+        },
+        {
+          name: 'restore',
+          type: 'checkbox',
+          defaultValue: true,
+          label: ta('Return to the status before the incident'),
+        },
+      ],
+    },
   ],
   hooks: {
     afterDelete: [
@@ -323,7 +354,7 @@ export const Incidents: CollectionConfig = {
         // Die Umwandlung in Wartungen löscht gelöste Störungen, ohne Zustände von Hand zurückzusetzen
         if (req.context?.skipServiceSync) return
         // Gelöschte Störung gibt die Dienste wieder frei
-        await syncServiceStatusesFromIncidents(req.payload, uniqueServiceIds(doc.affectedServices), req)
+        await syncServiceStatusesFromIncidents(req.payload, uniqueServiceIds(doc.affectedServices), req, { incidentId: doc.id })
       },
     ],
     beforeChange: [
@@ -356,6 +387,9 @@ export const Incidents: CollectionConfig = {
           const latestUpdate = updates[updates.length - 1]
           data.status = latestUpdate.status || 'investigating'
           
+          // Die Auswahl je Dienst gilt nur für die Behebung. Nach einer Wiederöffnung gelten alte Zeilen nicht mehr.
+          if (latestUpdate.status !== 'resolved') data.serviceChoices = []
+
           // Set resolvedAt if status is resolved
           if (latestUpdate.status === 'resolved') {
             data.resolvedAt = latestUpdate.createdAt || new Date().toISOString()
@@ -380,6 +414,12 @@ export const Incidents: CollectionConfig = {
           req.payload,
           uniqueServiceIds(doc.affectedServices, previousDoc?.affectedServices),
           req,
+          {
+            incidentId: doc.id,
+            // Vor der Änderung offen? Dann gehört der Dienstzustand schon zu diesem Vorfall (Merkfeld nicht nachtragen).
+            previouslyOpenServiceIds: previousDoc && previousDoc.status !== 'resolved' ? uniqueServiceIds(previousDoc.affectedServices) : [],
+            choices: doc.serviceChoices,
+          },
         )
         return doc
       },

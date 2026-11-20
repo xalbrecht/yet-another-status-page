@@ -2,6 +2,7 @@ import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import type { Payload } from 'payload'
 import { decideServiceState, syncServiceStatusesFromIncidents } from '@/lib/service-status-sync'
+import { Incidents } from '@/collections/Incidents'
 
 // Issue #210: Der Dienst merkt sich den Zustand vor dem ersten Vorfall und kehrt beim Ende des letzten offenen Vorfalls
 // auf Wunsch dorthin zurück.
@@ -141,4 +142,81 @@ test('aus dem Vorfall entfernter Dienst ohne Zeile in serviceChoices: betriebsbe
   const { payload, updates } = fakePayload({ id: 2, status: 'major', statusBeforeIncident: 'degraded' }, [])
   await syncServiceStatusesFromIncidents(payload, [2], undefined, { incidentId: 9, previouslyOpenServiceIds: [2], choices: [{ service: 1, restore: true }] })
   assert.deepEqual(updates, [{ collection: 'services', id: 2, data: { status: 'operational', statusBeforeIncident: null } }])
+})
+
+// Verdrahtung in der Collection „Störungen“
+
+type Hook = (args: Record<string, unknown>) => Promise<unknown> | unknown
+
+async function runHooks(hooks: unknown[] | undefined, args: Record<string, unknown>) {
+  for (const hook of (hooks ?? []) as Hook[]) await hook(args)
+}
+
+const hookRequest = (payload: Payload) => ({ payload, context: { skipNotificationCreation: true } })
+
+test('afterChange gibt Vorfall, frühere Dienste und Auswahl an die Berechnung: Behebung kehrt zurück', async () => {
+  const { payload, updates } = fakePayload({ id: 1, status: 'partial', statusBeforeIncident: 'degraded' }, [])
+  await runHooks(Incidents.hooks?.afterChange, {
+    doc: { id: 9, status: 'resolved', affectedServices: [1], serviceChoices: [{ service: 1, restore: true }] },
+    previousDoc: { id: 9, status: 'investigating', affectedServices: [1] },
+    operation: 'update',
+    req: hookRequest(payload),
+  })
+  assert.deepEqual(updates, [{ collection: 'services', id: 1, data: { status: 'degraded', statusBeforeIncident: null } }])
+})
+
+test('afterChange: neuer Vorfall merkt den Zustand (previousDoc leer)', async () => {
+  const { payload, updates } = fakePayload({ id: 1, status: 'degraded', statusBeforeIncident: null }, [{ id: 9, impact: 'partial' }])
+  await runHooks(Incidents.hooks?.afterChange, {
+    doc: { id: 9, status: 'investigating', impact: 'partial', affectedServices: [1] },
+    previousDoc: {},
+    operation: 'create',
+    req: hookRequest(payload),
+  })
+  assert.deepEqual(updates, [{ collection: 'services', id: 1, data: { status: 'partial', statusBeforeIncident: 'degraded' } }])
+})
+
+test('afterChange: wieder geöffneter Vorfall merkt den Zustand erneut', async () => {
+  const { payload, updates } = fakePayload({ id: 1, status: 'major', statusBeforeIncident: null }, [{ id: 9, impact: 'partial' }])
+  await runHooks(Incidents.hooks?.afterChange, {
+    doc: { id: 9, status: 'investigating', affectedServices: [1] },
+    previousDoc: { id: 9, status: 'resolved', affectedServices: [1] },
+    operation: 'update',
+    req: hookRequest(payload),
+  })
+  assert.deepEqual(updates, [{ collection: 'services', id: 1, data: { status: 'partial', statusBeforeIncident: 'major' } }])
+})
+
+test('afterChange: offener Vorfall aus der Zeit vor dem Merkfeld wird bei neuer Aktualisierung nicht nachgemerkt', async () => {
+  const { payload, updates } = fakePayload({ id: 1, status: 'partial', statusBeforeIncident: null }, [{ id: 9, impact: 'partial' }])
+  await runHooks(Incidents.hooks?.afterChange, {
+    doc: { id: 9, status: 'monitoring', impact: 'partial', affectedServices: [1] },
+    previousDoc: { id: 9, status: 'investigating', affectedServices: [1] },
+    operation: 'update',
+    req: hookRequest(payload),
+  })
+  assert.deepEqual(updates, [])
+})
+
+test('afterDelete: gelöschter Vorfall setzt betriebsbereit und leert das Merkfeld', async () => {
+  const { payload, updates } = fakePayload({ id: 1, status: 'partial', statusBeforeIncident: 'degraded' }, [])
+  await runHooks(Incidents.hooks?.afterDelete, { doc: { id: 9, affectedServices: [1] }, req: hookRequest(payload) })
+  assert.deepEqual(updates, [{ collection: 'services', id: 1, data: { status: 'operational', statusBeforeIncident: null } }])
+})
+
+test('beforeChange leert serviceChoices, wenn die letzte Aktualisierung nicht „Behoben“ ist', async () => {
+  const [hook] = (Incidents.hooks?.beforeChange ?? []) as Hook[]
+  const choices = [{ service: 1, restore: false }]
+  const reopened = (await hook({
+    data: { updates: [{ status: 'resolved' }, { status: 'monitoring' }], serviceChoices: choices },
+    operation: 'update',
+    originalDoc: { shortId: 'abc' },
+  })) as Record<string, unknown>
+  assert.deepEqual(reopened.serviceChoices, [])
+  const resolved = (await hook({
+    data: { updates: [{ status: 'investigating' }, { status: 'resolved' }], serviceChoices: choices },
+    operation: 'update',
+    originalDoc: { shortId: 'abc' },
+  })) as Record<string, unknown>
+  assert.deepEqual(resolved.serviceChoices, choices)
 })

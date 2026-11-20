@@ -336,6 +336,13 @@ export interface Incident {
     ntfyBody?: string | null;
     id?: string | null;
   }[];
+  serviceChoices?:
+    | {
+        service?: (number | null) | Service;
+        restore?: boolean | null;
+        id?: string | null;
+      }[]
+    | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -894,6 +901,13 @@ export interface IncidentsSelect<T extends boolean = true> {
         createNotificationDraft?: T;
         smsBody?: T;
         ntfyBody?: T;
+        id?: T;
+      };
+  serviceChoices?:
+    | T
+    | {
+        service?: T;
+        restore?: T;
         id?: T;
       };
   updatedAt?: T;

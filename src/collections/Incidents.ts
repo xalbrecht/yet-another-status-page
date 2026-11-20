@@ -1,4 +1,4 @@
-import type { CollectionConfig } from 'payload'
+import type { CollectionConfig, Payload, PayloadRequest } from 'payload'
 import { translatorsFor } from '@/lib/i18n/translators'
 import { generateShortId } from '@/lib/shortId'
 import { authenticatedOrTestWriteField, standardAccess } from '@/lib/access'
@@ -38,80 +38,74 @@ function interpolateTemplate(template: string, vars: Record<string, string>): st
   return template.replace(/\{\{(\w+)\}\}/g, (_, key) => vars[key] || '')
 }
 
-// Helper to create notification drafts for incidents (deferred execution)
-async function createIncidentNotificationDeferred(data: DeferredNotification) {
-  try {
-    // Import payload dynamically to get a fresh instance outside the transaction
-    const { getPayload } = await import('payload')
-    const config = (await import('@payload-config')).default
-    const payload = await getPayload({ config })
-    
-    // Fetch settings
-    const settings = await payload.findGlobal({ slug: 'settings' })
-    const smsSettings = await payload.findGlobal({ slug: 'sms-settings' })
-    const { t } = translatorsFor()
-    const siteName = settings.siteName || 'Status'
-    const siteUrl = getServerUrl()
-    
-    // Get max lengths from SMS settings
-    const titleMaxLength = smsSettings.templateTitleMaxLength || 50
-    const messageMaxLength = smsSettings.templateMessageMaxLength || 100
-    
-    // Truncate title and message for SMS
-    const truncatedTitle = data.title.length > titleMaxLength
-      ? data.title.substring(0, titleMaxLength - 3) + '...'
-      : data.title
-    
-    const truncatedMessage = data.message.length > messageMaxLength 
-      ? data.message.substring(0, messageMaxLength - 3) + '...' 
-      : data.message
-    
-    const url = `${siteUrl}/i/${data.shortId}`
-    
-    const templateVars = {
-      siteName,
-      title: truncatedTitle,
-      status: data.statusLabel,
-      message: truncatedMessage,
-      url,
-    }
-    
-    let smsBody: string
-    let emailBody: string
-    
-    if (data.isInitial) {
-      // Initial incident notification (from first update)
-      const template = smsSettings.templateIncidentNew || t('notif.smsIncidentNew')
-      smsBody = interpolateTemplate(template, templateVars)
-      emailBody = `${t('notif.incidentNew')}\n\n${t('notif.status')}: ${data.statusLabel}\n\n${data.message}\n\n${t('notif.viewDetails')}: ${url}`
-    } else {
-      // Subsequent update notification
-      const template = smsSettings.templateIncidentUpdate || t('notif.smsIncidentUpdate')
-      smsBody = interpolateTemplate(template, templateVars)
-      emailBody = `${t('notif.status')}: ${data.statusLabel}\n\n${data.message}\n\n${t('notif.viewDetails')}: ${url}`
-    }
-    
-    // Ein eigener Text der Aktualisierung (aus einer Vorlage) ersetzt den allgemeinen SMS-Text aus den Einstellungen
-    const ownSms = data.smsBody?.trim()
-    const ownNtfy = data.ntfyBody?.trim()
-    const notification = await payload.create({
-      collection: 'notifications',
-      data: {
-        title: data.isInitial ? `[${t('notif.newIncident')}] ${data.title}` : `[${data.statusLabel}] ${data.title}`,
-        relatedIncident: typeof data.docId === 'string' ? parseInt(data.docId, 10) : data.docId,
-        updateIndex: data.updateIndex,
-        channel: 'both',
-        status: 'draft',
-        subject: `[${data.statusLabel}] ${data.title}`,
-        emailBody,
-        smsBody: ownSms || smsBody,
-        ...(ownNtfy ? { ntfyBody: ownNtfy } : {}),
-      },
-    })
-    return notification
-  } catch (error) {
-    console.error('[Incidents] Failed to create notification:', error)
+// Entwurf zur Störung in derselben Transaktion anlegen (req). Payload kennt keinen Hook nach dem Commit,
+// und ein Entwurf auf einer zweiten Verbindung sieht die noch offene Störung nicht (#231).
+// Fehler gehen an den Aufrufer: Ein halb gescheiterter Entwurf bricht die Transaktion in Postgres ohnehin ab.
+async function createIncidentNotification(payload: Payload, data: DeferredNotification, req: PayloadRequest) {
+  // Fetch settings
+  const settings = await payload.findGlobal({ slug: 'settings', req })
+  const smsSettings = await payload.findGlobal({ slug: 'sms-settings', req })
+  const { t } = translatorsFor()
+  const siteName = settings.siteName || 'Status'
+  const siteUrl = getServerUrl()
+  
+  // Get max lengths from SMS settings
+  const titleMaxLength = smsSettings.templateTitleMaxLength || 50
+  const messageMaxLength = smsSettings.templateMessageMaxLength || 100
+  
+  // Truncate title and message for SMS
+  const truncatedTitle = data.title.length > titleMaxLength
+    ? data.title.substring(0, titleMaxLength - 3) + '...'
+    : data.title
+  
+  const truncatedMessage = data.message.length > messageMaxLength 
+    ? data.message.substring(0, messageMaxLength - 3) + '...' 
+    : data.message
+  
+  const url = `${siteUrl}/i/${data.shortId}`
+  
+  const templateVars = {
+    siteName,
+    title: truncatedTitle,
+    status: data.statusLabel,
+    message: truncatedMessage,
+    url,
   }
+  
+  let smsBody: string
+  let emailBody: string
+  
+  if (data.isInitial) {
+    // Initial incident notification (from first update)
+    const template = smsSettings.templateIncidentNew || t('notif.smsIncidentNew')
+    smsBody = interpolateTemplate(template, templateVars)
+    emailBody = `${t('notif.incidentNew')}\n\n${t('notif.status')}: ${data.statusLabel}\n\n${data.message}\n\n${t('notif.viewDetails')}: ${url}`
+  } else {
+    // Subsequent update notification
+    const template = smsSettings.templateIncidentUpdate || t('notif.smsIncidentUpdate')
+    smsBody = interpolateTemplate(template, templateVars)
+    emailBody = `${t('notif.status')}: ${data.statusLabel}\n\n${data.message}\n\n${t('notif.viewDetails')}: ${url}`
+  }
+  
+  // Ein eigener Text der Aktualisierung (aus einer Vorlage) ersetzt den allgemeinen SMS-Text aus den Einstellungen
+  const ownSms = data.smsBody?.trim()
+  const ownNtfy = data.ntfyBody?.trim()
+  const notification = await payload.create({
+    collection: 'notifications',
+    req,
+    data: {
+      title: data.isInitial ? `[${t('notif.newIncident')}] ${data.title}` : `[${data.statusLabel}] ${data.title}`,
+      relatedIncident: typeof data.docId === 'string' ? parseInt(data.docId, 10) : data.docId,
+      updateIndex: data.updateIndex,
+      channel: 'both',
+      status: 'draft',
+      subject: `[${data.statusLabel}] ${data.title}`,
+      emailBody,
+      smsBody: ownSms || smsBody,
+      ...(ownNtfy ? { ntfyBody: ownNtfy } : {}),
+    },
+  })
+  return notification
 }
 
 // Helper to get status from the latest update
@@ -427,10 +421,8 @@ export const Incidents: CollectionConfig = {
             ntfyBody: firstUpdate.ntfyBody,
           }
           
-          // Defer execution to after transaction commits
-          setImmediate(() => {
-            createIncidentNotificationDeferred(notificationData).catch(console.error)
-          })
+          // In derselben Transaktion anlegen (#231)
+          await createIncidentNotification(req.payload, notificationData, req)
           return doc
         }
 
@@ -453,10 +445,8 @@ export const Incidents: CollectionConfig = {
               ntfyBody: update.ntfyBody,
             }
             
-            // Defer execution to after transaction commits
-            setImmediate(() => {
-              createIncidentNotificationDeferred(notificationData).catch(console.error)
-            })
+            // In derselben Transaktion anlegen (#231)
+            await createIncidentNotification(req.payload, notificationData, req)
           }
         }
 

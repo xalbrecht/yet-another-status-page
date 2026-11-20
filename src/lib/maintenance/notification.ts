@@ -1,4 +1,4 @@
-import type { Payload } from 'payload'
+import type { Payload, PayloadRequest } from 'payload'
 import { translatorsFor } from '@/lib/i18n/translators'
 import { getServerUrl } from '@/lib/utils'
 import { formatNotificationDateTime, resolveDateTimeConfig } from '@/lib/datetime'
@@ -33,11 +33,11 @@ function interpolateTemplate(template: string, vars: Record<string, string>): st
   return template.replace(/\{\{(\w+)\}\}/g, (_, key) => vars[key] || '')
 }
 
-/** Legt den Benachrichtigungsentwurf zu einer Wartung an (Anlegen oder Aktualisierung) und gibt ihn zurück. */
-export async function createMaintenanceNotification(payload: Payload, data: DeferredNotification) {
+/** Legt den Benachrichtigungsentwurf zu einer Wartung an (Anlegen oder Aktualisierung) und gibt ihn zurück. Mit `req` läuft er in der Transaktion des Aufrufers. */
+export async function createMaintenanceNotification(payload: Payload, data: DeferredNotification, req?: PayloadRequest) {
   // Fetch settings
-  const settings = await payload.findGlobal({ slug: 'settings' })
-  const smsSettings = await payload.findGlobal({ slug: 'sms-settings' })
+  const settings = await payload.findGlobal({ slug: 'settings', req })
+  const smsSettings = await payload.findGlobal({ slug: 'sms-settings', req })
   const { t } = translatorsFor()
   const siteName = settings.siteName || 'Status'
   const siteUrl = getServerUrl()
@@ -95,6 +95,7 @@ export async function createMaintenanceNotification(payload: Payload, data: Defe
 
   const notification = await payload.create({
     collection: 'notifications',
+    req,
     data: {
       title: data.isUpdate ? `[${t('notif.maintTag')} ${data.statusLabel}] ${data.title}` : `[${t('notif.maintScheduledTag')}] ${data.title}`,
       relatedMaintenance: typeof data.docId === 'string' ? parseInt(data.docId, 10) : data.docId,

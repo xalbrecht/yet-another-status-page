@@ -434,6 +434,26 @@ test.describe('Kachel „Alle“', { tag: ['@public', '@statusseite'] }, () => {
     }
   }
 
+  // Die Kachel „Alle“ liegt außerhalb des Rasters: Ihr Tooltip bleibt trotzdem im Fenster (Review zu #235)
+  for (const width of [320, 360]) {
+    test(`${width} Pixel: der Tooltip von „Alle“ bleibt im Fenster und verbreitert die Seite nicht`, async ({ page }) => {
+      await page.setViewportSize({ width, height: 900 })
+      await updateSettings({ lagebildVariant: 'b' })
+      await load(page)
+      await allButton(page).hover()
+      const tip = allTile(page).getByRole('tooltip')
+      await expect(tip).toBeVisible()
+      const box = (await tip.boundingBox())!
+      expect(box.x).toBeGreaterThanOrEqual(0)
+      expect(box.x + box.width).toBeLessThanOrEqual(width)
+      // Unter 360 Pixel sind die Balken (mindestens 2 Pixel je Strich) schon ohne Tooltip breiter als das Fenster
+      if (width >= 360) {
+        const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)
+        expect(overflow).toBeLessThanOrEqual(0)
+      }
+    })
+  }
+
   test('Variante A: der Bereich von „Alle“ steht direkt unter der Zeile, vor der Überschrift „Gruppen“', async ({ page }) => {
     await updateSettings({ lagebildVariant: 'a' })
     await load(page)

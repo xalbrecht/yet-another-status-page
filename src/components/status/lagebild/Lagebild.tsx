@@ -165,7 +165,7 @@ function LagebildView({
   }
 
   return (
-    <section className="animate-fade-in" data-testid={`lagebild-${variant}`}>
+    <section className="animate-fade-in" data-testid={`lagebild-${variant}`} data-lagebild-bounds>
       <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
         <h2 className="text-xl font-bold text-foreground">
           {t('lagebild.title')}
@@ -490,7 +490,7 @@ function ServicePanel({
         <span className={cn('flex h-8 w-8 items-center justify-center rounded-lg', statusSoftBg[group.status])}>
           <GroupIcon name={group.icon} className={cn('h-[18px] w-[18px]', statusText[group.status])} />
         </span>
-        <h3 className="flex-1 text-base font-bold text-foreground">{group.name}</h3>
+        <h4 className="flex-1 text-base font-bold text-foreground">{group.name}</h4>
         <button
           type="button"
           onClick={onClose}

@@ -402,6 +402,70 @@ test.describe('Kachel „Alle“', { tag: ['@public', '@statusseite'] }, () => {
     await expect(page.getByTestId('lagebild-panel-all')).toBeVisible()
     await expect(page).not.toHaveURL(/gruppe=/)
   })
+
+  // „Alle“ steht in eigener Zeile über dem Raster (Issue #235), in beiden Darstellungen, hell und dunkel, breit und schmal
+  for (const variant of ['a', 'b'] as const) {
+    for (const [width, scheme] of [
+      [1280, 'light'],
+      [375, 'dark'],
+    ] as const) {
+      test(`Variante ${variant}, ${width} Pixel, ${scheme}: „Alle“ steht über dem Raster und der Gruppenüberschrift`, async ({ page }) => {
+        await page.setViewportSize({ width, height: 900 })
+        await page.emulateMedia({ colorScheme: scheme })
+        await updateSettings({ lagebildVariant: variant })
+        await load(page)
+        const view = page.getByTestId(`lagebild-${variant}`)
+        const grid = view.locator('[data-lagebild-grid]')
+        const heading = view.getByRole('heading', { name: /^(Gruppen|Groups)$/ })
+        await expect(grid.getByTestId('lagebild-tile-all')).toHaveCount(0)
+        await expect(grid.getByTestId(`lagebild-tile-${groupId}`)).toBeVisible()
+
+        const tile = (await allTile(page).boundingBox())!
+        const line = (await heading.boundingBox())!
+        const first = (await grid.boundingBox())!
+        expect(tile.y + tile.height).toBeLessThanOrEqual(line.y)
+        expect(line.y + line.height).toBeLessThanOrEqual(first.y)
+        // volle Breite: die Zeile reicht so weit wie das Raster
+        expect(tile.width).toBeGreaterThanOrEqual(first.width - 1)
+
+        const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)
+        expect(overflow).toBeLessThanOrEqual(0)
+      })
+    }
+  }
+
+  test('Variante A: der Bereich von „Alle“ steht direkt unter der Zeile, vor der Überschrift „Gruppen“', async ({ page }) => {
+    await updateSettings({ lagebildVariant: 'a' })
+    await load(page)
+    const view = page.getByTestId('lagebild-a')
+    const panel = page.getByTestId('lagebild-panel-all')
+    await expect(panel).toBeVisible()
+    const tile = (await allTile(page).boundingBox())!
+    const area = (await panel.boundingBox())!
+    const line = (await view.getByRole('heading', { name: /^(Gruppen|Groups)$/ }).boundingBox())!
+    expect(area.y).toBeGreaterThanOrEqual(tile.y + tile.height)
+    expect(area.y + area.height).toBeLessThanOrEqual(line.y)
+    await expect(view.locator('[data-lagebild-grid]').getByTestId('lagebild-panel-all')).toHaveCount(0)
+  })
+
+  for (const width of [375, 700, 1280]) {
+    test(`Variante A, ${width} Pixel: der Bereich einer Gruppe steht im Raster unter der Zeile der Gruppe`, async ({ page }) => {
+      await page.setViewportSize({ width, height: 900 })
+      await updateSettings({ lagebildVariant: 'a' })
+      await load(page)
+      const grid = page.getByTestId('lagebild-a').locator('[data-lagebild-grid]')
+      const tile = grid.getByTestId(`lagebild-tile-${groupId}`)
+      await tile.getByRole('button').click()
+      const panel = page.getByTestId(`lagebild-panel-${groupId}`)
+      await expect(panel).toBeVisible()
+      // der Bereich steht im Raster, unter der gewählten Kachel, und „Alle“ bleibt zu
+      await expect(grid.getByTestId(`lagebild-panel-${groupId}`)).toHaveCount(1)
+      await expect(page.getByTestId('lagebild-panel-all')).toHaveCount(0)
+      const box = (await tile.boundingBox())!
+      const area = (await panel.boundingBox())!
+      expect(area.y).toBeGreaterThanOrEqual(box.y + box.height)
+    })
+  }
 })
 
 /**

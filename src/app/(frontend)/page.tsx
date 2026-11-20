@@ -8,7 +8,7 @@ import { cn, getMediaUrl } from '@/lib/utils'
 import { Header } from '@/components/status/Header'
 import { Footer } from '@/components/status/Footer'
 import { translatorsFor } from '@/lib/i18n/server'
-import { countMaintenanceServices, maintenanceBarText, maintenanceNoticeFor, noticeMaintenanceWhere, toNoticeMaintenance } from '@/lib/maintenance-notice'
+import { countMaintenanceServices, maintenanceBarText, maintenanceNoticeTextFor, noticeMaintenanceWhere, toNoticeMaintenance } from '@/lib/maintenance-notice'
 import { Subscribe } from '@/components/status/SubscribeDialog'
 import { LoginButton } from '@/components/status/LoginButton'
 import { StatusBanner } from '@/components/status/StatusBanner'
@@ -93,7 +93,7 @@ async function getStatusData(requestedPeriod: unknown, requestedBar: unknown) {
   })
 
   // Wartungen für die Anzeige am Dienst: noch nicht beendet und in den nächsten 24 Stunden beginnend. Der Status wird beim
-  // Lesen nach Zeitplan umgestellt, deshalb filtert maintenanceNoticeFor noch einmal nach dem gelesenen Status.
+  // Lesen nach Zeitplan umgestellt, deshalb filtert maintenanceNoticeTextFor noch einmal nach dem gelesenen Status.
   const nowMs = Date.now()
   const noticeMaintenances = await payload.find({
     collection: 'maintenances',
@@ -102,18 +102,11 @@ async function getStatusData(requestedPeriod: unknown, requestedBar: unknown) {
     pagination: false,
   })
   const noticeInput = noticeMaintenances.docs.map(toNoticeMaintenance)
-  const noticeText = (serviceId: string): string | undefined => {
-    const notice = maintenanceNoticeFor(noticeInput, serviceId, nowMs)
-    if (!notice) return undefined
-    const start = formatDateTime(new Date(notice.start), dt)
-    const end = notice.end === null ? null : formatDateTime(new Date(notice.end), dt)
-    if (notice.kind === 'running') {
-      if (notice.affectsService) {
-        return end === null ? t('maintenance.noticeRunningOpenLimited') : tf('maintenance.noticeRunningLimited', { end })
-      }
-      return end === null ? t('maintenance.noticeRunningOpen') : tf('maintenance.noticeRunning', { end })
-    }
-    return end === null ? tf('maintenance.noticeSoonOpen', { start }) : tf('maintenance.noticeSoon', { start, end })
+  // Das Lagebild kommt aus dem Zwischenspeicher, der Hinweis nicht: Er wird je Aufruf berechnet und als Zuordnung übergeben.
+  const maintenanceNotices: Record<string, string> = {}
+  for (const service of services.docs) {
+    const text = maintenanceNoticeTextFor(noticeInput, String(service.id), nowMs, dt, { t, tf })
+    if (text) maintenanceNotices[String(service.id)] = text
   }
 
   const incidents = await payload.find({
@@ -141,7 +134,7 @@ async function getStatusData(requestedPeriod: unknown, requestedBar: unknown) {
         name: service.name,
         status: (service.status || 'operational') as ServiceStatus,
         description: service.description || undefined,
-        maintenanceNotice: noticeText(String(service.id)),
+        maintenanceNotice: maintenanceNotices[String(service.id)],
       })),
     }
   }).filter((group) => group.services.length > 0)
@@ -289,6 +282,7 @@ async function getStatusData(requestedPeriod: unknown, requestedBar: unknown) {
     settings,
     overallStatus,
     maintenanceBar,
+    maintenanceNotices,
     serviceGroups: groupedServices,
     maintenances: formattedMaintenances,
     pastIncidents,
@@ -311,6 +305,7 @@ export default async function StatusPage({
     settings,
     overallStatus,
     maintenanceBar,
+    maintenanceNotices,
     serviceGroups,
     maintenances,
     pastIncidents,
@@ -366,6 +361,7 @@ export default async function StatusPage({
                   <Lagebild
                     variant={shownVariant as 'a' | 'b' | 'both'}
                     data={lagebild}
+                    maintenanceNotices={maintenanceNotices}
                     initialGroup={initialGroup}
                     defaultPeriodDays={defaultPeriodDays}
                     defaultBarHours={defaultBarHours}

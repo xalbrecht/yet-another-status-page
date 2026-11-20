@@ -242,7 +242,7 @@
     "statusBoxes.whenRange": "{start} – {end}",
     "statusBoxes.countLabel": "Count:",
     "home.currentIncidents": "Current incidents",
-    "lagebild.allTile": "All",
+    "lagebild.groupsHeading": "Groups",
     "lagebild.groupsOne": "1 group",
     "lagebild.groupsMany": "{count} groups",
     "lagebild.colGroup": "Group",

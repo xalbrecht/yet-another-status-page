@@ -24,6 +24,7 @@ import { AllGroupsPanel } from './AllGroupsPanel'
 import { BarLegend } from './BarLegend'
 import { GroupIcon } from './GroupIcon'
 import { GroupTooltip, useDelayedHover } from './GroupTooltip'
+import { caretPosition, panelFollowsTile } from './panel-placement'
 import { StatusBar } from './StatusBar'
 import { statusBadgeIcon, statusBorder, statusSoftBg, statusText } from './status-styles'
 
@@ -121,26 +122,24 @@ function LagebildView({
         : null,
   )
 
-  const tiles: TileModel[] = [
-    {
-      id: ALL_GROUPS,
-      name: t('lagebild.allTile'),
-      status: worstStatus(data.groups.map((group) => group.status)) ?? 'operational',
-      meta: groupsMeta(data.groups, t, tf),
-      bars: data.allBars,
-      icon: null,
-      ...allTooltip(data.groups, t, tf),
-    },
-    ...data.groups.map((group) => ({
-      id: group.id,
-      name: group.name,
-      status: group.status,
-      meta: serviceMeta(group, t, tf),
-      bars: group.bars,
-      icon: group.icon,
-      tipItems: group.services.map((service) => ({ name: service.name, status: service.status })),
-    })),
-  ]
+  const allTile: TileModel = {
+    id: ALL_GROUPS,
+    name: t('lagebild.allGroups'),
+    status: worstStatus(data.groups.map((group) => group.status)) ?? 'operational',
+    meta: groupsMeta(data.groups, t, tf),
+    bars: data.allBars,
+    icon: null,
+    ...allTooltip(data.groups, t, tf),
+  }
+  const groupTiles: TileModel[] = data.groups.map((group) => ({
+    id: group.id,
+    name: group.name,
+    status: group.status,
+    meta: serviceMeta(group, t, tf),
+    bars: group.bars,
+    icon: group.icon,
+    tipItems: group.services.map((service) => ({ name: service.name, status: service.status })),
+  }))
 
   const gridRef = useRef<HTMLDivElement>(null)
   const [columns, setColumns] = useState(4)
@@ -166,7 +165,7 @@ function LagebildView({
   }
 
   return (
-    <section className="animate-fade-in" data-testid={`lagebild-${variant}`}>
+    <section className="animate-fade-in" data-testid={`lagebild-${variant}`} data-lagebild-bounds>
       <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
         <h2 className="text-xl font-bold text-foreground">
           {t('lagebild.title')}
@@ -190,6 +189,21 @@ function LagebildView({
         </label>
       </div>
 
+      <div className="space-y-3" data-testid="lagebild-all">
+        {variant === 'a' ? (
+          <TileA tile={allTile} wide active={selected === ALL_GROUPS} onSelect={() => select(ALL_GROUPS)} />
+        ) : (
+          <TileB tile={allTile} wide active={selected === ALL_GROUPS} onSelect={() => select(ALL_GROUPS)} bar={data.bar} from={data.barsFrom} to={data.barsTo} />
+        )}
+        {selected === ALL_GROUPS && (
+          <AllGroupsPanel data={data} caretPercent={50} onSelect={select} onClose={() => select(ALL_GROUPS)} />
+        )}
+      </div>
+
+      <h3 className="mb-3 mt-5 flex items-center gap-2.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground after:h-px after:flex-1 after:bg-border">
+        {t('lagebild.groupsHeading')}
+      </h3>
+
       <div
         ref={gridRef}
         data-lagebild-grid
@@ -198,14 +212,13 @@ function LagebildView({
           variant === 'a' ? 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4' : 'grid-cols-1 sm:grid-cols-2',
         )}
       >
-        {tiles.map((tile, index) => {
+        {groupTiles.map((tile, index) => {
           const open = selected === tile.id
+          const selectedIndex = groupTiles.findIndex((candidate) => candidate.id === selected)
           // Aufklappbereich steht hinter der letzten Kachel der Zeile
-          const endsRow = index === tiles.length - 1 || (index + 1) % columns === 0
-          const panelIndex = selected ? tiles.findIndex((candidate) => candidate.id === selected) : -1
-          const panelInRow = endsRow && panelIndex >= 0 && Math.floor(panelIndex / columns) === Math.floor(index / columns)
-          const panelGroup = panelInRow ? data.groups.find((group) => group.id === selected) : undefined
-          const caretPercent = (((panelIndex % columns) + 0.5) / columns) * 100
+          const panelGroup = panelFollowsTile(index, groupTiles.length, columns, selectedIndex)
+            ? data.groups[selectedIndex]
+            : undefined
           return (
             <Fragment key={tile.id}>
               {variant === 'a' ? (
@@ -213,19 +226,11 @@ function LagebildView({
               ) : (
                 <TileB tile={tile} active={open} onSelect={() => select(tile.id)} bar={data.bar} from={data.barsFrom} to={data.barsTo} />
               )}
-              {panelInRow && selected === ALL_GROUPS && (
-                <AllGroupsPanel
-                  data={data}
-                  caretPercent={caretPercent}
-                  onSelect={select}
-                  onClose={() => select(ALL_GROUPS)}
-                />
-              )}
               {panelGroup && (
                 <ServicePanel
                   group={panelGroup}
                   periodDays={data.periodDays}
-                  caretPercent={caretPercent}
+                  caretPercent={caretPosition(selectedIndex, columns)}
                   bar={data.bar}
                   from={data.barsFrom}
                   to={data.barsTo}
@@ -387,7 +392,8 @@ function TileIcon({ tile, className }: { tile: TileModel; className: string }) {
   return <LayoutGrid aria-hidden="true" className={className} />
 }
 
-function TileA({ tile, active, onSelect }: { tile: TileModel; active: boolean; onSelect: () => void }) {
+/** `wide`: die Kachel „Alle“ in eigener Zeile, waagerecht mit Symbol links und Pfeil rechts. */
+function TileA({ tile, active, onSelect, wide = false }: { tile: TileModel; active: boolean; onSelect: () => void; wide?: boolean }) {
   const { t } = useTranslation()
   const Badge = statusBadgeIcon[tile.status]
   return (
@@ -398,23 +404,44 @@ function TileA({ tile, active, onSelect }: { tile: TileModel; active: boolean; o
           {...buttonProps}
           aria-expanded={active}
           className={cn(
-            'relative flex w-full flex-col items-center gap-1 rounded-xl border bg-card px-3 pb-3.5 pt-5 text-center transition-colors hover:bg-secondary/60',
-            active ? cn('ring-2 ring-primary/20', statusBorder[tile.status]) : 'border-border',
+            'relative flex w-full rounded-xl border bg-card transition-colors hover:bg-secondary/60',
+            wide
+              ? 'items-center gap-3.5 border-l-4 px-4 py-3.5 text-left'
+              : 'flex-col items-center gap-1 px-3 pb-3.5 pt-5 text-center',
+            wide ? statusBorder[tile.status] : active ? cn('ring-2 ring-primary/20', statusBorder[tile.status]) : 'border-border',
+            wide && active && 'ring-2 ring-primary/20',
           )}
         >
           <ChevronDown
             aria-hidden="true"
-            className={cn('absolute right-2.5 top-2.5 h-4 w-4 text-muted-foreground transition-transform', active && 'rotate-180')}
+            className={cn(
+              'h-4 w-4 text-muted-foreground transition-transform',
+              wide ? 'order-last shrink-0' : 'absolute right-2.5 top-2.5',
+              active && 'rotate-180',
+            )}
           />
-          <span className={cn('relative mb-2 flex h-14 w-14 items-center justify-center rounded-2xl', statusSoftBg[tile.status])}>
+          <span className={cn('relative flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl', !wide && 'mb-2', statusSoftBg[tile.status])}>
             <TileIcon tile={tile} className={cn('h-7 w-7', statusText[tile.status])} />
             <span className="absolute -bottom-2 -right-2 rounded-full bg-card">
               <Badge className={cn('h-5 w-5', statusText[tile.status])} aria-hidden="true" />
             </span>
           </span>
-          <span className="text-sm font-semibold text-foreground">{tile.name}</span>
-          <span className={cn('text-xs font-semibold', statusText[tile.status])}>{statusLabel(tile.status, t)}</span>
-          <span className="text-xs text-muted-foreground">{tile.meta}</span>
+          {wide ? (
+            <span className="grid min-w-0 flex-1 gap-0.5">
+              <span className="text-base font-semibold text-foreground">{tile.name}</span>
+              <span className="text-xs text-muted-foreground">
+                <span className={cn('font-semibold', statusText[tile.status])}>{statusLabel(tile.status, t)}</span>
+                {' · '}
+                {tile.meta}
+              </span>
+            </span>
+          ) : (
+            <>
+              <span className="text-sm font-semibold text-foreground">{tile.name}</span>
+              <span className={cn('text-xs font-semibold', statusText[tile.status])}>{statusLabel(tile.status, t)}</span>
+              <span className="text-xs text-muted-foreground">{tile.meta}</span>
+            </>
+          )}
         </button>
       )}
     </TileFrame>
@@ -463,7 +490,7 @@ function ServicePanel({
         <span className={cn('flex h-8 w-8 items-center justify-center rounded-lg', statusSoftBg[group.status])}>
           <GroupIcon name={group.icon} className={cn('h-[18px] w-[18px]', statusText[group.status])} />
         </span>
-        <h3 className="flex-1 text-base font-bold text-foreground">{group.name}</h3>
+        <h4 className="flex-1 text-base font-bold text-foreground">{group.name}</h4>
         <button
           type="button"
           onClick={onClose}
@@ -525,6 +552,7 @@ function ServicePanel({
   )
 }
 
+/** `wide`: die Kachel „Alle“ in eigener Zeile, der Balken steht rechts, auf schmalen Geräten darunter. */
 function TileB({
   tile,
   active,
@@ -532,10 +560,12 @@ function TileB({
   bar,
   from,
   to,
+  wide = false,
 }: {
   tile: TileModel
   active: boolean
   onSelect: () => void
+  wide?: boolean
   bar: LagebildData['bar']
   from: string
   to: string
@@ -555,32 +585,47 @@ function TileB({
             active && 'ring-2 ring-primary/30',
           )}
         >
-          <span className="flex items-center gap-3">
-            <TileIcon tile={tile} className="h-6 w-6 shrink-0 text-muted-foreground" />
+          <span className={cn('flex items-center gap-3', wide && 'md:gap-4')}>
+            <TileIcon tile={tile} className={cn('shrink-0 text-muted-foreground', wide ? 'h-7 w-7' : 'h-6 w-6')} />
             <span className="flex-1">
-              <span className="block text-sm font-semibold text-foreground">{tile.name}</span>
+              <span className={cn('block font-semibold text-foreground', wide ? 'text-base' : 'text-sm')}>{tile.name}</span>
               <span className="block text-xs text-muted-foreground">
                 <span className={cn('font-semibold', statusText[tile.status])}>{statusLabel(tile.status, t)}</span>
                 {' · '}
                 {tile.meta}
               </span>
             </span>
+            {wide && (
+              <span className="hidden min-w-0 md:block md:flex-[1.3]">
+                <TileBar tile={tile} bar={bar} from={from} to={to} />
+              </span>
+            )}
             <Badge className={cn('h-5 w-5 shrink-0', statusText[tile.status])} aria-hidden="true" />
             <ChevronDown
               aria-hidden="true"
               className={cn('h-4 w-4 shrink-0 text-muted-foreground transition-transform', active && 'rotate-180')}
             />
           </span>
-          <span className="block">
-            <StatusBar runs={tile.bars} window={bar} heightClass="h-3" label={`${tile.name}: ${statusLabel(tile.status, t)}`} />
-            <span className="mt-1 flex justify-between text-[11px] text-muted-foreground">
-              <span>{from}</span>
-              <span>{to}</span>
-            </span>
+          <span className={cn('block', wide && 'md:hidden')}>
+            <TileBar tile={tile} bar={bar} from={from} to={to} />
           </span>
         </button>
       )}
     </TileFrame>
+  )
+}
+
+/** Balken der letzten Stunden mit Zeitangabe an beiden Enden. */
+function TileBar({ tile, bar, from, to }: { tile: TileModel; bar: LagebildData['bar']; from: string; to: string }) {
+  const { t } = useTranslation()
+  return (
+    <span className="block">
+      <StatusBar runs={tile.bars} window={bar} heightClass="h-3" label={`${tile.name}: ${statusLabel(tile.status, t)}`} />
+      <span className="mt-1 flex justify-between text-[11px] text-muted-foreground">
+        <span>{from}</span>
+        <span>{to}</span>
+      </span>
+    </span>
   )
 }
 

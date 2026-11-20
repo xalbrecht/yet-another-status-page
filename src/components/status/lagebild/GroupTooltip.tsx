@@ -53,7 +53,7 @@ type Props = {
  * der Kachel sie auch geschlossen vorlesen kann; angezeigt wird sie nur bei `open`. Öffnen und Schließen beim Darüberfahren
  * steuert der Rahmen der Kachel (`TileFrame`), der Tooltip ist sein Kind. Der Zustand steht zusätzlich als Text
  * für Screenreader da. Der Tooltip überlappt den unteren Rand der Kachel um 4 Pixel, damit die Maus keine Lücke quert,
- * und bleibt innerhalb des Rasters (`data-lagebild-grid`).
+ * und bleibt innerhalb des Lagebilds (`data-lagebild-bounds`), auch die Kachel „Alle“ außerhalb des Rasters.
  */
 export function GroupTooltip({ id, title, items, footer, open, onActivate }: Props) {
   const { t } = useTranslation()
@@ -63,7 +63,7 @@ export function GroupTooltip({ id, title, items, footer, open, onActivate }: Pro
   useLayoutEffect(() => {
     if (!open) return
     const element = ref.current
-    const grid = element?.closest('[data-lagebild-grid]')
+    const grid = element?.closest('[data-lagebild-bounds]')
     const anchor = element?.offsetParent
     if (!element || !grid || !anchor) return
     const gridBox = grid.getBoundingClientRect()

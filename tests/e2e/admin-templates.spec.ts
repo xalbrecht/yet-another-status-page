@@ -46,7 +46,12 @@ async function removeByTitle(request: APIRequestContext, collection: 'incidents'
  * „Jetzt veröffentlichen“ liegt am unteren Rand unter dem Hinweisfeld „Insight“ der Next.js-Entwicklungsansicht. Ein echter
  * Mausklick träfe dieses Feld, deshalb löst der Test den Klick am Knopf selbst aus.
  */
-const publish = (page: Page) => page.getByTestId('publish').dispatchEvent('click')
+async function publish(page: Page) {
+  const button = page.getByTestId('publish')
+  await expect(button).toBeVisible()
+  await expect(button).toBeEnabled()
+  await button.dispatchEvent('click')
+}
 
 test.describe('Admin: Vorlagen', { tag: ['@admin', '@vorlagen', '@stoerungen', '@wartungen'] }, () => {
   // Der erste Aufruf kompiliert die Admin-Seiten im Dev-Server und dauert lange.
@@ -133,6 +138,13 @@ test.describe('Admin: Vorlagen', { tag: ['@admin', '@vorlagen', '@stoerungen', '
 
   test('Vorlagen-Auswahl: zeigt Vorlagen zum Status, füllt Nachricht, SMS und ntfy und gibt sie beim Speichern weiter', async ({ page, request }) => {
     const s = await newService('Auswahl')
+    await createTemplate(request, {
+      name: `Vorlage Untersucht ${s.id}`,
+      kind: 'incident',
+      status: 'investigating',
+      title: 'Untersucht: {{services}}',
+      body: 'Wir untersuchen die Störung an {{services}}.',
+    })
     const templateId = await createTemplate(request, {
       name: `Vorlage Behoben ${s.id}`,
       kind: 'incident',
@@ -149,6 +161,8 @@ test.describe('Admin: Vorlagen', { tag: ['@admin', '@vorlagen', '@stoerungen', '
     const incident = (await response.json()).doc.id as number
 
     try {
+      // Die Auswahl lädt die Dienste des Vorfalls getrennt von den Vorlagen. Erst danach füllt sie `{{services}}` und `{{group}}`.
+      const servicesLoaded = page.waitForResponse((r) => decodeURIComponent(r.url()).includes('/api/services?where[id][in]'))
       await page.goto(`/admin/collections/incidents/${incident}`)
       // Die gespeicherte Aktualisierung bekommt keine Auswahl
       await expect(page.locator('#field-updates__0__message')).toHaveValue('Text')
@@ -156,12 +170,20 @@ test.describe('Admin: Vorlagen', { tag: ['@admin', '@vorlagen', '@stoerungen', '
 
       await page.getByRole('button', { name: 'Add Update' }).click()
       const select = page.getByTestId('update-template-select')
-      // Zum Status „Wird untersucht“ gibt es keine Vorlage, zu „Behoben“ genau diese
+      // Eine neue Zeile hat keinen Status, dann gibt es keine Vorlage. Der Status filtert in beide Richtungen.
       await expect(select.locator('option')).toHaveCount(1)
-      await page.locator('#field-updates__1__status').click()
-      await page.keyboard.type('Resolved')
-      await page.keyboard.press('Enter')
+      const setStatus = async (label: string) => {
+        await page.locator('#field-updates__1__status').click()
+        await page.keyboard.type(label)
+        await page.keyboard.press('Enter')
+      }
+      await setStatus('Investigating')
+      await expect(select.locator('option', { hasText: `Vorlage Untersucht ${s.id}` })).toHaveCount(1)
+      await expect(select.locator('option', { hasText: `Vorlage Behoben ${s.id}` })).toHaveCount(0)
+      await setStatus('Resolved')
       await expect(select.locator('option', { hasText: `Vorlage Behoben ${s.id}` })).toHaveCount(1)
+      await expect(select.locator('option', { hasText: `Vorlage Untersucht ${s.id}` })).toHaveCount(0)
+      await servicesLoaded
 
       await select.selectOption(String(templateId))
       await expect(page.locator('#field-updates__1__message')).toHaveValue(`Störung an ${s.name} (${s.groupName}) behoben. Auswirkung war: Partial Outage.`)

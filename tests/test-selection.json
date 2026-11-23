@@ -58,6 +58,7 @@
     "src/components/admin/status-log/**": ["@statusprotokoll"],
     "src/components/admin/update-template/**": ["@vorlagen", "@stoerungen", "@wartungen"],
     "src/components/admin/group-icon-field/**": ["@dienste"],
+    "src/components/admin/ServiceChoices*": ["@admin", "@stoerungen", "@dienste"],
     "src/components/admin/Service*": ["@dienste"],
     "src/components/admin/SystemInfo*": ["@system"],
     "src/components/admin/Dashboard*": ["@system"],

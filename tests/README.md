@@ -102,7 +102,7 @@ tests/
 │   ├── subscribe.spec.ts        # Subscription flows (10 tests)
 │   ├── theme-toggle.spec.ts     # Dark/light mode (5 tests)
 │   ├── history-page.spec.ts     # Incident history (6 tests)
-│   ├── admin.spec.ts            # Admin panel (skipped - slow to compile)
+│   ├── admin-service-choices.spec.ts # Eigene Admin-Komponenten (angemeldet per storageState)
 │   └── api.spec.ts              # API endpoints (7 tests)
 ├── seed/
 │   └── seed-test-data.mjs       # Test data seeding

@@ -56,6 +56,7 @@ test.describe('Admin: Dienste nach der Behebung', { tag: ['@admin', '@stoerungen
 
   test('Admin-Panel öffnet angemeldet', async ({ page }) => {
     await page.goto('/admin/collections/incidents')
+    await expect(page.getByRole('heading', { level: 1 })).toBeVisible()
     await expect(page).not.toHaveURL(/\/admin\/(login|create-first-user)/)
   })
 
@@ -132,7 +133,7 @@ test.describe('Admin: Dienste nach der Behebung', { tag: ['@admin', '@stoerungen
     expect((await getService(service)).statusBeforeIncident).toBe('degraded')
 
     // Die Komponente lädt beim Öffnen Dienste und weitere Vorfälle. Erst danach sagt „keine Zeile“ etwas aus.
-    const servicesLoaded = page.waitForResponse((r) => r.url().includes('/api/services?'))
+    const servicesLoaded = page.waitForResponse((r) => decodeURIComponent(r.url()).includes('/api/services?where[id][in]'))
     const othersLoaded = page.waitForResponse((r) => r.url().includes('/api/incidents?') && r.url().includes('affectedServices'))
     await page.goto(`/admin/collections/incidents/${incident}`)
     await expect(page.locator('#field-updates__1__message')).toHaveValue('Behoben')

@@ -19,6 +19,10 @@ export async function warmUpAdmin(page: Page): Promise<number> {
   const start = Date.now()
   await page.goto('/admin', { waitUntil: 'networkidle', timeout: 180000 })
   const ms = Date.now() - start
+  // Eine fehlende oder ungültige Sitzung führt auf die Anmeldeseite: früh und deutlich scheitern statt in Zeitüberschreitungen
+  if (/\/admin\/(login|create-first-user)/.test(page.url())) {
+    throw new Error(`Admin-Sitzung ungültig oder fehlt, die Seite landete auf ${page.url()} (Setup-Meldung im Log prüfen)`)
+  }
   console.log(`   Admin-Seite angewärmt in ${ms} ms (Adresse: ${page.url()})`)
   return ms
 }

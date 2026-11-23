@@ -1,4 +1,7 @@
+import { mkdirSync, writeFileSync } from 'node:fs'
+import { dirname } from 'node:path'
 import { FullConfig } from '@playwright/test'
+import { ADMIN_EMAIL, ADMIN_PASSWORD, ADMIN_STORAGE_STATE } from '../utils/admin-auth'
 
 /**
  * Global setup for E2E tests
@@ -14,6 +17,39 @@ import { FullConfig } from '@playwright/test'
  * - Uses existing dev server
  * - No seeding (assumes data exists)
  */
+/**
+ * Legt den Testbenutzer an (`first-register`) oder meldet ihn an (`login`, wenn er schon existiert) und schreibt die
+ * Sitzung als Playwright-`storageState` (Issue #237). Die Datenbank ist eine Wegwerf-Datenbank.
+ */
+async function prepareAdminSession(baseURL: string) {
+  const body = JSON.stringify({ email: ADMIN_EMAIL, password: ADMIN_PASSWORD, name: 'E2E Admin' })
+  const headers = { 'Content-Type': 'application/json' }
+  const post = (path: string) => fetch(`${baseURL}${path}`, { method: 'POST', headers, body })
+
+  // Den ersten Benutzer legt das Setup nur gegen einen lokalen Server an (Wegwerf-Datenbank). Gegen jeden anderen Server
+  // würde das öffentliche Testkennwort sonst zum ersten Benutzer einer echten Instanz.
+  const local = ['localhost', '127.0.0.1', '[::1]'].includes(new URL(baseURL).hostname)
+  let response = local ? await post('/api/users/first-register') : undefined
+  const registerStatus = response?.status
+  if (!response?.ok) response = await post('/api/users/login')
+
+  let token: string | undefined
+  if (response.ok) token = ((await response.json()) as { token?: string }).token
+
+  // Ohne Anmeldung (laufender Dev-Server mit echten Benutzern, Anmeldung per Kennwort abgeschaltet) scheitern nur die
+  // Admin-Tests. Alle anderen Tests brauchen keine Sitzung und laufen weiter.
+  if (!token) {
+    console.warn(`   ⚠ Keine Admin-Sitzung: first-register ${registerStatus ?? 'übersprungen'}, login ${response.status}. Admin-Tests scheitern.`)
+  }
+
+  mkdirSync(dirname(ADMIN_STORAGE_STATE), { recursive: true })
+  const cookies = token
+    ? [{ name: 'payload-token', value: token, domain: new URL(baseURL).hostname, path: '/', httpOnly: true, secure: false, sameSite: 'Lax', expires: -1 }]
+    : []
+  writeFileSync(ADMIN_STORAGE_STATE, JSON.stringify({ cookies, origins: [] }))
+  if (token) console.log(`   ✓ Admin-Sitzung gespeichert (${ADMIN_STORAGE_STATE})`)
+}
+
 async function globalSetup(config: FullConfig) {
   const baseURL = process.env.PLAYWRIGHT_BASE_URL || 
     config.projects[0]?.use?.baseURL || 
@@ -45,6 +81,8 @@ async function globalSetup(config: FullConfig) {
   if (!isReady) {
     throw new Error(`Application at ${baseURL} is not responding after ${maxRetries} attempts`)
   }
+
+  await prepareAdminSession(baseURL)
 
   console.log(`   ✓ Global setup complete\n`)
 }

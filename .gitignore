@@ -50,6 +50,7 @@ docs/book/
 
 # Playwright
 /test-results/
+/tests/.auth/
 /playwright-report/
 /blob-report/
 /playwright/.cache/

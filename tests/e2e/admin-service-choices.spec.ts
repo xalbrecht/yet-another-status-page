@@ -60,8 +60,8 @@ test.describe('Admin: Dienste nach der Behebung', { tag: ['@admin', '@stoerungen
     await expect(page).not.toHaveURL(/\/admin\/(login|create-first-user)/)
   })
 
-  test('ist je Dienst mit gemerktem Zustand vorbelegt „Zurück“', async ({ page, request }) => {
-    const service = await newDegradedService('Vorbelegung')
+  test('ist vorbelegt „Zurück“, und Speichern führt den Dienst in den gemerkten Zustand zurück', async ({ page, request }) => {
+    const service = await newDegradedService('Zurück')
     const incident = await openIncident(request, [service.id])
 
     await page.goto(`/admin/collections/incidents/${incident}`)
@@ -70,20 +70,11 @@ test.describe('Admin: Dienste nach der Behebung', { tag: ['@admin', '@stoerungen
     await expect(choiceRows(page)).toHaveCount(1)
     await expect(choiceRows(page).first().locator('input[type="checkbox"]')).toBeChecked()
     await expect(choiceRows(page).first()).toContainText('Degraded Performance')
-  })
 
-  test('Speichern mit Haken führt den Dienst in den gemerkten Zustand zurück', async ({ page, request }) => {
-    const { id: service } = await newDegradedService('Zurück')
-    const incident = await openIncident(request, [service])
-
-    await page.goto(`/admin/collections/incidents/${incident}`)
-    await addResolvedUpdate(page)
-    await expect(choiceRows(page)).toHaveCount(1)
     await page.locator('#action-save').click()
-
     await expect.poll(async () => (await getIncident(request, incident)).status).toBe('resolved')
-    expect((await getIncident(request, incident)).serviceChoices).toEqual([expect.objectContaining({ service, restore: true })])
-    await expect.poll(async () => (await getService(service)).status).toBe('degraded')
+    expect((await getIncident(request, incident)).serviceChoices).toEqual([expect.objectContaining({ service: service.id, restore: true })])
+    await expect.poll(async () => (await getService(service.id)).status).toBe('degraded')
   })
 
   test('Abwählen und Speichern setzt den Dienst auf „Betriebsbereit“', async ({ page, request }) => {
@@ -115,6 +106,11 @@ test.describe('Admin: Dienste nach der Behebung', { tag: ['@admin', '@stoerungen
     await expect(choiceRows(page)).toHaveCount(1)
     await expect(choiceRows(page).first()).toContainText(free.name)
     await expect(page.locator('[data-testid="service-choices"]')).not.toContainText(shared.name)
+
+    // Mit Speichern enden: Ein Formular mit ungespeicherten Änderungen lässt die Störung rund 5 Minuten gesperrt (HTTP 423
+    // beim Löschen), und `clearCollection` anderer Spezifikationen lässt sie dann offen auf der Statusseite stehen.
+    await page.locator('#action-save').click()
+    await expect.poll(async () => (await getIncident(request, first)).status).toBe('resolved')
   })
 
   test('lässt einen alten, behobenen Vorfall beim Öffnen unverändert', async ({ page, request }) => {

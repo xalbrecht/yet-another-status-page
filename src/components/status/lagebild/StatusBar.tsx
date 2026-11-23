@@ -72,11 +72,12 @@ export function StatusBar({ runs, window: bar, heightClass = 'h-6', label }: Pro
           key={index}
           data-run={run.slots}
           // Ein Element je Zustandsfolge. Die Maske lässt hinter jedem Strich 1 px frei, damit die Striche
-          // wie bisher einzeln erscheinen. Breite über flex-grow, mindestens 2 px je Strich.
+          // wie bisher einzeln erscheinen. Breite über flex-grow, mindestens 1 px je Strich: Ab 288 px Balkenbreite sind es
+          // wie bisher 2 px und mehr, schmalere Spalten (Fenster unter rund 325 px) verbreitern die Seite nicht mehr (Issue #245).
           style={{
             flexGrow: run.slots,
             flexBasis: 0,
-            minWidth: run.slots * 2,
+            minWidth: run.slots,
             maskImage: 'linear-gradient(to right, #000 calc(100% - 1px), transparent 0)',
             maskSize: `${100 / run.slots}% 100%`,
             WebkitMaskImage: 'linear-gradient(to right, #000 calc(100% - 1px), transparent 0)',

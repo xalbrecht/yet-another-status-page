@@ -504,18 +504,20 @@ test.describe('Seite ohne seitliches Scrollen', { tag: ['@public', '@statusseite
     const id = Date.now()
     const group = await createServiceGroup({ name: `Schmal Gruppe ${id}`, icon: 'Server' })
     await createService({ name: `Schmal Dienst ${id}`, group: group.id })
-    await updateSettings({ lagebildVariant: 'a' })
+    await updateSettings({ lagebildVariant: 'both' })
   })
 
   test.afterAll(async () => {
     await updateSettings({ lagebildVariant: 'off' })
   })
 
-  for (const width of [375, 768]) {
-    test(`bei ${width} Pixel Breite ist die Seite nicht breiter als das Fenster`, async ({ page }) => {
+  // 320 Pixel: Der Balken hat 144 Striche, bei weniger als 288 Pixel Spaltenbreite hat er die Seite verbreitert (Issue #245)
+  for (const width of [320, 375, 768]) {
+    test(`bei ${width} Pixel Breite ist die Seite nicht breiter als das Fenster (beide Varianten)`, async ({ page }) => {
       await page.setViewportSize({ width, height: 900 })
       await page.goto('/')
-      await expect(page.getByTestId('lagebild-tile-all')).toBeVisible()
+      await expect(page.getByTestId('lagebild-a')).toBeVisible()
+      await expect(page.getByTestId('lagebild-b')).toBeVisible()
       const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)
       expect(overflow).toBeLessThanOrEqual(0)
     })

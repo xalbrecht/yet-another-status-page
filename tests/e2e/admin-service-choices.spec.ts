@@ -46,6 +46,10 @@ async function addResolvedUpdate(page: Page) {
 const choiceRows = (page: Page) => page.locator('[data-testid="service-choice"]')
 
 test.describe('Admin: Dienste nach der Behebung', { tag: ['@admin', '@stoerungen', '@dienste'] }, () => {
+  // Ein Worker und 120 s je Test: Der erste Aufruf einer Admin-Seite kompiliert im Dev-Server 25 bis 40 s, und lokal liefe sonst
+  // jeder Worker das Anwärmen selbst und gegen das Standard-Timeout von 30 s (Issue #247)
+  test.describe.configure({ mode: 'serial', timeout: 120_000 })
+
   // Der erste Aufruf kompiliert die Admin-Seiten im Dev-Server und dauert lange.
   test.beforeAll(async ({ browser }) => {
     test.setTimeout(240000)

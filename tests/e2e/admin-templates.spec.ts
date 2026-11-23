@@ -1,5 +1,5 @@
 import { test, expect, type APIRequestContext, type Locator, type Page } from '@playwright/test'
-import { createService, createServiceGroup, getService } from '../utils/payload-helpers'
+import { createService, createServiceGroup, getService, updateSettings } from '../utils/payload-helpers'
 import { ADMIN_STORAGE_STATE, warmUpAdmin } from '../utils/admin-auth'
 
 /**
@@ -54,6 +54,10 @@ async function publish(page: Page) {
 }
 
 test.describe('Admin: Vorlagen', { tag: ['@admin', '@vorlagen', '@stoerungen', '@wartungen'] }, () => {
+  // Ein Worker und 120 s je Test: Der erste Aufruf einer Admin-Seite kompiliert im Dev-Server 25 bis 40 s, und lokal liefe sonst
+  // jeder Worker das Anwärmen selbst und gegen das Standard-Timeout von 30 s (Issue #247)
+  test.describe.configure({ mode: 'serial', timeout: 120_000 })
+
   // Der erste Aufruf kompiliert die Admin-Seiten im Dev-Server und dauert lange.
   test.beforeAll(async ({ browser }) => {
     test.setTimeout(240000)
@@ -132,6 +136,46 @@ test.describe('Admin: Vorlagen', { tag: ['@admin', '@vorlagen', '@stoerungen', '
       expect(list.docs).toHaveLength(1)
       expect(list.docs[0]).toMatchObject({ title: `Wartung: ${s.name}`, status: 'upcoming', maintenanceKind: 'additional' })
     } finally {
+      await removeByTitle(request, 'maintenances', s.id)
+    }
+  })
+
+  test('Assistent „Wartung mit Vorlage“: Beginn und Ende gelten in der Zeitzone der Einstellungen, nicht in UTC', async ({ page, request }) => {
+    const s = await newService('Zeitzone')
+    const templateId = await createTemplate(request, {
+      name: `Vorlage Zeitzone ${s.id}`,
+      kind: 'maintenance',
+      status: 'upcoming',
+      title: 'Wartung: {{services}}',
+      body: 'Wartung an {{services}}.',
+    })
+    const settings = await (await request.get('/api/globals/settings?depth=0')).json()
+    const originalZone: string = settings.timezone ?? 'UTC'
+
+    try {
+      await updateSettings({ timezone: 'Europe/Berlin' })
+      await page.goto('/admin/incident-from-template?kind=maintenance')
+      await waitForHydration(page.getByTestId('group'))
+      await page.getByTestId('group').selectOption(String(s.groupId))
+      await page.getByTestId(`service-${s.serviceId}`).check()
+      await page.getByTestId('maintenance-kind').selectOption('additional')
+      // Beginn im Winter (UTC+1), Ende im Sommer (UTC+2): zeigt, dass die Sommerzeit mitgerechnet wird
+      await page.getByTestId('start').fill('2027-01-15T10:00')
+      await page.getByTestId('end').fill('2027-07-15T10:00')
+      await page.getByTestId(`template-${templateId}`).check()
+      await expect(page.getByTestId('missing')).toHaveCount(0)
+
+      await page.getByTestId('preview-button').click()
+      await expect(page.getByTestId('preview')).toBeVisible()
+      await publish(page)
+      await expect(page.getByTestId('done')).toBeVisible({ timeout: 60000 })
+
+      const list = await (await request.get(`/api/maintenances?where[title][contains]=${s.id}&depth=0`)).json()
+      expect(list.docs).toHaveLength(1)
+      expect(new Date(list.docs[0].scheduledStartAt).toISOString()).toBe('2027-01-15T09:00:00.000Z')
+      expect(new Date(list.docs[0].scheduledEndAt).toISOString()).toBe('2027-07-15T08:00:00.000Z')
+    } finally {
+      await updateSettings({ timezone: originalZone })
       await removeByTitle(request, 'maintenances', s.id)
     }
   })

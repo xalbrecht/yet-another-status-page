@@ -15,27 +15,27 @@ const statusConfig = {
   operational: {
     icon: CheckCircle2,
     textKey: "banner.operational" as const,
-    className: "bg-status-banner-operational",
+    className: "bg-status-banner-operational text-white",
   },
   degraded: {
     icon: AlertTriangle,
     textKey: "banner.degraded" as const,
-    className: "bg-status-banner-degraded",
+    className: "bg-status-banner-degraded text-status-banner-degraded-foreground",
   },
   partial: {
     icon: AlertCircle,
     textKey: "banner.partial" as const,
-    className: "bg-status-banner-partial",
+    className: "bg-status-banner-partial text-status-banner-partial-foreground",
   },
   major: {
     icon: XCircle,
     textKey: "banner.major" as const,
-    className: "bg-status-banner-major",
+    className: "bg-status-banner-major text-white",
   },
   maintenance: {
     icon: Wrench,
     textKey: "banner.maintenance" as const,
-    className: "bg-status-banner-maintenance",
+    className: "bg-status-banner-maintenance text-white",
   },
 };
 
@@ -48,7 +48,7 @@ export function StatusBanner({ status, message }: StatusBannerProps) {
   return (
     <div
       className={cn(
-        "rounded-lg px-6 py-4 text-white transition-all duration-300",
+        "rounded-lg px-6 py-4 transition-all duration-300",
         config.className
       )}
     >

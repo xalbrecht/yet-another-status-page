@@ -46,11 +46,14 @@
   --status-major: 0 72% 51%;
   --status-maintenance: 217 91% 60%;
 
-  --status-banner-operational: 152 69% 40%;
+  /* Statusbanner: Schrift 16 px, mittelfett, mindestens 4,5 zu 1 (Issue #243). Gelb und Orange behalten ihre Farbe und tragen dunkle Schrift */
+  --status-banner-operational: 152 69% 31%;
   --status-banner-degraded: 38 92% 50%;
+  --status-banner-degraded-foreground: 30 40% 8%;
   --status-banner-partial: 25 95% 53%;
+  --status-banner-partial-foreground: 30 40% 8%;
   --status-banner-major: 0 72% 51%;
-  --status-banner-maintenance: 217 91% 60%;
+  --status-banner-maintenance: 217 91% 53%;
   /* Wartungsleiste: dunkler als das Banner, weiße Schrift 14 px braucht 4,5 zu 1 */
   --status-bar-maintenance: 217 80% 45%;
   --status-bar-maintenance-text: 217 80% 38%;
@@ -95,9 +98,11 @@
   --status-major: 0 72% 55%;
   --status-maintenance: 217 91% 65%;
 
-  --status-banner-operational: 152 69% 35%;
-  --status-banner-degraded: 38 80% 40%;
-  --status-banner-partial: 25 85% 42%;
+  --status-banner-operational: 152 69% 31%;
+  --status-banner-degraded: 38 80% 34%;
+  --status-banner-degraded-foreground: 0 0% 100%;
+  --status-banner-partial: 25 85% 40%;
+  --status-banner-partial-foreground: 0 0% 100%;
   --status-banner-major: 0 65% 40%;
   --status-banner-maintenance: 217 80% 45%;
   --status-bar-maintenance: 217 80% 45%;
@@ -145,7 +150,9 @@
 
   --color-status-banner-operational: hsl(var(--status-banner-operational));
   --color-status-banner-degraded: hsl(var(--status-banner-degraded));
+  --color-status-banner-degraded-foreground: hsl(var(--status-banner-degraded-foreground, 0 0% 100%));
   --color-status-banner-partial: hsl(var(--status-banner-partial));
+  --color-status-banner-partial-foreground: hsl(var(--status-banner-partial-foreground, 0 0% 100%));
   --color-status-banner-major: hsl(var(--status-banner-major));
   --color-status-banner-maintenance: hsl(var(--status-banner-maintenance));
   --color-status-bar-maintenance: hsl(var(--status-bar-maintenance));

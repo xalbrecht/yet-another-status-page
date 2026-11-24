@@ -43,3 +43,19 @@ test('verifySmtp meldet den Fehler des Servers, statt zu werfen', async () => {
   const result = await verifySmtp(settings, async () => ({ verify: async () => { throw new Error('connect ECONNREFUSED') } }))
   assert.deepEqual(result, { ok: false, error: 'connect ECONNREFUSED' })
 })
+
+test('der Kopf List-Unsubscribe nennt die Adresse der Einmalabmeldung', () => {
+  const message = buildMailMessage(settings, {
+    ...base,
+    to: 'a@x.de',
+    oneClickUnsubscribeUrl: 'https://status.example/api/unsubscribe/tok',
+  })
+  const headers = message.headers as Record<string, string>
+  assert.equal(headers['List-Unsubscribe'], '<https://status.example/api/unsubscribe/tok>')
+  assert.equal(headers['List-Unsubscribe-Post'], 'List-Unsubscribe=One-Click')
+})
+
+test('ohne Adresse der Einmalabmeldung setzt die Nachricht keinen Kopf List-Unsubscribe', () => {
+  const message = buildMailMessage(settings, { ...base, to: 'a@x.de' })
+  assert.deepEqual(message.headers, {})
+})

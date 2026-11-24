@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test'
+import { createSubscriber } from '../utils/payload-helpers'
 
 /**
  * API Endpoint Tests
@@ -79,6 +80,36 @@ test.describe('Unsubscribe API', { tag: ['@api', '@schnittstelle', '@abonnenten'
     })
     
     expect(response.status()).toBe(404)
+  })
+})
+
+test.describe('Einmalabmeldung (RFC 8058)', { tag: ['@api', '@schnittstelle', '@abonnenten'] }, () => {
+  const form = { 'List-Unsubscribe': 'One-Click' }
+
+  test('POST ohne Formularfeld ergibt 400', async ({ request }) => {
+    const response = await request.post('/api/unsubscribe/irgendein-token', { form: {} })
+    expect(response.status()).toBe(400)
+  })
+
+  test('POST mit unbekanntem Token ergibt 404', async ({ request }) => {
+    const response = await request.post('/api/unsubscribe/invalid-token-12345', { form })
+    expect(response.status()).toBe(404)
+  })
+
+  test('POST mit gültigem Token meldet den Abonnenten ab', async ({ request }) => {
+    const subscriber = await createSubscriber({ type: 'email', email: `oneclick-${Date.now()}@example.com` })
+
+    const response = await request.post(`/api/unsubscribe/${subscriber.unsubscribeToken}`, { form })
+    expect(response.status()).toBe(200)
+
+    const again = await request.post('/api/unsubscribe', { data: { token: subscriber.unsubscribeToken } })
+    expect((await again.json()).message).toBe('Already unsubscribed')
+  })
+
+  test('GET leitet auf die Seite mit dem Abmelde-Knopf weiter', async ({ request }) => {
+    const response = await request.get('/api/unsubscribe/irgendein-token', { maxRedirects: 0 })
+    expect(response.status()).toBe(303)
+    expect(response.headers()['location']).toContain('/unsubscribe/irgendein-token')
   })
 })
 

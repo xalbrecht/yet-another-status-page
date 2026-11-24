@@ -13,7 +13,8 @@ export interface EmailOptions {
   subject: string
   html: string
   text?: string
-  unsubscribeUrl?: string
+  /** Adresse, die ein POST nach RFC 8058 annimmt (Kopf `List-Unsubscribe`). Ohne Angabe setzt die Nachricht keinen Kopf. */
+  oneClickUnsubscribeUrl?: string
   attachments?: EmailAttachment[]
   /** Sprache für den Absendernamen, wenn die Einstellungen keinen nennen. Ohne Angabe gilt DEFAULT_LANGUAGE. */
   language?: string
@@ -57,8 +58,8 @@ export function buildMailMessage(emailSettings: EmailSetting, options: EmailOpti
   const headers: Record<string, string> = {}
 
   // Add unsubscribe headers for better deliverability
-  if (options.unsubscribeUrl) {
-    headers['List-Unsubscribe'] = `<${options.unsubscribeUrl}>`
+  if (options.oneClickUnsubscribeUrl) {
+    headers['List-Unsubscribe'] = `<${options.oneClickUnsubscribeUrl}>`
     headers['List-Unsubscribe-Post'] = 'List-Unsubscribe=One-Click'
   }
 

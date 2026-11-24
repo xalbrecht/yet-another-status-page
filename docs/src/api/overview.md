@@ -33,4 +33,4 @@ Every instance serves its own OpenAPI 3.1 document at `https://your-status-page.
 
 ## Rate limiting
 
-The application does not rate limit read endpoints itself. Put your reverse proxy, ingress or CDN in front of `/api/v1`, `/feed.atom` and `/maintenances.ics` if you need limits; the short cache headers make these endpoints cheap to front with a CDN. The subscribe endpoint is limited to 5 attempts per IP per hour.
+The application does not rate limit read endpoints itself. Put your reverse proxy, ingress or CDN in front of `/api/v1`, `/feed.atom` and `/maintenances.ics` if you need limits; the short cache headers make these endpoints cheap to front with a CDN. The subscribe endpoint is limited to 5 attempts per IP per hour. The limit relies on the client address in `X-Forwarded-For`, so your reverse proxy must set that header to the client address instead of appending to a value sent by the client; see `SECURITY.md`.

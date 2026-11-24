@@ -99,6 +99,7 @@ The following endpoints are intentionally public:
 
 - Subscription endpoint is rate-limited to 5 requests per IP per hour
 - Rate limiting data is stored in the database for consistency across instances
+- The limit counts per client IP, taken from the first `X-Forwarded-For` entry (`X-Real-IP` as fallback). It only holds behind a reverse proxy that sets `X-Forwarded-For` to the client address instead of appending to a value sent by the client. Without such a proxy a client can send its own header and bypass the limit. Without any header all visitors share one bucket (`unknown`)
 
 ### Sensitive Data Handling
 

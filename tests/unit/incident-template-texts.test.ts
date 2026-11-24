@@ -45,7 +45,7 @@ test('Texte ohne Platzhalter und andere Platzhalter bleiben unverändert', () =>
   assert.equal((result.updates as Update[])[0].smsBody, undefined)
 })
 
-test('SMS- und ntfy-Text der Aktualisierung sind versteckt und nur für Angemeldete lesbar und schreibbar', () => {
+test('SMS- und ntfy-Text der Aktualisierung sind versteckt und nur für ServiceDesk und Admin lesbar und schreibbar', () => {
   const updates = Incidents.fields.find((field) => 'name' in field && field.name === 'updates') as Extract<Field, { type: 'array' }>
   for (const name of ['smsBody', 'ntfyBody']) {
     const field = updates.fields.find((f) => 'name' in f && f.name === name) as Extract<Field, { type: 'textarea' }>
@@ -55,7 +55,8 @@ test('SMS- und ntfy-Text der Aktualisierung sind versteckt und nur für Angemeld
     for (const operation of ['read', 'create', 'update'] as const) {
       const access = field.access?.[operation] as (args: unknown) => unknown
       assert.equal(access({ req: { user: null } }), false, `${name}.${operation} ohne Anmeldung`)
-      assert.equal(access({ req: { user: { id: 1 } } }), true, `${name}.${operation} angemeldet`)
+      assert.equal(access({ req: { user: { id: 1 } } }), false, `${name}.${operation} ohne Rolle`)
+      assert.equal(access({ req: { user: { id: 1, roles: ['servicedesk'] } } }), true, `${name}.${operation} ServiceDesk`)
     }
   }
 })

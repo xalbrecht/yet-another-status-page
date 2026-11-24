@@ -1,5 +1,6 @@
 import type { CollectionConfig } from 'payload'
 import { ta } from '@/lib/i18n/admin'
+import { rolesAccess } from '@/lib/access'
 
 export const Media: CollectionConfig = {
   slug: 'media',
@@ -9,9 +10,9 @@ export const Media: CollectionConfig = {
   },
   access: {
     read: () => true,
-    create: ({ req: { user } }) => !!user,
-    update: ({ req: { user } }) => !!user,
-    delete: ({ req: { user } }) => !!user,
+    create: rolesAccess(['admin', 'servicedesk']),
+    update: rolesAccess(['admin', 'servicedesk']),
+    delete: rolesAccess(['admin', 'servicedesk']),
   },
   upload: {
     staticDir: 'public/media',

@@ -1,5 +1,5 @@
 import type { GlobalConfig } from 'payload'
-import { authenticatedOrTestWrite } from '@/lib/access'
+import { rolesAccess } from '@/lib/access'
 import { TIMEZONE_OPTIONS } from '@/lib/datetime'
 import { ta } from '@/lib/i18n/admin'
 import { translatorsFor } from '@/lib/i18n/translators'
@@ -12,7 +12,7 @@ export const Settings: GlobalConfig = {
   },
   access: {
     read: () => true,
-    update: authenticatedOrTestWrite,
+    update: rolesAccess(['admin']),
   },
   fields: [
     // General Settings

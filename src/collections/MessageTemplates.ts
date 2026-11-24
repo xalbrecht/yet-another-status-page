@@ -1,5 +1,5 @@
 import type { CollectionConfig } from 'payload'
-import { authenticatedOrTestWrite } from '@/lib/access'
+import { rolesAccess } from '@/lib/access'
 import { ta } from '@/lib/i18n/admin'
 import { incidentStatusOptions } from './Incidents'
 import { maintenanceStatusOptions } from './Maintenances'
@@ -39,10 +39,10 @@ export const MessageTemplates: CollectionConfig = {
     ),
   },
   access: {
-    read: authenticatedOrTestWrite,
-    create: authenticatedOrTestWrite,
-    update: authenticatedOrTestWrite,
-    delete: authenticatedOrTestWrite,
+    read: rolesAccess(['admin', 'servicedesk']),
+    create: rolesAccess(['admin', 'servicedesk']),
+    update: rolesAccess(['admin', 'servicedesk']),
+    delete: rolesAccess(['admin', 'servicedesk']),
   },
   hooks: {
     beforeChange: [

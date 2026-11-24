@@ -1,5 +1,6 @@
 import { test, expect, type APIRequestContext, type PlaywrightWorkerArgs } from '@playwright/test'
 import { ADMIN_STORAGE_STATE } from '../utils/admin-auth'
+import { createService, createServiceGroup } from '../utils/payload-helpers'
 
 /**
  * Rollen der Benutzer (Issue #259). Die Tests laufen als Admin (storageState aus `global-setup.ts`) und legen eigene
@@ -130,5 +131,166 @@ test.describe('Benutzer ohne Admin-Rolle', () => {
       await request.delete(`/api/users/${user.id}`)
       await request.delete(`/api/users/${other.id}`)
     }
+  })
+})
+
+const denied = (response: { status(): number }) => {
+  expect(response.status()).toBeGreaterThanOrEqual(400)
+  expect(response.status()).toBeLessThan(500)
+}
+
+test.describe.serial('Sammlungen nach Rolle und Dienstgruppe', () => {
+  type Client = APIRequestContext
+  const data = {} as {
+    admin: Client
+    desk: Client
+    deskAll: Client
+    pm: Client
+    none: Client
+    groupA: number
+    groupB: number
+    svcA: number
+    svcB: number
+    incA: number
+    incMix: number
+    incB: number
+    deskId: number
+  }
+  const clients: Client[] = []
+
+  const incidentBody = (title: string, services: number[]) => ({
+    title,
+    impact: 'partial',
+    affectedServices: services,
+    updates: [{ status: 'investigating', message: 'Text' }],
+  })
+  const maintenanceBody = (title: string, services: number[]) => ({
+    title,
+    maintenanceKind: 'sla',
+    status: 'upcoming',
+    scheduledStartAt: new Date(Date.now() + 86400000).toISOString(),
+    scheduledEndAt: new Date(Date.now() + 90000000).toISOString(),
+    affectedServices: services,
+  })
+  const createIncident = async (client: Client, title: string, services: number[]) => client.post('/api/incidents', { data: incidentBody(title, services) })
+
+  test.beforeAll(async ({ playwright }) => {
+    const admin = await playwright.request.newContext({ baseURL: ORIGIN, extraHTTPHeaders: { Origin: ORIGIN }, storageState: ADMIN_STORAGE_STATE })
+    clients.push(admin)
+    data.admin = admin
+    const id = unique()
+    const groupA = await createServiceGroup({ name: `Rollen A ${id}`, icon: 'Server' })
+    const groupB = await createServiceGroup({ name: `Rollen B ${id}`, icon: 'Server' })
+    const startsAt = new Date(Date.now() - 5 * 86400000).toISOString()
+    const svcA = await createService({ name: `Rollen DA ${id}`, group: groupA.id, startsAt })
+    const svcB = await createService({ name: `Rollen DB ${id}`, group: groupB.id, startsAt })
+    Object.assign(data, { groupA: groupA.id, groupB: groupB.id, svcA: svcA.id, svcB: svcB.id })
+    const make = async (extra: Record<string, unknown>) => {
+      const email = `rolle-${unique()}@example.com`
+      const user = await createUser(admin, { email, ...extra })
+      const client = await loginAs(playwright, email)
+      clients.push(client)
+      return { user, client }
+    }
+    const desk = await make({ roles: ['servicedesk'], servicedeskGruppen: [groupA.id] })
+    data.desk = desk.client
+    data.deskId = desk.user.id
+    data.deskAll = (await make({ roles: ['servicedesk'], servicedeskAlleGruppen: true })).client
+    data.pm = (await make({ roles: ['produktmanager'], produktmanagerGruppen: [groupA.id] })).client
+    data.none = (await make({})).client
+    const inc = async (title: string, services: number[]) => {
+      const response = await createIncident(admin, `${title} ${id}`, services)
+      expect(response.status()).toBe(201)
+      return (await response.json()).doc.id as number
+    }
+    data.incA = await inc('Nur A', [svcA.id])
+    data.incMix = await inc('A und B', [svcA.id, svcB.id])
+    data.incB = await inc('Nur B', [svcB.id])
+  })
+
+  test.afterAll(async () => {
+    for (const client of clients) await client.dispose()
+  })
+
+  test('ServiceDesk mit Gruppe A legt Meldungen nur mit Diensten der Gruppe an', { tag: ['@admin', '@stoerungen'] }, async () => {
+    const ok = await createIncident(data.desk, 'Desk A', [data.svcA])
+    expect(ok.status()).toBe(201)
+    denied(await createIncident(data.desk, 'Desk B', [data.svcB]))
+    denied(await createIncident(data.desk, 'Desk A und B', [data.svcA, data.svcB]))
+    denied(await createIncident(data.desk, 'Desk ohne Dienst', []))
+  })
+
+  test('ServiceDesk mit „alle Dienstgruppen“ legt Meldungen in jeder Gruppe und ohne Dienste an', { tag: ['@admin', '@stoerungen'] }, async () => {
+    expect((await createIncident(data.deskAll, 'Alle B', [data.svcB])).status()).toBe(201)
+    expect((await createIncident(data.deskAll, 'Alle ohne Dienst', [])).status()).toBe(201)
+  })
+
+  test('ServiceDesk mit Gruppe A sieht nur Meldungen mit einem Dienst der Gruppe', { tag: ['@admin', '@stoerungen'] }, async () => {
+    const list = (await (await data.desk.get('/api/incidents?limit=200&depth=0')).json()) as { docs: Array<{ id: number }> }
+    const ids = list.docs.map((doc) => doc.id)
+    expect(ids).toContain(data.incA)
+    expect(ids).toContain(data.incMix)
+    expect(ids).not.toContain(data.incB)
+    denied(await data.desk.get(`/api/incidents/${data.incB}`))
+    const graphql = await data.desk.post('/api/graphql', { data: { query: '{ Incidents(limit: 200) { docs { id } } }' } })
+    const gids = ((await graphql.json()) as { data?: { Incidents?: { docs: Array<{ id: number }> } } }).data?.Incidents?.docs.map((doc) => doc.id) ?? []
+    expect(gids).not.toContain(data.incB)
+  })
+
+  test('ServiceDesk ändert und löscht nur Meldungen, deren Dienste alle in der Gruppe liegen', { tag: ['@admin', '@stoerungen'] }, async () => {
+    expect((await data.desk.patch(`/api/incidents/${data.incA}`, { data: { title: 'Nur A geändert' } })).status()).toBe(200)
+    denied(await data.desk.patch(`/api/incidents/${data.incMix}`, { data: { title: 'Gemischt geändert' } }))
+    denied(await data.desk.delete(`/api/incidents/${data.incMix}`))
+    denied(await data.desk.delete(`/api/incidents/${data.incB}`))
+    denied(await data.desk.patch(`/api/incidents/${data.incA}`, { data: { affectedServices: [data.svcA, data.svcB] } }))
+  })
+
+  test('Produktmanager legt Wartungen in der Gruppe an, Störungen nicht, und liest Meldungen der Gruppe', { tag: ['@admin', '@wartungen'] }, async () => {
+    expect((await data.pm.post('/api/maintenances', { data: maintenanceBody('PM A', [data.svcA]) })).status()).toBe(201)
+    denied(await data.pm.post('/api/maintenances', { data: maintenanceBody('PM B', [data.svcB]) }))
+    denied(await createIncident(data.pm, 'PM Störung', [data.svcA]))
+    const list = (await (await data.pm.get('/api/incidents?limit=200&depth=0')).json()) as { docs: Array<{ id: number }> }
+    const ids = list.docs.map((doc) => doc.id)
+    expect(ids).toContain(data.incA)
+    expect(ids).not.toContain(data.incB)
+  })
+
+  test('Statusprotokoll: Produktmanager sieht nur Dienste seiner Gruppe, ServiceDesk nichts', { tag: ['@admin', '@statusprotokoll'] }, async () => {
+    for (const service of [data.svcA, data.svcB]) {
+      expect((await data.admin.patch(`/api/services/${service}`, { data: { status: 'degraded' } })).status()).toBe(200)
+    }
+    const events = (await (await data.pm.get('/api/service-status-events?limit=200&depth=2')).json()) as { docs: Array<{ service: { id: number; group: { id: number } | number } }> }
+    expect(events.docs.length).toBeGreaterThan(0)
+    for (const event of events.docs) {
+      const group = event.service.group
+      expect(typeof group === 'object' ? group.id : group).toBe(data.groupA)
+    }
+    denied(await data.desk.get('/api/service-status-events'))
+  })
+
+  test('Ohne Admin-Rolle: keine Abonnenten, keine Vorlagen für Produktmanager, keine Einstellungen, keine Dienste', { tag: ['@admin', '@system'] }, async () => {
+    denied(await data.desk.get('/api/subscribers'))
+    denied(await data.pm.get('/api/subscribers'))
+    denied(await data.pm.get('/api/message-templates'))
+    expect((await data.desk.get('/api/message-templates')).status()).toBe(200)
+    denied(await data.desk.post('/api/globals/settings', { data: { siteName: 'x' } }))
+    denied(await data.desk.post('/api/globals/email-settings', { data: { enabled: false } }))
+    denied(await data.desk.patch(`/api/service-groups/${data.groupA}`, { data: { name: 'x' } }))
+    denied(await data.desk.post('/api/services', { data: { name: 'x', group: data.groupA, startsAt: new Date().toISOString() } }))
+    const email = (await (await data.desk.get('/api/globals/email-settings')).json()) as Record<string, unknown>
+    expect(email.smtpHost).toBeUndefined()
+  })
+
+  test('Benutzer ohne Rolle legt nichts an', { tag: ['@admin', '@system'] }, async () => {
+    denied(await createIncident(data.none, 'Ohne Rolle', [data.svcA]))
+    denied(await data.none.post('/api/maintenances', { data: maintenanceBody('Ohne Rolle', [data.svcA]) }))
+    denied(await data.none.get('/api/subscribers'))
+  })
+
+  test('Rollenänderung wirkt bei der nächsten Anfrage ohne neue Anmeldung', { tag: ['@admin', '@system'] }, async () => {
+    expect((await data.admin.patch(`/api/users/${data.deskId}`, { data: { roles: [] } })).status()).toBe(200)
+    denied(await createIncident(data.desk, 'Nach Entzug', [data.svcA]))
+    expect((await data.admin.patch(`/api/users/${data.deskId}`, { data: { roles: ['servicedesk'] } })).status()).toBe(200)
+    expect((await createIncident(data.desk, 'Nach Rückgabe', [data.svcA])).status()).toBe(201)
   })
 })

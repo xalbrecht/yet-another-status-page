@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getPayload } from 'payload'
 import { headers } from 'next/headers'
 import config from '@payload-config'
-import { isTestMode } from '@/lib/access'
+import { requireRoles } from '@/lib/route-auth'
 import { sendEmail, verifySmtp } from '@/lib/email'
 import { ta } from '@/lib/i18n/admin'
 import { parseRecipients } from '@/lib/report/export/recipients'
@@ -19,14 +19,14 @@ import type { EmailSetting } from '@/payload-types'
  */
 export const runtime = 'nodejs'
 
-type Code = 'unauthorized' | 'bad-request' | 'invalid-period' | 'no-recipients' | 'no-smtp' | 'smtp-failed' | 'running' | 'too-large' | 'plan-changed' | 'send-failed' | 'unknown'
+type Code = 'unauthorized' | 'forbidden' | 'bad-request' | 'invalid-period' | 'no-recipients' | 'no-smtp' | 'smtp-failed' | 'running' | 'too-large' | 'plan-changed' | 'send-failed' | 'unknown'
 const fail = (code: Code, error: string, status: number, extra: Record<string, unknown> = {}) => NextResponse.json({ error, code, ...extra }, { status })
 
 export async function POST(request: NextRequest) {
   try {
     const payload = await getPayload({ config })
-    const { user } = await payload.auth({ headers: await headers() })
-    if (!user && !isTestMode()) return fail('unauthorized', ta('Authentication required'), 401)
+    const auth = await requireRoles(payload, await headers(), ['admin', 'produktmanager'])
+    if (!auth.ok) return fail(auth.status === 401 ? 'unauthorized' : 'forbidden', auth.message, auth.status)
 
     const search: Record<string, string | string[] | undefined> = {}
     for (const key of new Set(request.nextUrl.searchParams.keys())) {

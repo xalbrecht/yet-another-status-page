@@ -4,7 +4,7 @@ import { getPayload } from 'payload'
 import { headers } from 'next/headers'
 import { sql } from '@payloadcms/db-postgres'
 import config from '@payload-config'
-import { isTestMode } from '@/lib/access'
+import { requireRoles } from '@/lib/route-auth'
 import { resolveDateTimeConfig } from '@/lib/datetime'
 import { collectSystemInfo } from '@/lib/system-info'
 import type { SqlRunner } from '@/lib/status-log-rebuild'
@@ -19,10 +19,8 @@ import packageJson from '../../../../package.json' with { type: 'json' }
 export async function GET() {
   try {
     const payload = await getPayload({ config })
-    const { user } = await payload.auth({ headers: await headers() })
-    if (!user && !isTestMode()) {
-      return NextResponse.json({ error: ta('Authentication required') }, { status: 401 })
-    }
+    const auth = await requireRoles(payload, await headers(), ['admin'])
+    if (!auth.ok) return NextResponse.json({ error: auth.message }, { status: auth.status })
 
     const info = await collectSystemInfo({
       env: process.env,

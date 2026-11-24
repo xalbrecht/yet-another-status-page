@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getPayload } from 'payload'
 import { headers } from 'next/headers'
 import config from '@payload-config'
-import { isTestMode } from '@/lib/access'
+import { requireRoles } from '@/lib/route-auth'
 import { invalidateLagebild } from '@/lib/lagebild-invalidate'
 import { rebuildStatusLog, type SqlRunner } from '@/lib/status-log-rebuild'
 import { ta } from '@/lib/i18n/admin'
@@ -25,10 +25,8 @@ export async function POST(request: NextRequest) {
   }
   try {
     const payload = await getPayload({ config })
-    const { user } = await payload.auth({ headers: await headers() })
-    if (!user && !isTestMode()) {
-      return NextResponse.json({ error: ta('Authentication required') }, { status: 401 })
-    }
+    const auth = await requireRoles(payload, await headers(), ['admin'])
+    if (!auth.ok) return NextResponse.json({ error: auth.message }, { status: auth.status })
 
     const body = (await request.json().catch(() => ({}))) as { dryRun?: unknown; expect?: unknown }
     const dryRun = body.dryRun !== false

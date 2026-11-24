@@ -1,11 +1,13 @@
 import React from 'react'
 import type { AdminViewServerProps } from 'payload'
+import { notFound } from 'next/navigation'
 import { DefaultTemplate } from '@payloadcms/next/templates'
 import { Gutter } from '@payloadcms/ui'
 import { safeLocale, safeTimeZone } from '@/lib/datetime'
 import { translatorsFor } from '@/lib/i18n/translators'
 import { TemplateWizard, type MessageKind } from './TemplateWizard'
 import { activeServiceWhereNow } from '@/lib/service-lifecycle'
+import { groupScope, hasAnyRole, type RoleUser } from '@/lib/roles'
 import type { WizardGroup, WizardTemplate, ServiceState } from './IncidentWizardParts'
 
 const idOf = (value: unknown): number => Number(typeof value === 'object' && value !== null ? (value as { id: unknown }).id : value)
@@ -18,11 +20,16 @@ const idOf = (value: unknown): number => Number(typeof value === 'object' && val
 export async function IncidentFromTemplateView({ initPageResult, params, searchParams }: AdminViewServerProps) {
   const user = initPageResult.req.user
   if (!user) return null
+  // Nur Admin und ServiceDesk: Für andere Rollen gibt es die Seite nicht
+  if (!hasAnyRole(user as RoleUser, ['admin', 'servicedesk'])) notFound()
   const payload = initPageResult.req.payload
+  // ServiceDesk wählt nur Dienste und Gruppen seines Bereichs, der Server prüft es beim Speichern ebenfalls
+  const scope = groupScope(user as RoleUser, ['servicedesk'])
+  const inScope = scope === 'all' ? undefined : scope.length ? scope : [0]
 
   const [groupsResult, servicesResult, templatesResult, maintenanceTemplatesResult, openIncidents, settings] = await Promise.all([
-    payload.find({ collection: 'service-groups', sort: '_order', pagination: false, depth: 0 }),
-    payload.find({ collection: 'services', where: activeServiceWhereNow(), sort: '_order', pagination: false, depth: 0 }),
+    payload.find({ collection: 'service-groups', where: inScope ? { id: { in: inScope } } : undefined, sort: '_order', pagination: false, depth: 0 }),
+    payload.find({ collection: 'services', where: inScope ? { and: [activeServiceWhereNow(), { group: { in: inScope } }] } : activeServiceWhereNow(), sort: '_order', pagination: false, depth: 0 }),
     payload.find({
       collection: 'message-templates',
       where: { and: [{ kind: { equals: 'incident' } }, { status: { equals: 'investigating' } }] },

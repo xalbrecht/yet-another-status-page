@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getPayload } from 'payload'
 import { headers } from 'next/headers'
 import config from '@payload-config'
-import { isTestMode } from '@/lib/access'
+import { requireRoles } from '@/lib/route-auth'
 import { loadReport } from '@/lib/report/load'
 import { ta } from '@/lib/i18n/admin'
 
@@ -13,10 +13,8 @@ import { ta } from '@/lib/i18n/admin'
 export async function GET(request: NextRequest) {
   try {
     const payload = await getPayload({ config })
-    const { user } = await payload.auth({ headers: await headers() })
-    if (!user && !isTestMode()) {
-      return NextResponse.json({ error: ta('Authentication required') }, { status: 401 })
-    }
+    const auth = await requireRoles(payload, await headers(), ['admin', 'produktmanager'])
+    if (!auth.ok) return NextResponse.json({ error: auth.message }, { status: auth.status })
 
     const search: Record<string, string | string[] | undefined> = {}
     for (const key of new Set(request.nextUrl.searchParams.keys())) {

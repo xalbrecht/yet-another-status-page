@@ -9,7 +9,6 @@ import { ta } from '@/lib/i18n/admin'
 import { activeServicesFilterOptions, validateActiveServices } from '@/lib/affected-services'
 import { invalidateLagebild } from '@/lib/lagebild-invalidate'
 import { resolveScheduledStatus } from '@/lib/maintenance/schedule'
-import { triggerDueProcessing } from '@/lib/maintenance/trigger'
 import { createMaintenanceNotification, formatScheduleTime, type DeferredNotification } from '@/lib/maintenance/notification'
 
 import type { MaintenanceStatus } from '@/lib/maintenance/schedule'
@@ -346,11 +345,11 @@ export const Maintenances: CollectionConfig = {
         if (req?.context?.skipScheduleOverlay) return doc
 
         // Zeigt den Zeitplan, der seit dem letzten Schreiben abgelaufen ist: Der Leser sieht den umgestellten Status.
-        // Gespeichert wird die Umstellung vom Zeitgeber (src/lib/maintenance/timer.ts), hier nur als Auffangnetz angestoßen.
+        // Nur die Anzeige: Gespeichert wird die Umstellung ausschließlich vom Zeitgeber (src/lib/maintenance/timer.ts),
+        // das Lesen löst weder Speichern noch Meldung aus.
         const newStatus = resolveScheduledStatus(doc)
         if (!newStatus) return doc
 
-        triggerDueProcessing()
         return { ...doc, status: newStatus }
       },
     ],

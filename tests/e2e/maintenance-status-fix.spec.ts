@@ -212,7 +212,7 @@ test.describe('Maintenance schedule auto-transition', { tag: ['@public', '@wartu
     expect(await maintenanceIsStoredAs(maintenance.id, 'upcoming')).toBe(true)
   })
 
-  test('a start time that elapses after creation transitions on read and is persisted', async () => {
+  test('a start time that elapses after creation shows as in progress on read', async () => {
     test.setTimeout(60_000)
 
     const maintenance = await createMaintenance({
@@ -222,16 +222,25 @@ test.describe('Maintenance schedule auto-transition', { tag: ['@public', '@wartu
     })
     expect(maintenance.status).toBe('upcoming')
 
-    // afterRead reports the transition to the caller immediately, but schedules the
-    // write out of band — so read first, then check what actually landed in the column.
+    // afterRead shows the transition to the reader; saving it is the job of the timer (next test)
     await expect
-      .poll(
-        async () => {
-          const read = await getMaintenance(maintenance.id)
-          return read.status === 'in_progress' && (await maintenanceIsStoredAs(maintenance.id, 'in_progress'))
-        },
-        { timeout: 30_000 },
-      )
+      .poll(async () => (await getMaintenance(maintenance.id)).status, { timeout: 30_000 })
+      .toBe('in_progress')
+  })
+
+  test('the timer saves a start time that elapses after creation, reading does not', async () => {
+    // First timer run 15 seconds after the server starts, then every 60 seconds
+    test.setTimeout(150_000)
+
+    const maintenance = await createMaintenance({
+      title: `Timer Start ${Date.now()}`,
+      status: 'upcoming',
+      scheduledStartAt: new Date(Date.now() + 5000).toISOString(),
+    })
+
+    // The query filters on the stored status, so it only matches after the timer has written it (reading never saves)
+    await expect
+      .poll(() => maintenanceIsStoredAs(maintenance.id, 'in_progress'), { timeout: 120_000, intervals: [5_000] })
       .toBe(true)
   })
 })

@@ -126,3 +126,25 @@ export async function groupIdsOfServices(payload: Payload, serviceIds: string[],
   }
   return [...groups]
 }
+
+/**
+ * Dienstgruppen der Störung oder Wartung, zu der ein Benachrichtigungsentwurf gehört. Eine leere Liste ohne Bezug,
+ * `null`, wenn das Bezugsobjekt fehlt oder ein Dienst keine Gruppe hat.
+ */
+export async function notificationGroupIds(
+  payload: Payload,
+  notification: { relatedIncident?: unknown; relatedMaintenance?: unknown },
+  req?: PayloadRequest,
+): Promise<number[] | null> {
+  const idOf = (value: unknown): string | null => {
+    if (value === null || value === undefined) return null
+    return String(typeof value === 'object' ? (value as { id: unknown }).id : value)
+  }
+  const incident = idOf(notification.relatedIncident)
+  const maintenance = idOf(notification.relatedMaintenance)
+  const [collection, id] = incident ? (['incidents', incident] as const) : maintenance ? (['maintenances', maintenance] as const) : [null, null]
+  if (!collection) return []
+  const doc = await payload.findByID({ collection, id, depth: 0, overrideAccess: true, disableErrors: true, req })
+  if (!doc) return null
+  return groupIdsOfServices(payload, serviceIdsOf(doc), req)
+}

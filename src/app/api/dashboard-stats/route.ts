@@ -1,12 +1,23 @@
 import { NextResponse } from 'next/server'
+import { headers } from 'next/headers'
 import { getPayload } from 'payload'
 import config from '@payload-config'
 import { getIncidentStatus } from '@/collections/Incidents'
 import { pendingSubscribersWhere } from '@/lib/subscriber-filter'
+import { requireRoles } from '@/lib/route-auth'
+import { ROLES, hasRole, type RoleUser } from '@/lib/roles'
+
+const none = Promise.resolve({ totalDocs: 0 })
 
 export async function GET() {
   try {
     const payload = await getPayload({ config })
+    const auth = await requireRoles(payload, await headers(), ROLES)
+    if (!auth.ok) return NextResponse.json({ error: auth.message }, { status: auth.status })
+    // Abonnenten zählen nur Admins, Benachrichtigungen Admins und ServiceDesk (ohne Anmeldung im Testmodus alles)
+    const user = auth.user as RoleUser
+    const isAdmin = !user || hasRole(user, 'admin')
+    const canNotify = isAdmin || hasRole(user, 'servicedesk')
 
     // Fetch all stats in parallel
     const [
@@ -19,17 +30,17 @@ export async function GET() {
       upcomingMaintenances,
     ] = await Promise.all([
       // Draft notifications
-      payload.count({
+      canNotify ? payload.count({
         collection: 'notifications',
         where: { status: { equals: 'draft' } },
-      }),
+      }) : none,
       // Scheduled notifications
-      payload.count({
+      canNotify ? payload.count({
         collection: 'notifications',
         where: { status: { equals: 'scheduled' } },
-      }),
+      }) : none,
       // Email subscribers (active only)
-      payload.count({
+      isAdmin ? payload.count({
         collection: 'subscribers',
         where: {
           and: [
@@ -37,9 +48,9 @@ export async function GET() {
             { active: { equals: true } },
           ],
         },
-      }),
+      }) : none,
       // SMS subscribers (active only)
-      payload.count({
+      isAdmin ? payload.count({
         collection: 'subscribers',
         where: {
           and: [
@@ -47,12 +58,12 @@ export async function GET() {
             { active: { equals: true } },
           ],
         },
-      }),
+      }) : none,
       // Subscribers waiting for approval (email also: address confirmation)
-      payload.count({
+      isAdmin ? payload.count({
         collection: 'subscribers',
         where: pendingSubscribersWhere(),
-      }),
+      }) : none,
       // Fetch all incidents to compute active count
       // (Incidents don't have a top-level status field - it's derived from updates)
       payload.find({

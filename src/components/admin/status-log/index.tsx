@@ -1,9 +1,11 @@
 import React from 'react'
 import type { AdminViewServerProps } from 'payload'
+import { notFound } from 'next/navigation'
 import { DefaultTemplate } from '@payloadcms/next/templates'
 import { Gutter } from '@payloadcms/ui'
 import { normalizeRules } from '@/lib/incident-classification'
 import { ta } from '@/lib/i18n/admin'
+import { hasRole, type RoleUser } from '@/lib/roles'
 import { safeLocale, safeTimeZone } from '@/lib/datetime'
 import { translatorsFor } from '@/lib/i18n/translators'
 import { isStatusLogMaintenanceDisabled } from '@/lib/status-log-maintenance'
@@ -14,6 +16,8 @@ import './status-log.scss'
 export async function StatusLogAdminView({ initPageResult, params, searchParams }: AdminViewServerProps) {
   const user = initPageResult.req.user
   if (!user) return null
+  // Nur Admin: Für andere Rollen gibt es die Seite nicht
+  if (!hasRole(user as RoleUser, 'admin')) notFound()
   const disabled = isStatusLogMaintenanceDisabled()
   const settings = disabled ? null : await initPageResult.req.payload.findGlobal({ slug: 'settings' })
   const ruleCount = settings ? normalizeRules(settings.classificationRules).length : 0

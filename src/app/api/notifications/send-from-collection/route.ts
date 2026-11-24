@@ -4,6 +4,9 @@ import { headers } from 'next/headers'
 import config from '@payload-config'
 import { sendNotificationDraft } from '@/lib/notifications/send-draft'
 import { ta } from '@/lib/i18n/admin'
+import { notificationGroupIds } from '@/lib/access'
+import { requireRoles } from '@/lib/route-auth'
+import { scopeAllows, type RoleUser } from '@/lib/roles'
 
 interface SendRequest {
   notificationId: string | number
@@ -15,17 +18,26 @@ export async function POST(request: NextRequest) {
 
     // Verify user is authenticated
     const headersList = await headers()
-    const { user } = await payload.auth({ headers: headersList })
+    const auth = await requireRoles(payload, headersList, ['admin', 'servicedesk'])
 
-    if (!user) {
-      return NextResponse.json({ error: ta('Authentication required') }, { status: 401 })
-    }
+    // Nur Admin und ServiceDesk, auch im Testmodus nur mit Anmeldung
+    if (!auth.ok) return NextResponse.json({ error: auth.message }, { status: auth.status })
+    if (!auth.user) return NextResponse.json({ error: ta('Authentication required') }, { status: 401 })
 
     const body: SendRequest = await request.json()
     const { notificationId } = body
 
     if (!notificationId) {
       return NextResponse.json({ error: ta('Missing notificationId') }, { status: 400 })
+    }
+
+    // ServiceDesk sendet nur Entwürfe zu Meldungen seiner Dienstgruppen (alle Dienste der Meldung in den erlaubten Gruppen)
+    const draft = await payload.findByID({ collection: 'notifications', id: notificationId, depth: 0, overrideAccess: true, disableErrors: true })
+    if (draft) {
+      const groups = await notificationGroupIds(payload, draft)
+      if (!scopeAllows(auth.user as RoleUser, ['servicedesk'], groups ?? [], 'all')) {
+        return NextResponse.json({ error: ta('You do not have permission for this action') }, { status: 403 })
+      }
     }
 
     const result = await sendNotificationDraft(payload, notificationId)

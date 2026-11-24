@@ -261,6 +261,7 @@
     "The last admin cannot lose the admin role.": "Der letzte Admin kann die Rolle Admin nicht verlieren.",
     "User roles for access control. Without a role the user cannot enter the admin area. The rights of several roles add up": "Rollen des Benutzers für die Zugriffssteuerung. Ohne Rolle kommt der Benutzer nicht in den Admin-Bereich. Die Rechte mehrerer Rollen addieren sich",
     "Without this checkbox and without a service group the role has no access": "Ohne diesen Haken und ohne Dienstgruppe hat die Rolle keinen Zugriff",
+    "You do not have permission for this action": "Keine Berechtigung für diese Aktion",
     "{count} rules saved": "{count} Regeln gespeichert",
     "{count} subscription(s) waiting for approval or confirmation": "{count} Abonnement(s) warten auf Freigabe oder Bestätigung",
     "= unchanged": "= unverändert",

@@ -1,6 +1,7 @@
 import React from 'react'
 import type { AdminViewServerProps } from 'payload'
-import { redirect } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
+import { hasAnyRole, type RoleUser } from '@/lib/roles'
 import { DefaultTemplate } from '@payloadcms/next/templates'
 import { Gutter } from '@payloadcms/ui'
 import { loadReport } from '@/lib/report/load'
@@ -27,6 +28,8 @@ const currentTime = () => Date.now()
 export async function AvailabilityReportView({ initPageResult, params, searchParams }: AdminViewServerProps) {
   const { req } = initPageResult
   if (!req.user) redirect('/admin/login')
+  // Nur Admin und Produktmanager: Für andere Rollen gibt es die Seite nicht
+  if (!hasAnyRole(req.user as RoleUser, ['admin', 'produktmanager'])) notFound()
   const search = (searchParams ?? {}) as Record<string, string | string[] | undefined>
   const now = currentTime()
   const settings = await req.payload.findGlobal({ slug: 'settings' })

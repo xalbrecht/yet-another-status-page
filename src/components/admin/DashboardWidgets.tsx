@@ -2,7 +2,9 @@
 
 import React, { useEffect, useState } from 'react'
 import Link from 'next/link'
+import { useAuth } from '@payloadcms/ui'
 import { useAdminText } from '@/lib/i18n/admin-client'
+import { hasAnyRole, hasRole, type RoleUser } from '@/lib/roles'
 import './DashboardWidgets.scss'
 
 interface WidgetData {
@@ -17,6 +19,9 @@ interface WidgetData {
 
 export const DashboardWidgets: React.FC = () => {
   const ta = useAdminText()
+  const { user } = useAuth()
+  const isAdmin = hasRole(user as RoleUser, 'admin')
+  const canNotify = hasAnyRole(user as RoleUser, ['admin', 'servicedesk'])
   const [data, setData] = useState<WidgetData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -65,7 +70,7 @@ export const DashboardWidgets: React.FC = () => {
     <div className="dashboard-widgets">
       <h2 className="dashboard-widgets__title">{ta('Status Overview')}</h2>
 
-      {data.pendingSubscribers > 0 && (
+      {isAdmin && data.pendingSubscribers > 0 && (
         <Link
           href="/admin/collections/subscribers?where[verified][not_equals]=true"
           data-testid="pending-subscribers-notice"
@@ -117,6 +122,8 @@ export const DashboardWidgets: React.FC = () => {
           </div>
         </Link>
 
+        {canNotify && (
+          <>
         {/* Pending Notifications */}
         <Link href="/admin/collections/notifications?where[status][equals]=draft" className="dashboard-widget dashboard-widget--pending">
           <div className="dashboard-widget__icon">
@@ -146,7 +153,11 @@ export const DashboardWidgets: React.FC = () => {
             <div className="dashboard-widget__label">{ta('Scheduled')}</div>
           </div>
         </Link>
+          </>
+        )}
 
+        {isAdmin && (
+          <>
         {/* Email Subscribers */}
         <Link href="/admin/collections/subscribers?where[type][equals]=email" className="dashboard-widget dashboard-widget--email">
           <div className="dashboard-widget__icon">
@@ -174,6 +185,8 @@ export const DashboardWidgets: React.FC = () => {
             <div className="dashboard-widget__label">{ta('SMS Subscribers')}</div>
           </div>
         </Link>
+          </>
+        )}
       </div>
     </div>
   )

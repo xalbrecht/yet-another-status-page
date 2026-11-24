@@ -44,3 +44,24 @@ test('Dienst ohne Gruppe: nur Admin darf (null wird als verweigert behandelt)', 
   assert.equal(scopeAllows(desk([10]), ['servicedesk'], groups ?? [], 'all'), false)
   assert.equal(scopeAllows({ roles: ['admin'] }, ['servicedesk'], groups ?? [], 'all'), true)
 })
+
+import { notificationGroupIds } from '@/lib/access'
+
+const docs: Record<string, Record<string, { affectedServices: number[] }>> = {
+  incidents: { '1': { affectedServices: [1] }, '2': { affectedServices: [1, 3] } },
+  maintenances: { '5': { affectedServices: [3] } },
+}
+const payloadWithDocs = {
+  ...payload,
+  findByID: async ({ collection, id }: { collection: string; id: string }) => docs[collection]?.[String(id)] ?? null,
+} as unknown as Payload
+
+test('notificationGroupIds nennt die Gruppen der Störung oder Wartung des Entwurfs', async () => {
+  assert.deepEqual(await notificationGroupIds(payloadWithDocs, { relatedIncident: 2 }), [10, 20])
+  assert.deepEqual(await notificationGroupIds(payloadWithDocs, { relatedMaintenance: { id: 5 } }), [20])
+})
+
+test('notificationGroupIds liefert eine leere Liste ohne Bezug und null bei fehlendem Bezugsobjekt', async () => {
+  assert.deepEqual(await notificationGroupIds(payloadWithDocs, {}), [])
+  assert.equal(await notificationGroupIds(payloadWithDocs, { relatedIncident: 99 }), null)
+})

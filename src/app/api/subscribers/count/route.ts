@@ -1,11 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { headers } from 'next/headers'
 import { getPayload } from 'payload'
 import config from '@payload-config'
 import { deliverableSubscribersWhere } from '@/lib/subscriber-filter'
+import { requireRoles } from '@/lib/route-auth'
 
 export async function GET(request: NextRequest) {
   try {
     const payload = await getPayload({ config })
+    const auth = await requireRoles(payload, await headers(), ['admin', 'servicedesk'])
+    if (!auth.ok) return NextResponse.json({ error: auth.message }, { status: auth.status })
     const { searchParams } = new URL(request.url)
     const channel = searchParams.get('channel') || 'both'
 

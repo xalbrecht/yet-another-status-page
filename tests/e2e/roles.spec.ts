@@ -287,6 +287,107 @@ test.describe.serial('Sammlungen nach Rolle und Dienstgruppe', () => {
     denied(await data.none.get('/api/subscribers'))
   })
 
+  const notAllowed = (response: { status(): number }) => expect(response.status()).toBe(403)
+  const allowedByRole = (response: { status(): number }) => {
+    expect(response.status()).not.toBe(401)
+    expect(response.status()).not.toBe(403)
+  }
+
+  test('Eigene Routen: Rolle je Route, Benutzer ohne Rolle überall 403', { tag: ['@api', '@system'] }, async () => {
+    const routes: Array<{ method: 'get' | 'post'; path: string; roles: Array<'admin' | 'desk' | 'pm'> }> = [
+      { method: 'get', path: '/api/availability-report', roles: ['admin', 'pm'] },
+      { method: 'get', path: '/api/availability-report/export', roles: ['admin', 'pm'] },
+      { method: 'post', path: '/api/availability-report/send', roles: ['admin', 'pm'] },
+      { method: 'post', path: '/api/status-log/rebuild', roles: ['admin'] },
+      { method: 'post', path: '/api/status-log/convert-maintenance', roles: ['admin'] },
+      { method: 'post', path: '/api/incidents/from-template', roles: ['admin', 'desk'] },
+      { method: 'post', path: '/api/maintenances/from-template', roles: ['admin', 'desk', 'pm'] },
+      { method: 'post', path: '/api/notifications/send-from-collection', roles: ['admin', 'desk'] },
+      { method: 'get', path: '/api/subscribers/count', roles: ['admin', 'desk'] },
+      { method: 'get', path: '/api/system-info', roles: ['admin'] },
+      { method: 'get', path: '/api/dashboard-stats', roles: ['admin', 'desk', 'pm'] },
+    ]
+    const clients = { admin: data.admin, desk: data.desk, pm: data.pm }
+    for (const route of routes) {
+      for (const [role, client] of Object.entries(clients) as Array<['admin' | 'desk' | 'pm', Client]>) {
+        const response = await (route.method === 'get' ? client.get(route.path) : client.post(route.path, { data: {} }))
+        const label = `${route.method} ${route.path} als ${role}`
+        if (route.roles.includes(role)) allowedByRole(response)
+        else expect(response.status(), label).toBe(403)
+      }
+      const none = await (route.method === 'get' ? data.none.get(route.path) : data.none.post(route.path, { data: {} }))
+      expect(none.status(), `${route.method} ${route.path} ohne Rolle`).toBe(403)
+    }
+  })
+
+  test('Dashboard-Zahlen: Produktmanager sieht weder Abonnenten noch Benachrichtigungen', { tag: ['@api', '@system'] }, async () => {
+    const stats = async (client: Client) => (await (await client.get('/api/dashboard-stats')).json()) as Record<string, number>
+    const pm = await stats(data.pm)
+    expect(pm.emailSubscribers).toBe(0)
+    expect(pm.smsSubscribers).toBe(0)
+    expect(pm.pendingSubscribers).toBe(0)
+    expect(pm.pendingNotifications).toBe(0)
+    const desk = await stats(data.desk)
+    expect(desk.emailSubscribers).toBe(0)
+    expect(desk.pendingSubscribers).toBe(0)
+  })
+
+  test('Benachrichtigung senden: ServiceDesk nur für Entwürfe zu Meldungen seiner Gruppen', { tag: ['@admin', '@abonnenten'] }, async () => {
+    const draft = async (incident: number) => {
+      const response = await data.admin.post('/api/notifications', { data: { title: `Entwurf ${unique()}`, channel: 'email', status: 'draft', subject: 'x', relatedIncident: incident } })
+      expect(response.status()).toBe(201)
+      return (await response.json()).doc.id as number
+    }
+    const foreign = await draft(data.incB)
+    const mixed = await draft(data.incMix)
+    for (const id of [foreign, mixed]) {
+      notAllowed(await data.desk.post('/api/notifications/send-from-collection', { data: { notificationId: id } }))
+      notAllowed(await data.pm.post('/api/notifications/send-from-collection', { data: { notificationId: id } }))
+    }
+  })
+
+  test('Menü und Seiten je Rolle', { tag: ['@admin', '@system'] }, async ({ browser }) => {
+    const nav = async (client: Client, path: string) => {
+      const context = await browser.newContext({ baseURL: ORIGIN, storageState: await client.storageState() })
+      const page = await context.newPage()
+      const response = await page.goto(path, { waitUntil: 'domcontentloaded', timeout: 120000 })
+      return { page, context, status: response?.status() ?? 0 }
+    }
+    const pmDash = await nav(data.pm, '/admin')
+    try {
+      await expect(pmDash.page.locator('a[href="/admin/verfuegbarkeitsbericht"]').first()).toBeVisible({ timeout: 60000 })
+      await expect(pmDash.page.locator('a[href="/admin/protokoll-pflege"]')).toHaveCount(0)
+      await expect(pmDash.page.locator('a[href="/admin/collections/subscribers"]')).toHaveCount(0)
+    } finally {
+      await pmDash.context.close()
+    }
+    const pmStatusLog = await nav(data.pm, '/admin/protokoll-pflege')
+    try {
+      expect(pmStatusLog.status).toBe(404)
+    } finally {
+      await pmStatusLog.context.close()
+    }
+    const deskReport = await nav(data.desk, '/admin/verfuegbarkeitsbericht')
+    try {
+      expect(deskReport.status).toBe(404)
+    } finally {
+      await deskReport.context.close()
+    }
+    const deskDash = await nav(data.desk, '/admin')
+    try {
+      await expect(deskDash.page.locator('a[href="/admin/collections/incidents"]').first()).toBeVisible({ timeout: 60000 })
+      await expect(deskDash.page.locator('a[href="/admin/verfuegbarkeitsbericht"]')).toHaveCount(0)
+    } finally {
+      await deskDash.context.close()
+    }
+    const none = await nav(data.none, '/admin')
+    try {
+      await expect(none.page.locator('a[href="/admin/collections/incidents"]')).toHaveCount(0)
+    } finally {
+      await none.context.close()
+    }
+  })
+
   test('Rollenänderung wirkt bei der nächsten Anfrage ohne neue Anmeldung', { tag: ['@admin', '@system'] }, async () => {
     expect((await data.admin.patch(`/api/users/${data.deskId}`, { data: { roles: [] } })).status()).toBe(200)
     denied(await createIncident(data.desk, 'Nach Entzug', [data.svcA]))

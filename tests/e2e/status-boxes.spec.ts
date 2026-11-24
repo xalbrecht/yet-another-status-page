@@ -255,8 +255,13 @@ test.describe('Tooltip an der Gruppe', { tag: ['@public', '@statusseite'] }, () 
     await page.goto('/')
     await waitForHydration(button(page))
   }
-  // Mit vielen Gruppen liegt die Kachel weit unten. Der Tooltip steht unter ihr und muss im Fenster liegen.
+  // Der Tooltip steht unter der Kachel und muss im Fenster liegen. Ist die Kachel die letzte auf einer kurzen Seite
+  // (wenig Gruppen in der Datenbank, z. B. in einem Shard der CI), reicht der Platz unter ihr nicht. Deshalb schafft
+  // der Test unter der Seite Platz, bevor er die Kachel in die Mitte scrollt.
   const hover = async (page: import('@playwright/test').Page) => {
+    await page.evaluate(() => {
+      document.body.style.paddingBottom = '600px'
+    })
     await tile(page).evaluate((element) => element.scrollIntoView({ block: 'center' }))
     await button(page).hover()
   }

@@ -75,9 +75,15 @@ jobs:
           CHECK_MIGRATIONS_DATABASE_URL: postgres://postgres:test@localhost:5432/postgres
 
   # Läuft parallel zu `checks`: die Gesamtzeit ist die des längeren Jobs, nicht die Summe.
+  # Die volle Suite läuft in zwei Teilen (Shards), jeder mit eigenem PostgreSQL und eigener Anwendung, also ohne geteilte
+  # Daten (Issue #103). Eine Auswahl von Testdateien (mode=some) ist kurz und läuft nur im Shard 1.
   e2e-tests:
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2]
 
     # Die Anwendung läuft direkt auf dem Runner (`next dev`), nur PostgreSQL ist ein Dienst-Container.
     # Ein zweites `npm install` in einem Container entfällt (rund 55 s je Lauf, gemessen in PR #208).
@@ -122,13 +128,26 @@ jobs:
           E2E_EVENT: ${{ github.event_name }}
           E2E_LABELS: ${{ toJSON(github.event.pull_request.labels.*.name) }}
 
+      # Ob dieser Shard Tests ausführt: mode=all in beiden Shards, mode=some nur im Shard 1, mode=none in keinem.
+      - name: Plan this shard
+        id: plan
+        run: |
+          if [ "$E2E_MODE" = "all" ] || { [ "$E2E_MODE" = "some" ] && [ "$SHARD" = "1" ]; }; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "run=false" >> "$GITHUB_OUTPUT"
+          fi
+        env:
+          E2E_MODE: ${{ steps.select.outputs.mode }}
+          SHARD: ${{ matrix.shard }}
+
       - name: Install Playwright browsers
-        if: steps.select.outputs.mode != 'none'
+        if: steps.plan.outputs.run == 'true'
         run: npx playwright install --with-deps chromium
 
       # Gleiche Einstellungen wie `app` in docker-compose.test.yml (lokaler Lauf über scripts/run-e2e-tests.sh)
       - name: Start test environment
-        if: steps.select.outputs.mode != 'none'
+        if: steps.plan.outputs.run == 'true'
         run: |
           START=$(date +%s)
           nohup npm run dev -- --port 3001 < /dev/null 2>&1 \
@@ -153,28 +172,33 @@ jobs:
           PAYLOAD_AUTO_GENERATE: "false"
 
       - name: Seed test data
-        if: steps.select.outputs.mode != 'none'
+        if: steps.plan.outputs.run == 'true'
         run: |
           API_BASE=http://localhost:3001 node tests/seed/seed-test-data.mjs
 
       - name: Run E2E tests
-        if: steps.select.outputs.mode != 'none'
+        if: steps.plan.outputs.run == 'true'
         run: |
           # Bei mode=some nur die gewählten Testdateien (eine je Zeile), sonst alle
+          # Bei mode=all nur der Anteil dieses Shards
           FILES=()
+          SHARD_ARG=()
           if [ "$E2E_MODE" = "some" ]; then mapfile -t FILES <<< "$E2E_FILES"; fi
-          PLAYWRIGHT_BASE_URL=http://localhost:3001 npx playwright test --project=chromium --workers=1 --timeout=120000 "${FILES[@]}"
+          if [ "$E2E_MODE" = "all" ]; then SHARD_ARG=("--shard=$SHARD/$SHARD_TOTAL"); fi
+          PLAYWRIGHT_BASE_URL=http://localhost:3001 npx playwright test --project=chromium --workers=1 --timeout=120000 "${SHARD_ARG[@]}" "${FILES[@]}"
         env:
           CI: ""  # Unset CI to allow local config options
           E2E_MODE: ${{ steps.select.outputs.mode }}
           E2E_FILES: ${{ steps.select.outputs.files }}
+          SHARD: ${{ matrix.shard }}
+          SHARD_TOTAL: ${{ strategy.job-total }}
 
       - name: Summarize test durations
-        if: always() && steps.select.outcome == 'success' && steps.select.outputs.mode != 'none'
+        if: always() && steps.select.outcome == 'success' && steps.plan.outputs.run == 'true'
         run: node scripts/e2e-timing.mjs test-results/results.json | tee -a "$GITHUB_STEP_SUMMARY"
 
       - name: Summarize startup timing
-        if: always() && steps.select.outcome == 'success' && steps.select.outputs.mode != 'none'
+        if: always() && steps.select.outcome == 'success' && steps.plan.outputs.run == 'true'
         run: |
           {
             echo "### Startup of the test environment (app log, UTC)"
@@ -188,7 +212,7 @@ jobs:
       # überspringen sich dort. Hier läuft der Server wie im Betrieb (PAYLOAD_PUBLIC_ALLOW_WRITES=false), nur diese
       # Tests laufen. Eigene Ausgabe und kein HTML-/JSON-Bericht, damit der Bericht des Hauptlaufs erhalten bleibt.
       - name: Check access protection (server without open writes)
-        if: always() && steps.select.outputs.lock == 'true'
+        if: always() && steps.select.outputs.lock == 'true' && matrix.shard == 1
         run: |
           fuser -k -TERM 3001/tcp || true
           for i in {1..30}; do
@@ -222,7 +246,7 @@ jobs:
         uses: actions/upload-artifact@v7
         if: failure()
         with:
-          name: app-log
+          name: app-log-${{ matrix.shard }}
           path: |
             app.log
             app-locked.log
@@ -232,7 +256,7 @@ jobs:
         uses: actions/upload-artifact@v7
         if: always()
         with:
-          name: playwright-report
+          name: playwright-report-${{ matrix.shard }}
           path: playwright-report/
           if-no-files-found: ignore
           retention-days: 7
@@ -241,6 +265,6 @@ jobs:
         uses: actions/upload-artifact@v7
         if: failure()
         with:
-          name: test-screenshots
+          name: test-screenshots-${{ matrix.shard }}
           path: test-results/
           retention-days: 7

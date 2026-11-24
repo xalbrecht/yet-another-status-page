@@ -56,7 +56,7 @@ A maintenance you set to "In Progress" or "Completed" yourself, or one with the 
 
 A maintenance that is saved with a start or end time already in the past is switched at once while saving, without an entry and without a notification (the notification for the new maintenance is created as before).
 
-Reading a maintenance whose schedule has passed also triggers the switch, at most every 30 seconds per process, as a safety net if the timer does not run. To switch off the timer, see `DISABLE_MAINTENANCE_TIMER` in [Configuration](../getting-started/configuration.md). `POST /api/maintenances/process-due` runs the switch immediately (signed-in users only).
+Reading a maintenance whose schedule has passed shows the new status, but does not save it or send anything: only the timer saves the switch. Until the next timer run (at most about 75 seconds after the server starts, otherwise at most 60 seconds) the stored status is still the old one. To switch off the timer, see `DISABLE_MAINTENANCE_TIMER` in [Configuration](../getting-started/configuration.md). `POST /api/maintenances/process-due` runs the switch immediately (signed-in users only).
 
 ## Adding Updates
 

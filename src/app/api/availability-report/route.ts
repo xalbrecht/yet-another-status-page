@@ -4,6 +4,8 @@ import { headers } from 'next/headers'
 import config from '@payload-config'
 import { requireRoles } from '@/lib/route-auth'
 import { loadReport } from '@/lib/report/load'
+import { reportScopeOf } from '@/lib/report/scope'
+import type { RoleUser } from '@/lib/roles'
 import { ta } from '@/lib/i18n/admin'
 
 /**
@@ -22,7 +24,7 @@ export async function GET(request: NextRequest) {
       search[key] = values.length > 1 ? values : values[0]
     }
 
-    const result = await loadReport(payload, search)
+    const result = await loadReport(payload, search, Date.now(), reportScopeOf(auth.user as RoleUser))
     if (!result.ok) return NextResponse.json({ error: result.error }, { status: 400 })
     if (result.data.error) return NextResponse.json({ error: result.data.error }, { status: 400 })
     return NextResponse.json({ ...result.data, period: result.period, params: result.params })

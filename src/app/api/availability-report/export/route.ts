@@ -8,6 +8,8 @@ import { ta } from '@/lib/i18n/admin'
 import { buildWorkbook } from '@/lib/report/export/excel'
 import { exportFiles, reportBaseName, uniqueSlugs } from '@/lib/report/export/files'
 import { loadReportContext } from '@/lib/report/load'
+import { reportScopeOf } from '@/lib/report/scope'
+import type { RoleUser } from '@/lib/roles'
 
 /**
  * Export des Berichts als ZIP (alle Dateien), PDF oder Excel. Nur für angemeldete Nutzer, im Testmodus
@@ -81,7 +83,7 @@ export async function GET(request: NextRequest) {
     const format = FORMATS.find((value) => value === search.format)
     if (!format) return fail(ta('The format must be zip, pdf or xlsx.'))
 
-    const loaded = await loadReportContext(payload, search)
+    const loaded = await loadReportContext(payload, search, Date.now(), reportScopeOf(auth.user as RoleUser))
     if (!loaded.ok) return fail(loaded.error)
     const { context } = loaded
     const base = reportBaseName(context.period, context.timeZone)

@@ -10,6 +10,7 @@ import { maintenanceWindow } from '@/lib/report/maintenance-time'
 import type { MaintenanceWindow } from '@/lib/report/metrics'
 import { parseReportParams, type ReportParams } from '@/lib/report/params'
 import { reportDataEnd, resolvePeriod, type ReportPeriod } from '@/lib/report/period'
+import type { GroupScope } from '@/lib/roles'
 
 /**
  * Lädt die Daten für den Verfügbarkeitsbericht und baut daraus die Berichtsdaten. Gemeinsam genutzt von
@@ -36,10 +37,15 @@ export type ReportContext = {
   weakestGroupId(): number | null
 }
 
+/**
+ * `scope` beschränkt den Bericht auf Dienstgruppen (Rolle Produktmanager): Gruppen, Dienste und Fußnoten kommen nur aus dem
+ * Bereich, vor jeder Berechnung. Eine fremde Gruppe in der Adresse gilt wie eine unbekannte Gruppe. `'all'` ändert nichts.
+ */
 export async function loadReportContext(
   payload: Payload,
   search: Record<string, string | string[] | undefined>,
   now: number = Date.now(),
+  scope: GroupScope = 'all',
 ): Promise<{ ok: true; context: ReportContext } | { ok: false; error: string }> {
   const settings = await payload.findGlobal({ slug: 'settings' })
   const dt = resolveDateTimeConfig(settings)
@@ -97,11 +103,15 @@ export async function loadReportContext(
     }
   }
 
-  const groups = groupDocs.docs.map((group) => ({ id: Number(group.id), name: group.name, target: group.availabilityTarget ?? null }))
+  const inScope = (groupId: number): boolean => scope === 'all' || scope.includes(groupId)
+  const groups = groupDocs.docs
+    .filter((group) => inScope(Number(group.id)))
+    .map((group) => ({ id: Number(group.id), name: group.name, target: group.availabilityTarget ?? null }))
   const globalTarget = settings.availabilityTarget ?? DEFAULT_AVAILABILITY_TARGET
   const rules = normalizeRules(settings.classificationRules)
   // Dienste im Bericht: am Berichtsdatum aktive, mit Schalter auch beendete. Dienste mit Beginn in der Zukunft nie.
-  const reportedDocs = serviceDocs.docs.filter((service) => isServiceActive(service, now) || (params.ended && isServiceEnded(service, now)))
+  const scopedServiceDocs = serviceDocs.docs.filter((service) => inScope(idOf(service.group)))
+  const reportedDocs = scopedServiceDocs.filter((service) => isServiceActive(service, now) || (params.ended && isServiceEnded(service, now)))
   const services = reportedDocs.map((service) => ({
     id: Number(service.id),
     name: service.name,
@@ -116,9 +126,12 @@ export async function loadReportContext(
   // Fußnoten: Vorfälle im ganzen angezeigten Bereich (Verlauf und Zeitraum), bei gewählter Gruppe nur deren Dienste
   const buildFor = (group: string | undefined) => {
     const scoped: ReportParams = { ...params, group }
+    // Mit Bereich zählen die Fußnoten nur Vorfälle der Dienste im Bereich, nie Vorfälle ohne Dienst oder anderer Gruppen
     const groupServiceIds = group
       ? reportedDocs.filter((service) => String(idOf(service.group)) === group).map((service) => Number(service.id))
-      : null
+      : scope === 'all'
+        ? null
+        : scopedServiceDocs.map((service) => Number(service.id))
     const footnotes = countFootnotes(
       incidentDocs.docs.map((incident) => ({
         title: incident.title,
@@ -166,8 +179,9 @@ export async function loadReport(
   payload: Payload,
   search: Record<string, string | string[] | undefined>,
   now: number = Date.now(),
+  scope: GroupScope = 'all',
 ): Promise<LoadedReport> {
-  const loaded = await loadReportContext(payload, search, now)
+  const loaded = await loadReportContext(payload, search, now, scope)
   if (!loaded.ok) return loaded
   const { context } = loaded
   const fallback = defaultGroupId(context.params, context.weakestGroupId)

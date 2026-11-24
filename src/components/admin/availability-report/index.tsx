@@ -5,6 +5,7 @@ import { hasAnyRole, type RoleUser } from '@/lib/roles'
 import { DefaultTemplate } from '@payloadcms/next/templates'
 import { Gutter } from '@payloadcms/ui'
 import { loadReport } from '@/lib/report/load'
+import { reportScopeOf } from '@/lib/report/scope'
 import { periodOptions } from '@/lib/report/period'
 import { resolveDateTimeConfig } from '@/lib/datetime'
 import { reportDisplayOf } from '@/lib/report/display-settings'
@@ -38,7 +39,7 @@ export async function AvailabilityReportView({ initPageResult, params, searchPar
   const emailSettings = await req.payload.findGlobal({ slug: 'email-settings' })
   const recipients = parseRecipients(emailSettings.reportRecipients)
   const requested = parseReportParams(search)
-  const result = await loadReport(req.payload, searchForLoad(requested, search), now)
+  const result = await loadReport(req.payload, searchForLoad(requested, search), now, reportScopeOf(req.user as RoleUser))
   const { groupInvalid, controlParams, exportable } = reportViewState(requested, result)
   const options = periodOptions(now, dt.timezone, dt.locale)
   const periodKey = result.ok ? result.period.key : requested.period ?? options[1]?.value ?? 'custom'

@@ -20,7 +20,7 @@ import { StatusLegend } from '@/components/status/StatusLegend'
 import { Lagebild } from '@/components/status/lagebild/Lagebild'
 import { StatusBoxes } from '@/components/status/StatusBoxes'
 import { loadLagebildCached } from '@/lib/lagebild-cache'
-import { parseBarHours, parseLagebildOverride, parsePeriodDays, type BarHours, type PeriodDays } from '@/lib/lagebild'
+import { parseBarHours, parsePeriodDays, type BarHours, type PeriodDays } from '@/lib/lagebild'
 import {
   buildIncidentItems,
   isOpenIncident,
@@ -296,10 +296,9 @@ export default async function StatusPage({
     gruppe?: string | string[]
     rueckschau?: string | string[]
     balken?: string | string[]
-    lagebild?: string | string[]
   }>
 }) {
-  const { gruppe, rueckschau, balken, lagebild: lagebildParam } = await searchParams
+  const { gruppe, rueckschau, balken } = await searchParams
   const {
     boxes,
     settings,
@@ -316,16 +315,6 @@ export default async function StatusPage({
   } = await getStatusData(rueckschau, balken)
   const { t, tf } = translatorsFor()
   const initialGroup = typeof gruppe === 'string' ? gruppe : null
-  // Testmodus „Beide“: ?lagebild=a oder ?lagebild=b zeigt nur eine Variante, damit beide in zwei Browser-Tabs verglichen
-  // werden können. Bei allen anderen Einstellungen hat der Parameter keine Wirkung.
-  const override = lagebildVariant === 'both' ? parseLagebildOverride(lagebildParam) : null
-  const shownVariant = override ?? lagebildVariant
-  const testBadge =
-    lagebildVariant === 'both'
-      ? override
-        ? tf('lagebild.testBadgeVariant', { variant: t(override === 'a' ? 'lagebild.variantA' : 'lagebild.variantB') })
-        : t('lagebild.testBadge')
-      : undefined
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
@@ -333,8 +322,6 @@ export default async function StatusPage({
         siteName={settings.siteName}
         logoLightUrl={getMediaUrl(settings.logoLight)}
         logoDarkUrl={getMediaUrl(settings.logoDark)}
-        badge={testBadge}
-        badgeTitle={testBadge ? t('lagebild.testNotice') : undefined}
       >
         <LoginButton />
         <Subscribe />
@@ -352,14 +339,14 @@ export default async function StatusPage({
             {/* Lagebild links, Boxen rechts; unter lg vor oder nach dem Lagebild (Website-Einstellungen → Lagebild) */}
             <div
               data-testid="status-layout"
-              data-variant={shownVariant}
+              data-variant={lagebildVariant}
               data-placement={boxes.placement}
               className="mb-10 grid gap-6 lg:grid-cols-[minmax(0,1.9fr)_minmax(18rem,1fr)] lg:items-start"
             >
               <div className="min-w-0">
                 {lagebild && (
                   <Lagebild
-                    variant={shownVariant as 'a' | 'b' | 'both'}
+                    variant={lagebildVariant as 'a' | 'b'}
                     data={lagebild}
                     maintenanceNotices={maintenanceNotices}
                     initialGroup={initialGroup}

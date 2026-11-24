@@ -11,10 +11,6 @@ interface HeaderProps {
   logoLightUrl?: string;
   logoDarkUrl?: string;
   subtitle?: string;
-  /** Marke neben dem Untertitel, z. B. „Testmodus“ */
-  badge?: string;
-  /** Hinweistext der Marke */
-  badgeTitle?: string;
   children?: React.ReactNode;
 }
 
@@ -23,8 +19,6 @@ export function Header({
   logoLightUrl,
   logoDarkUrl,
   subtitle,
-  badge,
-  badgeTitle,
   children,
 }: HeaderProps) {
   const { t } = useTranslation();
@@ -68,15 +62,6 @@ export function Header({
           </Link>
           <div className="hidden h-6 w-px bg-border sm:block" />
           <p className="hidden text-sm font-medium text-muted-foreground sm:block">{subtitleText}</p>
-          {badge && (
-            <span
-              data-testid="test-badge"
-              title={badgeTitle}
-              className="hidden whitespace-nowrap rounded-full border border-dashed border-border bg-secondary/60 px-2.5 py-0.5 text-xs font-medium text-muted-foreground sm:inline-block"
-            >
-              {badge}
-            </span>
-          )}
         </div>
         <div className="flex items-center gap-3">
           {children}

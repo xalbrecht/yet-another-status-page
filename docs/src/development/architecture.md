@@ -99,7 +99,7 @@ Further collections:
 
 ### Globals
 
-- **Settings** - Site configuration, SMTP, Twilio credentials, `lagebildVariant` (off, a, b, both)
+- **Settings** - Site configuration, SMTP, Twilio credentials, `lagebildVariant` (off, a, b)
 - **EmailSettings**, **SmsSettings** - Mail and SMS configuration
 
 ## Request Flow

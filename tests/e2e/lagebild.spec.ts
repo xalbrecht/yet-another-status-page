@@ -33,18 +33,15 @@ test.describe('Lagebild', { tag: ['@public', '@lagebild'] }, () => {
     const group = await createServiceGroup({ name: `Lagebild Mail ${id}`, icon: 'Mail' })
     const service = await createService({ name: `Lagebild Dienst ${id}`, group: group.id })
     await updateService(service.id, { status: 'partial' })
-    await updateSettings({ lagebildVariant: 'both' })
-
-    await page.goto('/')
-    const variantA = page.getByTestId('lagebild-a')
-    const variantB = page.getByTestId('lagebild-b')
-    await expect(variantA).toBeVisible()
-    await expect(variantB).toBeVisible()
 
     // Kachel mit Zustand, Balken und Eintrag in beiden Varianten
-    for (const variant of [variantA, variantB]) {
-      await expect(variant.getByRole('button', { name: new RegExp(`Lagebild Mail ${id}`) }).first()).toBeVisible()
-      await expect(variant.getByText(new RegExp(`(Partial Outage|Teilausfall): Lagebild Mail ${id}`))).toBeVisible()
+    for (const variant of ['a', 'b'] as const) {
+      await updateSettings({ lagebildVariant: variant })
+      await page.goto('/')
+      const view = page.getByTestId(`lagebild-${variant}`)
+      await expect(view).toBeVisible()
+      await expect(view.getByRole('button', { name: new RegExp(`Lagebild Mail ${id}`) }).first()).toBeVisible()
+      await expect(view.getByText(new RegExp(`(Partial Outage|Teilausfall): Lagebild Mail ${id}`))).toBeVisible()
     }
   })
 

@@ -1185,7 +1185,7 @@ export interface Setting {
   /**
    * Layout of the start page. "Situation overview A" and "Situation overview B" show the situation overview on the left and boxes for disruptions and maintenance on the right. A shows tiles, a click shows the services with bars. B shows a small bar in every tile. "Situation overview A and B (test)" displays both one after the other to compare them. "List (original)" is the simple list without situation overview. The three settings below apply to the situation overview (A, B and A and B) only.
    */
-  lagebildVariant?: ('off' | 'a' | 'b' | 'both') | null;
+  lagebildVariant?: ('off' | 'a' | 'b') | null;
   /**
    * Default look-back of the situation overview: restrictions list and availability per service. Visitors can change it on the status page.
    */

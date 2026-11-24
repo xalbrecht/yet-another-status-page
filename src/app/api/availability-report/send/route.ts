@@ -10,6 +10,8 @@ import { mailPartLimitBytes } from '@/lib/report/export/mail-limit'
 import { ReportMailImageTooLargeError, ReportMailPlanChangedError, ReportMailResumeError, ReportMailTooLargeError, sendReportMail } from '@/lib/report/export/mail'
 import { acquireSendLock } from '@/lib/report/export/send-lock'
 import { loadReportContext } from '@/lib/report/load'
+import { reportScopeOf } from '@/lib/report/scope'
+import type { RoleUser } from '@/lib/roles'
 import type { EmailSetting } from '@/payload-types'
 
 /**
@@ -48,7 +50,7 @@ export async function POST(request: NextRequest) {
       resume = { from, planId }
     }
 
-    const loaded = await loadReportContext(payload, search)
+    const loaded = await loadReportContext(payload, search, Date.now(), reportScopeOf(auth.user as RoleUser))
     if (!loaded.ok) return fail('invalid-period', loaded.error, 400)
 
     const settings = (await payload.findGlobal({ slug: 'email-settings' })) as EmailSetting

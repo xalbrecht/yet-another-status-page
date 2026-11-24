@@ -388,6 +388,27 @@ test.describe.serial('Sammlungen nach Rolle und Dienstgruppe', () => {
     }
   })
 
+  test('Bericht: Produktmanager sieht nur Dienstgruppen seines Bereichs, Admin alle', { tag: ['@api', '@bericht'] }, async () => {
+    const groupIds = async (client: Client) => {
+      const response = await client.get('/api/availability-report')
+      expect(response.status()).toBe(200)
+      return ((await response.json()) as { groupList: Array<{ id: number }> }).groupList.map((entry) => entry.id)
+    }
+    expect(await groupIds(data.pm)).toEqual([data.groupA])
+    const adminIds = await groupIds(data.admin)
+    expect(adminIds).toContain(data.groupA)
+    expect(adminIds).toContain(data.groupB)
+  })
+
+  test('Bericht: fremde Gruppe in der Adresse wird abgelehnt, auch beim Export', { tag: ['@api', '@bericht'] }, async () => {
+    const foreign = await data.pm.get(`/api/availability-report?view=groups&group=${data.groupB}`)
+    expect(foreign.status()).toBe(400)
+    expect(JSON.stringify(await foreign.json())).not.toContain(`Rollen DB`)
+    denied(await data.pm.get(`/api/availability-report/export?format=zip&group=${data.groupB}`))
+    expect((await data.pm.get(`/api/availability-report/export?format=zip&group=${data.groupA}`)).status()).toBe(200)
+    expect((await data.admin.get(`/api/availability-report/export?format=zip&group=${data.groupB}`)).status()).toBe(200)
+  })
+
   test('Rollenänderung wirkt bei der nächsten Anfrage ohne neue Anmeldung', { tag: ['@admin', '@system'] }, async () => {
     expect((await data.admin.patch(`/api/users/${data.deskId}`, { data: { roles: [] } })).status()).toBe(200)
     denied(await createIncident(data.desk, 'Nach Entzug', [data.svcA]))

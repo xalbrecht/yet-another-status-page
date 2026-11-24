@@ -107,6 +107,9 @@ export async function sendNotificationFromCollectionHandler({ input, req }: Task
         const unsubscribeUrl = subscriber.unsubscribeToken
           ? `${siteUrl}/unsubscribe/${subscriber.unsubscribeToken}`
           : `${siteUrl}/unsubscribe`
+        const oneClickUnsubscribeUrl = subscriber.unsubscribeToken
+          ? `${siteUrl}/api/unsubscribe/${subscriber.unsubscribeToken}`
+          : undefined
 
         const html = generateEmailHtml({
           siteName,
@@ -124,7 +127,7 @@ export async function sendNotificationFromCollectionHandler({ input, req }: Task
           to: subscriber.email!,
           subject: subject || tf('mail.defaultSubject', { siteName }),
           html,
-          unsubscribeUrl,
+          oneClickUnsubscribeUrl,
           language: lang,
         }
       })

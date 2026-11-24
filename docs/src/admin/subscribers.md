@@ -76,6 +76,8 @@ When clicked:
 
 The unsubscribe link is unique per subscriber and doesn't expire.
 
+Mail clients that offer their own "Unsubscribe" button use the `List-Unsubscribe` header instead. They send a `POST` to `/api/unsubscribe/{token}` and the subscription is set to inactive without a confirmation page. A browser opening that address is redirected to the page above.
+
 ## Phone Number Format
 
 SMS phone numbers must include the country code:

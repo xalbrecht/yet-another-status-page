@@ -64,7 +64,7 @@ Email notifications include:
 
 Emails automatically include:
 
-- `List-Unsubscribe` header for one-click unsubscribe
+- `List-Unsubscribe` header for one-click unsubscribe (points to `/api/unsubscribe/{token}`, which accepts the `POST` of the mail client)
 - `List-Unsubscribe-Post` header for RFC 8058 compliance
 
 ### Configuration

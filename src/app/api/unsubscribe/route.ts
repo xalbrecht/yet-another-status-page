@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getPayload } from 'payload'
 import config from '@payload-config'
+import { unsubscribeByToken } from '@/lib/unsubscribe'
 
 export async function POST(request: NextRequest) {
   try {
@@ -16,41 +17,21 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Find subscriber by token
-    const result = await payload.find({
-      collection: 'subscribers',
-      where: {
-        unsubscribeToken: {
-          equals: token,
-        },
-      },
-      limit: 1,
-    })
+    const result = await unsubscribeByToken(payload, token)
 
-    const subscriber = result.docs[0]
-
-    if (!subscriber) {
+    if (result === 'not-found') {
       return NextResponse.json(
         { error: 'Invalid unsubscribe token' },
         { status: 404 }
       )
     }
 
-    if (!subscriber.active) {
+    if (result === 'already-unsubscribed') {
       return NextResponse.json({
         success: true,
         message: 'Already unsubscribed',
       })
     }
-
-    // Deactivate the subscriber
-    await payload.update({
-      collection: 'subscribers',
-      id: subscriber.id,
-      data: {
-        active: false,
-      },
-    })
 
     return NextResponse.json({
       success: true,

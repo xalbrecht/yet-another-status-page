@@ -22,7 +22,7 @@
     "src/collections/Services.ts": ["@dienste", "@statusseite", "@lagebild", "@bericht"],
     "src/collections/ServiceStatusEvents.ts": ["@statusprotokoll", "@bericht", "@lagebild"],
     "src/collections/Subscribers.ts": ["@abonnenten", "@system"],
-    "src/collections/Users.ts": ["@system"],
+    "src/collections/Users.ts": ["*"],
     "src/collections/Media.ts": ["@system"],
     "src/collections/index.ts": ["*"],
     "src/globals/**": ["*"],

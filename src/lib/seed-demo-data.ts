@@ -59,7 +59,7 @@ export async function seedDemoData(payload: Payload) {
         data: {
           email: demoEmail,
           password: process.env.DEMO_USER_PASSWORD || 'demo2026#',
-          role: 'admin',
+          roles: ['admin'],
         },
       })
     } else {

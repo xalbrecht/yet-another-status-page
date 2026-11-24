@@ -36,6 +36,7 @@ import * as migration_20261119_300000_add_notification_draft_flag from './202611
 import * as migration_20261120_100000_add_status_before_incident from './20261120_100000_add_status_before_incident';
 import * as migration_20261120_100100_add_incident_service_choices from './20261120_100100_add_incident_service_choices';
 import * as migration_20261124_100000_remove_lagebild_variant_both from './20261124_100000_remove_lagebild_variant_both';
+import * as migration_20261125_100000_users_roles from './20261125_100000_users_roles';
 
 export const migrations = [
   {
@@ -227,5 +228,10 @@ export const migrations = [
     up: migration_20261124_100000_remove_lagebild_variant_both.up,
     down: migration_20261124_100000_remove_lagebild_variant_both.down,
     name: '20261124_100000_remove_lagebild_variant_both',
+  },
+  {
+    up: migration_20261125_100000_users_roles.up,
+    down: migration_20261125_100000_users_roles.down,
+    name: '20261125_100000_users_roles',
   },
 ];

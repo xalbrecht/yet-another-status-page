@@ -592,9 +592,19 @@ export interface User {
   id: number;
   name?: string | null;
   /**
-   * User role for access control
+   * User roles for access control. Without a role the user cannot enter the admin area. The rights of several roles add up
    */
-  role: 'admin' | 'editor';
+  roles?: ('admin' | 'servicedesk' | 'produktmanager')[] | null;
+  /**
+   * Without this checkbox and without a service group the role has no access
+   */
+  servicedeskAlleGruppen?: boolean | null;
+  servicedeskGruppen?: (number | ServiceGroup)[] | null;
+  /**
+   * Without this checkbox and without a service group the role has no access
+   */
+  produktmanagerAlleGruppen?: boolean | null;
+  produktmanagerGruppen?: (number | ServiceGroup)[] | null;
   /**
    * Only a marker for takeover and evaluation. Changes no behavior: test subscribers still receive notifications, test users can still sign in
    */
@@ -1008,7 +1018,11 @@ export interface SubscribersSelect<T extends boolean = true> {
  */
 export interface UsersSelect<T extends boolean = true> {
   name?: T;
-  role?: T;
+  roles?: T;
+  servicedeskAlleGruppen?: T;
+  servicedeskGruppen?: T;
+  produktmanagerAlleGruppen?: T;
+  produktmanagerGruppen?: T;
   isTest?: T;
   updatedAt?: T;
   createdAt?: T;
@@ -1183,7 +1197,7 @@ export interface Setting {
    */
   customStatusMessage?: string | null;
   /**
-   * Layout of the start page. "Situation overview A" and "Situation overview B" show the situation overview on the left and boxes for disruptions and maintenance on the right. A shows tiles, a click shows the services with bars. B shows a small bar in every tile. "Situation overview A and B (test)" displays both one after the other to compare them. "List (original)" is the simple list without situation overview. The three settings below apply to the situation overview (A, B and A and B) only.
+   * Layout of the start page. "Situation overview A" and "Situation overview B" show the situation overview on the left and boxes for disruptions and maintenance on the right. A shows tiles, a click shows the services with bars. B shows a small bar in every tile. "List (original)" is the simple list without situation overview. The three settings below apply to the situation overview (A and B) only.
    */
   lagebildVariant?: ('off' | 'a' | 'b') | null;
   /**

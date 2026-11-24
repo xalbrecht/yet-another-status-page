@@ -277,9 +277,10 @@ test.describe('Tooltip an der Gruppe', { tag: ['@public', '@statusseite'] }, () 
   test('Maus in den Tooltip lässt ihn offen, Klick im Tooltip zeigt das Dienstfeld', async ({ page }) => {
     await load(page)
     await hover(page)
-    const box = await tip(page).boundingBox()
-    expect(box).not.toBeNull()
-    await page.mouse.move(box!.x + box!.width / 2, box!.y + box!.height / 2, { steps: 15 })
+    await expect(tip(page)).toBeVisible()
+    // Playwright scrollt den Tooltip selbst in den Sichtbereich. Eine vorher gemessene Koordinate
+    // läge bei einer verschobenen Seite außerhalb des Fensters und die Maus verließe die Kachel.
+    await tip(page).hover()
     await expect(tip(page)).toBeVisible()
     await page.waitForTimeout(400)
     await expect(tip(page)).toBeVisible()

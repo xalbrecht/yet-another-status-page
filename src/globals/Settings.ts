@@ -173,11 +173,10 @@ export const Settings: GlobalConfig = {
             { label: ta('List (original)'), value: 'off' },
             { label: ta('Situation overview A'), value: 'a' },
             { label: ta('Situation overview B'), value: 'b' },
-            { label: ta('Situation overview A and B (test)'), value: 'both' },
           ],
           admin: {
             description: ta(
-              'Layout of the start page. "Situation overview A" and "Situation overview B" show the situation overview on the left and boxes for disruptions and maintenance on the right. A shows tiles, a click shows the services with bars. B shows a small bar in every tile. "Situation overview A and B (test)" displays both one after the other to compare them. "List (original)" is the simple list without situation overview. The three settings below apply to the situation overview (A, B and A and B) only.',
+              'Layout of the start page. "Situation overview A" and "Situation overview B" show the situation overview on the left and boxes for disruptions and maintenance on the right. A shows tiles, a click shows the services with bars. B shows a small bar in every tile. "List (original)" is the simple list without situation overview. The three settings below apply to the situation overview (A and B) only.',
             ),
           },
         },

@@ -187,7 +187,7 @@ Access **Configuration → Site Settings** (Konfiguration → Website-Einstellun
 - **Logos**: Light and dark theme logos
 - **SEO**: Meta titles and descriptions
 - **Status Override**: Maintenance mode and custom messages
-- **Situation overview** (Lagebild): **Display** (List (original), Situation overview A, Situation overview B or Situation overview A and B for testing), **Look-back period**, **Bar period** and, for the situation overview options (A, B and A and B), **Entries per box**, **Content of the boxes** and **Boxes on narrow screens** (see [Situation Overview](../admin/situation-overview.md))
+- **Situation overview** (Lagebild): **Display** (List (original), Situation overview A, or Situation overview B), **Look-back period**, **Bar period** and, for the situation overview options (A and B), **Entries per box**, **Content of the boxes** and **Boxes on narrow screens** (see [Situation Overview](../admin/situation-overview.md))
 - **Localization**: Timezone, locale, and week start (see below)
 
 #### Localization

@@ -35,6 +35,7 @@ import * as migration_20261119_200000_add_maintenance_affects_service from './20
 import * as migration_20261119_300000_add_notification_draft_flag from './20261119_300000_add_notification_draft_flag';
 import * as migration_20261120_100000_add_status_before_incident from './20261120_100000_add_status_before_incident';
 import * as migration_20261120_100100_add_incident_service_choices from './20261120_100100_add_incident_service_choices';
+import * as migration_20261124_100000_remove_lagebild_variant_both from './20261124_100000_remove_lagebild_variant_both';
 
 export const migrations = [
   {
@@ -221,5 +222,10 @@ export const migrations = [
     up: migration_20261120_100100_add_incident_service_choices.up,
     down: migration_20261120_100100_add_incident_service_choices.down,
     name: '20261120_100100_add_incident_service_choices',
+  },
+  {
+    up: migration_20261124_100000_remove_lagebild_variant_both.up,
+    down: migration_20261124_100000_remove_lagebild_variant_both.down,
+    name: '20261124_100000_remove_lagebild_variant_both',
   },
 ];

@@ -24,7 +24,7 @@ For each point check on Dev first, then on Test. Set a tick (✓) and write find
 | A7 | "since …" for a short log | Choose a look-back of 365 days, look at the services | Below the percentage it says "since DD.MM.YYYY" where the log is shorter than the chosen period | Unit (`all-groups-panel`): "since …" in the "All" panel. Open: display at the individual services. | ☐ | ☐ |  |
 | A8 | Availability values are plausible | Find two or three services with known incidents, compare the value with the incident list | Value between 0 and 100 %. A service without disruption shows 100 %. "Degraded Performance" and "Maintenance" count as available |  | ☐ | ☐ |  |
 
-## 2. Variant B (only in test mode "Both")
+## 2. Variant B
 
 | No. | Check | How to check | Expectation | Automatic | Dev | Test | Note |
 |---|---|---|---|---|---|---|---|
@@ -51,7 +51,7 @@ For each point check on Dev first, then on Test. Set a tick (✓) and write find
 
 ## 6. New layout (A and B)
 
-Applies to variant A, variant B and test mode "Both". The settings are under `/admin` in the website settings, area situation overview. Changes take effect after 60 seconds at the latest (cache of the situation overview); the boxes themselves are read on every call. Reset the values afterwards.
+Applies to variant A and variant B. The settings are under `/admin` in the website settings, area situation overview. Changes take effect after 60 seconds at the latest (cache of the situation overview); the boxes themselves are read on every call. Reset the values afterwards.
 
 | No. | Check | How to check | Expectation | Automatic | Dev | Test | Note |
 |---|---|---|---|---|---|---|---|
@@ -63,7 +63,6 @@ Applies to variant A, variant B and test mode "Both". The settings are under `/a
 | G8 | Tooltip at the edge | Approach the tiles at the far left and far right with the mouse, also in a narrow window | The tooltip stays inside the grid and is not cut off. Width at most 340 pixels |  | ☐ | ☐ |  |
 | G9 | Tile "All" | Look at the first tile (grid symbol, below it "All" only once), click it, click a row, move the mouse over the tile | Meta "n groups · m affected", preselected in variant A. The panel shows one row per group with bar and availability, a click on a row selects the group. The tooltip names the affected groups and "n more groups operational" | E2E and unit: symbol, preselection in variant A, a row selects the group, one row per group with availability. Open: meta "n groups · m affected", text in the tooltip. | ☐ | ☐ |  |
 | G11 | Dark mode | Switch dark mode on, look at boxes, strips, tooltip and service panel | Everything readable, strips and dots in the state colours |  | ☐ | ☐ |  |
-| G14 | Badge "Test mode" in the header | In test mode "Both" look at the header, once wide, once narrow | Wide: badge between "System Status" and "Subscribe", with a single variant labelled "Variant A" or "Variant B", the boxes do not shift. Below 640 pixels width the badge is hidden | E2E: badge in the header, "Variant A" and "Variant B". Open: position between "System Status" and "Subscribe", hidden below 640 pixels. | ☐ | ☐ |  |
 | G15 | Maintenance bar | Create a maintenance with status "In progress" and impact "Yes" for a service, look at the home page in light and dark, once wide, once narrow | Below the status banner a blue bar "Maintenance in progress: …" shows the counts. The service shows "Maintenance until …, restricted availability". Text readable, the bar wraps when narrow | E2E: bar, counts, suffix on the badge, banner with an incident (`maintenance-bar.spec.ts`), unit tests for counting and text. Open: appearance in light and dark, wrapping when narrow. | ☐ | ☐ |  |
 
 ## 7. Operations only (shell access needed)
@@ -109,7 +108,7 @@ A test covers these points completely. They no longer appear in the tables; thei
 | G6 | Tooltip with the keyboard | `status-boxes.spec.ts` (Tab, Esc, `aria-describedby`), `group-tooltip.test.tsx` (Zustandstext) |
 | G10 | Address | `lagebild.spec.ts` (Filter je Gruppe), `status-boxes.spec.ts` (Kachel „Alle“) |
 | G12 | List (original) unchanged | `status-boxes.spec.ts` (Variante off), `status-page.spec.ts` (Legende) |
-| G13 | Variant by address (only test mode "Both") | `status-boxes.spec.ts` (Testmodus per Adresse) |
+| G13, G14 | Variant by address and badge "Test mode" | removed with the test mode "Both" (#21) |
 | H5 | Decimal mark in the tooltip | `report-group-sheet-view.test.tsx` (Dezimalzeichen im Tooltip) |
 | H6 | Short outage visible | `report-group-sheet-view.test.tsx` (Mindesthöhe eines kurzen Ausfalls) |
 | H7 | Heading for a part of a month | `report-group-sheet.test.ts` (Überschrift mit Tagen) |

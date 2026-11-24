@@ -47,12 +47,12 @@ test('die drei Felder sind bei Variante C (off) ausgeblendet', () => {
     assert.ok(condition, `${name} hat keine Bedingung`)
     assert.equal(condition({ lagebildVariant: 'off' }), false)
     assert.equal(condition({ lagebildVariant: 'a' }), true)
-    assert.equal(condition({ lagebildVariant: 'both' }), true)
+    assert.equal(condition({ lagebildVariant: 'b' }), true)
   }
 })
 
-test('lagebildVariant behält die Werte off, a, b, both und nennt off „List (original)“', () => {
-  assert.deepEqual(optionValues('lagebildVariant'), ['off', 'a', 'b', 'both'])
+test('lagebildVariant hat genau die Werte off, a, b (kein Testmodus „Beide“) und nennt off „List (original)“', () => {
+  assert.deepEqual(optionValues('lagebildVariant'), ['off', 'a', 'b'])
   const off = (field('lagebildVariant').options as Array<{ value: string; label: unknown }>).find((o) => o.value === 'off')
   assert.match(JSON.stringify(off?.label), /List \(original\)|Liste \(Original\)/)
 })

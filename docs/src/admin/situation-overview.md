@@ -11,9 +11,8 @@ Go to **Configuration → Site Settings → Situation overview** (Konfiguration 
 | List (original) | Liste (Original) | No situation overview and no boxes. The start page shows the list of services per group, the legend and the incidents of the last days (default) |
 | Situation overview A | Lagebild A | Tiles per group. The tile **All** is preselected. A click on a tile opens the services of the group below the tile row |
 | Situation overview B | Lagebild B | Tiles per group, each with its own small bar. Nothing is preselected. A click opens the services of the group below the tile row, like in variant A |
-| Situation overview A and B (test) | Lagebild A und B (Test) | Both variants one after the other, to compare them (see [Test mode](#test-mode-both)) |
 
-The options Situation overview A, B and A and B also show the boxes and the three blocks described below. The settings for the boxes apply to these options only.
+The options Situation overview A and B also show the boxes and the three blocks described below. The settings for the boxes apply to these options only.
 
 ## Layout of the start page
 
@@ -89,17 +88,3 @@ Every status change of a service is recorded in **Status → Status log** (Statu
 ## Status from incidents
 
 Each incident has the field **Impact on affected services**. Saving an incident sets that status on the affected services. The worst impact of all open incidents applies. When the last open incident of a service is resolved, the service returns to Operational. A service in **Under Maintenance** stays in maintenance.
-
-## Test mode "Both"
-
-The option **Situation overview A and B (test)** shows variant A and variant B one after the other, so that you can compare them. The heading of each is marked with its variant, and the header of the page shows the badge **Test mode** (Testmodus).
-
-To compare the variants in two browser tabs, add a parameter to the address:
-
-| Address | Result |
-|---------|--------|
-| `/?lagebild=a` | Only variant A, the badge reads "Test mode: Variant A" |
-| `/?lagebild=b` | Only variant B, the badge reads "Test mode: Variant B" |
-| `/` or an invalid value | Both variants, the badge reads "Test mode" |
-
-The parameter has an effect only with the option **Both**. With every other option it is ignored and there is no badge. It stays in the address when a group is selected. While both variants are shown at once, the selection of a group is not written to the address.

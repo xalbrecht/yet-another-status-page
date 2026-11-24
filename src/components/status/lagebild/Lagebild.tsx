@@ -48,7 +48,7 @@ type TileModel = {
 }
 
 type Props = {
-  variant: Variant | 'both'
+  variant: Variant
   data: LagebildData
   /** Gruppe aus der Adresse (`?gruppe=…`), falls vorhanden */
   initialGroup: string | null
@@ -62,17 +62,7 @@ type Props = {
 
 /** Lagebild je Dienstgruppe: Kacheln mit aufklappbaren Diensten, Einschränkungen der gewählten Rückschau. */
 export function Lagebild({ variant, data, initialGroup, defaultPeriodDays, defaultBarHours, maintenanceNotices = {} }: Props) {
-  const { t } = useTranslation()
   if (data.groups.length === 0) return null
-
-  if (variant === 'both') {
-    return (
-      <div className="space-y-12">
-        <LagebildView variant="a" data={data} initialGroup={initialGroup} defaultPeriodDays={defaultPeriodDays} defaultBarHours={defaultBarHours} maintenanceNotices={maintenanceNotices} syncUrl={false} caption={t('lagebild.variantA')} />
-        <LagebildView variant="b" data={data} initialGroup={initialGroup} defaultPeriodDays={defaultPeriodDays} defaultBarHours={defaultBarHours} maintenanceNotices={maintenanceNotices} syncUrl={false} caption={t('lagebild.variantB')} />
-      </div>
-    )
-  }
 
   return (
     <LagebildView
@@ -82,7 +72,6 @@ export function Lagebild({ variant, data, initialGroup, defaultPeriodDays, defau
       defaultPeriodDays={defaultPeriodDays}
       defaultBarHours={defaultBarHours}
       maintenanceNotices={maintenanceNotices}
-      syncUrl
     />
   )
 }
@@ -94,8 +83,6 @@ function LagebildView({
   defaultPeriodDays,
   defaultBarHours,
   maintenanceNotices,
-  syncUrl,
-  caption,
 }: {
   variant: Variant
   data: LagebildData
@@ -103,8 +90,6 @@ function LagebildView({
   defaultPeriodDays: PeriodDays
   defaultBarHours: BarHours
   maintenanceNotices: Record<string, string>
-  syncUrl: boolean
-  caption?: string
 }) {
   const { t, tf } = useTranslation()
   const router = useRouter()
@@ -161,12 +146,10 @@ function LagebildView({
   function select(groupId: string | null) {
     const next = groupId === selected ? null : groupId
     setSelected(next)
-    if (syncUrl) {
-      const url = new URL(window.location.href)
-      if (next && next !== ALL_GROUPS) url.searchParams.set('gruppe', next)
-      else url.searchParams.delete('gruppe')
-      window.history.replaceState(null, '', url)
-    }
+    const url = new URL(window.location.href)
+    if (next && next !== ALL_GROUPS) url.searchParams.set('gruppe', next)
+    else url.searchParams.delete('gruppe')
+    window.history.replaceState(null, '', url)
   }
 
   return (
@@ -174,7 +157,6 @@ function LagebildView({
       <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
         <h2 className="text-xl font-bold text-foreground">
           {t('lagebild.title')}
-          {caption && <span className="ml-2 text-sm font-medium text-muted-foreground">({caption})</span>}
         </h2>
         <label className="flex items-center gap-2 text-sm text-muted-foreground">
           {t('lagebild.barLabel')}

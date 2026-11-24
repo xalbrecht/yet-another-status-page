@@ -17,9 +17,14 @@ test('Vorlagen sind ohne Anmeldung weder les- noch schreibbar', () => {
   for (const operation of operations) assert.equal(ask(MessageTemplates.access?.[operation], null), false, operation)
 })
 
-test('Angemeldete dürfen lesen und schreiben', () => {
+test('ServiceDesk und Admin dürfen lesen und schreiben, ohne Rolle und Produktmanager nicht', () => {
   delete process.env.PAYLOAD_PUBLIC_ALLOW_WRITES
-  for (const operation of operations) assert.equal(ask(MessageTemplates.access?.[operation], { id: 1 }), true, operation)
+  for (const operation of operations) {
+    assert.equal(ask(MessageTemplates.access?.[operation], { id: 1, roles: ['servicedesk'] }), true, operation)
+    assert.equal(ask(MessageTemplates.access?.[operation], { id: 1, roles: ['admin'] }), true, operation)
+    assert.equal(ask(MessageTemplates.access?.[operation], { id: 1, roles: ['produktmanager'] }), false, operation)
+    assert.equal(ask(MessageTemplates.access?.[operation], { id: 1 }), false, operation)
+  }
 })
 
 test('nur im Testmodus der Testumgebung ist der Zugriff offen', () => {

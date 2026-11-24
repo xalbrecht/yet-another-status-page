@@ -2,9 +2,10 @@ import { validateRecipients } from '@/lib/report/export/recipients'
 import { MAIL_PART_LIMIT_DEFAULT_MB, MAIL_PART_LIMIT_MAX_MB, MAIL_PART_LIMIT_MIN_MB } from '@/lib/report/export/mail-limit'
 import type { FieldAccess, GlobalConfig } from 'payload'
 import { ta } from '@/lib/i18n/admin'
+import { adminOnlyField, rolesAccess } from '@/lib/access'
 
-/** Das Global ist öffentlich lesbar (die Statusseite braucht einzelne Felder). Adressen von Mitarbeitern und die SMTP-Angaben (Server, Benutzer, Absender) lesen nur angemeldete Nutzer. Server-Code liest über die lokale API ohne Feldprüfung. */
-const authenticatedRead: FieldAccess = ({ req }) => Boolean(req.user)
+/** Das Global ist öffentlich lesbar (die Statusseite braucht einzelne Felder). Adressen von Mitarbeitern und die SMTP-Angaben (Server, Benutzer, Absender) lesen nur Admins. Server-Code liest über die lokale API ohne Feldprüfung. */
+const authenticatedRead: FieldAccess = adminOnlyField
 
 export const EmailSettings: GlobalConfig = {
   slug: 'email-settings',
@@ -14,6 +15,7 @@ export const EmailSettings: GlobalConfig = {
   },
   access: {
     read: () => true,
+    update: rolesAccess(['admin']),
   },
   fields: [
     {

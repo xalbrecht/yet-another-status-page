@@ -1,14 +1,16 @@
 import type { CollectionConfig, Payload, PayloadRequest } from 'payload'
 import { translatorsFor } from '@/lib/i18n/translators'
 import { generateShortId } from '@/lib/shortId'
-import { authenticatedOrTestWriteField, standardAccess } from '@/lib/access'
+import { groupScopedRead, groupScopedWrite, rolesAccess, rolesFieldAccess } from '@/lib/access'
 import { NTFY_TEXT_MAX_LENGTH, renderTemplate, SMS_TEXT_MAX_LENGTH } from '@/lib/template-text'
 import { getServerUrl } from '@/lib/utils'
 import { localizedDateAdmin } from '@/lib/localizedDateAdmin'
 import { invalidateLagebild } from '@/lib/lagebild-invalidate'
 import { ta } from '@/lib/i18n/admin'
-import { activeServicesFilterOptions, validateActiveServices } from '@/lib/affected-services'
+import { affectedServicesFilterOptions, validateAffectedServices } from '@/lib/affected-services'
 import { syncServiceStatusesFromIncidents, uniqueServiceIds } from '@/lib/service-status-sync'
+
+const incidentFieldAccess = rolesFieldAccess(['admin', 'servicedesk'])
 
 export const incidentStatusOptions = [
   { label: ta('Investigating'), value: 'investigating' },
@@ -141,7 +143,12 @@ export const Incidents: CollectionConfig = {
     },
     group: ta('Status'),
   },
-  access: standardAccess,
+  access: {
+    read: groupScopedRead(['servicedesk', 'produktmanager']),
+    create: rolesAccess(['admin', 'servicedesk']),
+    update: groupScopedWrite('incidents', ['servicedesk']),
+    delete: groupScopedWrite('incidents', ['servicedesk']),
+  },
   fields: [
     {
       name: 'title',
@@ -194,8 +201,8 @@ export const Incidents: CollectionConfig = {
       type: 'relationship',
       relationTo: 'services',
       hasMany: true,
-      filterOptions: activeServicesFilterOptions,
-      validate: validateActiveServices('incidents'),
+      filterOptions: affectedServicesFilterOptions(['servicedesk']),
+      validate: validateAffectedServices('incidents', ['servicedesk']),
       label: ta('Affected Services'),
       admin: {
         description: ta('Services affected by this incident'),
@@ -286,7 +293,7 @@ export const Incidents: CollectionConfig = {
           type: 'checkbox',
           label: ta('Create notification draft'),
           defaultValue: true,
-          access: { read: authenticatedOrTestWriteField, create: authenticatedOrTestWriteField, update: authenticatedOrTestWriteField },
+          access: { read: incidentFieldAccess, create: incidentFieldAccess, update: incidentFieldAccess },
           admin: {
             description: ta('Select to create a notification draft for this update. Clear it when entering an update afterwards.'),
           },
@@ -299,7 +306,7 @@ export const Incidents: CollectionConfig = {
           type: 'textarea',
           maxLength: SMS_TEXT_MAX_LENGTH,
           admin: { hidden: true },
-          access: { read: authenticatedOrTestWriteField, create: authenticatedOrTestWriteField, update: authenticatedOrTestWriteField },
+          access: { read: incidentFieldAccess, create: incidentFieldAccess, update: incidentFieldAccess },
         },
         {
           name: 'ntfyBody',
@@ -307,7 +314,7 @@ export const Incidents: CollectionConfig = {
           type: 'textarea',
           maxLength: NTFY_TEXT_MAX_LENGTH,
           admin: { hidden: true },
-          access: { read: authenticatedOrTestWriteField, create: authenticatedOrTestWriteField, update: authenticatedOrTestWriteField },
+          access: { read: incidentFieldAccess, create: incidentFieldAccess, update: incidentFieldAccess },
         },
       ],
     },
@@ -318,7 +325,7 @@ export const Incidents: CollectionConfig = {
       type: 'array',
       label: ta('Services after the resolution'),
       labels: { singular: ta('Service'), plural: ta('Services') },
-      access: { read: authenticatedOrTestWriteField, create: authenticatedOrTestWriteField, update: authenticatedOrTestWriteField },
+      access: { read: incidentFieldAccess, create: incidentFieldAccess, update: incidentFieldAccess },
       admin: {
         condition: (data) => {
           const updates = (data?.updates ?? []) as Array<{ status?: string }>

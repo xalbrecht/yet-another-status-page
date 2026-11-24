@@ -1,5 +1,5 @@
 import { APIError, type CollectionConfig } from 'payload'
-import { authenticatedOrTestWriteField, standardAccess } from '@/lib/access'
+import { publicRead, rolesAccess, rolesFieldAccess } from '@/lib/access'
 import { ta } from '@/lib/i18n/admin'
 import { invalidateLagebild } from '@/lib/lagebild-invalidate'
 import { localizedDateAdmin } from '@/lib/localizedDateAdmin'
@@ -37,7 +37,12 @@ export const Services: CollectionConfig = {
     },
   },
   orderable: true,
-  access: standardAccess,
+  access: {
+    read: publicRead,
+    create: rolesAccess(['admin']),
+    update: rolesAccess(['admin']),
+    delete: rolesAccess(['admin']),
+  },
   hooks: {
     afterChange: [
       async ({ doc, previousDoc, operation, req }) => {
@@ -157,7 +162,7 @@ export const Services: CollectionConfig = {
       label: ta('Status before the incident'),
       type: 'select',
       options: serviceStatusOptions.filter((option) => option.value !== 'maintenance'),
-      access: { read: authenticatedOrTestWriteField, create: authenticatedOrTestWriteField, update: authenticatedOrTestWriteField },
+      access: { read: rolesFieldAccess(['admin']), create: rolesFieldAccess(['admin']), update: rolesFieldAccess(['admin']) },
       admin: {
         readOnly: true,
         description: ta('Remembered when an incident first covers the service. The service can return to it when the last open incident ends'),

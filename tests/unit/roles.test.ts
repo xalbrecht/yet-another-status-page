@@ -63,10 +63,12 @@ test('scopeAllows: „any“ verlangt eine, „all“ jede Gruppe im Bereich', (
   assert.equal(scopeAllows(deskGroups, ['servicedesk'], [3], 'any'), false)
 })
 
-test('scopeAllows: ohne Gruppen der Objekte darf nur Admin', () => {
-  assert.equal(scopeAllows(deskAll, ['servicedesk'], [], 'any'), false)
-  assert.equal(scopeAllows(deskAll, ['servicedesk'], [], 'all'), false)
+test('scopeAllows: ohne Gruppen am Objekt darf mit Gruppenliste nur Admin, der Bereich „alle“ darf auch', () => {
+  assert.equal(scopeAllows(deskGroups, ['servicedesk'], [], 'any'), false)
+  assert.equal(scopeAllows(deskGroups, ['servicedesk'], [], 'all'), false)
+  assert.equal(scopeAllows(deskAll, ['servicedesk'], [], 'all'), true)
   assert.equal(scopeAllows(admin, ['servicedesk'], [], 'all'), true)
+  assert.equal(scopeAllows(deskNone, ['servicedesk'], [], 'all'), false)
 })
 
 test('scopeAllows: Bereich „alle“ erlaubt jede Gruppe', () => {

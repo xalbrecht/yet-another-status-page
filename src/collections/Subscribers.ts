@@ -1,7 +1,9 @@
 import type { CollectionConfig } from 'payload'
-import { authenticatedOrTestWrite, authenticatedOrTestWriteField, isTestMode } from '@/lib/access'
+import { isTestMode, rolesAccess, rolesFieldAccess } from '@/lib/access'
 import { generateShortId } from '@/lib/shortId'
 import { ta } from '@/lib/i18n/admin'
+
+const adminFieldAccess = rolesFieldAccess(['admin'])
 
 export const subscriptionTypeOptions = [
   { label: ta('Email'), value: 'email' },
@@ -28,10 +30,10 @@ export const Subscribers: CollectionConfig = {
     group: ta('Notifications'),
   },
   access: {
-    read: authenticatedOrTestWrite,
-    create: authenticatedOrTestWrite, // Public sign-ups go through POST /api/subscribe (local API)
-    update: authenticatedOrTestWrite,
-    delete: authenticatedOrTestWrite,
+    read: rolesAccess(['admin']),
+    create: rolesAccess(['admin']), // Public sign-ups go through POST /api/subscribe (local API)
+    update: rolesAccess(['admin']),
+    delete: rolesAccess(['admin']),
   },
   fields: [
     {
@@ -136,7 +138,7 @@ export const Subscribers: CollectionConfig = {
       name: 'verified',
       type: 'checkbox',
       // Public sign-ups must not approve themselves
-      access: { create: authenticatedOrTestWriteField, update: authenticatedOrTestWriteField },
+      access: { create: adminFieldAccess, update: adminFieldAccess },
       defaultValue: false,
       label: ta('Approved'),
       admin: {
@@ -147,7 +149,7 @@ export const Subscribers: CollectionConfig = {
       name: 'addressConfirmed',
       type: 'checkbox',
       // Public sign-ups must not approve themselves
-      access: { create: authenticatedOrTestWriteField, update: authenticatedOrTestWriteField },
+      access: { create: adminFieldAccess, update: adminFieldAccess },
       defaultValue: false,
       label: ta('Address confirmed'),
       admin: {
@@ -158,7 +160,7 @@ export const Subscribers: CollectionConfig = {
       name: 'verificationToken',
       type: 'text',
       // The response to a public create must not reveal the token
-      access: { read: authenticatedOrTestWriteField },
+      access: { read: adminFieldAccess },
       label: ta('Verification Token'),
       admin: {
         description: ta('Token used for email/phone verification'),
@@ -181,7 +183,7 @@ export const Subscribers: CollectionConfig = {
       name: 'unsubscribeToken',
       type: 'text',
       // The response to a public create must not reveal the token
-      access: { read: authenticatedOrTestWriteField },
+      access: { read: adminFieldAccess },
       label: ta('Unsubscribe Token'),
       unique: true,
       admin: {
@@ -215,7 +217,7 @@ export const Subscribers: CollectionConfig = {
       defaultValue: false,
       label: ta('Test record'),
       // Public sign-ups never set or read this marker (like the approval flags)
-      access: { read: authenticatedOrTestWriteField, create: authenticatedOrTestWriteField, update: authenticatedOrTestWriteField },
+      access: { read: adminFieldAccess, create: adminFieldAccess, update: adminFieldAccess },
       admin: {
         position: 'sidebar',
         description: ta('Only a marker for takeover and evaluation. Changes no behavior: test subscribers still receive notifications, test users can still sign in'),

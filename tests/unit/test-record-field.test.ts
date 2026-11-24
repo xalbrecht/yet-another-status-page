@@ -22,11 +22,12 @@ for (const [name, collection] of [['subscribers', Subscribers], ['users', Users]
   })
 }
 
-test('subscribers: isTest ist anonym nicht lesbar und nicht setzbar, für angemeldete Nutzer schon', () => {
+test('subscribers: isTest ist anonym nicht lesbar und nicht setzbar, für Admins schon', () => {
   const access = find(Subscribers.fields, 'isTest')?.access
   for (const op of ['read', 'create', 'update'] as const) {
     assert.equal(typeof access?.[op], 'function', `Zugriff ${op} fehlt`)
     assert.equal(access![op]!({ req: { user: null } }), false, `${op} anonym`)
-    assert.equal(access![op]!({ req: { user: { id: 1 } } }), true, `${op} angemeldet`)
+    assert.equal(access![op]!({ req: { user: { id: 1 } } }), false, `${op} ohne Rolle`)
+    assert.equal(access![op]!({ req: { user: { id: 1, roles: ['admin'] } } }), true, `${op} Admin`)
   }
 })

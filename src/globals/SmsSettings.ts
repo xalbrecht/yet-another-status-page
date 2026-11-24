@@ -1,5 +1,6 @@
 import type { GlobalConfig } from 'payload'
 import { ta } from '@/lib/i18n/admin'
+import { rolesAccess } from '@/lib/access'
 import { translatorsFor } from '@/lib/i18n/translators'
 
 export const SmsSettings: GlobalConfig = {
@@ -10,6 +11,7 @@ export const SmsSettings: GlobalConfig = {
   },
   access: {
     read: () => true,
+    update: rolesAccess(['admin']),
   },
   fields: [
     {

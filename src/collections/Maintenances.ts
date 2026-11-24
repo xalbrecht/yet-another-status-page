@@ -1,18 +1,20 @@
 import type { CollectionConfig } from 'payload'
 import { translatorsFor } from '@/lib/i18n/translators'
 import { generateShortId } from '@/lib/shortId'
-import { authenticatedOrTestWriteField, standardAccess } from '@/lib/access'
+import { groupScopedRead, groupScopedWrite, rolesAccess, rolesFieldAccess } from '@/lib/access'
 import { NTFY_TEXT_MAX_LENGTH, renderTemplate, SMS_TEXT_MAX_LENGTH } from '@/lib/template-text'
 import { getServerUrl } from '@/lib/utils'
 import { localizedDateAdmin } from '@/lib/localizedDateAdmin'
 import { ta } from '@/lib/i18n/admin'
-import { activeServicesFilterOptions, validateActiveServices } from '@/lib/affected-services'
+import { affectedServicesFilterOptions, validateAffectedServices } from '@/lib/affected-services'
 import { invalidateLagebild } from '@/lib/lagebild-invalidate'
 import { resolveScheduledStatus } from '@/lib/maintenance/schedule'
 import { createMaintenanceNotification, formatScheduleTime, type DeferredNotification } from '@/lib/maintenance/notification'
 
 import type { MaintenanceStatus } from '@/lib/maintenance/schedule'
 export type { MaintenanceStatus }
+
+const maintenanceFieldAccess = rolesFieldAccess(['admin', 'servicedesk', 'produktmanager'])
 
 export const maintenanceStatusOptions = [
   { label: ta('Upcoming'), value: 'upcoming' },
@@ -40,7 +42,12 @@ export const Maintenances: CollectionConfig = {
     },
     group: ta('Status'),
   },
-  access: standardAccess,
+  access: {
+    read: groupScopedRead(['servicedesk', 'produktmanager']),
+    create: rolesAccess(['admin', 'servicedesk', 'produktmanager']),
+    update: groupScopedWrite('maintenances', ['servicedesk', 'produktmanager']),
+    delete: groupScopedWrite('maintenances', ['servicedesk', 'produktmanager']),
+  },
   fields: [
     {
       name: 'title',
@@ -99,8 +106,8 @@ export const Maintenances: CollectionConfig = {
       type: 'relationship',
       relationTo: 'services',
       hasMany: true,
-      filterOptions: activeServicesFilterOptions,
-      validate: validateActiveServices('maintenances'),
+      filterOptions: affectedServicesFilterOptions(['servicedesk', 'produktmanager']),
+      validate: validateAffectedServices('maintenances', ['servicedesk', 'produktmanager']),
       label: ta('Affected Services'),
       admin: {
         description: ta('Services that will be affected by this maintenance'),
@@ -158,7 +165,7 @@ export const Maintenances: CollectionConfig = {
       // Ein Duplikat beginnt wieder angehakt: Ein abgewählter Haken einer nachgetragenen Wartung gehört nicht zur Kopie
       hooks: { beforeDuplicate: [() => true] },
       // Wie die SMS- und ntfy-Texte nur für Angemeldete: Öffentlich soll nicht sichtbar sein, welche Einträge nachgetragen wurden
-      access: { read: authenticatedOrTestWriteField, create: authenticatedOrTestWriteField, update: authenticatedOrTestWriteField },
+      access: { read: maintenanceFieldAccess, create: maintenanceFieldAccess, update: maintenanceFieldAccess },
       admin: {
         description: ta('Select to create a notification draft when saving and when the schedule starts or completes the maintenance. Clear it when entering a maintenance afterwards, so that nothing is announced.'),
         condition: (data) => !data?.id,
@@ -259,7 +266,7 @@ export const Maintenances: CollectionConfig = {
           type: 'checkbox',
           label: ta('Create notification draft'),
           defaultValue: true,
-          access: { read: authenticatedOrTestWriteField, create: authenticatedOrTestWriteField, update: authenticatedOrTestWriteField },
+          access: { read: maintenanceFieldAccess, create: maintenanceFieldAccess, update: maintenanceFieldAccess },
           admin: {
             description: ta('Select to create a notification draft for this update. Clear it when entering an update afterwards.'),
           },
@@ -272,7 +279,7 @@ export const Maintenances: CollectionConfig = {
           type: 'textarea',
           maxLength: SMS_TEXT_MAX_LENGTH,
           admin: { hidden: true },
-          access: { read: authenticatedOrTestWriteField, create: authenticatedOrTestWriteField, update: authenticatedOrTestWriteField },
+          access: { read: maintenanceFieldAccess, create: maintenanceFieldAccess, update: maintenanceFieldAccess },
         },
         {
           name: 'ntfyBody',
@@ -280,7 +287,7 @@ export const Maintenances: CollectionConfig = {
           type: 'textarea',
           maxLength: NTFY_TEXT_MAX_LENGTH,
           admin: { hidden: true },
-          access: { read: authenticatedOrTestWriteField, create: authenticatedOrTestWriteField, update: authenticatedOrTestWriteField },
+          access: { read: maintenanceFieldAccess, create: maintenanceFieldAccess, update: maintenanceFieldAccess },
         },
       ],
     },

@@ -249,6 +249,7 @@
   },
   "admin": {
     "(not clearly classified)": "(nicht eindeutig)",
+    "Only services of your own service groups can be chosen, at least one": "Es lassen sich nur Dienste der eigenen Dienstgruppen wählen, mindestens einer",
     "Product manager": "Produktmanager",
     "Product manager: all service groups": "Produktmanager: alle Dienstgruppen",
     "Product manager: service groups": "Produktmanager: Dienstgruppen",

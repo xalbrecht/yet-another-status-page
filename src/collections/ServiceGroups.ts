@@ -1,5 +1,5 @@
 import type { CollectionConfig } from 'payload'
-import { standardAccess } from '@/lib/access'
+import { publicRead, rolesAccess } from '@/lib/access'
 import { ta } from '@/lib/i18n/admin'
 import { DEFAULT_GROUP_ICON } from '@/lib/group-icons'
 import { groupIconOptions } from '@/lib/group-icon-options'
@@ -14,7 +14,12 @@ export const ServiceGroups: CollectionConfig = {
     group: ta('Status'),
   },
   orderable: true,
-  access: standardAccess,
+  access: {
+    read: publicRead,
+    create: rolesAccess(['admin']),
+    update: rolesAccess(['admin']),
+    delete: rolesAccess(['admin']),
+  },
   hooks: {
     // Name, Symbol und Reihenfolge der Gruppen stehen im zwischengespeicherten Lagebild
     afterChange: [

@@ -64,13 +64,12 @@ export function groupScope(user: RoleUser, roles: readonly ScopedRole[]): GroupS
 /**
  * Darf der Benutzer ein Objekt bearbeiten, das zu den Dienstgruppen `groupIds` gehört?
  * `any`: mindestens eine Gruppe im Bereich (Lesen). `all`: jede Gruppe im Bereich (Schreiben).
- * Ohne Gruppen am Objekt darf nur Admin.
+ * Ohne Gruppen am Objekt darf mit Gruppenliste nur Admin. Der Bereich „alle“ (Haken „alle Dienstgruppen“) gilt auch dafür.
  */
 export function scopeAllows(user: RoleUser, roles: readonly ScopedRole[], groupIds: number[], mode: 'any' | 'all'): boolean {
   if (hasRole(user, 'admin')) return true
-  if (groupIds.length === 0) return false
   const scope = groupScope(user, roles)
   if (scope === 'all') return true
-  if (scope.length === 0) return false
+  if (groupIds.length === 0 || scope.length === 0) return false
   return mode === 'any' ? groupIds.some((id) => scope.includes(id)) : groupIds.every((id) => scope.includes(id))
 }

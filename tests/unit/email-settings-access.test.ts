@@ -16,10 +16,12 @@ function find(fields: Field[], name: string): (Field & { access?: { read?: (args
 }
 
 for (const name of ['reportRecipients', 'subscriberRequestTo', 'smtpHost', 'smtpPort', 'smtpSecure', 'smtpUsername', 'smtpFromAddress', 'smtpFromName', 'smtpReplyTo']) {
-  test(`${name} ist anonym nicht lesbar, für angemeldete Nutzer schon`, () => {
+  test(`${name} ist anonym und ohne Rolle nicht lesbar, für Admins schon`, () => {
     const read = find(EmailSettings.fields, name)?.access?.read
     assert.equal(typeof read, 'function', 'Feldzugriff fehlt')
     assert.equal(read!({ req: { user: null } }), false)
-    assert.equal(read!({ req: { user: { id: 1 } } }), true)
+    assert.equal(read!({ req: { user: { id: 1 } } }), false)
+    assert.equal(read!({ req: { user: { id: 1, roles: ['servicedesk'] } } }), false)
+    assert.equal(read!({ req: { user: { id: 1, roles: ['admin'] } } }), true)
   })
 }

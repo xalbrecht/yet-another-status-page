@@ -1,6 +1,7 @@
 import { ta } from '@/lib/i18n/admin'
 import { formatAvailability } from '@/lib/availability'
 import type { ReportData } from '@/lib/report/aggregate'
+import { trendScale } from '@/lib/report/trend-scale'
 import { heatCellText, heatClass } from '@/lib/report/heat'
 import { GRID_COLOR, HEAT_COLOR, LINE_COLOR, MUTED_COLOR, TARGET_COLOR, TEXT_COLOR } from './palette'
 import { textEl, truncate } from './svg'
@@ -14,16 +15,12 @@ export function trendChart(trend: ReportData['trend'], target: number, locale: s
   const T = 14
   const B = 30
   const known = trend.map((point) => point.availability).filter((value): value is number => value !== null)
-  const max = 100
-  // Schrittweite so wählen, dass höchstens etwa sieben Gitterlinien entstehen, auch bei sehr niedrigen Werten
-  const low = Math.min(...known, target) - 0.5
-  const step = [0.25, 0.5, 1, 2, 5, 10, 20, 25, 50].find((candidate) => (max - low) / candidate <= 7) ?? 50
-  const min = Math.floor(low / step) * step
+  const { min, max, grid } = trendScale(known, target)
   const x = (index: number) => L + (index * (width - L - R)) / Math.max(1, trend.length - 1)
   const y = (value: number) => T + ((max - value) / (max - min)) * (height - T - B)
   const nf = new Intl.NumberFormat(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
   let body = ''
-  for (let value = max; value >= min - 1e-9; value -= step) {
+  for (const value of grid) {
     body += `<line x1="${L}" x2="${width - R}" y1="${y(value)}" y2="${y(value)}" stroke="${GRID_COLOR}"/>`
     body += textEl(L - 8, y(value) + 4, nf.format(value), { size: 11, anchor: 'end', fill: MUTED_COLOR })
   }

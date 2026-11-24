@@ -1,6 +1,7 @@
 import React from 'react'
 import { ta } from '@/lib/i18n/admin'
 import { formatAvailability } from '@/lib/availability'
+import { trendScale } from '@/lib/report/trend-scale'
 
 /** Verlauf der letzten 12 Monate als Linie mit gestrichelter Zielwertlinie (SVG ohne Bibliothek). */
 export function TrendChart(props: {
@@ -16,13 +17,9 @@ export function TrendChart(props: {
   const T = 14
   const B = 30
   const known = trend.map((point) => point.availability).filter((value): value is number => value !== null)
-  const min = Math.floor((Math.min(...known, target) - 0.5) * 2) / 2
-  const max = 100
+  const { min, max, grid } = trendScale(known, target)
   const x = (index: number) => L + (index * (W - L - R)) / Math.max(1, trend.length - 1)
   const y = (value: number) => T + ((max - value) / (max - min)) * (H - T - B)
-  const step = max - min > 1.6 ? 0.5 : 0.25
-  const grid: number[] = []
-  for (let value = max; value >= min - 1e-9; value -= step) grid.push(value)
   const nf = new Intl.NumberFormat(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
   const points = trend.map((point, index) => (point.availability === null ? null : `${x(index)},${y(point.availability)}`)).filter(Boolean).join(' ')
 

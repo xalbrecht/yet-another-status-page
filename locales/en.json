@@ -141,6 +141,7 @@
     "api.emailUnavailable": "Email notifications are not available. Please contact the administrator.",
     "api.invalidEmail": "Invalid email address",
     "api.emailExists": "This email is already subscribed",
+    "api.invalidGroups": "The selection of service groups is invalid",
     "api.smsUnavailable": "SMS notifications are not available. Please contact the administrator.",
     "api.invalidPhone": "Invalid phone number",
     "api.phoneExists": "This phone number is already subscribed",

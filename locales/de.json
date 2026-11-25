@@ -141,6 +141,7 @@
     "api.emailUnavailable": "E-Mail-Benachrichtigungen sind nicht verfügbar. Bitte den Administrator kontaktieren.",
     "api.invalidEmail": "Ungültige E-Mail-Adresse",
     "api.emailExists": "Diese E-Mail-Adresse ist bereits angemeldet",
+    "api.invalidGroups": "Die Auswahl der Dienstgruppen ist ungültig",
     "api.smsUnavailable": "SMS-Benachrichtigungen sind nicht verfügbar. Bitte den Administrator kontaktieren.",
     "api.invalidPhone": "Ungültige Telefonnummer",
     "api.phoneExists": "Diese Telefonnummer ist bereits angemeldet",

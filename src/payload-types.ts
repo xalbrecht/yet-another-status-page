@@ -572,7 +572,7 @@ export interface Subscriber {
   /**
    * The subscriber receives notifications about all service groups. Switch off to choose groups
    */
-  allGroups?: boolean | null;
+  allGroups: boolean;
   /**
    * Notifications reach this subscriber when they concern at least one of these groups. Applies only without "All service groups"
    */

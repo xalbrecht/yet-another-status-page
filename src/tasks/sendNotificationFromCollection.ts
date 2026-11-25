@@ -111,6 +111,9 @@ export async function sendNotificationFromCollectionHandler({ input, req }: Task
         const unsubscribeUrl = subscriber.unsubscribeToken
           ? `${siteUrl}/unsubscribe/${subscriber.unsubscribeToken}`
           : `${siteUrl}/unsubscribe`
+        const preferencesUrl = subscriber.unsubscribeToken
+          ? `${siteUrl}/subscription/${subscriber.unsubscribeToken}`
+          : undefined
         const oneClickUnsubscribeUrl = subscriber.unsubscribeToken
           ? `${siteUrl}/api/unsubscribe/${subscriber.unsubscribeToken}`
           : undefined
@@ -122,6 +125,7 @@ export async function sendNotificationFromCollectionHandler({ input, req }: Task
           ctaText: t('mail.cta'),
           ctaUrl: itemUrl,
           unsubscribeUrl,
+          preferencesUrl,
           siteUrl,
           logoUrl: logoUrl || undefined,
           language: lang,

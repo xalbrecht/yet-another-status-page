@@ -70,3 +70,21 @@ test('der Textteil der Mail zeigt die Zeichen, nicht ihre Maskierung', () => {
   assert.ok(text.includes('sagt "hallo"'))
   assert.ok(!/&(amp|lt|gt|quot);/.test(text))
 })
+
+test('preferencesUrl erzeugt den Link „Auswahl ändern“, ohne die Option fehlt er', () => {
+  const html = generateEmailHtml({ ...base, preferencesUrl: 'https://status.example/subscription/abc?a=1&b="2"' })
+  assert.ok(html.includes('href="https://status.example/subscription/abc?a=1&amp;b=&quot;2&quot;"'))
+  assert.ok(html.includes('>Change service group selection</a>'))
+  // Abmeldelink bleibt unverändert
+  assert.ok(html.includes('href="https://status.example/u?a=1&amp;b=&quot;2&quot;"'))
+
+  const without = generateEmailHtml(base)
+  assert.ok(!without.includes('/subscription/'))
+  assert.ok(!without.includes('Change service group selection'))
+  assert.ok(without.includes('href="https://status.example/u?a=1&amp;b=&quot;2&quot;"'))
+})
+
+test('der Link „Auswahl ändern“ erscheint auf Deutsch in der Mail', () => {
+  const html = generateEmailHtml({ ...base, preferencesUrl: 'https://status.example/subscription/abc', language: 'de' })
+  assert.ok(html.includes('>Auswahl der Dienstgruppen ändern</a>'))
+})

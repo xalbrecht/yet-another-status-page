@@ -172,6 +172,7 @@
     "api.availabilityFailed": "Verfügbarkeit der Abonnements konnte nicht geprüft werden",
     "mail.sentFrom": "Diese E-Mail wurde gesendet von",
     "mail.unsubscribe": "Von Statusmeldungen abmelden",
+    "mail.preferences": "Auswahl der Dienstgruppen ändern",
     "mail.defaultTitle": "Statusmeldung",
     "mail.defaultSubject": "[{siteName}] Statusmeldung",
     "mail.cta": "Status ansehen",

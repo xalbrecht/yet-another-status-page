@@ -172,6 +172,7 @@
     "api.availabilityFailed": "Failed to check subscription availability",
     "mail.sentFrom": "This email was sent from",
     "mail.unsubscribe": "Unsubscribe from status updates",
+    "mail.preferences": "Change service group selection",
     "mail.defaultTitle": "Status Update",
     "mail.defaultSubject": "[{siteName}] Status Update",
     "mail.cta": "View Status",

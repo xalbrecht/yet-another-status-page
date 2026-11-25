@@ -570,6 +570,14 @@ export interface Subscriber {
    */
   unsubscribeToken?: string | null;
   /**
+   * The subscriber receives notifications about all service groups. Switch off to choose groups
+   */
+  allGroups?: boolean | null;
+  /**
+   * Notifications reach this subscriber when they concern at least one of these groups. Applies only without "All service groups"
+   */
+  groups?: (number | ServiceGroup)[] | null;
+  /**
    * Whether the subscription is active
    */
   active?: boolean | null;
@@ -1006,6 +1014,8 @@ export interface SubscribersSelect<T extends boolean = true> {
   addressConfirmed?: T;
   verificationToken?: T;
   unsubscribeToken?: T;
+  allGroups?: T;
+  groups?: T;
   active?: T;
   isTest?: T;
   ipAddress?: T;

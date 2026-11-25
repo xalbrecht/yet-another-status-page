@@ -183,6 +183,11 @@ test.describe('Gruppenwahl der Abonnenten', { tag: ['@admin', '@abonnenten'] }, 
     const unknown = await request.get('/api/subscribers/count?channel=email&notification=2000000000')
     expect(unknown.status()).toBe(404)
   })
+
+  test('der Wert von „alle Dienstgruppen“ darf nicht leer sein', async ({ request }) => {
+    const response = await createSub(request, { allGroups: null })
+    expect(response.status()).toBe(400)
+  })
 })
 
 async function maintenance(request: APIRequestContext, services: number[]) {

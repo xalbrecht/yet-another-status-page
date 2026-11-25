@@ -215,6 +215,7 @@ export const Subscribers: CollectionConfig = {
     {
       name: 'allGroups',
       type: 'checkbox',
+      required: true,
       defaultValue: true,
       label: ta('All service groups'),
       admin: {

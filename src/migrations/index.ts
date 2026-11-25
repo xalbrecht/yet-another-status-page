@@ -38,6 +38,7 @@ import * as migration_20261120_100100_add_incident_service_choices from './20261
 import * as migration_20261124_100000_remove_lagebild_variant_both from './20261124_100000_remove_lagebild_variant_both';
 import * as migration_20261125_100000_users_roles from './20261125_100000_users_roles';
 import * as migration_20261126_100000_subscribers_groups from './20261126_100000_subscribers_groups';
+import * as migration_20261127_100000_subscribers_all_groups_not_null from './20261127_100000_subscribers_all_groups_not_null';
 
 export const migrations = [
   {
@@ -239,5 +240,10 @@ export const migrations = [
     up: migration_20261126_100000_subscribers_groups.up,
     down: migration_20261126_100000_subscribers_groups.down,
     name: '20261126_100000_subscribers_groups',
+  },
+  {
+    up: migration_20261127_100000_subscribers_all_groups_not_null.up,
+    down: migration_20261127_100000_subscribers_all_groups_not_null.down,
+    name: '20261127_100000_subscribers_all_groups_not_null',
   },
 ];

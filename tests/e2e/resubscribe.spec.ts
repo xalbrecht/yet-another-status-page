@@ -89,6 +89,23 @@ test.describe('Erneute Anmeldung nach der Abmeldung', { tag: ['@public', '@abonn
     expect((await subscribe()).status()).toBe(409)
   })
 
+  test('Erneute Anmeldungen zählen zur Ratenbegrenzung (5 je Adresse und Stunde)', async ({ request }) => {
+    const ip = `198.51.100.${((stamp + 7) % 250) + 1}`
+    const subscribe = (email: string) => request.post('/api/subscribe', { data: { type: 'email', email }, headers: { 'x-forwarded-for': ip } })
+
+    // Sechs abgemeldete Abonnenten, deren Einträge schon vor der Stunde bestehen
+    const twoHoursAgo = new Date(Date.now() - 2 * 3600 * 1000).toISOString()
+    const emails: string[] = []
+    for (let i = 0; i < 6; i++) {
+      const email = `limit-${i}-${stamp}@example.test`
+      const created = await request.post('/api/subscribers', { data: { type: 'email', email, active: false, verified: true, addressConfirmed: true, createdAt: twoHoursAgo } })
+      expect(created.ok(), await created.text()).toBeTruthy()
+      emails.push(email)
+    }
+    for (const email of emails.slice(0, 5)) expect((await subscribe(email)).status()).toBe(200)
+    expect((await subscribe(emails[5])).status()).toBe(429)
+  })
+
   test('SMS: Abgemeldete melden sich erneut an, die Freigabe fällt zurück', async ({ request }) => {
     const phone = `+4915${String(stamp).slice(-9)}`
     const subscribe = () => request.post('/api/subscribe', { data: { type: 'sms', phone }, headers })

@@ -50,16 +50,27 @@ async function checkDatabaseRateLimit(
   const windowStart = new Date()
   windowStart.setHours(windowStart.getHours() - RATE_LIMIT_WINDOW_HOURS)
 
-  // Count subscriptions from this IP in the rate limit window
+  // Count subscriptions from this IP in the rate limit window. Eine erneute Anmeldung (Reaktivierung) legt keinen
+  // Datensatz an: Sie zählt als Eintrag dieser IP, der im Zeitfenster geändert wurde und danach aktiv, unbestätigt und
+  // nicht freigegeben ist. Abmeldung, Bestätigung und Freigabe lassen einen Eintrag aus dieser Zählung fallen.
+  const since = windowStart.toISOString()
   const result = await payload.count({
     collection: 'subscribers',
     where: {
       ipAddress: {
         equals: ipAddress,
       },
-      createdAt: {
-        greater_than: windowStart.toISOString(),
-      },
+      or: [
+        { createdAt: { greater_than: since } },
+        {
+          and: [
+            { updatedAt: { greater_than: since } },
+            { active: { equals: true } },
+            { verified: { equals: false } },
+            { addressConfirmed: { equals: false } },
+          ],
+        },
+      ],
     },
   })
 

@@ -7,6 +7,7 @@ import { getServerUrl } from '@/lib/utils'
 import { sendSubscriptionConfirmationEmail, sendSubscriptionRequestEmail } from '@/lib/email'
 import { isSmsConfigured, isValidPhone, smsSubscriptionProblem } from '@/lib/sms-configured'
 import { reactivateSubscriber } from '@/lib/resubscribe'
+import { parseGroupChoice } from '@/lib/group-choice'
 
 // Rate limit configuration: 5 subscription attempts per IP per hour
 const RATE_LIMIT_MAX = 5
@@ -119,6 +120,13 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Gruppenwahl: „alle Dienstgruppen“ (Standard) oder eine Auswahl bekannter Dienstgruppen
+    const knownGroups = await payload.find({ collection: 'service-groups', depth: 0, pagination: false })
+    const choice = parseGroupChoice(body, knownGroups.docs.map((group) => Number(group.id)))
+    if (!choice.ok) {
+      return NextResponse.json({ error: t(choice.error) }, { status: 400 })
+    }
+
     const emailSettings = await payload.findGlobal({
       slug: 'email-settings',
     }) as EmailSetting
@@ -164,7 +172,7 @@ export async function POST(request: NextRequest) {
 
       // Create subscriber with IP address (needs address confirmation and operator approval)
       const subscriber = found
-        ? await reactivateSubscriber(payload, found.id, { type: 'email', ipAddress: clientIp })
+        ? await reactivateSubscriber(payload, found.id, { type: 'email', ipAddress: clientIp, allGroups: choice.allGroups, groups: choice.groups })
         : await payload.create({
             collection: 'subscribers',
             data: {
@@ -173,6 +181,8 @@ export async function POST(request: NextRequest) {
               verified: false,
               addressConfirmed: false,
               active: true,
+              allGroups: choice.allGroups,
+              groups: choice.groups,
               ipAddress: clientIp,
             },
           })
@@ -246,7 +256,7 @@ export async function POST(request: NextRequest) {
       }
 
       const subscriber = found
-        ? await reactivateSubscriber(payload, found.id, { type: 'sms', ipAddress: clientIp })
+        ? await reactivateSubscriber(payload, found.id, { type: 'sms', ipAddress: clientIp, allGroups: choice.allGroups, groups: choice.groups })
         : await payload.create({
             collection: 'subscribers',
             data: {
@@ -254,6 +264,8 @@ export async function POST(request: NextRequest) {
               phone,
               verified: false,
               active: true,
+              allGroups: choice.allGroups,
+              groups: choice.groups,
               ipAddress: clientIp,
             },
           })

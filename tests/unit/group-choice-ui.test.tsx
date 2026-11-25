@@ -1,7 +1,10 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { renderToStaticMarkup } from 'react-dom/server'
-import { GroupChoice, filterGroups, isGroupChoiceValid } from '@/components/status/GroupChoice'
+import { GroupChoice, describeChoice, filterGroups, isGroupChoiceValid } from '@/components/status/GroupChoice'
+import { SubscribeDialog } from '@/components/status/SubscribeDialog'
+import { makeTranslators } from '@/lib/i18n/core'
+import deJson from '../../locales/de.json' with { type: 'json' }
 import { withI18n } from './i18n-helpers'
 
 const groups = [
@@ -44,4 +47,29 @@ test('gültig ist „alle“ oder eine nicht leere Auswahl', () => {
   assert.equal(isGroupChoiceValid({ allGroups: true, groups: [] }), true)
   assert.equal(isGroupChoiceValid({ allGroups: false, groups: [1] }), true)
   assert.equal(isGroupChoiceValid({ allGroups: false, groups: [] }), false)
+})
+
+test('die Wahl steht in einem fieldset mit legend statt in einer losen Überschrift', () => {
+  const markup = render({ allGroups: true, groups: [] })
+  assert.match(markup, /<fieldset[^>]*>\s*<legend[^>]*>Dienstgruppen<\/legend>/)
+  assert.ok(!markup.includes('<h3'))
+})
+
+test('die Zusammenfassung nennt „alle Dienstgruppen“ oder die Zahl der gewählten Gruppen', () => {
+  const { t, tf } = makeTranslators(deJson.site)
+  assert.equal(describeChoice({ allGroups: true, groups: [] }, t, tf), 'Dienstgruppen: alle')
+  assert.equal(describeChoice({ allGroups: false, groups: [1] }, t, tf), 'Dienstgruppen: 1 gewählt')
+  assert.equal(describeChoice({ allGroups: false, groups: [1, 2, 3] }, t, tf), 'Dienstgruppen: 3 gewählt')
+})
+
+test('während die Liste lädt, steht ein Ladehinweis statt „keine Dienstgruppe“ da', () => {
+  const markup = renderToStaticMarkup(withI18n(<GroupChoice groups={[]} loading value={{ allGroups: false, groups: [] }} onChange={() => {}} idPrefix="t" />))
+  assert.ok(markup.includes('Dienstgruppen werden geladen'))
+  assert.ok(!markup.includes('Keine Dienstgruppe gefunden'))
+})
+
+test('der Anmeldedialog begrenzt seine Höhe mit dvh, damit die Adressleiste mobiler Browser ihn nicht abschneidet', () => {
+  const markup = renderToStaticMarkup(withI18n(<SubscribeDialog isOpen onClose={() => {}} />))
+  assert.ok(markup.includes('max-h-[90dvh]'))
+  assert.ok(!markup.includes('max-h-[90vh]'))
 })

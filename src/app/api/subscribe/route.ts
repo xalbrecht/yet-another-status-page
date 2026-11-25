@@ -6,6 +6,7 @@ import type { EmailSetting, Media, Setting, SmsSetting } from '@/payload-types'
 import { getServerUrl } from '@/lib/utils'
 import { sendSubscriptionConfirmationEmail, sendSubscriptionRequestEmail } from '@/lib/email'
 import { isSmsConfigured, isValidPhone, smsSubscriptionProblem } from '@/lib/sms-configured'
+import { reactivateSubscriber } from '@/lib/resubscribe'
 
 // Rate limit configuration: 5 subscription attempts per IP per hour
 const RATE_LIMIT_MAX = 5
@@ -49,16 +50,27 @@ async function checkDatabaseRateLimit(
   const windowStart = new Date()
   windowStart.setHours(windowStart.getHours() - RATE_LIMIT_WINDOW_HOURS)
 
-  // Count subscriptions from this IP in the rate limit window
+  // Count subscriptions from this IP in the rate limit window. Eine erneute Anmeldung (Reaktivierung) legt keinen
+  // Datensatz an: Sie zählt als Eintrag dieser IP, der im Zeitfenster geändert wurde und danach aktiv, unbestätigt und
+  // nicht freigegeben ist. Abmeldung, Bestätigung und Freigabe lassen einen Eintrag aus dieser Zählung fallen.
+  const since = windowStart.toISOString()
   const result = await payload.count({
     collection: 'subscribers',
     where: {
       ipAddress: {
         equals: ipAddress,
       },
-      createdAt: {
-        greater_than: windowStart.toISOString(),
-      },
+      or: [
+        { createdAt: { greater_than: since } },
+        {
+          and: [
+            { updatedAt: { greater_than: since } },
+            { active: { equals: true } },
+            { verified: { equals: false } },
+            { addressConfirmed: { equals: false } },
+          ],
+        },
+      ],
     },
   })
 
@@ -127,7 +139,8 @@ export async function POST(request: NextRequest) {
         )
       }
 
-      // Check if email already exists
+      // Ein aktiver Eintrag mit dieser Adresse bleibt ein Fall für 409. Wer sich abgemeldet hat (Eintrag inaktiv),
+      // meldet sich erneut an: Der Eintrag wird wieder aktiviert und braucht Bestätigung und Freigabe von vorn.
       const existing = await payload.find({
         collection: 'subscribers',
         where: {
@@ -138,9 +151,11 @@ export async function POST(request: NextRequest) {
             equals: 'email',
           },
         },
+        limit: 1,
       })
+      const found = existing.docs[0]
 
-      if (existing.docs.length > 0) {
+      if (found && found.active !== false) {
         return NextResponse.json(
           { error: t('api.emailExists') },
           { status: 409 }
@@ -148,17 +163,19 @@ export async function POST(request: NextRequest) {
       }
 
       // Create subscriber with IP address (needs address confirmation and operator approval)
-      const subscriber = await payload.create({
-        collection: 'subscribers',
-        data: {
-          type: 'email',
-          email,
-          verified: false,
-          addressConfirmed: false,
-          active: true,
-          ipAddress: clientIp,
-        },
-      })
+      const subscriber = found
+        ? await reactivateSubscriber(payload, found.id, { type: 'email', ipAddress: clientIp })
+        : await payload.create({
+            collection: 'subscribers',
+            data: {
+              type: 'email',
+              email,
+              verified: false,
+              addressConfirmed: false,
+              active: true,
+              ipAddress: clientIp,
+            },
+          })
 
       // A failed mail must not fail the subscription: log and continue
       try {
@@ -215,9 +232,12 @@ export async function POST(request: NextRequest) {
                 equals: 'sms',
               },
             },
+            limit: 1,
           })
         : null
-      const problem = smsSubscriptionProblem({ configured, phone, exists: (existing?.docs.length ?? 0) > 0 })
+      const found = existing?.docs[0]
+      // Nur ein aktiver Eintrag blockiert die Anmeldung, ein abgemeldeter wird wieder aktiviert
+      const problem = smsSubscriptionProblem({ configured, phone, exists: Boolean(found && found.active !== false) })
       if (problem) {
         return NextResponse.json(
           { error: t(problem.key) },
@@ -225,16 +245,18 @@ export async function POST(request: NextRequest) {
         )
       }
 
-      const subscriber = await payload.create({
-        collection: 'subscribers',
-        data: {
-          type: 'sms',
-          phone,
-          verified: false,
-          active: true,
-          ipAddress: clientIp,
-        },
-      })
+      const subscriber = found
+        ? await reactivateSubscriber(payload, found.id, { type: 'sms', ipAddress: clientIp })
+        : await payload.create({
+            collection: 'subscribers',
+            data: {
+              type: 'sms',
+              phone,
+              verified: false,
+              active: true,
+              ipAddress: clientIp,
+            },
+          })
 
       // Tell the operator about the request. A failed mail must not fail the subscription
       if (emailSettings.subscriberRequestTo && isEmailConfigured(emailSettings)) {

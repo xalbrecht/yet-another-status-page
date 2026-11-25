@@ -10,7 +10,8 @@ export const RecipientCountField: React.FC = () => {
   const [count, setCount] = useState<number | null>(null)
   const [loading, setLoading] = useState(false)
 
-  useDocumentInfo() // Hook call required for context
+  // Bei einem gespeicherten Entwurf zählen nur Abonnenten, deren Gruppenwahl zu den Dienstgruppen der Meldung passt
+  const { id: notificationId } = useDocumentInfo()
   const channelField = useField<string>({ path: 'channel' })
   const statusField = useField<string>({ path: 'status' })
   const recipientCountField = useField<number>({ path: 'recipientCount' })
@@ -32,7 +33,7 @@ export const RecipientCountField: React.FC = () => {
     const fetchCount = async () => {
       setLoading(true)
       try {
-        const response = await fetch(`/api/subscribers/count?channel=${channel}`)
+        const response = await fetch(`/api/subscribers/count?channel=${channel}${notificationId ? `&notification=${notificationId}` : ''}`)
         if (response.ok) {
           const data = await response.json()
           setCount(data.count)
@@ -45,7 +46,7 @@ export const RecipientCountField: React.FC = () => {
     }
 
     fetchCount()
-  }, [channel, isSent, savedCount])
+  }, [channel, isSent, savedCount, notificationId])
 
   return (
     <div className="recipient-count-field">

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { headers } from 'next/headers'
 import { getPayload } from 'payload'
 import config from '@payload-config'
-import { deliverableSubscribersWhere } from '@/lib/subscriber-filter'
+import { deliverableSubscribersWhere, groupsForDelivery } from '@/lib/subscriber-filter'
 import { requireRoles } from '@/lib/route-auth'
 
 export async function GET(request: NextRequest) {
@@ -13,12 +13,29 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const channel = searchParams.get('channel') || 'both'
 
+    // Mit `notification`: nur Abonnenten, deren Wahl zu den Dienstgruppen dieser Benachrichtigung passt. Gelesen wird
+    // mit den Rechten des Benutzers, ein Entwurf fremder Dienstgruppen ergibt 404.
+    let groups: number[] = []
+    const notificationId = searchParams.get('notification')
+    if (notificationId) {
+      const notification = await payload.findByID({
+        collection: 'notifications',
+        id: notificationId,
+        depth: 0,
+        user: auth.user,
+        overrideAccess: false,
+        disableErrors: true,
+      })
+      if (!notification) return NextResponse.json({ error: 'Notification not found' }, { status: 404 })
+      groups = await groupsForDelivery(payload, notification)
+    }
+
     let count = 0
 
     if (channel === 'email' || channel === 'both') {
       const emailCount = await payload.count({
         collection: 'subscribers',
-        where: deliverableSubscribersWhere('email'),
+        where: deliverableSubscribersWhere('email', groups),
       })
       count += emailCount.totalDocs
     }
@@ -26,7 +43,7 @@ export async function GET(request: NextRequest) {
     if (channel === 'sms' || channel === 'both') {
       const smsCount = await payload.count({
         collection: 'subscribers',
-        where: deliverableSubscribersWhere('sms'),
+        where: deliverableSubscribersWhere('sms', groups),
       })
       count += smsCount.totalDocs
     }

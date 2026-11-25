@@ -1,6 +1,6 @@
 import type { BasePayload } from 'payload'
 import { translatorsFor } from '@/lib/i18n/server'
-import { deliverableSubscribersWhere } from '@/lib/subscriber-filter'
+import { deliverableSubscribersWhere, groupsForDelivery } from '@/lib/subscriber-filter'
 import { sendBulkEmails, generateEmailHtml } from '@/lib/email'
 import { sendBulkSms, formatSmsMessage } from '@/lib/sms'
 import { getServerUrl } from '@/lib/utils'
@@ -57,6 +57,10 @@ export async function sendNotificationFromCollectionHandler({ input, req }: Task
   const logoLight = settings.logoLight as Media | number | null | undefined
   const logoUrl = logoLight && typeof logoLight === 'object' ? logoLight.url : undefined
 
+  // Nur Abonnenten, deren Gruppenwahl zu den Dienstgruppen der Meldung passt (leer: alle)
+  const notification = await payload.findByID({ collection: 'notifications', id: notificationId, depth: 0 })
+  const groups = notification ? await groupsForDelivery(payload, notification) : []
+
   // Fetch all subscribers with pagination to handle large lists
   const emailSubscribers: Subscriber[] = []
   const smsSubscribers: Subscriber[] = []
@@ -70,7 +74,7 @@ export async function sendNotificationFromCollectionHandler({ input, req }: Task
     while (hasMore) {
       const result = await payload.find({
         collection: 'subscribers',
-        where: deliverableSubscribersWhere(type),
+        where: deliverableSubscribersWhere(type, groups),
         limit: pageSize,
         page,
       })

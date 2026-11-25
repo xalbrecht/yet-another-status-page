@@ -28,8 +28,17 @@ export const ServiceGroups: CollectionConfig = {
         return doc
       },
     ],
+    // Abonnenten, deren letzte gewählte Gruppe gelöscht wird, hätten sonst keine Gruppe mehr und erhielten nichts:
+    // Sie gelten danach als „alle Dienstgruppen“. Die Verknüpfungszeilen löscht die Datenbank mit. Ohne Zustand zwischen
+    // den Hooks: Eine Sammellöschung startet die Hooks aller Gruppen gleichzeitig.
     afterDelete: [
-      ({ doc }) => {
+      async ({ doc, req }) => {
+        await req.payload.update({
+          collection: 'subscribers',
+          where: { and: [{ allGroups: { equals: false } }, { groups: { exists: false } }] },
+          data: { allGroups: true },
+          req,
+        })
         invalidateLagebild()
         return doc
       },

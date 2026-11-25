@@ -1,5 +1,5 @@
 import type { CollectionConfig } from 'payload'
-import { deliverableSubscribersWhere } from '@/lib/subscriber-filter'
+import { deliverableSubscribersWhere, groupsForDelivery } from '@/lib/subscriber-filter'
 import { localizedDateAdmin } from '@/lib/localizedDateAdmin'
 import { ta } from '@/lib/i18n/admin'
 import { notificationScopedCreate, notificationScopedRead, notificationScopedWrite } from '@/lib/access'
@@ -44,11 +44,13 @@ export const Notifications: CollectionConfig = {
           try {
             const channel = doc.channel || 'both'
             let count = 0
+            // Nur Abonnenten, deren Wahl zu den Dienstgruppen der Meldung passt
+            const groups = await groupsForDelivery(req.payload, doc)
 
             if (channel === 'email' || channel === 'both') {
               const emailCount = await req.payload.count({
                 collection: 'subscribers',
-                where: deliverableSubscribersWhere('email'),
+                where: deliverableSubscribersWhere('email', groups),
               })
               count += emailCount.totalDocs
             }
@@ -56,7 +58,7 @@ export const Notifications: CollectionConfig = {
             if (channel === 'sms' || channel === 'both') {
               const smsCount = await req.payload.count({
                 collection: 'subscribers',
-                where: deliverableSubscribersWhere('sms'),
+                where: deliverableSubscribersWhere('sms', groups),
               })
               count += smsCount.totalDocs
             }

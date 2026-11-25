@@ -26,7 +26,7 @@ export const Subscribers: CollectionConfig = {
   labels: { singular: ta('Subscriber'), plural: ta('Subscribers') },
   admin: {
     useAsTitle: 'email',
-    defaultColumns: ['type', 'email', 'phone', 'verified', 'addressConfirmed', 'active', 'isTest', 'createdAt'],
+    defaultColumns: ['type', 'email', 'phone', 'verified', 'addressConfirmed', 'allGroups', 'active', 'isTest', 'createdAt'],
     group: ta('Notifications'),
   },
   access: {
@@ -34,6 +34,16 @@ export const Subscribers: CollectionConfig = {
     create: rolesAccess(['admin']), // Public sign-ups go through POST /api/subscribe (local API)
     update: rolesAccess(['admin']),
     delete: rolesAccess(['admin']),
+  },
+  hooks: {
+    // „Alle Dienstgruppen“ und eine Auswahl schließen sich aus: Mit dem Haken wird die Auswahl geleert
+    beforeChange: [
+      ({ data, originalDoc }) => {
+        const all = data?.allGroups ?? originalDoc?.allGroups ?? true
+        if (all && data) data.groups = []
+        return data
+      },
+    ],
   },
   fields: [
     {
@@ -200,6 +210,31 @@ export const Subscribers: CollectionConfig = {
             return value
           },
         ],
+      },
+    },
+    {
+      name: 'allGroups',
+      type: 'checkbox',
+      defaultValue: true,
+      label: ta('All service groups'),
+      admin: {
+        description: ta('The subscriber receives notifications about all service groups. Switch off to choose groups'),
+      },
+    },
+    {
+      name: 'groups',
+      type: 'relationship',
+      relationTo: 'service-groups',
+      hasMany: true,
+      label: ta('Service groups'),
+      admin: {
+        description: ta('Notifications reach this subscriber when they concern at least one of these groups. Applies only without "All service groups"'),
+        condition: (data) => data?.allGroups === false,
+      },
+      validate: (value: unknown, { data, originalDoc }: { data?: { allGroups?: boolean }; originalDoc?: { allGroups?: boolean } }) => {
+        const all = data?.allGroups ?? originalDoc?.allGroups ?? true
+        if (all) return true
+        return Array.isArray(value) && value.length > 0 ? true : ta('Choose at least one service group')
       },
     },
     {

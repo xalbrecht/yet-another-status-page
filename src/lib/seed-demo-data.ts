@@ -358,6 +358,7 @@ export async function seedDemoData(payload: Payload) {
         verified: true,
         addressConfirmed: true,
         active: true,
+        allGroups: true,
       },
     })
 
@@ -369,6 +370,7 @@ export async function seedDemoData(payload: Payload) {
         phone: '+1234567890',
         verified: true,
         active: true,
+        allGroups: true,
       },
     })
 

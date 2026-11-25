@@ -94,6 +94,26 @@ test.describe('Gruppenwahl der Abonnenten', { tag: ['@admin', '@abonnenten'] }, 
     expect(groupIds(afterBoth)).toEqual([other])
   })
 
+  test('werden mehrere Gruppen auf einmal gelöscht, bleibt kein Abonnent ohne Gruppe zurück', async ({ request }) => {
+    const id = unique()
+    const first = (await createServiceGroup({ name: `Sammel A ${id}`, icon: 'Server' })).id
+    const second = (await createServiceGroup({ name: `Sammel B ${id}`, icon: 'Server' })).id
+    const third = (await createServiceGroup({ name: `Sammel C ${id}`, icon: 'Server' })).id
+    const both = ((await (await createSub(request, { allGroups: false, groups: [first, second] })).json()).doc as Subscriber).id
+    const partly = ((await (await createSub(request, { allGroups: false, groups: [first, third] })).json()).doc as Subscriber).id
+
+    const removed = await request.delete(`/api/service-groups?where[id][in]=${first},${second}`)
+    expect(removed.status(), await removed.text()).toBe(200)
+
+    const read = async (subscriber: number) => (await (await request.get(`/api/subscribers/${subscriber}?depth=0`)).json()) as Subscriber
+    const afterBoth = await read(both)
+    expect(afterBoth.allGroups).toBe(true)
+    expect(groupIds(afterBoth)).toEqual([])
+    const afterPartly = await read(partly)
+    expect(afterPartly.allGroups).toBe(false)
+    expect(groupIds(afterPartly)).toEqual([third])
+  })
+
   test('Empfängerzahl und Entwurf folgen der Wahl: nur passende Gruppen, sonst alle', async ({ request }) => {
     const id = unique()
     const startsAt = new Date(Date.now() - 5 * 86400000).toISOString()

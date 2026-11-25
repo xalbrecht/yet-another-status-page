@@ -32,6 +32,7 @@
     "src/app/(frontend)/m/**": ["@wartungen"],
     "src/app/(frontend)/confirm/**": ["@abonnenten"],
     "src/app/(frontend)/unsubscribe/**": ["@abonnenten"],
+    "src/app/(frontend)/subscription/**": ["@abonnenten"],
     "src/app/(frontend)/page.tsx": ["@statusseite", "@lagebild"],
     "src/app/(frontend)/*": ["@public"],
     "src/app/(payload)/**": ["@admin"],
@@ -50,6 +51,7 @@
     "src/app/api/subscribe/**": ["@abonnenten"],
     "src/app/api/unsubscribe/**": ["@abonnenten"],
     "src/app/api/subscribers/**": ["@abonnenten"],
+    "src/app/api/subscription/**": ["@abonnenten"],
     "src/app/api/system-info/**": ["@system"],
     "src/app/api/v1/**": ["@schnittstelle"],
 

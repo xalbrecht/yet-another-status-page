@@ -143,12 +143,14 @@ export function generateEmailHtml(options: {
   ctaText?: string
   ctaUrl?: string
   unsubscribeUrl?: string
+  /** Adresse der Seite „Auswahl ändern“ (Gruppenwahl des Abonnenten). Ohne Angabe fehlt der Link. */
+  preferencesUrl?: string
   siteUrl: string
   logoUrl?: string
   /** Sprache der festen Texte der Mail (Fußzeile, Abmeldelink) und des lang-Attributs. */
   language: string
 }): string {
-  const { unsubscribeUrl, siteUrl, logoUrl } = options
+  const { unsubscribeUrl, preferencesUrl, siteUrl, logoUrl } = options
   const { t, lang } = translatorsFor(options.language)
 
   // Alle Werte der Aufrufer sind Klartext und werden hier maskiert, auch in Attributen.
@@ -255,6 +257,7 @@ export function generateEmailHtml(options: {
     ` : ''}
     <div class="footer">
       <p>${escapeHtml(t('mail.sentFrom'))} <a href="${escapeHtml(siteUrl)}">${siteName}</a></p>
+      ${preferencesUrl ? `<p><a href="${escapeHtml(preferencesUrl)}">${escapeHtml(t('mail.preferences'))}</a></p>` : ''}
       ${unsubscribeUrl ? `<p><a href="${escapeHtml(unsubscribeUrl)}">${escapeHtml(t('mail.unsubscribe'))}</a></p>` : ''}
     </div>
   </div>

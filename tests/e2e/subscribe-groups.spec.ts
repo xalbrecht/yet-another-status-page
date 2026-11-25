@@ -13,7 +13,12 @@ test.describe.configure({ mode: 'serial' })
 const stamp = Date.now()
 let counter = 0
 const unique = () => `${stamp}-${counter++}`
-const ipFor = (n: number) => `198.51.100.${((stamp + 31 * n) % 250) + 1}`
+// Zufällige Adresse aus dem Testbereich 198.18.0.0/15: Kollisionen mit anderen Tests und früheren Läufen sind praktisch ausgeschlossen
+const ips = new Map<number, string>()
+const ipFor = (n: number) => {
+  if (!ips.has(n)) ips.set(n, `198.18.${Math.floor(Math.random() * 256)}.${1 + Math.floor(Math.random() * 254)}`)
+  return ips.get(n)!
+}
 
 type Subscriber = { id: number; allGroups: boolean; groups?: Array<number | { id: number }>; active: boolean }
 
@@ -34,10 +39,12 @@ const groupIds = (doc: Subscriber) => (doc.groups ?? []).map((g) => (typeof g ==
 test.describe('Anmeldung mit Gruppenwahl', { tag: ['@public', '@abonnenten'] }, () => {
   let groupA: number
   let groupB: number
+  let stampOfGroups: string
 
   test.beforeAll(async ({ request }) => {
     await setGlobal(request, 'email-settings', { enabled: true, smtpHost: 'localhost', smtpPort: 1, smtpFromAddress: 'status@example.test' })
     const id = unique()
+    stampOfGroups = id
     groupA = (await createServiceGroup({ name: `Anmeldung A ${id}`, icon: 'Server' })).id
     groupB = (await createServiceGroup({ name: `Anmeldung B ${id}`, icon: 'Server' })).id
   })
@@ -97,5 +104,39 @@ test.describe('Anmeldung mit Gruppenwahl', { tag: ['@public', '@abonnenten'] }, 
     const third = await findByEmail(request, email)
     expect(third.allGroups).toBe(true)
     expect(groupIds(third)).toEqual([])
+  })
+
+  test('der Dialog bietet „alle Dienstgruppen“, eine suchbare Auswahl und sendet die Wahl', async ({ page, request }) => {
+    await page.goto('/')
+    await page.getByRole('button', { name: /Subscribe/i }).first().click()
+    const all = page.getByLabel(/All service groups|Alle Dienstgruppen/i)
+    await expect(all).toBeChecked()
+    await expect(page.getByRole('searchbox')).toHaveCount(0)
+
+    await all.uncheck()
+    const submit = page.getByRole('button', { name: /^Subscribe$|^Abonnieren$/ })
+    await expect(submit).toBeDisabled()
+    await expect(page.getByText(/Choose at least one service group|Mindestens eine Dienstgruppe wählen/)).toBeVisible()
+
+    // Suche begrenzt die Liste auf passende Gruppen
+    const search = page.getByRole('searchbox')
+    await search.fill(`Anmeldung A ${stampOfGroups}`)
+    await expect(page.getByLabel(`Anmeldung A ${stampOfGroups}`)).toBeVisible()
+    await expect(page.getByLabel(`Anmeldung B ${stampOfGroups}`)).toHaveCount(0)
+    await page.getByLabel(`Anmeldung A ${stampOfGroups}`).check()
+    await expect(submit).toBeEnabled()
+
+    const email = `dialog-${unique()}@example.test`
+    await page.getByLabel(/Email Address|E-Mail-Adresse/i).fill(email)
+    const sent = page.waitForRequest((r) => r.url().endsWith('/api/subscribe') && r.method() === 'POST')
+    await submit.click()
+    const body = (await sent).postDataJSON() as { allGroups: boolean; groups: number[] }
+    expect(body.allGroups).toBe(false)
+    expect(body.groups).toEqual([groupA])
+    await expect(page.getByText(/receive status updates|künftig an/i)).toBeVisible({ timeout: 10000 })
+
+    const stored = await findByEmail(request, email)
+    expect(stored.allGroups).toBe(false)
+    expect(groupIds(stored)).toEqual([groupA])
   })
 })

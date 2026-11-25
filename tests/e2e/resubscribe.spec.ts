@@ -17,7 +17,8 @@ const stamp = Date.now()
 
 // Eigene Absenderadresse: Die Ratenbegrenzung (5 Anmeldungen je Adresse und Stunde) zählt sonst im selben Topf wie
 // andere Tests und wie wiederholte lokale Läufe
-const clientIp = `198.51.100.${(stamp % 250) + 1}`
+const randomIp = () => `198.18.${Math.floor(Math.random() * 256)}.${1 + Math.floor(Math.random() * 254)}`
+const clientIp = randomIp()
 const headers = { 'x-forwarded-for': clientIp }
 
 type Subscriber = {
@@ -90,7 +91,7 @@ test.describe('Erneute Anmeldung nach der Abmeldung', { tag: ['@public', '@abonn
   })
 
   test('Erneute Anmeldungen zählen zur Ratenbegrenzung (5 je Adresse und Stunde)', async ({ request }) => {
-    const ip = `198.51.100.${((stamp + 7) % 250) + 1}`
+    const ip = randomIp()
     const subscribe = (email: string) => request.post('/api/subscribe', { data: { type: 'email', email }, headers: { 'x-forwarded-for': ip } })
 
     // Sechs abgemeldete Abonnenten, deren Einträge schon vor der Stunde bestehen

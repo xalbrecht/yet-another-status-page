@@ -6,6 +6,7 @@ import type { Translate } from '@/lib/i18n/core'
 import { Mail, MessageSquare, X, Bell, AlertCircle } from "lucide-react";
 import { z } from "zod";
 import { cn } from "@/lib/utils";
+import { GroupChoice, isGroupChoiceValid, type GroupChoiceValue, type GroupOption } from "./GroupChoice";
 
 type SubscriptionMethod = "email" | "sms";
 
@@ -47,6 +48,10 @@ export function SubscribeDialog({ isOpen, onClose }: SubscribeDialogProps) {
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [availability, setAvailability] = useState<SubscriptionAvailability | null>(null);
   const [isLoadingAvailability, setIsLoadingAvailability] = useState(false);
+  // Gruppenwahl: Standard „alle Dienstgruppen“. Lässt sich die Liste nicht laden, bleibt der Block aus und die Anmeldung gilt für alle.
+  const [groups, setGroups] = useState<GroupOption[]>([]);
+  const [choice, setChoice] = useState<GroupChoiceValue>({ allGroups: true, groups: [] });
+  const [groupQuery, setGroupQuery] = useState("");
 
   // Fetch subscription availability when dialog opens
   useEffect(() => {
@@ -73,6 +78,18 @@ export function SubscribeDialog({ isOpen, onClose }: SubscribeDialogProps) {
     }
   }, [isOpen, availability]);
 
+  // Dienstgruppen für die Auswahl laden, sobald der Dialog öffnet
+  useEffect(() => {
+    if (isOpen && groups.length === 0) {
+      fetch("/api/service-groups?limit=500&depth=0&sort=name&select[name]=true")
+        .then((res) => (res.ok ? res.json() : { docs: [] }))
+        .then((data: { docs?: GroupOption[] }) => {
+          setGroups((data.docs ?? []).map((group) => ({ id: group.id, name: group.name })));
+        })
+        .catch(() => setGroups([]));
+    }
+  }, [isOpen, groups.length]);
+
   // Reset state when dialog closes
   useEffect(() => {
     if (!isOpen) {
@@ -86,6 +103,8 @@ export function SubscribeDialog({ isOpen, onClose }: SubscribeDialogProps) {
     setErrors({});
     setSuccessMessage(null);
     setIsSubmitting(true);
+    // Ohne geladene Liste gilt „alle Dienstgruppen“
+    const choiceBody = groups.length > 0 ? { allGroups: choice.allGroups, groups: choice.groups } : {};
 
     try {
       if (method === "email") {
@@ -99,7 +118,7 @@ export function SubscribeDialog({ isOpen, onClose }: SubscribeDialogProps) {
         const response = await fetch("/api/subscribe", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ type: "email", email }),
+          body: JSON.stringify({ type: "email", email, ...choiceBody }),
         });
         
         if (!response.ok) {
@@ -115,6 +134,8 @@ export function SubscribeDialog({ isOpen, onClose }: SubscribeDialogProps) {
         
         setSuccessMessage(tf("sub.successEmail", { email }));
         setEmail("");
+        setChoice({ allGroups: true, groups: [] });
+        setGroupQuery("");
       } else {
         const result = makeSmsSchema(t).safeParse({ phone });
         if (!result.success) {
@@ -126,7 +147,7 @@ export function SubscribeDialog({ isOpen, onClose }: SubscribeDialogProps) {
         const response = await fetch("/api/subscribe", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ type: "sms", phone }),
+          body: JSON.stringify({ type: "sms", phone, ...choiceBody }),
         });
         
         if (!response.ok) {
@@ -142,6 +163,8 @@ export function SubscribeDialog({ isOpen, onClose }: SubscribeDialogProps) {
         
         setSuccessMessage(tf("sub.successSms", { phone }));
         setPhone("");
+        setChoice({ allGroups: true, groups: [] });
+        setGroupQuery("");
       }
       
       setTimeout(() => {
@@ -174,7 +197,7 @@ export function SubscribeDialog({ isOpen, onClose }: SubscribeDialogProps) {
       />
 
       {/* Dialog */}
-      <div className="relative z-10 mx-4 w-full max-w-lg animate-fade-in rounded-xl border border-border bg-card shadow-2xl sm:mx-0">
+      <div className="relative z-10 mx-4 max-h-[90vh] w-full max-w-lg animate-fade-in overflow-y-auto rounded-xl border border-border bg-card shadow-2xl sm:mx-0">
         {/* Header */}
         <div className="flex items-center justify-between border-b border-border px-5 py-4 sm:px-6">
           <h2 className="text-lg font-semibold text-foreground">{t("sub.title")}</h2>
@@ -367,11 +390,24 @@ export function SubscribeDialog({ isOpen, onClose }: SubscribeDialogProps) {
                 </div>
               ) : null}
 
+              {!successMessage && !neitherAvailable && groups.length > 0 && (
+                <div className="mt-4">
+                  <GroupChoice
+                    groups={groups}
+                    value={choice}
+                    onChange={setChoice}
+                    query={groupQuery}
+                    onQueryChange={setGroupQuery}
+                    idPrefix="subscribe-groups"
+                  />
+                </div>
+              )}
+
               {!successMessage && !neitherAvailable && (
                 <div className="mt-6 flex justify-end">
                   <button
                     type="submit"
-                    disabled={isSubmitting}
+                    disabled={isSubmitting || (groups.length > 0 && !isGroupChoiceValid(choice))}
                     className={cn(
                       "inline-flex items-center gap-2 rounded-lg bg-primary px-5 py-2.5",
                       "text-sm font-medium text-primary-foreground transition-all",

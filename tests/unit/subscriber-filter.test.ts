@@ -1,6 +1,7 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { deliverableSubscribersWhere, pendingSubscribersWhere } from '@/lib/subscriber-filter'
+import type { Payload } from 'payload'
+import { deliverableSubscribersWhere, groupsForDelivery, pendingSubscribersWhere } from '@/lib/subscriber-filter'
 import { isSmsConfigured, smsSubscriptionProblem } from '@/lib/sms-configured'
 
 test('E-Mail-Abonnenten: aktiv, freigegeben und Adresse bestätigt', () => {
@@ -58,4 +59,39 @@ test('SMS-Anmeldung: schon angemeldete Nummer ergibt 409, eine neue wird angenom
   assert.deepEqual(smsSubscriptionProblem({ configured: true, phone: '+4915112345678', exists: true }), { status: 409, key: 'api.phoneExists' })
   assert.equal(smsSubscriptionProblem({ configured: true, phone: '+4915112345678', exists: false }), null)
   assert.equal(smsSubscriptionProblem({ configured: true, phone: '4915112345678', exists: false }), null)
+})
+
+test('mit Gruppen: „alle“ oder Auswahl mit mindestens einer Gruppe der Meldung', () => {
+  const where = deliverableSubscribersWhere('email', [3, 5])
+  const conditions = (where as { and: unknown[] }).and
+  assert.deepEqual(conditions[conditions.length - 1], { or: [{ allGroups: { equals: true } }, { groups: { in: [3, 5] } }] })
+  const sms = (deliverableSubscribersWhere('sms', [3]) as { and: unknown[] }).and
+  assert.deepEqual(sms[sms.length - 1], { or: [{ allGroups: { equals: true } }, { groups: { in: [3] } }] })
+})
+
+test('ohne Gruppen oder mit leerer Liste bleibt die Bedingung unverändert', () => {
+  assert.deepEqual(deliverableSubscribersWhere('email', []), deliverableSubscribersWhere('email'))
+  assert.deepEqual(deliverableSubscribersWhere('sms', undefined), deliverableSubscribersWhere('sms'))
+})
+
+// Fake-Payload: Störungen 1 (Dienste 10, 11), 2 (Dienst 12 ohne Gruppe), Dienste mit Gruppen 10→1, 11→2
+const fakePayload = {
+  findByID: async ({ collection, id }: { collection: string; id: string }) => {
+    if (collection === 'incidents' && String(id) === '1') return { id: 1, affectedServices: [10, 11] }
+    if (collection === 'incidents' && String(id) === '2') return { id: 2, affectedServices: [12] }
+    if (collection === 'maintenances' && String(id) === '3') return { id: 3, affectedServices: [10] }
+    return null
+  },
+  find: async ({ where }: { where: { id: { in: string[] } } }) => {
+    const groups: Record<string, number | null> = { '10': 1, '11': 2, '12': null }
+    return { docs: where.id.in.map((id) => ({ id, group: groups[id] })) }
+  },
+} as unknown as Payload
+
+test('Gruppen der Meldung: Gruppen der Dienste, ohne Bezug leer, unklare Gruppe leer', async () => {
+  assert.deepEqual((await groupsForDelivery(fakePayload, { relatedIncident: 1 })).sort(), [1, 2])
+  assert.deepEqual(await groupsForDelivery(fakePayload, { relatedMaintenance: 3 }), [1])
+  assert.deepEqual(await groupsForDelivery(fakePayload, {}), [])
+  assert.deepEqual(await groupsForDelivery(fakePayload, { relatedIncident: 2 }), [])
+  assert.deepEqual(await groupsForDelivery(fakePayload, { relatedIncident: 99 }), [])
 })

@@ -15,7 +15,7 @@
   "A: counts as available",
   "Active",
   "Active Incidents",
-  "Active subscribers who will receive this notification",
+  "Active subscribers who will receive this notification, based on the saved report. After changing the incident or maintenance, save first.",
   "Add {content} before sending.",
   "Additional maintenance",
   "Affected services",

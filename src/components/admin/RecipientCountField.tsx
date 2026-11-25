@@ -64,7 +64,7 @@ export const RecipientCountField: React.FC = () => {
       <p className="recipient-count-field__description">
         {isSent 
           ? ta('Number of subscribers who received this notification')
-          : ta('Active subscribers who will receive this notification')
+          : ta('Active subscribers who will receive this notification, based on the saved report. After changing the incident or maintenance, save first.')
         }
       </p>
     </div>

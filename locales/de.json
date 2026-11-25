@@ -319,7 +319,7 @@
     "Active in the report period": "Aktiv im Berichtszeitraum",
     "Active Incidents": "Aktive Störungen",
     "Active marks in the group sheet": "Aktiv-Kennzeichnung im Gruppenblatt",
-    "Active subscribers who will receive this notification": "Aktive Abonnenten, die diese Benachrichtigung erhalten",
+    "Active subscribers who will receive this notification, based on the saved report. After changing the incident or maintenance, save first.": "Aktive Abonnenten, die diese Benachrichtigung erhalten, nach dem gespeicherten Stand der Meldung. Nach einer Änderung der Störung oder Wartung zuerst speichern.",
     "Active today": "Aktiv heute",
     "Add {content} before sending.": "Vor dem Senden {content} ergänzen.",
     "Address confirmed": "Adresse bestätigt",

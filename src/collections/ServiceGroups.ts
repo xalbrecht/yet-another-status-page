@@ -28,8 +28,28 @@ export const ServiceGroups: CollectionConfig = {
         return doc
       },
     ],
+    // Abonnenten, deren letzte gewählte Gruppe gelöscht wird, hätten sonst keine Gruppe mehr und erhielten nichts:
+    // Sie gelten danach als „alle Dienstgruppen“. Die Verknüpfungszeilen löscht die Datenbank mit.
+    beforeDelete: [
+      async ({ id, req }) => {
+        const found = await req.payload.find({
+          collection: 'subscribers',
+          where: { and: [{ allGroups: { equals: false } }, { groups: { in: [id] } }] },
+          depth: 0,
+          pagination: false,
+          req,
+        })
+        req.context.subscribersWithoutGroup = found.docs
+          .filter((subscriber) => Array.isArray(subscriber.groups) && subscriber.groups.length <= 1)
+          .map((subscriber) => subscriber.id)
+      },
+    ],
     afterDelete: [
-      ({ doc }) => {
+      async ({ doc, req }) => {
+        const ids = (req.context.subscribersWithoutGroup as Array<number | string> | undefined) ?? []
+        if (ids.length > 0) {
+          await req.payload.update({ collection: 'subscribers', where: { id: { in: ids } }, data: { allGroups: true }, req })
+        }
         invalidateLagebild()
         return doc
       },

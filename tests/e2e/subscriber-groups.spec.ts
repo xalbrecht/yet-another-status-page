@@ -75,6 +75,25 @@ test.describe('Gruppenwahl der Abonnenten', { tag: ['@admin', '@abonnenten'] }, 
     expect(narrowed.status()).toBe(200)
   })
 
+  test('wird die letzte gewählte Gruppe gelöscht, gilt der Abonnent als „alle Dienstgruppen“', async ({ request }) => {
+    const id = unique()
+    const only = (await createServiceGroup({ name: `Löschen A ${id}`, icon: 'Server' })).id
+    const other = (await createServiceGroup({ name: `Löschen B ${id}`, icon: 'Server' })).id
+    const single = ((await (await createSub(request, { allGroups: false, groups: [only] })).json()).doc as Subscriber).id
+    const both = ((await (await createSub(request, { allGroups: false, groups: [only, other] })).json()).doc as Subscriber).id
+
+    const removed = await request.delete(`/api/service-groups/${only}`)
+    expect(removed.status(), await removed.text()).toBe(200)
+
+    const read = async (subscriber: number) => (await (await request.get(`/api/subscribers/${subscriber}?depth=0`)).json()) as Subscriber
+    const afterSingle = await read(single)
+    expect(afterSingle.allGroups).toBe(true)
+    expect(groupIds(afterSingle)).toEqual([])
+    const afterBoth = await read(both)
+    expect(afterBoth.allGroups).toBe(false)
+    expect(groupIds(afterBoth)).toEqual([other])
+  })
+
   test('Empfängerzahl und Entwurf folgen der Wahl: nur passende Gruppen, sonst alle', async ({ request }) => {
     const id = unique()
     const startsAt = new Date(Date.now() - 5 * 86400000).toISOString()

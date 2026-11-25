@@ -104,7 +104,7 @@ export function SubscribeDialog({ isOpen, onClose }: SubscribeDialogProps) {
     setSuccessMessage(null);
     setIsSubmitting(true);
     // Ohne geladene Liste gilt „alle Dienstgruppen“
-    const choiceBody = groups.length > 0 ? { allGroups: choice.allGroups, groups: choice.groups } : {};
+    const choiceBody = groups.length > 0 ? { allGroups: choice.allGroups, groups: choice.allGroups ? [] : choice.groups } : {};
 
     try {
       if (method === "email") {

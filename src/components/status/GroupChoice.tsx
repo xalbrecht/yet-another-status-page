@@ -63,7 +63,11 @@ export function GroupChoice({ groups, value, onChange, query = '', onQueryChange
           id={`${idPrefix}-all`}
           type="checkbox"
           checked={value.allGroups}
-          onChange={(e) => onChange({ allGroups: e.target.checked, groups: e.target.checked ? [] : value.groups })}
+          // Die Auswahl bleibt beim Umschalten erhalten, nur der Suchtext wird geleert
+          onChange={(e) => {
+            onChange({ allGroups: e.target.checked, groups: value.groups })
+            onQueryChange?.('')
+          }}
           className="mt-0.5 h-4 w-4 flex-shrink-0 accent-primary"
         />
         <span>
@@ -84,6 +88,10 @@ export function GroupChoice({ groups, value, onChange, query = '', onQueryChange
             type="search"
             value={query}
             onChange={(e) => onQueryChange?.(e.target.value)}
+            // Enter im Suchfeld darf das Anmeldeformular nicht absenden: Die Wahl wäre sonst unvollständig
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') e.preventDefault()
+            }}
             placeholder={t('sub.groupsSearch')}
             className={cn(
               'w-full rounded-lg border border-input bg-background px-4 py-2.5 text-sm text-foreground',

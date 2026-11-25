@@ -139,4 +139,51 @@ test.describe('Anmeldung mit Gruppenwahl', { tag: ['@public', '@abonnenten'] }, 
     expect(stored.allGroups).toBe(false)
     expect(groupIds(stored)).toEqual([groupA])
   })
+
+  test('Enter im Suchfeld meldet nicht an, und die Auswahl bleibt beim Umschalten von „alle“ erhalten', async ({ page }) => {
+    let posted = 0
+    page.on('request', (r) => {
+      if (r.url().endsWith('/api/subscribe') && r.method() === 'POST') posted++
+    })
+    await page.goto('/')
+    await page.getByRole('button', { name: /Subscribe/i }).first().click()
+    const all = page.getByLabel(/All service groups|Alle Dienstgruppen/i)
+    await page.getByLabel(/Email Address|E-Mail-Adresse/i).fill(`enter-${unique()}@example.test`)
+    await all.uncheck()
+    await page.getByLabel(`Anmeldung A ${stampOfGroups}`).check()
+
+    // Enter im Suchfeld darf das Formular nicht absenden (sonst bleibt die Wahl unvollständig)
+    const search = page.getByRole('searchbox')
+    await search.fill('Anmeldung')
+    await search.press('Enter')
+    await page.waitForTimeout(800)
+    expect(posted).toBe(0)
+
+    // „alle“ an und wieder aus: Die Auswahl bleibt, der Suchtext ist leer
+    await all.check()
+    await expect(page.getByRole('searchbox')).toHaveCount(0)
+    await all.uncheck()
+    await expect(page.getByText(/^1 (of|von) \d+ (selected|gewählt)$/)).toBeVisible()
+    await expect(page.getByRole('searchbox')).toHaveValue('')
+    await expect(page.getByLabel(`Anmeldung A ${stampOfGroups}`)).toBeChecked()
+  })
+
+  test('SMS: die Gruppenwahl wird gespeichert, ungültige Wahl ergibt 400', async ({ request }) => {
+    await setGlobal(request, 'sms-settings', { enabled: true, twilioAccountSid: 'ACtest', twilioAuthToken: 'token', twilioFromNumber: '+15005550006' })
+    try {
+      const phone = `+4915${String(stamp).slice(-9)}`
+      const sms = (n: number, body: Record<string, unknown>) =>
+        request.post('/api/subscribe', { data: { type: 'sms', phone, ...body }, headers: { 'x-forwarded-for': ipFor(n) } })
+      expect((await sms(20, { allGroups: false, groups: [] })).status()).toBe(400)
+      expect((await sms(21, { allGroups: false, groups: [999999] })).status()).toBe(400)
+      expect((await sms(22, { allGroups: false, groups: [groupA, groupB] })).status()).toBe(200)
+      const found = await request.get(`/api/subscribers?where[phone][equals]=${encodeURIComponent(phone)}&depth=0`)
+      const docs = (await found.json()).docs as Subscriber[]
+      expect(docs).toHaveLength(1)
+      expect(docs[0].allGroups).toBe(false)
+      expect(groupIds(docs[0]).sort()).toEqual([groupA, groupB].sort())
+    } finally {
+      await setGlobal(request, 'sms-settings', { enabled: false })
+    }
+  })
 })

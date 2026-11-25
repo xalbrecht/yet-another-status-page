@@ -1,4 +1,4 @@
-import type { Access, FieldAccess, Payload, PayloadRequest } from 'payload'
+import type { Access, FieldAccess, Payload, PayloadRequest, Where } from 'payload'
 import { groupScope, hasAnyRole, hasRole, scopeAllows, type Role, type RoleUser, type ScopedRole } from '@/lib/roles'
 
 /**
@@ -84,6 +84,78 @@ export const groupScopedWrite =
     return scopeAllows(u, roles, groups ?? [], 'all')
   }
 
+/** Rollen, die Benachrichtigungen bearbeiten, und ihre Gruppenbereiche. */
+const notificationRoles = ['servicedesk'] as const
+
+/**
+ * Lesen von Benachrichtigungen: Admin alles, ServiceDesk Entwürfe und Benachrichtigungen, deren Störung oder Wartung
+ * mindestens einen Dienst einer erlaubten Gruppe betrifft (wie `groupScopedRead` bei den Meldungen). Ohne Bezug nur Admin
+ * und der Bereich „alle“.
+ */
+export const notificationScopedRead: Access = ({ req: { user } }) => {
+  if (allowRequest(user)) return true
+  const u = user as RoleUser
+  if (hasRole(u, 'admin')) return true
+  if (!hasAnyRole(u, notificationRoles)) return false
+  const scope = groupScope(u, notificationRoles)
+  if (scope === 'all') return true
+  if (scope.length === 0) return false
+  const where: Where = {
+    or: [
+      { 'relatedIncident.affectedServices.group': { in: scope } },
+      { 'relatedMaintenance.affectedServices.group': { in: scope } },
+    ],
+  }
+  return where
+}
+
+/** Darf der Benutzer mit diesem Bezugsobjekt (Störung oder Wartung) eine Benachrichtigung bearbeiten? */
+const notificationScopeAllows = async (
+  payload: Payload,
+  user: RoleUser,
+  notification: { relatedIncident?: unknown; relatedMaintenance?: unknown },
+  req: PayloadRequest,
+): Promise<boolean> => {
+  const groups = await notificationGroupIds(payload, notification, req)
+  return scopeAllows(user, notificationRoles, groups ?? [], 'all')
+}
+
+/**
+ * Anlegen von Benachrichtigungen über die Schnittstelle: Das Bezugsobjekt muss im Bereich des Benutzers liegen, nur
+ * Dienste seiner Gruppen. Die automatisch angelegten Entwürfe zu Störungen und Wartungen laufen über die lokale
+ * Schnittstelle und prüft dieser Zugriff nicht (die Dienste sind dort schon geprüft).
+ */
+export const notificationScopedCreate: Access = async ({ req, data }) => {
+  const { user, payload } = req
+  if (allowRequest(user)) return true
+  const u = user as RoleUser
+  if (hasRole(u, 'admin')) return true
+  if (!hasAnyRole(u, notificationRoles)) return false
+  return notificationScopeAllows(payload, u, data ?? {}, req)
+}
+
+/**
+ * Ändern und Löschen von Benachrichtigungen: Das Bezugsobjekt des gespeicherten Stands muss im Bereich liegen, beim Ändern
+ * auch ein neues Bezugsobjekt. Eine Sammelaktion ohne Kennung ist nur Admins und dem Bereich „alle“ erlaubt.
+ */
+export const notificationScopedWrite: Access = async ({ req, id, data }) => {
+  const { user, payload } = req
+  if (allowRequest(user)) return true
+  const u = user as RoleUser
+  if (hasRole(u, 'admin')) return true
+  if (!hasAnyRole(u, notificationRoles)) return false
+  if (groupScope(u, notificationRoles) === 'all') return true
+  if (id === undefined || id === null) return false
+  const stored = await payload.findByID({ collection: 'notifications', id, depth: 0, overrideAccess: true, disableErrors: true, req })
+  if (!stored) return false
+  if (!(await notificationScopeAllows(payload, u, stored, req))) return false
+  const incoming = data as { relatedIncident?: unknown; relatedMaintenance?: unknown } | undefined
+  if (incoming && (incoming.relatedIncident !== undefined || incoming.relatedMaintenance !== undefined)) {
+    return notificationScopeAllows(payload, u, { ...stored, ...incoming }, req)
+  }
+  return true
+}
+
 /** Statusprotokoll: Admin und Produktmanager, der Produktmanager nur für Dienste seiner Gruppen. */
 export const statusEventsRead: Access = ({ req: { user } }) => {
   if (allowRequest(user)) return true
@@ -128,8 +200,9 @@ export async function groupIdsOfServices(payload: Payload, serviceIds: string[],
 }
 
 /**
- * Dienstgruppen der Störung oder Wartung, zu der ein Benachrichtigungsentwurf gehört. Eine leere Liste ohne Bezug,
- * `null`, wenn das Bezugsobjekt fehlt oder ein Dienst keine Gruppe hat.
+ * Dienstgruppen der Störung und der Wartung, zu denen ein Benachrichtigungsentwurf gehört. Über die Schnittstelle lassen
+ * sich beide Bezüge zugleich setzen: Es zählen die Gruppen von beiden. Eine leere Liste ohne Bezug, `null`, wenn ein
+ * Bezugsobjekt fehlt oder ein Dienst keine Gruppe hat.
  */
 export async function notificationGroupIds(
   payload: Payload,
@@ -140,11 +213,18 @@ export async function notificationGroupIds(
     if (value === null || value === undefined) return null
     return String(typeof value === 'object' ? (value as { id: unknown }).id : value)
   }
-  const incident = idOf(notification.relatedIncident)
-  const maintenance = idOf(notification.relatedMaintenance)
-  const [collection, id] = incident ? (['incidents', incident] as const) : maintenance ? (['maintenances', maintenance] as const) : [null, null]
-  if (!collection) return []
-  const doc = await payload.findByID({ collection, id, depth: 0, overrideAccess: true, disableErrors: true, req })
-  if (!doc) return null
-  return groupIdsOfServices(payload, serviceIdsOf(doc), req)
+  const related = [
+    ['incidents', idOf(notification.relatedIncident)],
+    ['maintenances', idOf(notification.relatedMaintenance)],
+  ] as const
+  const groups = new Set<number>()
+  for (const [collection, id] of related) {
+    if (!id) continue
+    const doc = await payload.findByID({ collection, id, depth: 0, overrideAccess: true, disableErrors: true, req })
+    if (!doc) return null
+    const found = await groupIdsOfServices(payload, serviceIdsOf(doc), req)
+    if (found === null) return null
+    found.forEach((group) => groups.add(group))
+  }
+  return [...groups]
 }

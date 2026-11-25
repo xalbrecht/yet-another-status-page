@@ -87,6 +87,16 @@ test.describe('Anmeldung mit Gruppenwahl', { tag: ['@public', '@abonnenten'] }, 
     }
   })
 
+  test('eine Anmeldung mit Antwort 400 belegt keinen Platz der Ratenbegrenzung', async ({ request }) => {
+    // Grenze: 5 Anmeldungen je Adresse und Stunde. Sechs abgelehnte Anmeldungen dürfen die siebte nicht sperren.
+    for (let attempt = 0; attempt < 6; attempt++) {
+      const rejected = await subscribe(request, 30, { email: `anmeldung-${unique()}@example.test`, allGroups: false, groups: [] })
+      expect(rejected.status(), `Versuch ${attempt + 1}`).toBe(400)
+    }
+    const accepted = await subscribe(request, 30, { email: `anmeldung-${unique()}@example.test` })
+    expect(accepted.status()).toBe(200)
+  })
+
   test('eine erneute Anmeldung nach der Abmeldung überschreibt die Wahl', async ({ request }) => {
     const email = `anmeldung-${unique()}@example.test`
     expect((await subscribe(request, 8, { email, allGroups: false, groups: [groupA] })).status()).toBe(200)

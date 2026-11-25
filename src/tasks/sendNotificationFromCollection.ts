@@ -57,9 +57,10 @@ export async function sendNotificationFromCollectionHandler({ input, req }: Task
   const logoLight = settings.logoLight as Media | number | null | undefined
   const logoUrl = logoLight && typeof logoLight === 'object' ? logoLight.url : undefined
 
-  // Nur Abonnenten, deren Gruppenwahl zu den Dienstgruppen der Meldung passt (leer: alle)
+  // Nur Abonnenten, deren Gruppenwahl zu den Dienstgruppen der Meldung passt (leer: alle).
+  // `findByID` wirft, wenn die Benachrichtigung fehlt: Die Aufgabe bricht dann ab und sendet an niemanden.
   const notification = await payload.findByID({ collection: 'notifications', id: notificationId, depth: 0 })
-  const groups = notification ? await groupsForDelivery(payload, notification) : []
+  const groups = await groupsForDelivery(payload, notification)
 
   // Fetch all subscribers with pagination to handle large lists
   const emailSubscribers: Subscriber[] = []

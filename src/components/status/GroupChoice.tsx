@@ -1,6 +1,7 @@
 "use client";
 
 import { useTranslation } from '@/lib/i18n/client'
+import type { Translate, TranslateFormat } from '@/lib/i18n/core'
 import { cn } from '@/lib/utils'
 
 export interface GroupOption {
@@ -18,6 +19,11 @@ export function isGroupChoiceValid(value: GroupChoiceValue): boolean {
   return value.allGroups || value.groups.length > 0
 }
 
+/** Kurzfassung der Wahl für die Erfolgsmeldung: „alle“ oder die Zahl der gewählten Gruppen. */
+export function describeChoice(value: GroupChoiceValue, t: Translate, tf: TranslateFormat): string {
+  return value.allGroups ? t('sub.successScopeAll') : tf('sub.successScopeSome', { count: value.groups.length })
+}
+
 /** Gruppen, deren Name den Suchtext enthält (ohne Groß- und Kleinschreibung, Leerraum am Rand zählt nicht). */
 export function filterGroups<T extends { name: string }>(groups: T[], query: string): T[] {
   const needle = query.trim().toLowerCase()
@@ -33,13 +39,15 @@ interface GroupChoiceProps {
   onQueryChange?: (query: string) => void
   /** Vorsatz für die Kennungen der Felder, damit mehrere Blöcke auf einer Seite nicht kollidieren. */
   idPrefix?: string
+  /** Die Liste wird gerade geladen: statt „keine Dienstgruppe“ erscheint ein Ladehinweis. */
+  loading?: boolean
 }
 
 /**
  * Gruppenwahl der Abonnenten: Haken „alle Dienstgruppen“ oder Auswahl mit Suche. Gemeinsam genutzt vom
  * Anmeldedialog und von der Seite „Auswahl ändern“.
  */
-export function GroupChoice({ groups, value, onChange, query = '', onQueryChange, idPrefix = 'groups' }: GroupChoiceProps) {
+export function GroupChoice({ groups, value, onChange, query = '', onQueryChange, idPrefix = 'groups', loading = false }: GroupChoiceProps) {
   const { t, tf } = useTranslation()
   const shown = filterGroups(groups, query)
   const chosen = new Set(value.groups)
@@ -52,8 +60,9 @@ export function GroupChoice({ groups, value, onChange, query = '', onQueryChange
   }
 
   return (
-    <div className="space-y-3 border-t border-border pt-4">
-      <h3 className="text-sm font-medium text-foreground">{t('sub.groupsTitle')}</h3>
+    <div className="border-t border-border pt-4">
+    <fieldset className="m-0 min-w-0 space-y-3 border-0 p-0">
+      <legend className="mb-3 p-0 text-sm font-medium text-foreground">{t('sub.groupsTitle')}</legend>
 
       <label
         htmlFor={`${idPrefix}-all`}
@@ -111,7 +120,7 @@ export function GroupChoice({ groups, value, onChange, query = '', onQueryChange
           </div>
           <ul className="max-h-60 overflow-y-auto rounded-lg border border-border bg-background p-1">
             {shown.length === 0 ? (
-              <li className="px-2 py-4 text-center text-sm text-muted-foreground">{t('sub.groupsNone')}</li>
+              <li className="px-2 py-4 text-center text-sm text-muted-foreground">{loading ? t('sub.groupsLoading') : t('sub.groupsNone')}</li>
             ) : (
               shown.map((group) => (
                 <li key={group.id}>
@@ -133,13 +142,14 @@ export function GroupChoice({ groups, value, onChange, query = '', onQueryChange
               ))
             )}
           </ul>
-          {value.groups.length === 0 && (
+          {value.groups.length === 0 && !loading && (
             <p role="alert" className="text-xs text-destructive">
               {t('sub.groupsRequired')}
             </p>
           )}
         </div>
       )}
+    </fieldset>
     </div>
   )
 }

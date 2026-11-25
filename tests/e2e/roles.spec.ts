@@ -391,6 +391,13 @@ test.describe.serial('Sammlungen nach Rolle und Dienstgruppe', () => {
     }
     expect((await data.deskAll.post('/api/notifications', { data: body({}) })).status()).toBe(201)
 
+    // Störung und Wartung zugleich (nur über die Schnittstelle möglich): beide müssen im eigenen Bereich liegen
+    const maintenance = await data.admin.post('/api/maintenances', { data: maintenanceBody(`Fremde Wartung ${unique()}`, [data.svcB]) })
+    expect(maintenance.status()).toBe(201)
+    const foreignMaintenance = (await maintenance.json()).doc.id as number
+    denied(await data.desk.post('/api/notifications', { data: body({ relatedIncident: data.incA, relatedMaintenance: foreignMaintenance }) }))
+    denied(await data.desk.patch(`/api/notifications/${own}`, { data: { relatedMaintenance: foreignMaintenance } }))
+
     // Löschen im eigenen Bereich
     expect((await data.desk.delete(`/api/notifications/${own}`)).status()).toBe(200)
   })

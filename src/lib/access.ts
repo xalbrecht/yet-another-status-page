@@ -200,8 +200,9 @@ export async function groupIdsOfServices(payload: Payload, serviceIds: string[],
 }
 
 /**
- * Dienstgruppen der Störung oder Wartung, zu der ein Benachrichtigungsentwurf gehört. Eine leere Liste ohne Bezug,
- * `null`, wenn das Bezugsobjekt fehlt oder ein Dienst keine Gruppe hat.
+ * Dienstgruppen der Störung und der Wartung, zu denen ein Benachrichtigungsentwurf gehört. Über die Schnittstelle lassen
+ * sich beide Bezüge zugleich setzen: Es zählen die Gruppen von beiden. Eine leere Liste ohne Bezug, `null`, wenn ein
+ * Bezugsobjekt fehlt oder ein Dienst keine Gruppe hat.
  */
 export async function notificationGroupIds(
   payload: Payload,
@@ -212,11 +213,18 @@ export async function notificationGroupIds(
     if (value === null || value === undefined) return null
     return String(typeof value === 'object' ? (value as { id: unknown }).id : value)
   }
-  const incident = idOf(notification.relatedIncident)
-  const maintenance = idOf(notification.relatedMaintenance)
-  const [collection, id] = incident ? (['incidents', incident] as const) : maintenance ? (['maintenances', maintenance] as const) : [null, null]
-  if (!collection) return []
-  const doc = await payload.findByID({ collection, id, depth: 0, overrideAccess: true, disableErrors: true, req })
-  if (!doc) return null
-  return groupIdsOfServices(payload, serviceIdsOf(doc), req)
+  const related = [
+    ['incidents', idOf(notification.relatedIncident)],
+    ['maintenances', idOf(notification.relatedMaintenance)],
+  ] as const
+  const groups = new Set<number>()
+  for (const [collection, id] of related) {
+    if (!id) continue
+    const doc = await payload.findByID({ collection, id, depth: 0, overrideAccess: true, disableErrors: true, req })
+    if (!doc) return null
+    const found = await groupIdsOfServices(payload, serviceIdsOf(doc), req)
+    if (found === null) return null
+    found.forEach((group) => groups.add(group))
+  }
+  return [...groups]
 }

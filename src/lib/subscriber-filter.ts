@@ -1,4 +1,4 @@
-import type { Payload, Where } from 'payload'
+import type { Payload, PayloadRequest, Where } from 'payload'
 import { notificationGroupIds } from '@/lib/access'
 
 /**
@@ -34,8 +34,9 @@ export function deliverableSubscribersWhere(type: 'email' | 'sms', groupIds?: nu
 export async function groupsForDelivery(
   payload: Payload,
   notification: { relatedIncident?: unknown; relatedMaintenance?: unknown },
+  req?: PayloadRequest,
 ): Promise<number[]> {
-  return (await notificationGroupIds(payload, notification)) ?? []
+  return (await notificationGroupIds(payload, notification, req)) ?? []
 }
 
 /** Aktive Abonnenten, die noch keine Meldungen erhalten: E-Mail ohne Freigabe oder Bestätigung, SMS ohne Freigabe. */

@@ -1,5 +1,5 @@
 import type { CollectionConfig } from 'payload'
-import { deliverableSubscribersWhere, groupsForDelivery } from '@/lib/subscriber-filter'
+import { estimateRecipients } from '@/lib/recipient-count'
 import { localizedDateAdmin } from '@/lib/localizedDateAdmin'
 import { ta } from '@/lib/i18n/admin'
 import { notificationScopedCreate, notificationScopedRead, notificationScopedWrite } from '@/lib/access'
@@ -39,35 +39,10 @@ export const Notifications: CollectionConfig = {
   hooks: {
     afterRead: [
       async ({ doc, req }) => {
-        // For drafts/scheduled, compute estimated recipient count
+        // Entwürfe und geplante Meldungen: geschätzte Empfängerzahl (je Anfrage nur einmal gezählt, s. recipient-count.ts)
         if (doc.status === 'draft' || doc.status === 'scheduled') {
           try {
-            const channel = doc.channel || 'both'
-            let count = 0
-            // Nur Abonnenten, deren Wahl zu den Dienstgruppen der Meldung passt
-            const groups = await groupsForDelivery(req.payload, doc)
-
-            if (channel === 'email' || channel === 'both') {
-              const emailCount = await req.payload.count({
-                collection: 'subscribers',
-                where: deliverableSubscribersWhere('email', groups),
-              })
-              count += emailCount.totalDocs
-            }
-
-            if (channel === 'sms' || channel === 'both') {
-              const smsCount = await req.payload.count({
-                collection: 'subscribers',
-                where: deliverableSubscribersWhere('sms', groups),
-              })
-              count += smsCount.totalDocs
-            }
-
-            // Return with estimated count
-            return {
-              ...doc,
-              recipientCount: count,
-            }
+            return { ...doc, recipientCount: await estimateRecipients(req.payload, doc, req) }
           } catch (error) {
             console.error('Error computing recipient count:', error)
             return doc

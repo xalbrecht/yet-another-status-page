@@ -1,6 +1,7 @@
 import { test, expect, type APIRequestContext, type Page } from '@playwright/test'
 import { createService, createServiceGroup, getService, updateService } from '../utils/payload-helpers'
 import { ADMIN_STORAGE_STATE, warmUpAdmin } from '../utils/admin-auth'
+import { getWithReset } from '../utils/api-retry'
 
 /**
  * Eigene Admin-Komponente „Dienste nach der Behebung“ (Issue #237, Feld aus Issue #210).
@@ -28,7 +29,8 @@ async function openIncident(request: APIRequestContext, serviceIds: number[]) {
 }
 
 async function getIncident(request: APIRequestContext, id: number) {
-  return (await (await request.get(`/api/incidents/${id}?depth=0`)).json()) as {
+  // Der erste Abruf nach längerem Leerlauf kann eine vom Server geschlossene Verbindung treffen (#278)
+  return (await (await getWithReset(request, `/api/incidents/${id}?depth=0`)).json()) as {
     status: string
     serviceChoices?: Array<{ service: number; restore: boolean }>
   }

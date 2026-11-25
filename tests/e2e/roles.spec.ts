@@ -346,7 +346,56 @@ test.describe.serial('Sammlungen nach Rolle und Dienstgruppe', () => {
     }
   })
 
-  test('Menü und Seiten je Rolle', { tag: ['@admin', '@system'] }, async ({ browser }) => {
+  test('Benachrichtigungen: ServiceDesk liest Entwürfe zu Meldungen seiner Gruppen, ändert, löscht und legt nur solche an, deren Dienste alle in seinen Gruppen liegen', { tag: ['@admin', '@abonnenten'] }, async () => {
+    const body = (extra: Record<string, unknown>) => ({ title: `Entwurf ${unique()}`, channel: 'email', status: 'draft', subject: 'x', ...extra })
+    const draft = async (extra: Record<string, unknown>) => {
+      const response = await data.admin.post('/api/notifications', { data: body(extra) })
+      expect(response.status()).toBe(201)
+      return (await response.json()).doc.id as number
+    }
+    const own = await draft({ relatedIncident: data.incA })
+    const mixed = await draft({ relatedIncident: data.incMix })
+    const foreign = await draft({ relatedIncident: data.incB })
+    const withoutRelation = await draft({})
+    const ids = async (client: Client) => ((await (await client.get('/api/notifications?limit=500&depth=0')).json()) as { docs: Array<{ id: number }> }).docs.map((doc) => doc.id)
+
+    // Lesen wie bei den Meldungen: mindestens ein Dienst der eigenen Gruppen, Entwürfe ohne Bezug nicht
+    const deskIds = await ids(data.desk)
+    expect(deskIds).toContain(own)
+    expect(deskIds).toContain(mixed)
+    expect(deskIds).not.toContain(foreign)
+    expect(deskIds).not.toContain(withoutRelation)
+    denied(await data.desk.get(`/api/notifications/${foreign}`))
+    // „alle Dienstgruppen“ und Admin sehen alles
+    for (const client of [data.deskAll, data.admin]) {
+      const all = await ids(client)
+      for (const id of [own, mixed, foreign, withoutRelation]) expect(all).toContain(id)
+    }
+
+    // Ändern und Löschen
+    expect((await data.desk.patch(`/api/notifications/${own}`, { data: { subject: 'geändert' } })).status()).toBe(200)
+    for (const id of [mixed, foreign, withoutRelation]) {
+      denied(await data.desk.patch(`/api/notifications/${id}`, { data: { subject: 'fremd' } }))
+      denied(await data.desk.delete(`/api/notifications/${id}`))
+    }
+    // Ein eigener Entwurf lässt sich nicht auf eine fremde Meldung umhängen
+    denied(await data.desk.patch(`/api/notifications/${own}`, { data: { relatedIncident: data.incB } }))
+    expect((await data.deskAll.patch(`/api/notifications/${foreign}`, { data: { subject: 'alle' } })).status()).toBe(200)
+
+    // Anlegen: Bezugsobjekt im eigenen Bereich
+    expect((await data.desk.post('/api/notifications', { data: body({ relatedIncident: data.incA }) })).status()).toBe(201)
+    for (const extra of [{ relatedIncident: data.incB }, { relatedIncident: data.incMix }, {}]) {
+      const response = await data.desk.post('/api/notifications', { data: body(extra) })
+      expect(response.status()).toBeGreaterThanOrEqual(400)
+      expect(response.status()).toBeLessThan(500)
+    }
+    expect((await data.deskAll.post('/api/notifications', { data: body({}) })).status()).toBe(201)
+
+    // Löschen im eigenen Bereich
+    expect((await data.desk.delete(`/api/notifications/${own}`)).status()).toBe(200)
+  })
+
+  test('Menü und Seiten je Rolle',{ tag: ['@admin', '@system'] }, async ({ browser }) => {
     const nav = async (client: Client, path: string) => {
       const context = await browser.newContext({ baseURL: ORIGIN, storageState: await client.storageState() })
       const page = await context.newPage()

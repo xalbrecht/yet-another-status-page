@@ -2,7 +2,7 @@ import type { CollectionConfig } from 'payload'
 import { deliverableSubscribersWhere } from '@/lib/subscriber-filter'
 import { localizedDateAdmin } from '@/lib/localizedDateAdmin'
 import { ta } from '@/lib/i18n/admin'
-import { rolesAccess } from '@/lib/access'
+import { notificationScopedCreate, notificationScopedRead, notificationScopedWrite } from '@/lib/access'
 import { NTFY_TEXT_MAX_LENGTH } from '@/lib/message-templates'
 
 export const notificationChannelOptions = [
@@ -31,10 +31,10 @@ export const Notifications: CollectionConfig = {
     description: ta('Manage and send notifications to subscribers'),
   },
   access: {
-    read: rolesAccess(['admin', 'servicedesk']),
-    create: rolesAccess(['admin', 'servicedesk']),
-    update: rolesAccess(['admin', 'servicedesk']),
-    delete: rolesAccess(['admin', 'servicedesk']),
+    read: notificationScopedRead,
+    create: notificationScopedCreate,
+    update: notificationScopedWrite,
+    delete: notificationScopedWrite,
   },
   hooks: {
     afterRead: [

@@ -18,6 +18,10 @@ export async function GET(request: NextRequest) {
     let groups: number[] = []
     const notificationId = searchParams.get('notification')
     if (notificationId) {
+      // Kennungen sind ganze Zahlen; alles andere würde erst in der Datenbank scheitern (500)
+      if (!/^\d{1,10}$/.test(notificationId) || Number(notificationId) > 2147483647) {
+        return NextResponse.json({ error: 'Invalid notification id' }, { status: 400 })
+      }
       const notification = await payload.findByID({
         collection: 'notifications',
         id: notificationId,

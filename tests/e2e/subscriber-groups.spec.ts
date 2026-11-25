@@ -173,6 +173,16 @@ test.describe('Gruppenwahl der Abonnenten', { tag: ['@admin', '@abonnenten'] }, 
     expect(await count(noServicesDraft)).toBe(total)
     expect(await estimated(noServicesDraft)).toBe(total)
   })
+
+  test('Zählung: ungültige Kennung ergibt 400, unbekannte 404 (statt 500)', async ({ request }) => {
+    // `1.5` und eine Zahl über dem Wertebereich der Spalte ließen die Abfrage in der Datenbank scheitern (500)
+    for (const invalid of ['abc', '1.5', '99999999999']) {
+      const response = await request.get(`/api/subscribers/count?channel=email&notification=${invalid}`)
+      expect(response.status(), `Kennung ${invalid}`).toBe(400)
+    }
+    const unknown = await request.get('/api/subscribers/count?channel=email&notification=2000000000')
+    expect(unknown.status()).toBe(404)
+  })
 })
 
 async function maintenance(request: APIRequestContext, services: number[]) {

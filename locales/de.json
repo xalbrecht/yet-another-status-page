@@ -151,6 +151,7 @@
     "api.invalidEmail": "Ungültige E-Mail-Adresse",
     "api.emailExists": "Diese E-Mail-Adresse ist bereits angemeldet",
     "api.invalidGroups": "Die Auswahl der Dienstgruppen ist ungültig",
+    "api.subscriptionInactive": "Diese Anmeldung ist abgemeldet. Die Auswahl lässt sich nicht ändern.",
     "api.smsUnavailable": "SMS-Benachrichtigungen sind nicht verfügbar. Bitte den Administrator kontaktieren.",
     "api.invalidPhone": "Ungültige Telefonnummer",
     "api.phoneExists": "Diese Telefonnummer ist bereits angemeldet",

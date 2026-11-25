@@ -50,6 +50,7 @@
     "src/app/api/subscribe/**": ["@abonnenten"],
     "src/app/api/unsubscribe/**": ["@abonnenten"],
     "src/app/api/subscribers/**": ["@abonnenten"],
+    "src/app/api/subscription/**": ["@abonnenten"],
     "src/app/api/system-info/**": ["@system"],
     "src/app/api/v1/**": ["@schnittstelle"],
 

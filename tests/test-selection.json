@@ -32,6 +32,7 @@
     "src/app/(frontend)/m/**": ["@wartungen"],
     "src/app/(frontend)/confirm/**": ["@abonnenten"],
     "src/app/(frontend)/unsubscribe/**": ["@abonnenten"],
+    "src/app/(frontend)/subscription/**": ["@abonnenten"],
     "src/app/(frontend)/page.tsx": ["@statusseite", "@lagebild"],
     "src/app/(frontend)/*": ["@public"],
     "src/app/(payload)/**": ["@admin"],

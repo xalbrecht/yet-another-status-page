@@ -96,3 +96,68 @@ test.describe('Gruppenwahl per Token (API)', { tag: ['@api', '@abonnenten'] }, (
     expect(after.groups ?? []).toEqual([])
   })
 })
+
+test.describe('Seite „Auswahl ändern“', { tag: ['@public', '@abonnenten'] }, () => {
+  let groupA: number
+  let groupB: number
+  let nameA: string
+  let nameB: string
+
+  test.beforeAll(async () => {
+    const id = unique()
+    nameA = `Seite A ${id}`
+    nameB = `Seite B ${id}`
+    groupA = (await createServiceGroup({ name: nameA, icon: 'Server' })).id
+    groupB = (await createServiceGroup({ name: nameB, icon: 'Server' })).id
+  })
+
+  const fresh = () => createSubscriber({ type: 'email', email: `seite-${unique()}@example.test` })
+  const stored = async (request: import('@playwright/test').APIRequestContext, id: number) =>
+    (await (await request.get(`/api/subscribers/${id}?depth=0`)).json()) as Stored
+
+  test('zeigt „alle Dienstgruppen“, speichert die Auswahl und bestätigt', async ({ page, request }) => {
+    const sub = await fresh()
+    await page.goto(`/subscription/${sub.unsubscribeToken}`)
+    const all = page.getByLabel(/All service groups|Alle Dienstgruppen/i)
+    await expect(all).toBeChecked()
+    // Hydrierung abwarten, sonst löst das Umschalten nichts aus
+    await page.waitForFunction(() => Object.keys(document.querySelector('input[type="checkbox"]') ?? {}).some((k) => k.startsWith('__reactProps')))
+
+    await all.uncheck()
+    const save = page.getByRole('button', { name: /Save selection|Auswahl speichern/i })
+    await expect(save).toBeDisabled()
+    await page.getByRole('searchbox').fill(nameA)
+    await page.getByLabel(nameA).check()
+    await expect(save).toBeEnabled()
+    await save.click()
+    await expect(page.getByText(/selection has been saved|Auswahl ist gespeichert/i)).toBeVisible({ timeout: 10000 })
+
+    const after = await stored(request, sub.id)
+    expect(after.allGroups).toBe(false)
+    expect((after.groups ?? []).map((g) => (typeof g === 'object' ? g.id : g))).toEqual([groupA])
+  })
+
+  test('zeigt die gespeicherte Auswahl an', async ({ page, request }) => {
+    const sub = await fresh()
+    expect((await request.put(`/api/subscription/${sub.unsubscribeToken}`, { data: { allGroups: false, groups: [groupB] } })).status()).toBe(200)
+    await page.goto(`/subscription/${sub.unsubscribeToken}`)
+    await expect(page.getByLabel(/All service groups|Alle Dienstgruppen/i)).not.toBeChecked()
+    await expect(page.getByLabel(nameB)).toBeChecked()
+    await expect(page.getByLabel(nameA)).not.toBeChecked()
+  })
+
+  test('falscher Token zeigt die Fehlerseite ohne Formular', async ({ page }) => {
+    await page.goto('/subscription/unbekannter-token-0000')
+    await expect(page.getByRole('heading', { name: /Invalid link|Ungültiger Link/i })).toBeVisible()
+    await expect(page.getByRole('button', { name: /Save selection|Auswahl speichern/i })).toHaveCount(0)
+  })
+
+  test('abgemeldeter Eintrag zeigt „abgemeldet“ ohne Formular', async ({ page, request }) => {
+    const sub = await fresh()
+    expect((await request.patch(`/api/subscribers/${sub.id}`, { data: { active: false } })).ok()).toBeTruthy()
+    await page.goto(`/subscription/${sub.unsubscribeToken}`)
+    await expect(page.getByRole('heading', { name: /Unsubscribed|Abgemeldet/i })).toBeVisible()
+    await expect(page.getByRole('button', { name: /Save selection|Auswahl speichern/i })).toHaveCount(0)
+    await expect(page.getByLabel(/All service groups|Alle Dienstgruppen/i)).toHaveCount(0)
+  })
+})

@@ -15,6 +15,32 @@ interface WidgetData {
   smsSubscribers: number
   activeIncidents: number
   upcomingMaintenances: number
+  /** Konto mit Gruppenliste: Die Zahlen oben gelten nur für den Bereich, die `…Total`-Felder zählen alle Gruppen. */
+  scoped?: boolean
+  activeIncidentsTotal?: number
+  upcomingMaintenancesTotal?: number
+  pendingNotificationsTotal?: number
+  scheduledNotificationsTotal?: number
+}
+
+/**
+ * Zahl einer Kachel. Konten mit Gruppenliste sehen „Meine Gruppen“ und „Gesamt“ nebeneinander, alle anderen nur die Zahl.
+ */
+const Count: React.FC<{ own: number; total?: number; scoped?: boolean }> = ({ own, total, scoped }) => {
+  const ta = useAdminText()
+  if (!scoped || total === undefined) return <div className="dashboard-widget__value">{own}</div>
+  return (
+    <div className="dashboard-widget__pair">
+      <div>
+        <div className="dashboard-widget__value" data-testid="count-own">{own}</div>
+        <div className="dashboard-widget__hint">{ta('My groups')}</div>
+      </div>
+      <div className="dashboard-widget__pair-total">
+        <div className="dashboard-widget__value dashboard-widget__value--plain" data-testid="count-total">{total}</div>
+        <div className="dashboard-widget__hint">{ta('Total')}</div>
+      </div>
+    </div>
+  )
 }
 
 export const DashboardWidgets: React.FC = () => {
@@ -103,8 +129,8 @@ export const DashboardWidgets: React.FC = () => {
             </svg>
           </div>
           <div className="dashboard-widget__content">
-            <div className="dashboard-widget__value">{data.activeIncidents}</div>
             <div className="dashboard-widget__label">{ta('Active Incidents')}</div>
+            <Count own={data.activeIncidents} total={data.activeIncidentsTotal} scoped={data.scoped} />
           </div>
         </Link>
 
@@ -117,8 +143,8 @@ export const DashboardWidgets: React.FC = () => {
             </svg>
           </div>
           <div className="dashboard-widget__content">
-            <div className="dashboard-widget__value">{data.upcomingMaintenances}</div>
             <div className="dashboard-widget__label">{ta('Upcoming Maintenances')}</div>
+            <Count own={data.upcomingMaintenances} total={data.upcomingMaintenancesTotal} scoped={data.scoped} />
           </div>
         </Link>
 
@@ -133,8 +159,8 @@ export const DashboardWidgets: React.FC = () => {
             </svg>
           </div>
           <div className="dashboard-widget__content">
-            <div className="dashboard-widget__value">{data.pendingNotifications}</div>
-            <div className="dashboard-widget__label">{ta('Draft Notifications')}</div>
+            <div className="dashboard-widget__label">{ta('Notification drafts')}</div>
+            <Count own={data.pendingNotifications} total={data.pendingNotificationsTotal} scoped={data.scoped} />
           </div>
         </Link>
 
@@ -149,8 +175,8 @@ export const DashboardWidgets: React.FC = () => {
             </svg>
           </div>
           <div className="dashboard-widget__content">
-            <div className="dashboard-widget__value">{data.scheduledNotifications}</div>
-            <div className="dashboard-widget__label">{ta('Scheduled')}</div>
+            <div className="dashboard-widget__label">{ta('Scheduled notifications')}</div>
+            <Count own={data.scheduledNotifications} total={data.scheduledNotificationsTotal} scoped={data.scoped} />
           </div>
         </Link>
           </>

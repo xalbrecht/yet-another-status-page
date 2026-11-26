@@ -332,6 +332,56 @@ test.describe.serial('Sammlungen nach Rolle und Dienstgruppe', () => {
     expect(desk.pendingSubscribers).toBe(0)
   })
 
+  test('Dashboard-Zahlen: Konten mit Gruppenliste zählen nur Meldungen ihrer Gruppen (Störungen, Wartungen, Entwürfe)', { tag: ['@api', '@system'] }, async () => {
+    const keys = ['activeIncidents', 'upcomingMaintenances', 'pendingNotifications'] as const
+    const stats = async (client: Client) => (await (await client.get('/api/dashboard-stats')).json()) as Record<(typeof keys)[number] | `${(typeof keys)[number]}Total`, number> & { scoped: boolean }
+    const clients = { admin: data.admin, deskAll: data.deskAll, desk: data.desk }
+    const before = { admin: await stats(clients.admin), deskAll: await stats(clients.deskAll), desk: await stats(clients.desk) }
+    const draftFor = async (incident: number) => {
+      const response = await data.admin.post('/api/notifications', { data: { title: `Entwurf ${unique()}`, channel: 'email', status: 'draft', subject: 'x', relatedIncident: incident } })
+      expect(response.status()).toBe(201)
+    }
+    // Je eine Störung, eine Wartung und ein Entwurf in der fremden Gruppe B: nur „alle Dienstgruppen“ und Admin zählen sie
+    const foreignIncident = await createIncident(data.admin, `Zahl B ${unique()}`, [data.svcB])
+    expect(foreignIncident.status()).toBe(201)
+    expect((await data.admin.post('/api/maintenances', { data: maintenanceBody(`Zahl B ${unique()}`, [data.svcB]) })).status()).toBe(201)
+    await draftFor(((await foreignIncident.json()) as { doc: { id: number } }).doc.id)
+    const afterForeign = { admin: await stats(clients.admin), deskAll: await stats(clients.deskAll), desk: await stats(clients.desk) }
+    // Eine Störung legt von selbst einen Entwurf an: Die Zahl der Entwürfe steigt um mindestens 1, die der Störungen und Wartungen um genau 1
+    for (const key of keys) {
+      const added = afterForeign.admin[key] - before.admin[key]
+      expect(added, `Admin ${key}`).toBeGreaterThanOrEqual(1)
+      if (key !== 'pendingNotifications') expect(added, `Admin ${key}`).toBe(1)
+      expect(afterForeign.deskAll[key] - before.deskAll[key], `ServiceDesk alle ${key}`).toBe(added)
+      expect(afterForeign.desk[key], `ServiceDesk Gruppe A ${key}`).toBe(before.desk[key])
+    }
+    // Konto mit Gruppenliste: zusätzlich die Gesamtzahl über alle Gruppen, gleich der Zahl des Admins. Admin und „alle Dienstgruppen“ ohne zweite Zahl
+    expect(afterForeign.desk.scoped).toBe(true)
+    expect(afterForeign.admin.scoped).toBe(false)
+    expect(afterForeign.deskAll.scoped).toBe(false)
+    for (const key of keys) {
+      expect(afterForeign.desk[`${key}Total`], `Gesamtzahl ${key}`).toBe(afterForeign.admin[key])
+      expect(afterForeign.admin[`${key}Total`], `Admin ${key}Total`).toBe(afterForeign.admin[key])
+      expect(afterForeign.deskAll[`${key}Total`], `ServiceDesk alle ${key}Total`).toBe(afterForeign.deskAll[key])
+    }
+    // Dieselben drei in der eigenen Gruppe A: jetzt zählt auch das Konto mit Gruppenliste
+    const ownIncident = await createIncident(data.admin, `Zahl A ${unique()}`, [data.svcA])
+    expect(ownIncident.status()).toBe(201)
+    expect((await data.admin.post('/api/maintenances', { data: maintenanceBody(`Zahl A ${unique()}`, [data.svcA]) })).status()).toBe(201)
+    await draftFor(((await ownIncident.json()) as { doc: { id: number } }).doc.id)
+    const afterOwn = await stats(clients.desk)
+    for (const key of keys) {
+      expect(afterOwn[key] - before.desk[key], `ServiceDesk Gruppe A nach eigener Meldung ${key}`).toBeGreaterThanOrEqual(1)
+      if (key !== 'pendingNotifications') expect(afterOwn[key], `ServiceDesk Gruppe A nach eigener Meldung ${key}`).toBe(before.desk[key] + 1)
+    }
+    // Produktmanager mit Gruppe A: Wartungen und Störungen der Gruppe, keine Entwürfe
+    const pm = await stats(data.pm)
+    expect(pm.scoped).toBe(true)
+    expect(pm.pendingNotifications).toBe(0)
+    expect(pm.upcomingMaintenances).toBeGreaterThanOrEqual(1)
+    expect(pm.upcomingMaintenances).toBeLessThan((await stats(clients.admin)).upcomingMaintenances)
+  })
+
   test('Benachrichtigung senden: ServiceDesk nur für Entwürfe zu Meldungen seiner Gruppen', { tag: ['@admin', '@abonnenten'] }, async () => {
     const draft = async (incident: number) => {
       const response = await data.admin.post('/api/notifications', { data: { title: `Entwurf ${unique()}`, channel: 'email', status: 'draft', subject: 'x', relatedIncident: incident } })

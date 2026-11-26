@@ -29,15 +29,12 @@ export type LagebildStatus = AvailabilityStatus
 export const BAR_SLOTS = 144
 export const BAR_HOURS = 12
 
-/** Marke des zwischengespeicherten Lagebilds, damit eine Änderung es verwerfen kann. */
-export const LAGEBILD_CACHE_TAG = 'lagebild'
-
 /** Wie lange das berechnete Lagebild für alle Besucher gilt (Sekunden), wenn nichts anderes eingestellt ist. */
 export const LAGEBILD_CACHE_SECONDS = 60
 
 /**
- * Schlüssel des Zwischenspeichers. Das Ergebnis enthält übersetzte Texte und Next speichert es auf der Platte;
- * ohne die Sprache im Schlüssel lieferte ein Neustart mit anderer Sprache zuerst den alten Eintrag.
+ * Schlüssel des Zwischenspeichers. Das Ergebnis enthält übersetzte Texte; ohne die Sprache im Schlüssel
+ * bekäme ein Besucher mit anderer Sprache den Eintrag der ersten.
  */
 export function lagebildCacheKey(language: string): string[] {
   return ['lagebild', language]
@@ -48,6 +45,16 @@ export function parseCacheSeconds(value: unknown, fallback: number = LAGEBILD_CA
   if (value === undefined || value === null || String(value).trim() === '') return fallback
   const seconds = Number(value)
   return Number.isInteger(seconds) && seconds >= 0 && seconds <= 3600 ? seconds : fallback
+}
+
+/** Wählbare Dauer des Zwischenspeichers in Minuten (Einstellung „Zwischenspeicher des Lagebilds“). */
+export const CACHE_MINUTES_OPTIONS = ['1', '3', '5', '10'] as const
+
+/** Sekunden aus der Einstellung. Leer oder ungültig: `fallbackSeconds` (Umgebungsvariable oder 60). */
+export function cacheSecondsFromSetting(value: unknown, fallbackSeconds: number): number {
+  return typeof value === 'string' && (CACHE_MINUTES_OPTIONS as readonly string[]).includes(value)
+    ? Number(value) * 60
+    : fallbackSeconds
 }
 
 /** Wählbarer Zeitraum des Balkens in Stunden. Der erste Wert ist die Vorgabe. */

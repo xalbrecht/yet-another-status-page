@@ -72,11 +72,12 @@ The field **Bar period** (Zeitraum der Balken) in the same section sets the defa
 
 ## Caching
 
-The start page calculates one bar per service and group. To keep the load low, the result is cached for all visitors for 60 seconds (environment variable `LAGEBILD_CACHE_SECONDS`, `0` switches the cache off, see [Configuration](../getting-started/configuration.md)). The cache is separate for each look-back, bar period, language and time zone.
+The start page calculates one bar per service and group. To keep the load low, the result is calculated once and reused for all visitors. The duration is the setting **Cache of the situation overview** in the site settings (1, 3, 5 or 10 minutes). If the setting is empty, the environment variable `LAGEBILD_CACHE_SECONDS` applies (default 60 seconds, `0` switches the cache off, see [Configuration](../getting-started/configuration.md)). The cache is separate for each look-back, bar period, language and time zone.
 
-- A change of a service status, of a service, of a group, of an incident or of a maintenance discards the cache at once. The new state appears on the next load of the page. In a window of a few milliseconds while the change is saved, a request can still cache the old state for up to 60 seconds.
-- The bars and the times above them can be up to 60 seconds old.
-- The cache lives in each application instance (default cache handler of Next.js). With several instances (for example several Helm replicas) a change discards the cache only in the instance that received it. The others catch up after at most 60 seconds.
+- After the duration has passed, the next visit calculates the situation overview again and waits for the result. It never shows the old state once more.
+- A change of a service status, of a service, of a group, of an incident or of a maintenance discards the cache at once, whatever the duration is. The new state appears on the next load of the page. A calculation that was already running when the change was saved is not stored.
+- The bars and the times above them can be as old as the duration.
+- The cache lives in the memory of each application instance and is empty after a restart. With several instances (for example several Helm replicas) a change discards the cache only in the instance that received it. The others catch up after at most the duration.
 
 ## Status log
 

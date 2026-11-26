@@ -148,8 +148,8 @@ function IncidentCard({ incident, linkToDetail = false }: { incident: Incident; 
                 {/* Content */}
                 <div className="flex-1 pb-2">
                   <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-3">
-                    <span className={cn("text-sm font-semibold capitalize", config.color)}>
-                      {update.status}
+                    <span className={cn("text-sm font-semibold", config.color)}>
+                      {t(config.labelKey)}
                     </span>
                     <span className="text-xs text-muted-foreground">{update.timestamp}</span>
                   </div>

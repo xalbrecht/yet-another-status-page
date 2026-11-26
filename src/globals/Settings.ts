@@ -214,6 +214,23 @@ export const Settings: GlobalConfig = {
           },
         },
         {
+          name: 'lagebildCacheMinutes',
+          type: 'select',
+          label: ta('Cache of the situation overview'),
+          options: [
+            { label: ta('1 minute'), value: '1' },
+            { label: ta('3 minutes'), value: '3' },
+            { label: ta('5 minutes'), value: '5' },
+            { label: ta('10 minutes'), value: '10' },
+          ],
+          admin: {
+            condition: (data) => data?.lagebildVariant !== 'off',
+            description: ta(
+              'How long the situation overview is calculated once for all visitors. Empty: 1 minute. A change to a service or group applies immediately regardless.',
+            ),
+          },
+        },
+        {
           name: 'statusBoxEntries',
           type: 'number',
           label: ta('Entries per box'),

@@ -239,7 +239,7 @@ async function getStatusData(requestedPeriod: unknown, requestedBar: unknown) {
   // Zeitraum des Balkens: Vorgabe aus den Einstellungen, der Besucher überschreibt sie mit ?balken=<Stunden>
   const defaultBarHours = parseBarHours(settings.lagebildBarHours)
   const barHours: BarHours = parseBarHours(requestedBar, defaultBarHours)
-  const lagebild = lagebildVariant === 'off' ? null : await loadLagebildCached(lang, dt, periodDays, barHours)
+  const lagebild = lagebildVariant === 'off' ? null : await loadLagebildCached(lang, dt, periodDays, barHours, settings.lagebildCacheMinutes)
 
   // Boxen neben dem Lagebild: nur in den Varianten a, b und both
   let boxes = null

@@ -1219,6 +1219,10 @@ export interface Setting {
    */
   lagebildBarHours?: ('12' | '24') | null;
   /**
+   * How long the situation overview is calculated once for all visitors. Empty: 1 minute. A change to a service or group applies immediately regardless.
+   */
+  lagebildCacheMinutes?: ('1' | '3' | '5' | '10') | null;
+  /**
    * How many disruptions and maintenances each box on the start page shows. The rest is behind "show more".
    */
   statusBoxEntries?: number | null;
@@ -1452,6 +1456,7 @@ export interface SettingsSelect<T extends boolean = true> {
   lagebildVariant?: T;
   lagebildPeriodDays?: T;
   lagebildBarHours?: T;
+  lagebildCacheMinutes?: T;
   statusBoxEntries?: T;
   statusBoxContent?: T;
   statusBoxesPlacement?: T;

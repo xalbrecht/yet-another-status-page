@@ -5,7 +5,7 @@ import config from '@payload-config'
 import { getIncidentStatus } from '@/collections/Incidents'
 import { pendingSubscribersWhere } from '@/lib/subscriber-filter'
 import { requireRoles } from '@/lib/route-auth'
-import { ROLES, hasRole, type RoleUser } from '@/lib/roles'
+import { ROLES, groupScope, hasRole, type RoleUser } from '@/lib/roles'
 
 const none = Promise.resolve({ totalDocs: 0 })
 
@@ -18,6 +18,11 @@ export async function GET() {
     const user = auth.user as RoleUser
     const isAdmin = !user || hasRole(user, 'admin')
     const canNotify = isAdmin || hasRole(user, 'servicedesk')
+    // Störungen, Wartungen und Entwürfe zählen mit den Leserechten des Kontos, wie die Listen dahinter: ServiceDesk und
+    // Produktmanager mit Gruppenliste zählen nur Meldungen ihrer Dienstgruppen (Issue #286). Ohne Anmeldung (Testmodus) zählt alles.
+    const asUser = user ? { user, overrideAccess: false } : {}
+    // Konto mit Gruppenliste (ServiceDesk, Produktmanager): Neben der Zahl des Bereichs steht die Gesamtzahl über alle Gruppen
+    const scoped = Boolean(user) && !isAdmin && groupScope(user, ['servicedesk', 'produktmanager']) !== 'all'
 
     // Fetch all stats in parallel
     const [
@@ -33,11 +38,13 @@ export async function GET() {
       canNotify ? payload.count({
         collection: 'notifications',
         where: { status: { equals: 'draft' } },
+        ...asUser,
       }) : none,
       // Scheduled notifications
       canNotify ? payload.count({
         collection: 'notifications',
         where: { status: { equals: 'scheduled' } },
+        ...asUser,
       }) : none,
       // Email subscribers (active only)
       isAdmin ? payload.count({
@@ -69,6 +76,7 @@ export async function GET() {
       payload.find({
         collection: 'incidents',
         limit: 0, // We only need docs for filtering, not pagination
+        ...asUser,
       }),
       // Upcoming maintenances
       payload.count({
@@ -79,14 +87,25 @@ export async function GET() {
             { status: { equals: 'in_progress' } },
           ],
         },
+        ...asUser,
       }),
     ])
 
     // Count active incidents (status derived from last update, not 'resolved')
-    const activeIncidentsCount = allIncidents.docs.filter((incident) => {
-      const status = getIncidentStatus(incident.updates as Array<{ status?: string }> | undefined)
-      return status !== 'resolved'
-    }).length
+    const countActive = (docs: typeof allIncidents.docs) =>
+      docs.filter((incident) => getIncidentStatus(incident.updates as Array<{ status?: string }> | undefined) !== 'resolved').length
+    const activeIncidentsCount = countActive(allIncidents.docs)
+
+    // Gesamtzahlen über alle Gruppen (ohne Rechte des Kontos): nur für Konten mit Gruppenliste, sonst gleich der eigenen Zahl.
+    // Es sind reine Mengen, keine Inhalte.
+    const everything = scoped
+      ? await Promise.all([
+          payload.find({ collection: 'incidents', limit: 0, depth: 0 }),
+          payload.count({ collection: 'maintenances', where: { or: [{ status: { equals: 'upcoming' } }, { status: { equals: 'in_progress' } }] } }),
+          canNotify ? payload.count({ collection: 'notifications', where: { status: { equals: 'draft' } } }) : none,
+          canNotify ? payload.count({ collection: 'notifications', where: { status: { equals: 'scheduled' } } }) : none,
+        ])
+      : null
 
     return NextResponse.json({
       pendingNotifications: pendingNotifications.totalDocs,
@@ -96,6 +115,11 @@ export async function GET() {
       pendingSubscribers: pendingSubscribers.totalDocs,
       activeIncidents: activeIncidentsCount,
       upcomingMaintenances: upcomingMaintenances.totalDocs,
+      scoped,
+      activeIncidentsTotal: everything ? countActive(everything[0].docs) : activeIncidentsCount,
+      upcomingMaintenancesTotal: everything ? everything[1].totalDocs : upcomingMaintenances.totalDocs,
+      pendingNotificationsTotal: everything ? everything[2].totalDocs : pendingNotifications.totalDocs,
+      scheduledNotificationsTotal: everything ? everything[3].totalDocs : scheduledNotifications.totalDocs,
     })
   } catch (error) {
     console.error('Dashboard stats error:', error)

@@ -86,4 +86,30 @@ test.describe('Admin: Assistent je Rolle', { tag: ['@admin', '@wartungen', '@sto
       await request.delete(`/api/users/${userId}`)
     }
   })
+
+  test('Dashboard: Konto mit Gruppenliste zeigt „Meine Gruppen“ und „Gesamt“, Admin nur die Zahl (Issue #286)', async ({ browser, request, page }) => {
+    const id = unique()
+    const group = await createServiceGroup({ name: `Dashboard A ${id}`, icon: 'Server' })
+    const desk = await contextFor(browser, request, { roles: ['servicedesk'], servicedeskGruppen: [group.id] })
+    const pm = await contextFor(browser, request, { roles: ['produktmanager'], produktmanagerGruppen: [group.id] })
+    const deskPage = await desk.context.newPage()
+    const pmPage = await pm.context.newPage()
+    try {
+      // ServiceDesk: vier Kacheln mit zwei Zahlen, Produktmanager: zwei Kacheln (Störungen und Wartungen)
+      await deskPage.goto('/admin', { timeout: 120000 })
+      await expect(deskPage.getByTestId('count-total')).toHaveCount(4, { timeout: 30000 })
+      await expect(deskPage.getByTestId('count-own')).toHaveCount(4)
+      await pmPage.goto('/admin', { timeout: 120000 })
+      await expect(pmPage.getByTestId('count-total')).toHaveCount(2, { timeout: 30000 })
+      // Admin: eine Zahl je Kachel, keine zweite
+      await page.goto('/admin', { timeout: 120000 })
+      await expect(page.locator('.dashboard-widget')).toHaveCount(6, { timeout: 30000 })
+      await expect(page.getByTestId('count-total')).toHaveCount(0)
+    } finally {
+      await desk.context.close()
+      await pm.context.close()
+      await request.delete(`/api/users/${desk.userId}`)
+      await request.delete(`/api/users/${pm.userId}`)
+    }
+  })
 })

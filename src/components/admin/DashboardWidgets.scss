@@ -77,6 +77,28 @@
     color: var(--theme-elevation-900);
   }
 
+  &__hint {
+    font-size: 0.75rem;
+    color: var(--theme-elevation-500);
+  }
+
+  // „Meine Gruppen“ und „Gesamt“ nebeneinander (Konten mit Gruppenliste)
+  &__pair {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 0.25rem 0.75rem;
+  }
+
+  &__pair-total {
+    border-left: 1px solid var(--theme-elevation-150);
+    padding-left: 0.75rem;
+  }
+
+  &__value--plain {
+    color: var(--theme-elevation-800);
+  }
+
   &__label {
     font-size: 0.8125rem;
     color: var(--theme-elevation-500);

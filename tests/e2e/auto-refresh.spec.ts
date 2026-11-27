@@ -15,6 +15,20 @@ test.describe('Automatisches Neuladen', { tag: ['@public', '@statusseite', '@lag
 
   const line = (page: Page) => page.getByTestId('auto-refresh')
 
+  /**
+   * Wartet, bis React die Anzeige hydriert hat und ihr Zeitgeber läuft. `networkidle` genügt nicht: Die Hydrierung
+   * kann danach noch kommen (im Trace 70 ms nach dem Start des Tests), und ein Zeitgeber, der erst nach `runFor` beginnt,
+   * wird von der Uhr des Tests nie erreicht.
+   */
+  const hydrated = async (page: Page) => {
+    await page.waitForFunction(() => {
+      const el = document.querySelector('[data-testid="auto-refresh"]')
+      return el !== null && Object.keys(el).some((key) => key.startsWith('__reactProps'))
+    })
+    // ein Bild abwarten: Die Effekte der Komponente laufen vor dem nächsten Bild
+    await page.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => resolve(null))))
+  }
+
   /** Zählt die Anfragen, mit denen `router.refresh()` die Seite neu holt (RSC-Anfrage an die Seite selbst). */
   const countRefreshes = (page: Page) => {
     const state = { count: 0 }
@@ -55,6 +69,7 @@ test.describe('Automatisches Neuladen', { tag: ['@public', '@statusseite', '@lag
     await page.clock.install()
     await page.goto('/')
     await page.waitForLoadState('networkidle')
+    await hydrated(page)
     const refreshes = countRefreshes(page)
 
     await page.getByRole('button', { name: /Subscribe/i }).click()
@@ -72,6 +87,7 @@ test.describe('Automatisches Neuladen', { tag: ['@public', '@statusseite', '@lag
     await page.clock.install()
     await page.goto('/')
     await page.waitForLoadState('networkidle')
+    await hydrated(page)
     const refreshes = countRefreshes(page)
 
     await page.evaluate(() => {
@@ -93,6 +109,7 @@ test.describe('Automatisches Neuladen', { tag: ['@public', '@statusseite', '@lag
     await page.clock.install()
     await page.goto('/')
     await page.waitForLoadState('networkidle')
+    await hydrated(page)
     const refreshes = countRefreshes(page)
 
     const setHidden = (hidden: boolean) =>
@@ -117,6 +134,7 @@ test.describe('Automatisches Neuladen', { tag: ['@public', '@statusseite', '@lag
     await page.clock.install()
     await page.goto('/')
     await page.waitForLoadState('networkidle')
+    await hydrated(page)
     const refreshes = countRefreshes(page)
     const navigations: string[] = []
     page.on('framenavigated', (frame) => {

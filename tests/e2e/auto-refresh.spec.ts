@@ -34,7 +34,8 @@ test.describe('Automatisches Neuladen', { tag: ['@public', '@statusseite', '@lag
   test('die Zeile nennt den Stand und den Takt', async ({ page }) => {
     await updateSettings({ autoRefreshMinutes: '5' })
     await page.goto('/')
-    await expect(line(page)).toHaveText(/^As of \d{2}:\d{2}.* · updates every 5 minutes$/)
+    // Uhrzeit je nach Sprache und Zeitzone der Instanz: „10:42 CET“ oder „1:07 PM UTC“ (CI)
+    await expect(line(page)).toHaveText(/^As of \d{1,2}:\d{2}.* · updates every 5 minutes$/)
 
     await updateSettings({ autoRefreshMinutes: '1' })
     await page.goto('/')

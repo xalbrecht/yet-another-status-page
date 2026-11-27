@@ -89,3 +89,36 @@ test('ein Fehler wird nicht gespeichert, der nächste Aufruf rechnet neu', async
   const r = await t.cache.get('k', 60_000, t.compute)
   assert.equal(r.run, 1)
 })
+
+test('getEntry nennt den Zeitpunkt der Berechnung, auch für den gespeicherten Stand und gleichzeitige Aufrufe (#288)', async () => {
+  const t = setup()
+  const [a, b] = await Promise.all([t.cache.getEntry('k', 60_000, t.compute), t.cache.getEntry('k', 60_000, t.compute)])
+  assert.equal(a.at, 1_000_000)
+  assert.equal(b.at, 1_000_000, 'gleichzeitige Aufrufe teilen die Berechnung und ihren Zeitpunkt')
+  assert.equal(t.calls(), 1)
+
+  t.advance(30_000)
+  const cached = await t.cache.getEntry('k', 60_000, t.compute)
+  assert.equal(cached.at, 1_000_000, 'der gespeicherte Stand behält den Zeitpunkt seiner Berechnung')
+  assert.equal(cached.value, a.value)
+
+  t.advance(30_001)
+  const fresh = await t.cache.getEntry('k', 60_000, t.compute)
+  assert.equal(fresh.at, 1_060_001)
+  assert.equal(t.calls(), 2)
+})
+
+test('getEntry ohne Speicher (Dauer 0) liefert den Zeitpunkt des Aufrufs', async () => {
+  const t = setup()
+  t.advance(5_000)
+  const entry = await t.cache.getEntry('k', 0, t.compute)
+  assert.equal(entry.at, 1_005_000)
+})
+
+test('get und getEntry teilen sich den Speicher', async () => {
+  const t = setup()
+  const value = await t.cache.get('k', 60_000, t.compute)
+  const entry = await t.cache.getEntry('k', 60_000, t.compute)
+  assert.equal(entry.value, value)
+  assert.equal(t.calls(), 1)
+})

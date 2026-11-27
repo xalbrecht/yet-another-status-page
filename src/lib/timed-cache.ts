@@ -12,6 +12,8 @@
  */
 export interface TimedCache {
   get<T>(key: string, ttlMs: number, compute: () => Promise<T>): Promise<T>
+  /** Wie `get`, dazu der Zeitpunkt, zu dem der Wert fertig berechnet war (bei Dauer 0: der Aufruf). */
+  getEntry<T>(key: string, ttlMs: number, compute: () => Promise<T>): Promise<{ value: T; at: number }>
   clear(): void
 }
 
@@ -20,28 +22,34 @@ type Entry = { at: number; value: unknown }
 export function createTimedCache(now: () => number = Date.now): TimedCache {
   let generation = 0
   const entries = new Map<string, Entry>()
-  const running = new Map<string, Promise<unknown>>()
+  const running = new Map<string, Promise<Entry>>()
+
+  async function getEntry<T>(key: string, ttlMs: number, compute: () => Promise<T>): Promise<{ value: T; at: number }> {
+    if (ttlMs <= 0) return { value: await compute(), at: now() }
+    const entry = entries.get(key)
+    if (entry && now() - entry.at <= ttlMs) return entry as { value: T; at: number }
+    const shared = running.get(key)
+    if (shared) return shared as Promise<{ value: T; at: number }>
+
+    const startedIn = generation
+    const promise: Promise<Entry> = compute()
+      .then((value) => {
+        const fresh = { at: now(), value }
+        if (startedIn === generation) entries.set(key, fresh)
+        return fresh
+      })
+      .finally(() => {
+        if (running.get(key) === promise) running.delete(key)
+      })
+    running.set(key, promise)
+    return promise as Promise<{ value: T; at: number }>
+  }
 
   return {
     async get<T>(key: string, ttlMs: number, compute: () => Promise<T>): Promise<T> {
-      if (ttlMs <= 0) return compute()
-      const entry = entries.get(key)
-      if (entry && now() - entry.at <= ttlMs) return entry.value as T
-      const shared = running.get(key)
-      if (shared) return shared as Promise<T>
-
-      const startedIn = generation
-      const promise = compute()
-        .then((value) => {
-          if (startedIn === generation) entries.set(key, { at: now(), value })
-          return value
-        })
-        .finally(() => {
-          if (running.get(key) === promise) running.delete(key)
-        })
-      running.set(key, promise)
-      return promise
+      return (await getEntry(key, ttlMs, compute)).value
     },
+    getEntry,
     clear() {
       generation += 1
       entries.clear()

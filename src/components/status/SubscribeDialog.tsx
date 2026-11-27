@@ -7,6 +7,7 @@ import { Mail, MessageSquare, X, Bell, AlertCircle } from "lucide-react";
 import { z } from "zod";
 import { cn } from "@/lib/utils";
 import { GroupChoice, describeChoice, isGroupChoiceValid, type GroupChoiceValue, type GroupOption } from "./GroupChoice";
+import { AUTO_REFRESH_PAUSE_ATTRIBUTE } from "@/lib/auto-refresh";
 
 type SubscriptionMethod = "email" | "sms";
 
@@ -186,7 +187,7 @@ export function SubscribeDialog({ isOpen, onClose }: SubscribeDialogProps) {
   const bothAvailable = availability?.email && availability?.sms;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
+    <div className="fixed inset-0 z-50 flex items-center justify-center" {...{ [AUTO_REFRESH_PAUSE_ATTRIBUTE]: "" }}>
       {/* Backdrop */}
       <div
         className="absolute inset-0 bg-foreground/20 backdrop-blur-sm transition-opacity"

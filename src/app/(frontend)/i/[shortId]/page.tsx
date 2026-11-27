@@ -12,6 +12,7 @@ import { CopyLinkButton } from '@/components/status/CopyLinkButton'
 import { IncidentUpdatesTimeline } from '@/components/status/IncidentUpdatesTimeline'
 import { cn, getMediaUrl } from '@/lib/utils'
 import { formatDate, formatTime, resolveDateTimeConfig } from '@/lib/datetime'
+import { autoRefreshProps } from '@/lib/auto-refresh'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -168,7 +169,7 @@ export default async function IncidentPage({ params }: PageProps) {
         </section>
       </main>
 
-      <Footer footerText={settings.footerText} timezone={settings.timezone} />
+      <Footer footerText={settings.footerText} timezone={settings.timezone} refresh={autoRefreshProps(settings, resolveDateTimeConfig(settings))} />
     </div>
   )
 }

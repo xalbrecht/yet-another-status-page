@@ -20,6 +20,7 @@ import { StatusLegend } from '@/components/status/StatusLegend'
 import { Lagebild } from '@/components/status/lagebild/Lagebild'
 import { StatusBoxes } from '@/components/status/StatusBoxes'
 import { loadLagebildCached } from '@/lib/lagebild-cache'
+import { autoRefreshProps, cacheMinutesSetting } from '@/lib/auto-refresh'
 import { parseBarHours, parsePeriodDays, type BarHours, type PeriodDays } from '@/lib/lagebild'
 import {
   buildIncidentItems,
@@ -239,7 +240,12 @@ async function getStatusData(requestedPeriod: unknown, requestedBar: unknown) {
   // Zeitraum des Balkens: Vorgabe aus den Einstellungen, der Besucher überschreibt sie mit ?balken=<Stunden>
   const defaultBarHours = parseBarHours(settings.lagebildBarHours)
   const barHours: BarHours = parseBarHours(requestedBar, defaultBarHours)
-  const lagebild = lagebildVariant === 'off' ? null : await loadLagebildCached(lang, dt, periodDays, barHours, settings.lagebildCacheMinutes)
+  const loaded = lagebildVariant === 'off' ? null : await loadLagebildCached(lang, dt, periodDays, barHours, cacheMinutesSetting(settings))
+  const lagebild = loaded?.data ?? null
+  // Stand der Seite: Beginn der Berechnung des Lagebilds, ohne Lagebild der Aufruf. Banner, Dienste und Meldungen werden bei
+  // jedem Aufruf frisch gelesen: gleich alt oder neuer, bis auf die Dauer des Aufrufs (Millisekunden bis wenige Sekunden).
+  // Der Browser bekommt das Alter statt der Uhrzeit: Seine Uhr kann abweichen.
+  const refresh = autoRefreshProps(settings, dt, loaded?.computedAt)
 
   // Boxen neben dem Lagebild: nur in den Varianten a, b und both
   let boxes = null
@@ -277,6 +283,7 @@ async function getStatusData(requestedPeriod: unknown, requestedBar: unknown) {
     boxes,
     lagebildVariant,
     lagebild,
+    refresh,
     defaultPeriodDays,
     defaultBarHours,
     settings,
@@ -310,6 +317,7 @@ export default async function StatusPage({
     pastIncidents,
     lagebild,
     lagebildVariant,
+    refresh,
     defaultPeriodDays,
     defaultBarHours,
   } = await getStatusData(rueckschau, balken)
@@ -437,7 +445,7 @@ export default async function StatusPage({
         </section>
       </main>
 
-      <Footer footerText={settings.footerText} timezone={settings.timezone} />
+      <Footer footerText={settings.footerText} timezone={settings.timezone} refresh={refresh} />
     </div>
   )
 }

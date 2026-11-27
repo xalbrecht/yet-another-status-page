@@ -49,6 +49,24 @@ export const Settings: GlobalConfig = {
             description: ta('Text displayed in the footer. Supports bold, italic, underline, and links.'),
           },
         },
+        {
+          name: 'autoRefreshMinutes',
+          type: 'select',
+          label: ta('Reload the page automatically'),
+          defaultValue: 'off',
+          options: [
+            { label: ta('Off'), value: 'off' },
+            { label: ta('Every minute'), value: '1' },
+            { label: ta('Every 3 minutes'), value: '3' },
+            { label: ta('Every 5 minutes'), value: '5' },
+            { label: ta('Every 10 minutes'), value: '10' },
+          ],
+          admin: {
+            description: ta(
+              'How often the public page updates itself in the visitor\'s browser. Off: no update, the cache of the situation overview applies (block "Situation overview"). Otherwise this interval is also the cache duration and the footer shows when the data was calculated. Reloading pauses while a window is open, an input field has focus or the tab is not visible.',
+            ),
+          },
+        },
       ],
     },
     // SEO Settings
@@ -224,7 +242,7 @@ export const Settings: GlobalConfig = {
             { label: ta('10 minutes'), value: '10' },
           ],
           admin: {
-            condition: (data) => data?.lagebildVariant !== 'off',
+            condition: (data) => data?.lagebildVariant !== 'off' && (!data?.autoRefreshMinutes || data.autoRefreshMinutes === 'off'),
             description: ta(
               'How long the situation overview is calculated once for all visitors. Empty: 1 minute. A change to a service or group applies immediately regardless.',
             ),

@@ -217,6 +217,20 @@ export type LagebildGroup = {
   services: LagebildService[]
 }
 
+/**
+ * Kalendertage der Rückschau, heute zuerst. Das Fenster beginnt bei `now - periodDays * DAY` und berührt deshalb
+ * `periodDays + 1` Kalendertage: Ein Zustand, der das ganze Fenster abdeckt, hat den Fensteranfang als Beginn und
+ * braucht dessen Tag in der Liste (#283).
+ */
+export function lagebildDays(now: number, periodDays: number, dt: DateTimeConfig): LagebildData['days'] {
+  const days: LagebildData['days'] = []
+  for (let i = 0; i <= periodDays; i++) {
+    const date = new Date(now - i * DAY)
+    days.push({ dayKey: formatDateSlug(date, dt.timezone), dayLabel: formatDate(date, dt) })
+  }
+  return days
+}
+
 export type LagebildPeriod = {
   id: string
   groupId: string
@@ -429,11 +443,7 @@ export async function loadLagebild(
   // neueste zuerst
   periods.sort((a, b) => b.start - a.start)
 
-  const days: LagebildData['days'] = []
-  for (let i = 0; i < periodDays; i++) {
-    const date = new Date(now - i * DAY)
-    days.push({ dayKey: formatDateSlug(date, dt.timezone), dayLabel: formatDate(date, dt) })
-  }
+  const days = lagebildDays(now, periodDays, dt)
 
   return {
     groups,

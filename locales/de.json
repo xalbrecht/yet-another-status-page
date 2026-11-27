@@ -44,6 +44,8 @@
     "footer.machineReadable": "Maschinenlesbare Formate",
     "footer.atom": "Atom-Feed",
     "footer.calendar": "Wartungskalender",
+    "footer.autoRefreshOne": "Stand {time} · aktualisiert sich jede Minute",
+    "footer.autoRefreshMany": "Stand {time} · aktualisiert sich alle {minutes} Minuten",
     "footer.github": "Quellcode auf GitHub ansehen",
     "incident.none": "Keine Störungen gemeldet.",
     "incident.ongoing": "Andauernd",

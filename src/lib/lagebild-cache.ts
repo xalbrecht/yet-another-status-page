@@ -21,7 +21,8 @@ import { lagebildMemoryCache } from '@/lib/lagebild-memory'
  * `LAGEBILD_CACHE_SECONDS` (Vorgabe 60, `0` schaltet es aus). Eine Änderung am Zustand eines Dienstes, an Diensten
  * oder an Gruppen verwirft es sofort (`invalidateLagebild` in `lagebild-invalidate.ts`).
  * Der Balken ist deshalb höchstens so alt wie die Dauer. Nach Ablauf rechnet der nächste Aufruf neu und wartet darauf
- * (siehe `timed-cache.ts`; `unstable_cache` lieferte in einer laufenden Instanz dauerhaft den alten Stand, Issue #284). */
+ * (siehe `timed-cache.ts`; `unstable_cache` lieferte in einer laufenden Instanz dauerhaft den alten Stand, Issue #284).
+ * Ist das automatische Neuladen an, gilt sein Intervall als Dauer (`cacheMinutesSetting` in `auto-refresh.ts`). */
 const envSeconds = parseCacheSeconds(process.env.LAGEBILD_CACHE_SECONDS)
 
 export async function loadLagebildCached(
@@ -30,9 +31,11 @@ export async function loadLagebildCached(
   periodDays: PeriodDays = PERIOD_DAYS,
   barHours: BarHours = BAR_HOURS,
   cacheMinutesSetting?: unknown,
-): Promise<LagebildData> {
+): Promise<{ data: LagebildData; computedAt: number }> {
   const seconds = cacheSecondsFromSetting(cacheMinutesSetting, envSeconds)
   const compute = async () => loadLagebild(await getCachedPayload(), dt, translatorsFor(language), periodDays, barHours)
   const key = JSON.stringify([...lagebildCacheKey(language), dt, periodDays, barHours])
-  return lagebildMemoryCache().get(key, seconds * 1000, compute)
+  const entry = await lagebildMemoryCache().getEntry(key, seconds * 1000, compute)
+  // `computedAt` ist der Stand der Seite: Kein Wert des Lagebilds ist älter (Issue #288)
+  return { data: entry.value, computedAt: entry.at }
 }

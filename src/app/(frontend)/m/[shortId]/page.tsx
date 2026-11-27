@@ -13,6 +13,7 @@ import { MaintenanceUpdatesTimeline } from '@/components/status/MaintenanceUpdat
 import { RichText } from '@/components/RichText'
 import { cn, getMediaUrl } from '@/lib/utils'
 import { formatDateTime, resolveDateTimeConfig } from '@/lib/datetime'
+import { autoRefreshProps } from '@/lib/auto-refresh'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -195,7 +196,7 @@ export default async function MaintenancePage({ params }: PageProps) {
         <MaintenanceUpdatesTimeline updates={maintenance.updates} t={t} />
       </main>
 
-      <Footer footerText={settings.footerText} timezone={settings.timezone} />
+      <Footer footerText={settings.footerText} timezone={settings.timezone} refresh={autoRefreshProps(settings, resolveDateTimeConfig(settings))} />
     </div>
   )
 }

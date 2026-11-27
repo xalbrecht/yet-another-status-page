@@ -3,10 +3,14 @@
 import { RichText } from '@/components/RichText'
 import { useTranslation } from '@/lib/i18n/client'
 import { DEFAULT_TIMEZONE, formatTimezoneNotice } from '@/lib/datetime'
+import { AutoRefresh } from '@/components/status/AutoRefresh'
+import type { AutoRefreshProps } from '@/lib/auto-refresh'
 
 interface FooterProps {
   footerText: unknown
   timezone?: string | null
+  /** Stand und Zeitgeber des automatischen Neuladens, `null` oder fehlend: aus. */
+  refresh?: AutoRefreshProps | null
 }
 
 // An empty editor still saves a root with one empty paragraph, so look for actual text.
@@ -17,7 +21,7 @@ function hasRichTextContent(node: unknown): boolean {
   return Array.isArray(n.children) && n.children.some(hasRichTextContent)
 }
 
-export function Footer({ footerText, timezone }: FooterProps) {
+export function Footer({ footerText, timezone, refresh }: FooterProps) {
   const { t, tf } = useTranslation()
   const hasContent = hasRichTextContent((footerText as { root?: unknown } | null)?.root)
 
@@ -32,6 +36,7 @@ export function Footer({ footerText, timezone }: FooterProps) {
             <p className="text-xs text-muted-foreground/80">
               {formatTimezoneNotice(timezone || DEFAULT_TIMEZONE, tf)}
             </p>
+            {refresh ? <AutoRefresh {...refresh} /> : null}
             <nav aria-label={t('footer.machineReadable')} className="flex gap-3 text-xs text-muted-foreground/80">
               <a href="https://docs.yasp.io/api/public-api.html" target="_blank" rel="noopener noreferrer" className="hover:text-foreground">API</a>
               <a href="/feed.atom" type="application/atom+xml" className="hover:text-foreground">{t('footer.atom')}</a>

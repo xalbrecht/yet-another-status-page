@@ -10,6 +10,7 @@ import { Header } from '@/components/status/Header'
 import { Footer } from '@/components/status/Footer'
 import { IncidentTimelineWithLinks } from '@/components/status/IncidentTimeline'
 import { cn, getMediaUrl } from '@/lib/utils'
+import { autoRefreshProps } from '@/lib/auto-refresh'
 import {
   addZonedDays,
   dateFromSlug,
@@ -255,7 +256,7 @@ export default async function WeekPage({ params }: PageProps) {
         </div>
       </main>
 
-      <Footer footerText={settings.footerText} timezone={settings.timezone} />
+      <Footer footerText={settings.footerText} timezone={settings.timezone} refresh={autoRefreshProps(settings, resolveDateTimeConfig(settings))} />
     </div>
   )
 }

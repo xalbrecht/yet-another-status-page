@@ -274,9 +274,14 @@ function escapeHtml(value: string): string {
     .replace(/"/g, '&quot;')
 }
 
-/** Textteil einer Mail ohne eigenen Text: Tags entfernen, dann die vier Maskierungen von `escapeHtml` zurücknehmen (`&amp;` zuletzt). */
+/**
+ * Textteil einer Mail ohne eigenen Text: `<head>` und `<style>` verwerfen (sonst steht das CSS im Text), Tags entfernen,
+ * dann die vier Maskierungen von `escapeHtml` zurücknehmen (`&amp;` zuletzt).
+ */
 function htmlToText(html: string): string {
   return html
+    .replace(/<head[\s>][\s\S]*?<\/head>/gi, '')
+    .replace(/<style[\s>][\s\S]*?<\/style>/gi, '')
     .replace(/<[^>]*>/g, '')
     .replace(/&lt;/g, '<')
     .replace(/&gt;/g, '>')

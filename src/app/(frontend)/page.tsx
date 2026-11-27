@@ -242,8 +242,9 @@ async function getStatusData(requestedPeriod: unknown, requestedBar: unknown) {
   const barHours: BarHours = parseBarHours(requestedBar, defaultBarHours)
   const loaded = lagebildVariant === 'off' ? null : await loadLagebildCached(lang, dt, periodDays, barHours, cacheMinutesSetting(settings))
   const lagebild = loaded?.data ?? null
-  // Stand der Seite: Zeitpunkt, zu dem das Lagebild berechnet wurde, ohne Lagebild der Aufruf. Banner, Dienste und Meldungen
-  // sind frisch gelesen und gleich alt oder neuer. Der Browser bekommt das Alter statt der Uhrzeit: Seine Uhr kann abweichen.
+  // Stand der Seite: Beginn der Berechnung des Lagebilds, ohne Lagebild der Aufruf. Banner, Dienste und Meldungen werden bei
+  // jedem Aufruf frisch gelesen: gleich alt oder neuer, bis auf die Dauer des Aufrufs (Millisekunden bis wenige Sekunden).
+  // Der Browser bekommt das Alter statt der Uhrzeit: Seine Uhr kann abweichen.
   const refresh = autoRefreshProps(settings, dt, loaded?.computedAt)
 
   // Boxen neben dem Lagebild: nur in den Varianten a, b und both

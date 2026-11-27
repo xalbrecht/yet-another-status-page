@@ -13,6 +13,8 @@ import {
 
 /** Wartezeit, bis eine pausierte Seite erneut prüft, ob sie neu laden darf. */
 const PAUSE_RECHECK_MS = AUTO_REFRESH_MIN_DELAY_MS
+/** Wartezeit nach einem Neuladen, das mangels Antwort des Servers ausfiel. */
+const RETRY_AFTER_FAILURE_MS = 30_000
 /** Streuung hinter dem Ablauf des Zwischenspeichers, damit nicht alle Besucher im selben Moment anfragen. */
 const MAX_JITTER_MS = 3_000
 /** Ablauf des Zwischenspeichers plus Rest: Der erste Aufruf danach rechnet neu (`timed-cache.ts` gilt bis einschließlich der Dauer). */
@@ -39,32 +41,60 @@ export function AutoRefresh({ minutes, ageMs, standLabel }: AutoRefreshProps) {
   const { tf } = useTranslation()
   const router = useRouter()
   const deadline = useRef(0)
+  /** Die Frist ist abgelaufen, das Neuladen wartet aber (Pause oder Server nicht erreichbar). */
+  const due = useRef(false)
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
+    let cancelled = false
+    let busy = false
     const clear = () => {
       if (timer.current !== null) clearTimeout(timer.current)
       timer.current = null
     }
-    const refresh = () => startTransition(() => router.refresh())
     const schedule = (delay: number) => {
       clear()
       deadline.current = performance.now() + delay
-      timer.current = setTimeout(tick, delay)
+      timer.current = setTimeout(attempt, delay)
     }
-    function tick() {
-      if (paused()) return schedule(PAUSE_RECHECK_MS)
-      refresh()
-      // Kommt kein neuer Stand an (Fehler, anderer Zwischenspeicher), versucht es nach einem vollen Intervall erneut
+    /**
+     * `router.refresh()` wiederholt bei einem Fehler nicht: Antwortet der Server nicht mit 200 oder fällt das Netz aus,
+     * navigiert Next den ganzen Browser und der Besucher sieht eine Fehlerseite ohne Zeitgeber. Deshalb vorher eine billige
+     * Anfrage (`/api/health`): Ohne Antwort bleibt der letzte Stand stehen und es folgt ein neuer Versuch.
+     */
+    async function reload() {
+      busy = true
+      try {
+        const response = await fetch('/api/health', { cache: 'no-store' })
+        if (!response.ok) throw new Error(String(response.status))
+      } catch {
+        busy = false
+        if (!cancelled) schedule(RETRY_AFTER_FAILURE_MS)
+        return
+      }
+      busy = false
+      if (cancelled) return
+      due.current = false
+      startTransition(() => router.refresh())
+      // Kommt kein neuer Stand an (anderer Zwischenspeicher), versucht es nach einem vollen Intervall erneut
       schedule(minutes * 60_000)
     }
+    function attempt() {
+      due.current = true
+      if (busy) return
+      if (paused()) return schedule(PAUSE_RECHECK_MS)
+      clear()
+      void reload()
+    }
     const onVisible = () => {
-      if (!document.hidden && performance.now() >= deadline.current) tick()
+      if (!document.hidden && (due.current || performance.now() >= deadline.current)) attempt()
     }
 
+    due.current = false
     schedule(refreshDelayMs({ ageMs, minutes, marginMs: BASE_MARGIN_MS + Math.random() * MAX_JITTER_MS }))
     document.addEventListener('visibilitychange', onVisible)
     return () => {
+      cancelled = true
       clear()
       document.removeEventListener('visibilitychange', onVisible)
     }

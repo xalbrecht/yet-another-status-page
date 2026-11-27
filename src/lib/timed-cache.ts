@@ -12,7 +12,10 @@
  */
 export interface TimedCache {
   get<T>(key: string, ttlMs: number, compute: () => Promise<T>): Promise<T>
-  /** Wie `get`, dazu der Zeitpunkt, zu dem der Wert fertig berechnet war (bei Dauer 0: der Aufruf). */
+  /**
+   * Wie `get`, dazu der Beginn der Berechnung (bei Dauer 0: der Aufruf). Die Werte wurden nach diesem Zeitpunkt gelesen,
+   * der Wert ist also nicht älter. Die Dauer rechnet ab demselben Zeitpunkt.
+   */
   getEntry<T>(key: string, ttlMs: number, compute: () => Promise<T>): Promise<{ value: T; at: number }>
   clear(): void
 }
@@ -25,16 +28,20 @@ export function createTimedCache(now: () => number = Date.now): TimedCache {
   const running = new Map<string, Promise<Entry>>()
 
   async function getEntry<T>(key: string, ttlMs: number, compute: () => Promise<T>): Promise<{ value: T; at: number }> {
-    if (ttlMs <= 0) return { value: await compute(), at: now() }
+    if (ttlMs <= 0) {
+      const at = now()
+      return { value: await compute(), at }
+    }
     const entry = entries.get(key)
     if (entry && now() - entry.at <= ttlMs) return entry as { value: T; at: number }
     const shared = running.get(key)
     if (shared) return shared as Promise<{ value: T; at: number }>
 
     const startedIn = generation
+    const startedAt = now()
     const promise: Promise<Entry> = compute()
       .then((value) => {
-        const fresh = { at: now(), value }
+        const fresh = { at: startedAt, value }
         if (startedIn === generation) entries.set(key, fresh)
         return fresh
       })

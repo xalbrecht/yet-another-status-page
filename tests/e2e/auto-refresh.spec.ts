@@ -96,8 +96,36 @@ test.describe('Automatisches Neuladen', { tag: ['@public', '@statusseite', '@lag
     await page.clock.runFor('02:30')
     expect(refreshes.count, 'bei unsichtbarem Tab kein Neuladen').toBe(0)
 
+    // Uhr anhalten: Die Prüfung alle 5 Sekunden kann nicht mehr auslösen, nur der Wechsel zu „sichtbar“ kann das Neuladen holen
+    const now = await page.evaluate(() => Date.now())
+    await page.clock.pauseAt(new Date(now + 1000))
     await setHidden(false)
     await expect.poll(() => refreshes.count).toBeGreaterThan(0)
+  })
+
+  test('antwortet der Server nicht, bleibt die Seite stehen und versucht es später erneut', async ({ page }) => {
+    await updateSettings({ autoRefreshMinutes: '1' })
+    await page.clock.install()
+    await page.goto('/')
+    await page.waitForLoadState('networkidle')
+    const refreshes = countRefreshes(page)
+    const navigations: string[] = []
+    page.on('framenavigated', (frame) => {
+      if (frame === page.mainFrame()) navigations.push(frame.url())
+    })
+
+    // Server nicht erreichbar: Ohne Vorprüfung navigierte der Router den ganzen Browser auf eine Fehlerseite
+    await page.route('**/api/health', (route) => route.abort())
+    await page.clock.runFor('02:30')
+    expect(refreshes.count, 'ohne Antwort des Servers kein Neuladen').toBe(0)
+    expect(navigations, 'die Seite bleibt stehen').toEqual([])
+    await expect(line(page)).toBeVisible()
+
+    // Server wieder da: Der nächste Versuch lädt neu
+    await page.unroute('**/api/health')
+    await page.clock.runFor('00:40')
+    await expect.poll(() => refreshes.count).toBeGreaterThan(0)
+    expect(navigations).toEqual([])
   })
 
   test('das Intervall ist die Dauer des Zwischenspeichers: nach einer Minute zeigt die Seite einen neuen Stand', async ({ page }) => {

@@ -122,3 +122,25 @@ test('get und getEntry teilen sich den Speicher', async () => {
   assert.equal(entry.value, value)
   assert.equal(t.calls(), 1)
 })
+
+test('getEntry nennt den Beginn der Berechnung, nicht ihr Ende: die Werte wurden nach dem Beginn gelesen (#288)', async () => {
+  let now = 1_000_000
+  const cache = createTimedCache(() => now)
+  // Die Berechnung dauert 800 ms
+  const slow = async () => {
+    now += 800
+    return 'wert'
+  }
+  const entry = await cache.getEntry('k', 60_000, slow)
+  assert.equal(entry.at, 1_000_000)
+
+  // Die Dauer rechnet ab dem Beginn: 60 s nach dem Beginn ist der Eintrag noch gültig, danach nicht mehr
+  now = 1_060_000
+  assert.equal((await cache.getEntry('k', 60_000, slow)).at, 1_000_000)
+  now = 1_060_001
+  assert.equal((await cache.getEntry('k', 60_000, slow)).at, 1_060_001)
+
+  // ohne Speicher gilt dasselbe
+  now = 2_000_000
+  assert.equal((await cache.getEntry('x', 0, slow)).at, 2_000_000)
+})

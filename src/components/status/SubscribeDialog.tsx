@@ -310,7 +310,7 @@ export function SubscribeDialog({ isOpen, onClose }: SubscribeDialogProps) {
             )}
 
             {/* Form area */}
-            <form onSubmit={handleSubmit} className="flex-1 p-5 sm:p-6">
+            <form onSubmit={handleSubmit} noValidate className="flex-1 p-5 sm:p-6">
               {successMessage ? (
                 <div className="flex items-center gap-3 rounded-lg bg-status-operational/10 p-4 text-status-operational">
                   <Bell className="h-5 w-5" />

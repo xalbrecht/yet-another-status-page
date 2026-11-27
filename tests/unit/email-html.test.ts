@@ -88,3 +88,15 @@ test('der Link „Auswahl ändern“ erscheint auf Deutsch in der Mail', () => {
   const html = generateEmailHtml({ ...base, preferencesUrl: 'https://status.example/subscription/abc', language: 'de' })
   assert.ok(html.includes('>Auswahl der Dienstgruppen ändern</a>'))
 })
+
+test('der Text-Teil ohne eigenen Text enthält kein CSS, aber den lesbaren Inhalt', () => {
+  const html = generateEmailHtml({ ...base, siteName: 'Statusseite', title: 'Titel der Mail', body: 'a < b\n\nc & d', language: 'de' })
+  assert.ok(html.includes('<style>'), 'Voraussetzung: die HTML-Fassung trägt ein <style>')
+  const message = buildMailMessage({ smtpFromAddress: 'a@example.org' } as EmailSetting, { to: 'b@example.org', subject: 's', html })
+  const text = String(message.text)
+  assert.ok(!text.includes('{'), 'keine CSS-Regel im Text-Teil')
+  assert.ok(!/font-family|<style|<title/i.test(text), 'kein Rest aus <head> im Text-Teil')
+  assert.ok(text.includes('Titel der Mail'))
+  assert.ok(text.includes('a < b'))
+  assert.ok(text.includes('c & d'))
+})

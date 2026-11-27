@@ -113,7 +113,7 @@ test.describe('Subscribe Flow', { tag: ['@public', '@abonnenten'] }, () => {
       
       // Should show success message (contains email) or error if SMTP not configured
       await expect(
-        page.getByText(/receive status updates|Failed/i)
+        page.getByText(/confirmation email is on its way|Bestätigungsmail ist an|Failed/i)
       ).toBeVisible({ timeout: 10000 })
     }
   })

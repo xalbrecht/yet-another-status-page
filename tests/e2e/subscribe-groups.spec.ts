@@ -143,7 +143,7 @@ test.describe('Anmeldung mit Gruppenwahl', { tag: ['@public', '@abonnenten'] }, 
     const body = (await sent).postDataJSON() as { allGroups: boolean; groups: number[] }
     expect(body.allGroups).toBe(false)
     expect(body.groups).toEqual([groupA])
-    await expect(page.getByText(/receive status updates|künftig an/i)).toBeVisible({ timeout: 10000 })
+    await expect(page.getByText(/confirmation email is on its way|Bestätigungsmail ist an/i)).toBeVisible({ timeout: 10000 })
 
     const stored = await findByEmail(request, email)
     expect(stored.allGroups).toBe(false)

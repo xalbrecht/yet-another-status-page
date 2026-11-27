@@ -96,7 +96,7 @@
     "sub.phoneInvalid": "Bitte eine gültige Telefonnummer eingeben (z. B. +491701234567)",
     "sub.failed": "Abonnieren fehlgeschlagen",
     "sub.failedRetry": "Abonnieren fehlgeschlagen. Bitte erneut versuchen.",
-    "sub.successEmail": "Statusmeldungen gehen künftig an {email}",
+    "sub.successEmail": "Fast geschafft: Eine Bestätigungsmail ist an {email} unterwegs. Statusmeldungen gehen erst an diese Adresse, wenn Sie in der Mail auf den Link klicken und der Betreiber die Anmeldung freigegeben hat",
     "sub.successSms": "Der Antrag für SMS-Benachrichtigungen an {phone} ist eingegangen. Sie beginnen nach der Freigabe durch den Betreiber.",
     "sub.title": "Statusmeldungen erhalten",
     "sub.closeDialog": "Dialog schließen",

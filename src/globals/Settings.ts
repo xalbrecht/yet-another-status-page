@@ -63,7 +63,19 @@ export const Settings: GlobalConfig = {
           ],
           admin: {
             description: ta(
-              'How often the public page updates itself in the visitor\'s browser. Off: no update, the cache of the situation overview applies (block "Situation overview"). Otherwise this interval is also the cache duration and the footer shows when the data was calculated. Reloading pauses while a window is open, an input field has focus or the tab is not visible.',
+              'How often the public page updates itself in the visitor\'s browser. Off: no update, the cache of the situation overview applies (block "Situation overview"). Otherwise this interval is also the cache duration and a display below the header shows when the data was calculated. Reloading pauses while a window is open, an input field has focus or the tab is not visible.',
+            ),
+          },
+        },
+        {
+          name: 'autoRefreshShowInterval',
+          type: 'checkbox',
+          label: ta('Name the interval in the display'),
+          defaultValue: false,
+          admin: {
+            condition: (data) => Boolean(data?.autoRefreshMinutes) && data.autoRefreshMinutes !== 'off',
+            description: ta(
+              'The display below the header shows "As of 10:42". With this option it adds how often the page updates itself ("updates every 5 minutes").',
             ),
           },
         },

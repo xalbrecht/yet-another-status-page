@@ -127,6 +127,7 @@ export default async function MaintenancePage({ params }: PageProps) {
     <div className="flex min-h-screen flex-col bg-background">
       <Header
         siteName={settings.siteName}
+        refresh={autoRefreshProps(settings, resolveDateTimeConfig(settings))}
         logoLightUrl={getMediaUrl(settings.logoLight)}
         logoDarkUrl={getMediaUrl(settings.logoDark)}
         subtitle={t('maintenance.details')}
@@ -196,7 +197,7 @@ export default async function MaintenancePage({ params }: PageProps) {
         <MaintenanceUpdatesTimeline updates={maintenance.updates} t={t} />
       </main>
 
-      <Footer footerText={settings.footerText} timezone={settings.timezone} refresh={autoRefreshProps(settings, resolveDateTimeConfig(settings))} />
+      <Footer footerText={settings.footerText} timezone={settings.timezone} />
     </div>
   )
 }

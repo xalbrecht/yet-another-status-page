@@ -2,7 +2,7 @@ import { test, expect, type Page } from '@playwright/test'
 import { updateSettings } from '../utils/payload-helpers'
 
 /**
- * Automatisches Neuladen (#288): Zeile „Stand … · aktualisiert sich …“ in der Fußzeile, Zeitgeber, Pausen.
+ * Automatisches Neuladen (#288, #300): Anzeige „Stand …“ unter der Kopfzeile, auf Wunsch mit dem Takt, Zeitgeber, Pausen.
  * Die Pausen laufen mit der Uhr des Browsers (`page.clock`), nur der Test des neuen Stands wartet echte 70 Sekunden:
  * Der Zwischenspeicher im Server läuft nach der Uhr des Servers ab.
  */
@@ -10,10 +10,24 @@ test.describe('Automatisches Neuladen', { tag: ['@public', '@statusseite', '@lag
   test.describe.configure({ mode: 'serial' })
 
   test.afterAll(async () => {
-    await updateSettings({ autoRefreshMinutes: 'off', lagebildVariant: 'off', lagebildCacheMinutes: '1' })
+    await updateSettings({ autoRefreshMinutes: 'off', autoRefreshShowInterval: false, lagebildVariant: 'off', lagebildCacheMinutes: '1' })
   })
 
   const line = (page: Page) => page.getByTestId('auto-refresh')
+
+  /**
+   * Wartet, bis React die Anzeige hydriert hat und ihr Zeitgeber läuft. `networkidle` genügt nicht: Die Hydrierung
+   * kann danach noch kommen (im Trace 70 ms nach dem Start des Tests), und ein Zeitgeber, der erst nach `runFor` beginnt,
+   * wird von der Uhr des Tests nie erreicht.
+   */
+  const hydrated = async (page: Page) => {
+    await page.waitForFunction(() => {
+      const el = document.querySelector('[data-testid="auto-refresh"]')
+      return el !== null && Object.keys(el).some((key) => key.startsWith('__reactProps'))
+    })
+    // ein Bild abwarten: Die Effekte der Komponente laufen vor dem nächsten Bild
+    await page.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => resolve(null))))
+  }
 
   /** Zählt die Anfragen, mit denen `router.refresh()` die Seite neu holt (RSC-Anfrage an die Seite selbst). */
   const countRefreshes = (page: Page) => {
@@ -24,22 +38,30 @@ test.describe('Automatisches Neuladen', { tag: ['@public', '@statusseite', '@lag
     return state
   }
 
-  test('ohne Einstellung steht keine Zeile in der Fußzeile', async ({ page }) => {
-    await updateSettings({ autoRefreshMinutes: 'off' })
+  test('ohne Einstellung steht keine Anzeige auf der Seite', async ({ page }) => {
+    await updateSettings({ autoRefreshMinutes: 'off', autoRefreshShowInterval: true })
     await page.goto('/')
-    await expect(page.getByRole('contentinfo')).toBeVisible()
+    await expect(page.getByRole('banner')).toBeVisible()
     await expect(line(page)).toHaveCount(0)
   })
 
-  test('die Zeile nennt den Stand und den Takt', async ({ page }) => {
-    await updateSettings({ autoRefreshMinutes: '5' })
+  test('die Anzeige steht in der Kopfzeile und nennt den Stand, nicht den Takt', async ({ page }) => {
+    await updateSettings({ autoRefreshMinutes: '5', autoRefreshShowInterval: false })
     await page.goto('/')
     // Uhrzeit je nach Sprache und Zeitzone der Instanz: „10:42 CET“ oder „1:07 PM UTC“ (CI)
+    await expect(page.getByRole('banner').getByTestId('auto-refresh')).toHaveText(/^As of \d{1,2}:\d{2}[^·]*$/)
+    await expect(page.getByRole('contentinfo').getByTestId('auto-refresh')).toHaveCount(0)
+  })
+
+  test('mit der Einstellung nennt die Anzeige auch den Takt', async ({ page }) => {
+    await updateSettings({ autoRefreshMinutes: '5', autoRefreshShowInterval: true })
+    await page.goto('/')
     await expect(line(page)).toHaveText(/^As of \d{1,2}:\d{2}.* · updates every 5 minutes$/)
 
     await updateSettings({ autoRefreshMinutes: '1' })
     await page.goto('/')
     await expect(line(page)).toHaveText(/updates every minute$/)
+    await updateSettings({ autoRefreshShowInterval: false })
   })
 
   test('ein offenes Anmeldefenster pausiert das Neuladen, das Schließen holt es nach', async ({ page }) => {
@@ -47,6 +69,7 @@ test.describe('Automatisches Neuladen', { tag: ['@public', '@statusseite', '@lag
     await page.clock.install()
     await page.goto('/')
     await page.waitForLoadState('networkidle')
+    await hydrated(page)
     const refreshes = countRefreshes(page)
 
     await page.getByRole('button', { name: /Subscribe/i }).click()
@@ -64,6 +87,7 @@ test.describe('Automatisches Neuladen', { tag: ['@public', '@statusseite', '@lag
     await page.clock.install()
     await page.goto('/')
     await page.waitForLoadState('networkidle')
+    await hydrated(page)
     const refreshes = countRefreshes(page)
 
     await page.evaluate(() => {
@@ -85,6 +109,7 @@ test.describe('Automatisches Neuladen', { tag: ['@public', '@statusseite', '@lag
     await page.clock.install()
     await page.goto('/')
     await page.waitForLoadState('networkidle')
+    await hydrated(page)
     const refreshes = countRefreshes(page)
 
     const setHidden = (hidden: boolean) =>
@@ -109,6 +134,7 @@ test.describe('Automatisches Neuladen', { tag: ['@public', '@statusseite', '@lag
     await page.clock.install()
     await page.goto('/')
     await page.waitForLoadState('networkidle')
+    await hydrated(page)
     const refreshes = countRefreshes(page)
     const navigations: string[] = []
     page.on('framenavigated', (frame) => {

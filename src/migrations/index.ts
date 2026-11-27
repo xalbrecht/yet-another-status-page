@@ -41,6 +41,7 @@ import * as migration_20261126_100000_subscribers_groups from './20261126_100000
 import * as migration_20261127_100000_subscribers_all_groups_not_null from './20261127_100000_subscribers_all_groups_not_null';
 import * as migration_20261128_100000_settings_lagebild_cache_minutes from './20261128_100000_settings_lagebild_cache_minutes';
 import * as migration_20261129_100000_settings_auto_refresh_minutes from './20261129_100000_settings_auto_refresh_minutes';
+import * as migration_20261130_100000_settings_auto_refresh_show_interval from './20261130_100000_settings_auto_refresh_show_interval';
 
 export const migrations = [
   {
@@ -257,5 +258,10 @@ export const migrations = [
     up: migration_20261129_100000_settings_auto_refresh_minutes.up,
     down: migration_20261129_100000_settings_auto_refresh_minutes.down,
     name: '20261129_100000_settings_auto_refresh_minutes',
+  },
+  {
+    up: migration_20261130_100000_settings_auto_refresh_show_interval.up,
+    down: migration_20261130_100000_settings_auto_refresh_show_interval.down,
+    name: '20261130_100000_settings_auto_refresh_show_interval',
   },
 ];

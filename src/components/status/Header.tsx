@@ -5,12 +5,16 @@ import { useTranslation } from '@/lib/i18n/client'
 import Link from "next/link";
 import { ThemeToggle } from "./ThemeToggle";
 import { cn } from "@/lib/utils";
+import { AutoRefresh } from "./AutoRefresh";
+import type { AutoRefreshProps } from "@/lib/auto-refresh";
 
 interface HeaderProps {
   siteName: string;
   logoLightUrl?: string;
   logoDarkUrl?: string;
   subtitle?: string;
+  /** Stand und Zeitgeber des automatischen Neuladens, `null` oder fehlend: aus. */
+  refresh?: AutoRefreshProps | null;
   children?: React.ReactNode;
 }
 
@@ -19,6 +23,7 @@ export function Header({
   logoLightUrl,
   logoDarkUrl,
   subtitle,
+  refresh,
   children,
 }: HeaderProps) {
   const { t } = useTranslation();
@@ -68,6 +73,13 @@ export function Header({
           <ThemeToggle />
         </div>
       </div>
+      {refresh ? (
+        <div className="border-t border-border bg-muted/50">
+          <div className="mx-auto flex max-w-4xl justify-start px-4 py-1.5 sm:justify-end sm:px-6">
+            <AutoRefresh {...refresh} />
+          </div>
+        </div>
+      ) : null}
     </header>
   );
 }

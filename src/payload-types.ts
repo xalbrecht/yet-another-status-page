@@ -1171,9 +1171,13 @@ export interface Setting {
     [k: string]: unknown;
   } | null;
   /**
-   * How often the public page updates itself in the visitor's browser. Off: no update, the cache of the situation overview applies (block "Situation overview"). Otherwise this interval is also the cache duration and the footer shows when the data was calculated. Reloading pauses while a window is open, an input field has focus or the tab is not visible.
+   * How often the public page updates itself in the visitor's browser. Off: no update, the cache of the situation overview applies (block "Situation overview"). Otherwise this interval is also the cache duration and a display below the header shows when the data was calculated. Reloading pauses while a window is open, an input field has focus or the tab is not visible.
    */
   autoRefreshMinutes?: ('off' | '1' | '3' | '5' | '10') | null;
+  /**
+   * The display below the header shows "As of 10:42". With this option it adds how often the page updates itself ("updates every 5 minutes").
+   */
+  autoRefreshShowInterval?: boolean | null;
   /**
    * Title shown in browser tabs and search results (leave empty to use Site Name)
    */
@@ -1449,6 +1453,7 @@ export interface SettingsSelect<T extends boolean = true> {
   siteDescription?: T;
   footerText?: T;
   autoRefreshMinutes?: T;
+  autoRefreshShowInterval?: T;
   metaTitle?: T;
   metaDescription?: T;
   historyMetaTitle?: T;

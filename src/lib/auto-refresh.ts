@@ -55,15 +55,15 @@ export function isRefreshPaused(context: RefreshContext): boolean {
   return context.focusedTag === 'INPUT' || context.focusedTag === 'TEXTAREA' || context.focusedTag === 'SELECT'
 }
 
-/** Angaben für die Fußzeile: Intervall, Alter des Stands bei der Auslieferung und seine Uhrzeit als Text. */
-export type AutoRefreshProps = { minutes: AutoRefreshMinutes; ageMs: number; standLabel: string }
+/** Angaben für die Kopfzeile: Intervall, Alter des Stands bei der Auslieferung, seine Uhrzeit als Text und ob die Anzeige den Takt nennt. */
+export type AutoRefreshProps = { minutes: AutoRefreshMinutes; ageMs: number; standLabel: string; showInterval: boolean }
 
 /**
- * Angaben für `Footer`, `null` bei ausgeschaltetem Neuladen. `standAt` ist der Zeitpunkt der Berechnung der ältesten Daten
+ * Angaben für `Header`, `null` bei ausgeschaltetem Neuladen. `standAt` ist der Zeitpunkt der Berechnung der ältesten Daten
  * auf der Seite (Lagebild), ohne Angabe der Aufruf: Seiten ohne Zwischenspeicher lesen ihre Daten frisch.
  */
 export function autoRefreshProps(
-  settings: { autoRefreshMinutes?: unknown },
+  settings: { autoRefreshMinutes?: unknown; autoRefreshShowInterval?: unknown },
   dt: DateTimeConfig,
   standAt?: number,
   servedAt: number = Date.now(),
@@ -71,5 +71,10 @@ export function autoRefreshProps(
   const minutes = parseAutoRefreshMinutes(settings.autoRefreshMinutes)
   if (minutes === null) return null
   const stand = standAt ?? servedAt
-  return { minutes, ageMs: Math.max(0, servedAt - stand), standLabel: formatTime(new Date(stand), dt) }
+  return {
+    minutes,
+    ageMs: Math.max(0, servedAt - stand),
+    standLabel: formatTime(new Date(stand), dt),
+    showInterval: settings.autoRefreshShowInterval === true,
+  }
 }

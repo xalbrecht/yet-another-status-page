@@ -330,6 +330,7 @@ export default async function StatusPage({
         siteName={settings.siteName}
         logoLightUrl={getMediaUrl(settings.logoLight)}
         logoDarkUrl={getMediaUrl(settings.logoDark)}
+        refresh={refresh}
       >
         <LoginButton />
         <Subscribe />
@@ -445,7 +446,7 @@ export default async function StatusPage({
         </section>
       </main>
 
-      <Footer footerText={settings.footerText} timezone={settings.timezone} refresh={refresh} />
+      <Footer footerText={settings.footerText} timezone={settings.timezone} />
     </div>
   )
 }

@@ -70,6 +70,15 @@ test('autoRefreshProps: Aus liefert nichts, sonst Minuten, Alter des Stands und 
   assert.equal(props.minutes, 5)
   assert.equal(props.ageMs, 90_000)
   assert.match(props.standLabel, /^10:42/)
+  assert.equal(props.showInterval, false, 'ohne Angabe nennt die Anzeige den Takt nicht')
+
+  // Feld „Takt in der Anzeige nennen“: nur ein ausdrückliches Ja zeigt den Takt
+  assert.equal(autoRefreshProps({ autoRefreshMinutes: '5', autoRefreshShowInterval: true }, dt, standAt, standAt)?.showInterval, true)
+  for (const value of [false, null, undefined, 'true', 1]) {
+    assert.equal(autoRefreshProps({ autoRefreshMinutes: '5', autoRefreshShowInterval: value }, dt, standAt, standAt)?.showInterval, false, String(value))
+  }
+  // bei ausgeschaltetem Neuladen gibt es auch mit dem Haken keine Anzeige
+  assert.equal(autoRefreshProps({ autoRefreshMinutes: 'off', autoRefreshShowInterval: true }, dt, standAt, standAt), null)
 
   // ohne Stand (Seiten ohne Zwischenspeicher): Zeitpunkt des Aufrufs, Alter 0
   const served = Date.UTC(2026, 10, 27, 9, 50, 0)

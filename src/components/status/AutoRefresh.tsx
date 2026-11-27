@@ -31,13 +31,13 @@ function paused(): boolean {
 }
 
 /**
- * Zeile in der Fußzeile („Stand 10:42 · aktualisiert sich alle 5 Minuten“) und Zeitgeber für das Neuladen (Issue #288).
+ * Anzeige in der Kopfzeile („Stand 10:42“, auf Wunsch mit „· aktualisiert sich alle 5 Minuten“) und Zeitgeber für das Neuladen (Issue #288).
  *
  * Der Server liefert das Alter des Stands, nicht seine Uhrzeit: Die Uhr des Browsers kann abweichen. Das Neuladen
  * trifft das Ende der Zwischenspeicher-Zeit, deshalb zeigt die neue Seite einen neuen Stand. Es pausiert, solange der Tab
  * nicht sichtbar ist, ein Fenster offen ist oder ein Eingabefeld Fokus hat, und holt beim Sichtbarwerden nach.
  */
-export function AutoRefresh({ minutes, ageMs, standLabel }: AutoRefreshProps) {
+export function AutoRefresh({ minutes, ageMs, standLabel, showInterval }: AutoRefreshProps) {
   const { tf } = useTranslation()
   const router = useRouter()
   const deadline = useRef(0)
@@ -100,10 +100,15 @@ export function AutoRefresh({ minutes, ageMs, standLabel }: AutoRefreshProps) {
     }
   }, [router, minutes, ageMs, standLabel])
 
-  const every = minutes === 1 ? tf('footer.autoRefreshOne', { time: standLabel }) : tf('footer.autoRefreshMany', { time: standLabel, minutes: String(minutes) })
+  const text = !showInterval
+    ? tf('stand.only', { time: standLabel })
+    : minutes === 1
+      ? tf('stand.everyOne', { time: standLabel })
+      : tf('stand.everyMany', { time: standLabel, minutes: String(minutes) })
   return (
-    <p className="text-xs text-muted-foreground/80" data-testid="auto-refresh">
-      {every}
+    <p className="flex items-center gap-2 text-xs tabular-nums text-muted-foreground" data-testid="auto-refresh">
+      <span className="h-2 w-2 shrink-0 rounded-full bg-muted-foreground/60" aria-hidden="true" />
+      {text}
     </p>
   )
 }

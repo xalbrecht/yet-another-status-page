@@ -168,11 +168,6 @@ export function SubscribeDialog({ isOpen, onClose }: SubscribeDialogProps) {
         setChoice({ allGroups: true, groups: [] });
         setGroupQuery("");
       }
-      
-      setTimeout(() => {
-        onClose();
-        setSuccessMessage(null);
-      }, 2000);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : t("sub.failedRetry");
       setErrors({ 

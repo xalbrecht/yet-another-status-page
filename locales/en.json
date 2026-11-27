@@ -96,7 +96,7 @@
     "sub.phoneInvalid": "Please enter a valid phone number (e.g., +1234567890)",
     "sub.failed": "Failed to subscribe",
     "sub.failedRetry": "Failed to subscribe. Please try again.",
-    "sub.successEmail": "You'll receive status updates at {email}",
+    "sub.successEmail": "Almost done: a confirmation email is on its way to {email}. Status updates are sent to this address only after you click the link in the email and the operator has approved the subscription",
     "sub.successSms": "Your request for SMS updates at {phone} was received. They start after approval by the operator.",
     "sub.title": "Get status updates",
     "sub.closeDialog": "Close dialog",
